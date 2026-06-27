@@ -1,0 +1,30 @@
+[
+    {
+        "id_seguimeinto":"seg_usr_25_00008_25_0001",
+        "tema_seguimiento":"Gestiones de renovación de campañas",
+        "descripcion_seguimiento":"Campañas terminadas en proceso de renovación. Excel con cliente, estado, última gestión y próxima programada",
+        "id_agente":"usr_25_00008",
+        "link_seguimiento":"www.google.es"
+    },
+        {
+        "id_seguimeinto":"seg_usr_25_00008_25_0002",
+        "tema_seguimiento":"Leads abc",
+        "descripcion_seguimiento":"Excel de trabajo por pestañas, filtrando por importancia los clientes, para seguimiento del comercial y revisión de estados.",
+        "id_agente":"usr_25_00008",
+        "link_seguimiento":"www.google.es"
+    },
+        {
+        "id_seguimeinto":"seg_usr_25_00008_25_0003",
+        "tema_seguimiento":"Seguimiento anunciantes competidores",
+        "descripcion_seguimiento":"Listado de anunciantes de la competencia, para ofrecer renovaciones, priorizar, o detectar si no tienen seguimiento, o no suficiente.",
+        "id_agente":"usr_25_00008",
+        "link_seguimiento":"www.google.es"
+    },
+        {
+        "id_seguimeinto":"seg_usr_25_00008_25_0004",
+        "tema_seguimiento":"Seguimiento específico ferias",
+        "descripcion_seguimiento":"Listado de expositores de ferias futuras, para su preparación, gestión durante la feria, y gestión post.",
+        "id_agente":"usr_25_00008",
+        "link_seguimiento":"www.google.es"
+    }    
+]

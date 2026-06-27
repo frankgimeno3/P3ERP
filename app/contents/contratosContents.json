@@ -1,0 +1,183 @@
+[
+  {
+    "id_contrato": "contr_25_0000000001",
+    "id_agente_contrato": "ag_25_0004",
+    "fecha_cobro_prevista_contrato": "13/12/2025",
+    "forma_cobro_contrato": "Domiciliación Bancaria",
+    "fecha_firma_contrato": "12/12/2025",
+    "fecha_fin_contrato": "12/12/2026",
+    "id_campana_asociada": "K25_000_029",
+    "descuento_final_contrato": 500.00,
+    "importe_total_BI_contrato": 3020.00,
+    "iva_aplicable": true,
+    "importe_contrato_con_iva": 3049.20,
+    "array_ordenes_cobro": [
+      {
+        "id_orden": "C25.000.036-1/1",
+        "tipo_cobro": "Recibo domiciliado",
+        "id_factura": "525074"
+      }
+    ],
+    "cuenta_contrato": {
+      "id_cuenta_contrato": "62500001",
+      "id_contacto": "contact_25_00000000002",
+      "cargoContacto": "Comercial"
+    },
+    "array_contenidos": [
+      {
+        "id_contenido": "content_25_00001"
+      },
+      {
+        "id_contenido": "content_25_00002"
+      }
+    ],
+    "contenido_campana": [
+      {
+        "medio": "Revista del vidrio España",
+        "publicacion": "Edición 210",
+        "producto": "Anuncio de una página",
+        "precio_producto": 1760.00,
+        "deadline_publicacion": "11/10/2025",
+        "fecha_publicacion_publicacion": "12/12/2025",
+        "estado_material_contrato": "Publicado",
+        "urlcontenido": "/dashboard/produccion/publicaciones/publ_25_rev_bi_f_al_89/content_25_00001"
+      },
+      {
+        "medio": "Revista del vidrio España",
+        "publicacion": "Edición 211",
+        "producto": "Media página",
+        "precio_producto": 1760.00,
+        "deadline_publicacion": "15/10/2025",
+        "fecha_publicacion_publicacion": "01/01/2026",
+        "estado_material_contrato": "Pedido, no recibido",
+        "urlcontenido": "/dashboard/produccion/publicaciones/publ_25_rev_bi_f_al_89/content_25_00002"
+      }
+    ]
+  },
+  {
+    "id_contrato": "contr_25_0000000002",
+    "id_agente_contrato": "ag_25_0004",
+    "fecha_cobro_prevista_contrato": "19/12/2025",
+    "forma_cobro_contrato": "Domiciliación Bancaria",
+    "fecha_firma_contrato": "18/12/2025",
+    "fecha_fin_contrato": "18/06/2026",
+    "id_campana_asociada": "K25_000_030",
+    "descuento_final_contrato": 0.00,
+    "importe_total_BI_contrato": 500.00,
+    "iva_aplicable": true,
+    "importe_contrato_con_iva": 605.00,
+    "array_ordenes_cobro": [
+      {
+        "id_orden": "C25.000.037-1/1",
+        "tipo_cobro": "Recibo domiciliado",
+        "id_factura": "525075"
+      }
+    ],
+    "cuenta_contrato": {
+      "id_cuenta_contrato": "62500002",
+      "id_contacto": "contact_25_00000000003",
+      "cargoContacto": "Directora Comercial"
+    },
+    "array_contenidos": [
+      {
+        "id_contenido": "content_25_00003"
+      }
+    ],
+    "contenido_campana": [
+      {
+        "medio": "Revista del vidrio España",
+        "publicacion": "Edición 212",
+        "producto": "Doble página",
+        "precio_producto": 500.00,
+        "deadline_publicacion": "20/10/2025",
+        "fecha_publicacion_publicacion": "05/01/2026",
+        "estado_material_contrato": "No pedido",
+        "urlcontenido": "/dashboard/produccion/publicaciones/publ_25_rev_bi_f_al_89/content_25_00003"
+      }
+    ]
+  },
+  {
+    "id_contrato": "contr_25_0000000003",
+    "id_agente_contrato": "ag_25_0004",
+    "fecha_cobro_prevista_contrato": "23/12/2025",
+    "forma_cobro_contrato": "Transferencia Bancaria",
+    "fecha_firma_contrato": "22/12/2025",
+    "fecha_fin_contrato": "22/08/2026",
+    "id_campana_asociada": "K25_000_031",
+    "descuento_final_contrato": 0.00,
+    "importe_total_BI_contrato": 2300.00,
+    "iva_aplicable": false,
+    "importe_contrato_con_iva": 2300.00,
+    "array_ordenes_cobro": [
+      {
+        "id_orden": "C25.000.038-1/1",
+        "tipo_cobro": "Transferencia bancaria",
+        "id_factura": "525076"
+      }
+    ],
+    "cuenta_contrato": {
+      "id_cuenta_contrato": "62500003",
+      "id_contacto": "contact_25_00000000006",
+      "cargoContacto": "CEO"
+    },
+    "array_contenidos": [
+      {
+        "id_contenido": "content_25_00004"
+      }
+    ],
+    "contenido_campana": [
+      {
+        "medio": "Revista del vidrio España",
+        "publicacion": "Edición 213",
+        "producto": "Publicidad en portada",
+        "precio_producto": 2300.00,
+        "deadline_publicacion": "25/10/2025",
+        "fecha_publicacion_publicacion": "10/01/2026",
+        "estado_material_contrato": "No pedido",
+        "urlcontenido": "/dashboard/produccion/publicaciones/publ_25_rev_bi_f_al_89/content_25_00004"
+      }
+    ]
+  },
+  {
+    "id_contrato": "contr_25_0000000004",
+    "id_agente_contrato": "ag_25_0004",
+    "fecha_cobro_prevista_contrato": "30/09/2025",
+    "forma_cobro_contrato": "Recibo Domiciliado",
+    "fecha_firma_contrato": "15/09/2025",
+    "fecha_fin_contrato": "01/01/2027",
+    "id_campana_asociada": "K25_000_032",
+    "descuento_final_contrato": 0.00,
+    "importe_total_BI_contrato": 1200.00,
+    "iva_aplicable": true,
+    "importe_contrato_con_iva": 1452.00,
+    "array_ordenes_cobro": [
+      {
+        "id_orden": "C25.000.039-1/1",
+        "tipo_cobro": "Recibo Domiciliado",
+        "id_factura": "525077"
+      }
+    ],
+    "cuenta_contrato": {
+      "id_cuenta_contrato": "62500004",
+      "id_contacto": "contact_25_00000000007",
+      "cargoContacto": "Gerente General"
+    },
+    "array_contenidos": [
+      {
+        "id_contenido": "content_25_00005"
+      }
+    ],
+    "contenido_campana": [
+      {
+        "medio": "Revista del vidrio España",
+        "publicacion": "Edición 214",
+        "producto": "Anuncio interior portada",
+        "precio_producto": 1200.00,
+        "deadline_publicacion": "30/10/2025",
+        "fecha_publicacion_publicacion": "15/01/2026",
+        "estado_material_contrato": "No pedido",
+        "urlcontenido": "/dashboard/produccion/publicaciones/publ_25_rev_bi_f_al_89/content_25_00005"
+      }
+    ]
+  }
+]

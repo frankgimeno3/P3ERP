@@ -1,0 +1,230 @@
+[
+  {
+    "id_contenido": "content_25_00001",
+    "id_publicacion": "publ_25_rev_bi_f_al_89",
+    "id_cuenta": "62500001",
+    "especificaciones_contenido": "228 x 297, + 4mm margen",
+    "id_agente": "ag_25_0004",
+    "estado_contenido": "Pendiente de solicitar",
+    "deadline_contenido": "01/10/25",
+    "datos_en_propuesta": {
+      "medio": "Revista Ventanas, Puertas, Cerramientos y Protección Solar",
+      "publicacion": "Edición 89 - América Latina",
+      "producto": "Anuncio interior portada",
+      "precio_producto": 1200,
+      "deadline_publicacion": "30/10/2025",
+      "fecha_publicacion_publicacion": "15/01/2026",
+      "estado_material_contenido": "No pedido",
+      "url_contenido": "/dashboard/produccion/publicaciones/publ_25_rev_bi_f_al_89/content_25_00001"
+    }
+  },
+  {
+    "id_contenido": "content_25_00002",
+    "id_publicacion": "publ_25_rev_bi_f_al_89",
+    "id_cuenta": "62500002",
+    "especificaciones_contenido": "500 palabras, Word",
+    "id_agente": "ag_25_0004",
+    "estado_contenido": "Entregado",
+    "deadline_contenido": "05/11/25",
+    "datos_en_propuesta": {
+      "medio": "Revista Ventanas, Puertas, Cerramientos y Protección Solar",
+      "publicacion": "Edición 89 - América Latina",
+      "producto": "Anuncio Doble Página preferente",
+      "precio_producto": 1760,
+      "deadline_publicacion": "05/11/2025",
+      "fecha_publicacion_publicacion": "15/12/2025",
+      "estado_material_contenido": "Publicado",
+      "url_contenido": "/dashboard/produccion/publicaciones/publ_25_rev_bi_f_al_89/content_25_00002"
+    }
+  },
+  {
+    "id_contenido": "content_25_00003",
+    "id_publicacion": "publ_25_rev_bi_f_al_90",
+    "id_cuenta": "62500003",
+    "especificaciones_contenido": "Página 5, anuncio de 1 página interior derecha 228 x 297, + 4mm margen",
+    "id_agente": "ag_25_0004",
+    "estado_contenido": "En revisión",
+    "deadline_contenido": "07/11/25",
+    "datos_en_propuesta": {
+      "medio": "Revista Ventanas, Puertas, Cerramientos y Protección Solar",
+      "publicacion": "Edición 90 - América Latina",
+      "producto": "Anuncio 1 Página preferente",
+      "precio_producto": 950,
+      "deadline_publicacion": "07/11/2025",
+      "fecha_publicacion_publicacion": "01/01/2026",
+      "estado_material_contenido": "Pendiente de revisión",
+      "url_contenido": "/dashboard/produccion/publicaciones/publ_25_rev_bi_f_al_90/content_25_00003"
+    }
+  },
+  {
+    "id_contenido": "content_25_00004",
+    "id_publicacion": "publ_25_rev_bi_f_es_213",
+    "id_cuenta": "62500004",
+    "especificaciones_contenido": "Artículo de 1 página con novedades de producto",
+    "id_agente": "ag_25_0004",
+    "estado_contenido": "Pendiente",
+    "deadline_contenido": "10/11/25",
+    "datos_en_propuesta": {
+      "medio": "Revista Ventanas, Puertas, Cerramientos y Protección Solar",
+      "publicacion": "Edición 213 - Iberia",
+      "producto": "Anuncio 1 página",
+      "precio_producto": 1200,
+      "deadline_publicacion": "10/11/2025",
+      "fecha_publicacion_publicacion": "10/01/2026",
+      "estado_material_contenido": "No pedido",
+      "url_contenido": "/dashboard/produccion/publicaciones/publ_25_rev_bi_f_es_213/content_25_00004"
+    }
+  },
+  {
+    "id_contenido": "content_25_00005",
+    "id_publicacion": "publ_25_rev_bi_f_es_214",
+    "id_cuenta": "62500005",
+    "especificaciones_contenido": "Artículo de 1 página con novedades de producto",
+    "id_agente": "ag_25_0004",
+    "estado_contenido": "En redacción",
+    "deadline_contenido": "15/11/25",
+    "datos_en_propuesta": {
+      "medio": "Revista Ventanas, Puertas, Cerramientos y Protección Solar",
+      "publicacion": "Edición 214 - Iberia",
+      "producto": "Artículo 1 página",
+      "precio_producto": 1100,
+      "deadline_publicacion": "15/11/2025",
+      "fecha_publicacion_publicacion": "15/01/2026",
+      "estado_material_contenido": "En proceso de redacción",
+      "url_contenido": "/dashboard/produccion/publicaciones/publ_25_rev_bi_f_es_214/content_25_00005"
+    }
+  },
+  {
+    "id_contenido": "content_25_00006",
+    "id_publicacion": "publ_25_rev_bi_v_al_89",
+    "id_cuenta": "62500006",
+    "especificaciones_contenido": "Anuncio de 1 página interior derecha 228 x 297, + 4mm margen",
+    "id_agente": "ag_25_0004",
+    "estado_contenido": "Ya en revista",
+    "deadline_contenido": "20/11/25",
+    "datos_en_propuesta": {
+      "medio": "Revista del Vidrio Plano",
+      "publicacion": "Edición 89 - América Latina",
+      "producto": "Anuncio 1 página",
+      "precio_producto": 1300,
+      "deadline_publicacion": "20/11/2025",
+      "fecha_publicacion_publicacion": "20/01/2026",
+      "estado_material_contenido": "Publicado",
+      "url_contenido": "/dashboard/produccion/publicaciones/publ_25_rev_bi_v_al_89/content_25_00006"
+    }
+  },
+  {
+    "id_contenido": "content_25_00007",
+    "id_publicacion": "publ_25_rev_bi_v_es_213",
+    "id_cuenta": "62500007",
+    "especificaciones_contenido": "Anuncio de 1 página interior derecha 228 x 297, + 4mm margen",
+    "id_agente": "ag_25_0004",
+    "estado_contenido": "Ya en revista",
+    "deadline_contenido": "25/11/25",
+    "datos_en_propuesta": {
+      "medio": "Revista del Vidrio Plano",
+      "publicacion": "Edición 213 - Iberia",
+      "producto": "Anuncio 1 página",
+      "precio_producto": 1250,
+      "deadline_publicacion": "25/11/2025",
+      "fecha_publicacion_publicacion": "25/01/2026",
+      "estado_material_contenido": "Publicado",
+      "url_contenido": "/dashboard/produccion/publicaciones/publ_25_rev_bi_v_es_213/content_25_00007"
+    }
+  },
+  {
+    "id_contenido": "content_25_00008",
+    "id_publicacion": "publ_25_rev_bi_v_es_214",
+    "id_cuenta": "62500008",
+    "especificaciones_contenido": "Texto en Word y 4 imágenes alta resolución",
+    "id_agente": "ag_25_0004",
+    "estado_contenido": "Pendiente",
+    "deadline_contenido": "27/11/25",
+    "datos_en_propuesta": {
+      "medio": "Revista del Vidrio Plano",
+      "publicacion": "Edición 214 - Iberia",
+      "producto": "Artículo 2 páginas",
+      "precio_producto": 2100,
+      "deadline_publicacion": "27/11/2025",
+      "fecha_publicacion_publicacion": "27/01/2026",
+      "estado_material_contenido": "Pendiente de entrega",
+      "url_contenido": "/dashboard/produccion/publicaciones/publ_25_rev_bi_v_es_214/content_25_00008"
+    }
+  },
+  {
+    "id_contenido": "content_25_00009",
+    "id_publicacion": "publ_25_rev_h_p1",
+    "id_cuenta": "62500009",
+    "especificaciones_contenido": "228 x 297, + 4mm margen",
+    "id_agente": "ag_25_0004",
+    "estado_contenido": "En revisión",
+    "deadline_contenido": "29/11/25",
+    "datos_en_propuesta": {
+      "medio": "Revista Hueco Arquitectura",
+      "publicacion": "Edición 2025 P1",
+      "producto": "Anuncio Contraportada",
+      "precio_producto": 2500,
+      "deadline_publicacion": "29/11/2025",
+      "fecha_publicacion_publicacion": "05/02/2026",
+      "estado_material_contenido": "En revisión final",
+      "url_contenido": "/dashboard/produccion/publicaciones/publ_25_rev_h_p1/content_25_00009"
+    }
+  },
+  {
+    "id_contenido": "content_25_00010",
+    "id_publicacion": "publ_25_rev_h_p2",
+    "id_cuenta": "62500010",
+    "especificaciones_contenido": "2 páginas con gráficos en alta",
+    "id_agente": "ag_25_0004",
+    "estado_contenido": "Pendiente",
+    "deadline_contenido": "05/12/25",
+    "datos_en_propuesta": {
+      "medio": "Revista Hueco Arquitectura",
+      "publicacion": "Edición 2025 P2",
+      "producto": "Artículo técnico",
+      "precio_producto": 1800,
+      "deadline_publicacion": "05/12/2025",
+      "fecha_publicacion_publicacion": "10/02/2026",
+      "estado_material_contenido": "Pendiente de aprobación",
+      "url_contenido": "/dashboard/produccion/publicaciones/publ_25_rev_h_p2/content_25_00010"
+    }
+  },
+  {
+    "id_contenido": "content_25_00011",
+    "id_publicacion": "publ_25_rev_qq_f",
+    "id_cuenta": "62500011",
+    "especificaciones_contenido": "Texto en Word + fotos jpg",
+    "id_agente": "ag_25_0004",
+    "estado_contenido": "En redacción",
+    "deadline_contenido": "08/12/25",
+    "datos_en_propuesta": {
+      "medio": "Revista Quién es quién",
+      "publicacion": "Edición Ventanas Puertas Cerramientos Protección Solar 2025",
+      "producto": "Artículo institucional",
+      "precio_producto": 1300,
+      "deadline_publicacion": "08/12/2025",
+      "fecha_publicacion_publicacion": "12/02/2026",
+      "estado_material_contenido": "En redacción",
+      "url_contenido": "/dashboard/produccion/publicaciones/publ_25_rev_qq_f/content_25_00011"
+    }
+  },
+  {
+    "id_contenido": "content_25_00012",
+    "id_publicacion": "publ_25_rev_qq_v",
+    "id_cuenta": "62500012",
+    "especificaciones_contenido": "Texto + 3 fotos alta resolución",
+    "id_agente": "ag_25_0004",
+    "estado_contenido": "Pendiente",
+    "deadline_contenido": "12/12/25",
+    "datos_en_propuesta": {
+      "medio": "Revista Quién es quién Vidrio",
+      "publicacion": "Edición Vidrio Plano 2025",
+      "producto": "Artículo Vidrio",
+      "precio_producto": 1600,
+      "deadline_publicacion": "12/12/2025",
+      "fecha_publicacion_publicacion": "20/02/2026",
+      "estado_material_contenido": "Pendiente de recepción",
+      "url_contenido": "/dashboard/produccion/publicaciones/publ_25_rev_qq_v/content_25_00012"
+    }
+  }
+]

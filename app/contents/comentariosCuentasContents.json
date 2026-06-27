@@ -1,0 +1,94 @@
+{
+  "cuentasConComentarios": [
+    {
+      "id_cuenta": "62500001",
+      "array_comentarios_cuenta": [
+        {
+          "id_comentario": "com_cuen_25_0000000001",
+          "id_autor": "ag_25_0004",
+          "id_cuenta": "62500001",
+          "fecha_comentario": "2025-10-01T09:30:00",
+          "contenido_comentario": "Se realizó la primera llamada al cliente, interés en nuevos proyectos de vidrio arquitectónico."
+        },
+        {
+          "id_comentario": "com_cuen_25_0000000002",
+          "id_autor": "ag_25_0006",
+          "id_cuenta": "62500001",
+          "fecha_comentario": "2025-10-01T11:00:00",
+          "contenido_comentario": "Revisadas especificaciones técnicas de los pedidos y logística de entrega."
+        },
+        {
+          "id_comentario": "com_cuen_25_0000000003",
+          "id_autor": "ag_25_0004",
+          "id_cuenta": "62500001",
+          "fecha_comentario": "2025-10-03T14:15:00",
+          "contenido_comentario": "Se envió propuesta comercial con descuentos por volumen."
+        }
+      ]
+    },
+    {
+      "id_cuenta": "62500002",
+      "array_comentarios_cuenta": [
+        {
+          "id_comentario": "com_cuen_25_0000000004",
+          "id_autor": "ag_25_0004",
+          "id_cuenta": "62500002",
+          "fecha_comentario": "2025-10-02T10:45:00",
+          "contenido_comentario": "Primer contacto con Metales Unidos, interés en aleaciones especiales."
+        },
+        {
+          "id_comentario": "com_cuen_25_0000000005",
+          "id_autor": "ag_25_0006",
+          "id_cuenta": "62500002",
+          "fecha_comentario": "2025-10-02T12:30:00",
+          "contenido_comentario": "Se revisaron condiciones de almacenamiento y transporte de metales."
+        }
+      ]
+    },
+    {
+      "id_cuenta": "62500003",
+      "array_comentarios_cuenta": [
+        {
+          "id_comentario": "com_cuen_25_0000000006",
+          "id_autor": "ag_25_0004",
+          "id_cuenta": "62500003",
+          "fecha_comentario": "2025-10-03T09:00:00",
+          "contenido_comentario": "Contacto inicial con Plásticos del Sur, interés en embalajes sostenibles."
+        },
+        {
+          "id_comentario": "com_cuen_25_0000000007",
+          "id_autor": "ag_25_0006",
+          "id_cuenta": "62500003",
+          "fecha_comentario": "2025-10-03T11:15:00",
+          "contenido_comentario": "Se verificaron los procesos de producción y tiempos de entrega para nuevos pedidos."
+        },
+        {
+          "id_comentario": "com_cuen_25_0000000008",
+          "id_autor": "ag_25_0004",
+          "id_cuenta": "62500003",
+          "fecha_comentario": "2025-10-05T16:00:00",
+          "contenido_comentario": "Se envió cotización para nueva línea de envases personalizados."
+        }
+      ]
+    },
+    {
+      "id_cuenta": "62500004",
+      "array_comentarios_cuenta": [
+        {
+          "id_comentario": "com_cuen_25_0000000009",
+          "id_autor": "ag_25_0004",
+          "id_cuenta": "62500004",
+          "fecha_comentario": "2025-10-04T10:20:00",
+          "contenido_comentario": "Primer contacto con Químicos Globales, interés en soluciones químicas a medida."
+        },
+        {
+          "id_comentario": "com_cuen_25_0000000010",
+          "id_autor": "ag_25_0006",
+          "id_cuenta": "62500004",
+          "fecha_comentario": "2025-10-04T13:45:00",
+          "contenido_comentario": "Se revisaron normas de seguridad y procedimientos internos para suministro de químicos."
+        }
+      ]
+    }
+  ]
+}

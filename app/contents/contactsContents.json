@@ -1,0 +1,186 @@
+[
+  {
+    "id_contacto": "contact_25_00000000001",
+    "nombre_contacto": "Juan Antonio",
+    "apellidos_contacto": "Gimeno Ramirez",
+    "nombre_completo_contacto": "Juan Antonio Gimeno Ramirez",
+    "id_cuenta": "62500001",
+    "nombre_empresa": "TVITEC",
+    "telefono_contacto": "600123456",
+    "email_contacto": "juan.antonio.gimeno@tvitec.com",
+    "cargo_contacto": "Responsable de compras",
+    "idiomas": "Español, Inglés, Francés",
+    "conocido_en": "Glasstec 2022",
+    "contactado_en_feria": "Glasstec 2022, Vitrum 2023",
+    "suscripciones": [
+      "Newsletter mensual",
+      "Revista digital",
+      "Newsletter Vidrio España",
+      "Revista Hueco Arquitectura"
+    ],
+    "otros_datos_interes":"En este espacio el comercial puede poner un comentario fijado con otros datos de interés" 
+  ,"pais_contacto":"España"
+  },
+  {
+    "id_contacto": "contact_25_00000000002",
+    "nombre_contacto": "María Isabel",
+    "apellidos_contacto": "Fernandez López",
+    "nombre_completo_contacto": "María Isabel Fernandez López",
+    "id_cuenta": "62500001",
+    "nombre_empresa": "TVITEC",
+    "telefono_contacto": "600123457",
+    "email_contacto": "maria.isabel.fernandez@tvitec.com",
+    "cargo_contacto": "Responsable de compras",
+    "idiomas": "Español, Inglés, Francés",
+    "conocido_en": "Glasstec 2022",
+    "contactado_en_feria": "Glasstec 2022, Vitrum 2023",
+    "suscripciones": [
+      "Newsletter mensual",
+      "Revista digital",
+      "Newsletter Vidrio España",
+      "Revista Hueco Arquitectura"
+    ],
+    "otros_datos_interes":"En este espacio el comercial puede poner un comentario fijado con otros datos de interés" 
+  ,"pais_contacto":"España"
+
+  },
+   {
+    "id_contacto": "contact_25_00000000003",
+    "nombre_contacto": "Juanita Isabel",
+    "apellidos_contacto": "Fernandez López",
+    "nombre_completo_contacto": "María Isabel Fernandez López",
+    "id_cuenta": "62500002",
+    "nombre_empresa": "MAVHISA",
+    "telefono_contacto": "600123457",
+    "email_contacto": "maria.isabel.fernandez@mavhisa.com",
+    "cargo_contacto": "Responsable de compras",
+    "idiomas": "Español, Inglés, Francés",
+    "conocido_en": "Glasstec 2022",
+    "contactado_en_feria": "Glasstec 2022, Vitrum 2023",
+    "suscripciones": [
+      "Newsletter mensual",
+      "Revista digital",
+      "Newsletter Vidrio España",
+      "Revista Hueco Arquitectura"
+    ],
+    "otros_datos_interes":"En este espacio el comercial puede poner un comentario fijado con otros datos de interés" 
+  ,"pais_contacto":"México"
+
+  },
+ 
+ 
+  {
+    "id_contacto": "contact_25_00000000004",
+    "nombre_contacto": "Luis Alberto",
+    "apellidos_contacto": "Navarro Soto",
+    "nombre_completo_contacto": "Luis Alberto Navarro Soto",
+    "id_cuenta": "62500002",
+    "nombre_empresa": "MAVHISA",
+    "telefono_contacto": "600123458",
+    "email_contacto": "luis.alberto.navarro@mavhisa.com",
+    "cargo_contacto": "Jefe de almacén",
+    "idiomas": "Español, Inglés, Francés",
+    "conocido_en": "Glasstec 2022",
+    "contactado_en_feria": "Glasstec 2022, Vitrum 2023",
+    "suscripciones": [
+      "Newsletter mensual",
+      "Revista digital",
+      "Newsletter Vidrio España",
+      "Revista Hueco Arquitectura"
+    ],
+    "otros_datos_interes":"En este espacio el comercial puede poner un comentario fijado con otros datos de interés" 
+    ,"pais_contacto":"México"
+
+  },
+  {
+    "id_contacto": "contact_25_00000000005",
+    "nombre_contacto": "Beatriz Elena",
+    "apellidos_contacto": "Domínguez Pérez",
+    "nombre_completo_contacto": "Beatriz Elena Domínguez Pérez",
+    "id_cuenta": "62500003",
+    "nombre_empresa": "TECNOPERFILES - MUCHTECK.",
+    "telefono_contacto": "600123459",
+    "email_contacto": "beatriz.elena.dominguez@muchteck.com",
+    "cargo_contacto": "Asistente de compras",
+    "idiomas": "Español, Inglés, Francés",
+    "conocido_en": "Glasstec 2022",
+    "contactado_en_feria": "Glasstec 2022, Vitrum 2023",
+    "suscripciones": [
+      "Newsletter mensual",
+      "Revista digital",
+      "Newsletter Vidrio España",
+      "Revista Hueco Arquitectura"
+    ],
+    "otros_datos_interes":"En este espacio el comercial puede poner un comentario fijado con otros datos de interés" 
+    ,"pais_contacto":"Argentina"
+
+  },
+  {
+    "id_contacto": "contact_25_00000000006",
+    "nombre_contacto": "Carlos Eduardo",
+    "apellidos_contacto": "Martínez Torres",
+    "nombre_completo_contacto": "Carlos Eduardo Martínez Torres",
+    "id_cuenta": "62500003",
+    "nombre_empresa": "TECNOPERFILES - MUCHTECK",
+    "telefono_contacto": "600223456",
+    "email_contacto": "carlos.eduardo.martinez@muchteck.com",
+    "cargo_contacto": "Responsable de compras",
+    "idiomas": "Español, Inglés, Francés",
+    "conocido_en": "Glasstec 2022",
+    "contactado_en_feria": "Glasstec 2022, Vitrum 2023",
+    "suscripciones": [
+      "Newsletter mensual",
+      "Revista digital",
+      "Newsletter Vidrio España",
+      "Revista Hueco Arquitectura"
+    ],
+    "otros_datos_interes":"En este espacio el comercial puede poner un comentario fijado con otros datos de interés" 
+    ,"pais_contacto":"Argentina"
+
+  },
+  {
+    "id_contacto": "contact_25_00000000007",
+    "nombre_contacto": "Laura Beatriz",
+    "apellidos_contacto": "Sánchez Morales",
+    "nombre_completo_contacto": "Laura Beatriz Sánchez Morales",
+    "id_cuenta": "62500004",
+    "nombre_empresa": "G-U Herrajes",
+    "telefono_contacto": "600223457",
+    "email_contacto": "laura.beatriz.sanchez@metalesunidos.com",
+    "cargo_contacto": "Responsable de compras",
+    "idiomas": "Español, Inglés, Francés",
+    "conocido_en": "Glasstec 2022",
+    "contactado_en_feria": "Glasstec 2022, Vitrum 2023",
+    "suscripciones": [
+      "Newsletter mensual",
+      "Revista digital",
+      "Newsletter Vidrio España",
+      "Revista Hueco Arquitectura"
+    ],
+    "otros_datos_interes":"En este espacio el comercial puede poner un comentario fijado con otros datos de interés" 
+    ,"pais_contacto":"Chile"
+  },
+  {
+    "id_contacto": "contact_25_00000000008",
+    "nombre_contacto": "Javier Manuel",
+    "apellidos_contacto": "Ortiz Delgado",
+    "nombre_completo_contacto": "Javier Manuel Ortiz Delgado",
+    "id_cuenta": "62500004",
+    "nombre_empresa": "G-U Herrajes",
+    "telefono_contacto": "600223458",
+    "email_contacto": "javier.manuel.ortiz@metalesunidos.com",
+    "cargo_contacto": "Encargado de logística",
+    "idiomas": "Español, Inglés, Francés",
+    "conocido_en": "Glasstec 2022",
+    "contactado_en_feria": "Glasstec 2022, Vitrum 2023",
+    "suscripciones": [
+      "Newsletter mensual",
+      "Revista digital",
+      "Newsletter Vidrio España",
+      "Revista Hueco Arquitectura"
+    ],
+    "otros_datos_interes":"En este espacio el comercial puede poner un comentario fijado con otros datos de interés" 
+    ,"pais_contacto":"Chile"
+
+  }
+]

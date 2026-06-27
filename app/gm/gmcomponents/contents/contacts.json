@@ -1,0 +1,26 @@
+[
+  {
+    "contactId": 1,
+    "codigo": "001",
+    "name": "Mario Ruiz",
+    "charge": "Compras",
+    "email": "mario.ruiz@maderasnorte.es",
+    "phone": "600 111 222"
+  },
+  {
+    "contactId": 2,
+    "codigo": "002",
+    "name": "Elena Costa",
+    "charge": "Administración",
+    "email": "elena.costa@innovadecor.es",
+    "phone": "611 222 333"
+  },
+  {
+    "contactId": 3,
+    "codigo": "003",
+    "name": "Pablo Ortega",
+    "charge": "Operaciones",
+    "email": "pablo.ortega@atlasconsulting.es",
+    "phone": "622 333 444"
+  }
+]

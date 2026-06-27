@@ -1,0 +1,17 @@
+[
+  {
+    "id": 1,
+    "codigo": "001",
+    "fullComments": "Se revisará el contrato de renovación esta semana.\n\nEl cliente confirmó la entrega para el próximo martes."
+  },
+  {
+    "id": 2,
+    "codigo": "002",
+    "fullComments": "Pendiente de recibir la propuesta de servicios.\n\nEl equipo de diseño necesita una respuesta antes de cerrar el presupuesto."
+  },
+  {
+    "id": 3,
+    "codigo": "003",
+    "fullComments": "Nueva solicitud de soporte técnico para mañana.\n\nSe ha acordado una videollamada para revisar la incidencia."
+  }
+]

@@ -1,0 +1,168 @@
+[
+  {
+    "id_cuenta": "62500001",
+    "nombre_empresa": "TVITEC",
+    "pais_cuenta": "España",
+    "id_agente": "ag_25_0004",
+    "descripcion_cuenta": "Venta de vidrio industrial y soluciones arquitectónicas",
+    "actividades_cuenta": "Transformador de vidrio, Cristalería, Grandes almacenes",
+    "presente_en_qq": true,
+    "fuente_novedades_cuenta": "Web, Email",
+    "datos_comerciales": {
+      "ciudad_principal_cuenta": "Madrid",
+      "telefono_principal_cuenta": "+34 600 123 456",
+      "categoria_principal_cuenta": "Industria",
+      "contacto_principal": "contact_25_00000000001",
+      "resumen_actividad_cuenta": "Fabricación y distribución de vidrio para construcción y automoción"
+    },
+    "array_direcciones_cuenta": [
+      {
+        "nombre_direccion": "Oficina Central",
+        "pais_direccion": "España",
+        "region_direccion": "Madrid",
+        "ciudad_direccion": "Madrid",
+        "codigo_postal": "28001",
+        "direccion_completa": "Calle Falsa 123",
+        "telefono_direccion": "+34 600 123 456",
+        "descripcion_direccion": "Sede principal"
+      }
+    ],
+    "array_contactos_cuenta": [
+      {
+        "id_contacto": "contact_25_00000000001"
+      },
+      {
+        "id_contacto": "contact_25_00000000002"
+      }
+    ],
+    "array_comentarios_cuenta": [
+      "com_cuen_25_0000000001",
+      "com_cuen_25_0000000002",
+      "com_cuen_25_0000000003"
+    ]
+  },
+  {
+    "id_cuenta": "62500002",
+    "nombre_empresa": "MAVHISA",
+    "pais_cuenta": "México",
+    "id_agente": "ag_25_0004",
+    "descripcion_cuenta": "Distribución de metales y productos derivados",
+    "actividades_cuenta": "Transformador de vidrio, Cristalería, Grandes almacenes",
+    "presente_en_qq": false,
+    "fuente_novedades_cuenta": "Web, Ferias",
+    "datos_comerciales": {
+      "ciudad_principal_cuenta": "Ciudad de México",
+      "telefono_principal_cuenta": "+52 55 1234 5678",
+      "categoria_principal_cuenta": "Metalurgia",
+      "contacto_principal": "contact_25_00000000003",
+      "resumen_actividad_cuenta": "Venta y distribución de metales y aleaciones"
+    },
+    "array_direcciones_cuenta": [
+      {
+        "nombre_direccion": "Sucursal Norte",
+        "pais_direccion": "México",
+        "region_direccion": "Nuevo León",
+        "ciudad_direccion": "Monterrey",
+        "codigo_postal": "64000",
+        "direccion_completa": "Av. Industrial 45",
+        "telefono_direccion": "+52 81 1234 5678",
+        "descripcion_direccion": "Almacén y oficina comercial"
+      }
+    ],
+    "array_contactos_cuenta": [
+      {
+        "id_contacto": "contact_25_00000000003"
+      },
+      {
+        "id_contacto": "contact_25_00000000004"
+      } 
+    ],
+    "array_comentarios_cuenta": [
+      "com_cuen_25_0000000004",
+      "com_cuen_25_0000000005"
+    ]
+  },
+  {
+    "id_cuenta": "62500003",
+    "nombre_empresa": "TECNOPERFILES - MUCHTECK",
+    "pais_cuenta": "Argentina",
+    "id_agente": "ag_25_0004",
+    "descripcion_cuenta": "Fabricación de plásticos industriales y embalajes",
+    "actividades_cuenta": "Transformador de vidrio, Cristalería, Grandes almacenes",
+    "presente_en_qq": true,
+    "fuente_novedades_cuenta": "Email, Referencias",
+    "datos_comerciales": {
+      "ciudad_principal_cuenta": "Buenos Aires",
+      "telefono_principal_cuenta": "+54 11 4000 1234",
+      "categoria_principal_cuenta": "Plásticos",
+      "contacto_principal": "contact_25_00000000005",
+      "resumen_actividad_cuenta": "Producción de plásticos para embalajes y consumo industrial"
+    },
+    "array_direcciones_cuenta": [
+      {
+        "nombre_direccion": "Planta Sur",
+        "pais_direccion": "Argentina",
+        "region_direccion": "Buenos Aires",
+        "ciudad_direccion": "La Plata",
+        "codigo_postal": "1900",
+        "direccion_completa": "Av. Industria 88",
+        "telefono_direccion": "+54 11 4000 1234",
+        "descripcion_direccion": "Planta de producción"
+      }
+    ],
+    "array_contactos_cuenta": [
+      {
+        "id_contacto": "contact_25_00000000005"
+      },
+      {
+        "id_contacto": "contact_25_00000000006"
+      }
+    ],
+    "array_comentarios_cuenta": [
+      "com_cuen_25_0000000006",
+      "com_cuen_25_0000000007",
+      "com_cuen_25_0000000008"
+    ]
+  },
+  {
+    "id_cuenta": "62500004",
+    "nombre_empresa": "G-U Herrajes",
+    "pais_cuenta": "Chile",
+    "id_agente": "ag_25_0004",
+    "descripcion_cuenta": "Suministro de productos químicos y soluciones industriales",
+    "actividades_cuenta": "Transformador de vidrio, Cristalería, Grandes almacenes",
+    "presente_en_qq": false,
+    "fuente_novedades_cuenta": "Web, Ferias, Email",
+    "datos_comerciales": {
+      "ciudad_principal_cuenta": "Santiago",
+      "telefono_principal_cuenta": "+56 2 2345 6789",
+      "categoria_principal_cuenta": "Química",
+      "contacto_principal": "contact_25_00000000007",
+      "resumen_actividad_cuenta": "Distribución y asesoría en productos químicos industriales"
+    },
+    "array_direcciones_cuenta": [
+      {
+        "nombre_direccion": "Oficina Central",
+        "pais_direccion": "Chile",
+        "region_direccion": "Región Metropolitana",
+        "ciudad_direccion": "Santiago",
+        "codigo_postal": "8320000",
+        "direccion_completa": "Calle Química 12",
+        "telefono_direccion": "+56 2 2345 6789",
+        "descripcion_direccion": "Oficina central y sede de atención"
+      }
+    ],
+    "array_contactos_cuenta": [
+      {
+        "id_contacto": "contact_25_00000000007"
+      },
+      {
+        "id_contacto": "contact_25_00000000008"
+      }
+    ],
+    "array_comentarios_cuenta": [
+      "com_cuen_25_0000000009",
+      "com_cuen_25_0000000010"
+    ]
+  }
+]

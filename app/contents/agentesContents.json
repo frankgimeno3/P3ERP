@@ -1,0 +1,66 @@
+[
+    {
+        "id_agente":"ag_25_0001",
+        "nombre_agente":"Carlos David",
+        "apellidos_agente":"Ortega Torquet",
+        "nombre_completo_agente":"Carlos David Ortega Torquet",
+        "DNI_agente": "14415638N",
+        "rol_agente":"empleado",
+        "estado_agente":"activo"
+    },
+    {
+        "id_agente":"ag_25_0002",
+        "nombre_agente":"Ricardo",
+        "apellidos_agente":"Calleja Ayllón",
+        "nombre_completo_agente":"Calleja Ayllón",
+        "DNI_agente": "14415638N",
+        "rol_agente":"operaciones",
+        "estado_agente":"activo"
+    },
+      {
+        "id_agente":"ag_25_0003",
+        "nombre_agente":"Carlos",
+        "apellidos_agente":"Lamiel Torres",
+        "nombre_completo_agente":"Carlos Lamiel Torres",
+        "DNI_agente": "14415638N",
+        "rol_agente":"empleado",
+        "estado_agente":"activo"
+    },
+      
+    {
+        "id_agente":"ag_25_0004",
+        "nombre_agente":"Pep",
+        "apellidos_agente":"Fernandez Llop",
+        "nombre_completo_agente":"Jose Luis Fernandez Llop",
+        "DNI_agente": "14415638N",
+        "rol_agente":"empleado",
+        "estado_agente":"activo"
+    },
+    {
+        "id_agente":"ag_25_0005",
+        "nombre_agente":"Montserrat",
+        "apellidos_agente":"Valencia Martinez",
+        "nombre_completo_agente":"Montserrat Valencia mARTINEZ",
+        "DNI_agente": "14415638N",
+        "rol_agente":"administracion",
+        "estado_agente":"activo"
+    },
+    {
+        "id_agente":"ag_25_0006",
+        "nombre_agente":"Frank",
+        "apellidos_agente":"Cuenta Superadmin",
+        "nombre_completo_agente":"Frank Cuenta Superadmin",
+        "DNI_agente": "14415638N",
+        "rol_agente":"superadmin",
+        "estado_agente":"activo"
+    },
+    {
+        "id_agente":"ag_25_0007",
+        "nombre_agente":"Gimeno",
+        "apellidos_agente":"Propuestas-Pruebas",
+        "nombre_completo_agente":"Frank Gimeno Propuestas y Pruebas",
+        "DNI_agente": "24416538F",
+        "rol_agente":"empleado",
+        "estado_agente":"activo"
+    }
+]

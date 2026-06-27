@@ -1,0 +1,212 @@
+[
+  {
+    "id_propuesta": "prop_25_0000000001",
+    "id_agente_propuesta": "ag_25_0004",
+    "estado_propuesta": "Pendiente",
+    "fecha_envio_propuesta": "11/01/2025",
+    "cuenta_propuesta": {
+      "id_cuenta_propuesta": "62500001",
+      "id_contacto": "contact_25_00000000001",
+      "cargoContacto": "Comercial"
+    },
+    "descuento_final_propuesta": 500.00,
+    "importe_total_BI_propuesta": 3020.00,
+    "iva_aplicable": true,
+    "importe_propuesta_con_iva": 3654.20,
+    "forma_cobro_propuesta": "Transferencia Bancaria",
+    "cobros": [
+      {
+        "cobro": "1/2",
+        "fecha": "12/02/2025",
+        "importe": "654.20"
+      },
+      {
+        "cobro": "2/2",
+        "fecha": "12/04/2025",
+        "importe": "3000.00"
+      }
+    ],
+    "contenido_propuesta": [
+      {
+        "medio": "Revista del vidrio España",
+        "publicacion": "Edición 210",
+        "producto": "Anuncio de una página",
+        "precio_tarifa": 1760.00,
+        "descuento_producto": 0,
+        "precio_unitario": 1760.00,
+        "deadline_publicacion": "10/01/2025",
+        "fecha_publicacion_publicacion": "12/12/2025"
+      },
+      {
+        "medio": "Revista del vidrio España",
+        "publicacion": "Edición 211",
+        "producto": "Media página",
+        "precio_tarifa": 1760.00,
+        "descuento_producto": 0,
+        "precio_unitario": 1760.00,
+        "deadline_publicacion": "12/01/2025",
+        "fecha_publicacion_publicacion": "01/01/2026"
+      }
+    ]
+  },
+  {
+    "id_propuesta": "prop_25_0000000002",
+    "id_agente_propuesta": "ag_25_0004",
+    "estado_propuesta": "Pendiente",
+    "fecha_envio_propuesta": "12/01/2025",
+    "cuenta_propuesta": {
+      "id_cuenta_propuesta": "62500002",
+      "id_contacto": "contact_25_00000000003",
+      "cargoContacto": "Directora Comercial"
+    },
+    "descuento_final_propuesta": 0.00,
+    "importe_total_BI_propuesta": 500.00,
+    "iva_aplicable": true,
+    "importe_propuesta_con_iva": 605.00,
+    "forma_cobro_propuesta": "Transferencia Bancaria",
+    "cobros": [
+      {
+        "cobro": "1/1",
+        "fecha": "12/04/2025",
+        "importe": 605.00
+      }
+    ],
+    "contenido_propuesta": [
+      {
+        "medio": "Revista del vidrio España",
+        "publicacion": "Edición 212",
+        "producto": "Doble página",
+        "precio_tarifa": 500.00,
+        "descuento_producto": 0,
+        "precio_unitario": 500.00,
+        "deadline_publicacion": "15/01/2025",
+        "fecha_publicacion_publicacion": "05/01/2026"
+      }
+    ]
+  },
+  {
+    "id_propuesta": "prop_25_0000000003",
+    "id_agente_propuesta": "ag_25_0004",
+    "estado_propuesta": "Aprobada",
+    "fecha_envio_propuesta": "13/01/2025",
+    "cuenta_propuesta": {
+      "id_cuenta_propuesta": "62500003",
+      "id_contacto": "contact_25_00000000005",
+      "cargoContacto": "CEO"
+    },
+    "descuento_final_propuesta": 0.00,
+    "importe_total_BI_propuesta": 2300.00,
+    "iva_aplicable": false,
+    "importe_propuesta_con_iva": 2300.00,
+    "forma_cobro_propuesta": "Transferencia Bancaria",
+    "cobros": [
+      {
+        "cobro": "1/4",
+        "fecha": "12/02/2025",
+        "importe": 600.00
+      },
+      {
+        "cobro": "1/4",
+        "fecha": "12/04/2025",
+        "importe": 600.00
+      },
+      {
+        "cobro": "1/4",
+        "fecha": "12/06/2025",
+        "importe": 600.00
+      },
+      {
+        "cobro": "1/4",
+        "fecha": "12/07/2025",
+        "importe": 500.00
+      }
+    ],
+    "contenido_propuesta": [
+      {
+        "medio": "Revista del vidrio España",
+        "publicacion": "Edición 213",
+        "producto": "Publicidad en portada",
+        "precio_tarifa": 2300.00,
+        "descuento_producto": 0,
+        "precio_unitario": 2300.00,
+        "deadline_publicacion": "20/01/2025",
+        "fecha_publicacion_publicacion": "10/01/2026"
+      }
+    ]
+  },
+  {
+    "id_propuesta": "prop_25_0000000004",
+    "id_agente_propuesta": "ag_25_0004",
+    "estado_propuesta": "Rechazada",
+    "fecha_envio_propuesta": "14/01/2025",
+    "cuenta_propuesta": {
+      "id_cuenta_propuesta": "62500004",
+      "id_contacto": "contact_25_00000000007",
+      "cargoContacto": "Gerente General"
+    },
+    "descuento_final_propuesta": 0.00,
+    "importe_total_BI_propuesta": 1200.00,
+    "iva_aplicable": true,
+    "importe_propuesta_con_iva": 1452.00,
+    "forma_cobro_propuesta": "Transferencia Bancaria",
+    "cobros": [
+      {
+        "cobro": "1/1",
+        "fecha": "12/02/2026",
+        "importe": "1452.00"
+      }
+    ],
+    "contenido_propuesta": [
+      {
+        "medio": "Revista del vidrio España",
+        "publicacion": "Edición 214",
+        "producto": "Anuncio interior portada",
+        "precio_tarifa": 1200.00,
+        "descuento_producto": 0,
+        "precio_unitario": 1200.00,
+        "deadline_publicacion": "25/01/2025",
+        "fecha_publicacion_publicacion": "15/01/2026"
+      }
+    ]
+  },
+  {
+    "id_propuesta": "prop_25_0000000005",
+    "id_agente_propuesta": "ag_25_0004",
+    "estado_propuesta": "Pendiente",
+    "fecha_envio_propuesta": "15/01/2025",
+    "cuenta_propuesta": {
+      "id_cuenta_propuesta": "62500004",
+      "id_contacto": "contact_25_00000000007",
+      "cargoContacto": "Gerente General"
+    },
+    "descuento_final_propuesta": 0.00,
+    "importe_total_BI_propuesta": 12000.00,
+    "iva_aplicable": true,
+    "importe_propuesta_con_iva": 14520.00,
+    "forma_cobro_propuesta": "Transferencia Bancaria",
+    "cobros": [
+      {
+        "cobro": "1/2",
+        "fecha": "01/01/2026",
+        "importe": "10000.00"
+      },
+      {
+        "cobro": "2/2",
+        "fecha": "02/03/2026",
+        "importe": 4520.00
+      }
+    ],
+    "contenido_propuesta": [
+      {
+        "medio": "Revista del vidrio España",
+        "publicacion": "Edición 214",
+        "producto": "Anuncio interior portada",
+        "precio_tarifa": 12000.00,
+        "descuento_producto": 0,
+        "precio_unitario": 12000.00,
+        "deadline_publicacion": "28/01/2025",
+        "fecha_publicacion_publicacion": "15/01/2026"
+      }
+    ]
+  }
+]

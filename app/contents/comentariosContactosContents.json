@@ -1,0 +1,59 @@
+{
+  "contactosConComentarios": [
+    {
+      "id_contacto": "contact_25_00000000001",
+      "array_comentarios_contacto": [
+        {
+          "id_comentario": "com_cont_25_0000000001",
+          "id_autor": "ag_25_0004",
+          "id_contacto": "contact_25_00000000001",
+          "fecha_comentario": "2025-10-01T09:30:00",
+          "contenido_comentario": "Contacto muy receptivo, mostró interés en nuevos productos de vidrio arquitectónico."
+        },
+        {
+          "id_comentario": "com_cont_25_0000000002",
+          "id_autor": "ag_25_0006",
+          "id_contacto": "contact_25_00000000001",
+          "fecha_comentario": "2025-10-02T14:20:00",
+          "contenido_comentario": "Revisó las especificaciones técnicas y solicitó información adicional sobre plazos de entrega."
+        }
+      ]
+    },
+    {
+      "id_contacto": "contact_25_00000000002",
+      "array_comentarios_contacto": [
+        {
+          "id_comentario": "com_cont_25_0000000003",
+          "id_autor": "ag_25_0004",
+          "id_contacto": "contact_25_00000000002",
+          "fecha_comentario": "2025-10-03T10:15:00",
+          "contenido_comentario": "Primera reunión programada para discutir nuevas oportunidades de negocio."
+        }
+      ]
+    },
+    {
+      "id_contacto": "contact_25_00000000003",
+      "array_comentarios_contacto": []
+    },
+    {
+      "id_contacto": "contact_25_00000000004",
+      "array_comentarios_contacto": []
+    },
+    {
+      "id_contacto": "contact_25_00000000005",
+      "array_comentarios_contacto": []
+    },
+    {
+      "id_contacto": "contact_25_00000000006",
+      "array_comentarios_contacto": []
+    },
+    {
+      "id_contacto": "contact_25_00000000007",
+      "array_comentarios_contacto": []
+    },
+    {
+      "id_contacto": "contact_25_00000000008",
+      "array_comentarios_contacto": []
+    }
+  ]
+}
