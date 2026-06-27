@@ -1,14 +1,12 @@
 import {COGNITO} from "../../../env.js";
 import {verifyAccessToken, verifyIdToken} from "../../../server/features/authentication/AuthenticationService.js";
 
-// Validar que las variables de entorno están definidas
-if (!COGNITO?.USER_POOL_ID || !COGNITO?.CLIENT_ID) {
-    throw new Error("Cognito USER_POOL_ID or CLIENT_ID is missing or undefined.");
-}
-
-
 export async function POST(request) {
     try {
+        if (!COGNITO?.USER_POOL_ID || !COGNITO?.CLIENT_ID) {
+            return new Response("Cognito configuration is missing", {status: 500});
+        }
+
         const baseKey = `CognitoIdentityServiceProvider.${COGNITO.CLIENT_ID}`;
         const username = request.cookies.get(`${baseKey}.LastAuthUser`)?.value;
 
