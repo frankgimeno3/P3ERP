@@ -41,7 +41,7 @@ const TablaPublicaciones: FC<TablaPublicacionesProps> = ({ setFaseCrearServicio,
               <td className='p-2 border-b border-gray-200'>{item.detalle_publicacion}</td>
               <td className='p-2 border-b border-gray-200'>{item.deadline_material}</td>
               <td className='p-2 border-b border-gray-200'>{item.fecha_publicacion}</td>
-              <td className='p-2 border-b border-gray-200'>{item.estado}</td>
+              <td className='p-2 border-b border-gray-200'>{item.estado_publicacion}</td>
             </tr>
           ))}
         </tbody>

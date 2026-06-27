@@ -1,15 +1,11 @@
 "use client"
-import React, { FC, useState } from 'react';
+import React, { useState } from 'react';
 import Fase0 from './fases/fase0';
 import Fase1 from './fases/fase1';
 import Fase2 from './fases/fase2';
  import MiddleNav from '@/app/general_components/componentes_recurrentes/MiddleNav';
 
-interface CrearContactoProps {
-  setFaseCrearContacto: React.Dispatch<React.SetStateAction<number>>;
-}
-
-const CrearContacto: FC<CrearContactoProps> = ({ }) => {
+const CrearContacto = () => {
   const [faseCrearContacto, setFaseCrearContacto] = useState(0)
   const [nombre, setNombre] = useState("")
   const [apellidos, setApellidos] = useState("")  

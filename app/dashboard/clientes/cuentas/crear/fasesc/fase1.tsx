@@ -138,7 +138,10 @@ const Fase1: FC<Fase1Props> = ({
       setCuentaCreada(true);
     } catch (error) {
       console.error('Error creating cuenta:', error);
-      alert(error?.message || 'Error al crear la cuenta. Por favor, inténtelo de nuevo.');
+      const message = error instanceof Error
+        ? error.message
+        : 'Error al crear la cuenta. Por favor, inténtelo de nuevo.';
+      alert(message);
       setIsCreating(false);
     }
   };

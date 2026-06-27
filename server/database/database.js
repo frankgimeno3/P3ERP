@@ -4,7 +4,7 @@ import path from "node:path";
 import pg from "pg";
 
 const caPath = path.resolve(process.cwd(), 'certs', 'rds-ca.pem');
-const sslCA  = fs.readFileSync(caPath, 'utf8');
+const sslCA  = fs.existsSync(caPath) ? fs.readFileSync(caPath, 'utf8') : undefined;
 
 class Database {
     static #instance;
@@ -25,7 +25,7 @@ class Database {
                 dialectOptions:{
                     ssl: {
                         require: true,
-                        ca: sslCA.toString(),
+                        ...(sslCA ? { ca: sslCA } : {}),
                         rejectUnauthorized: process.env.NODE_ENV !== 'development',
                     }
                 }

@@ -8,6 +8,10 @@ interface Agente {
   rol: string;
 }
 
+interface CuentaResumen {
+  id_cuenta: string;
+}
+
 const paises = [
   "Afganistán", "Albania", "Alemania", "Andorra", "Angola", "Antigua y Barbuda", "Arabia Saudita", "Argelia", "Argentina", "Armenia", "Australia", "Austria", "Azerbaiyán",
   "Bahamas", "Bangladés", "Barbados", "Baréin", "Bélgica", "Belice", "Benín", "Bhután", "Bolivia", "Bosnia y Herzegovina", "Botsuana", "Brasil", "Brunéi", "Bulgaria", "Burkina Faso", "Burundi",
@@ -118,7 +122,7 @@ const Fase0: FC<Fase0Props> = ({
     setLoading(true);
     setCuentaExiste(null);
     try {
-      const cuentas = await CuentaService.getCuentas({ codigoCrmFiltro: codigoEdisoft });
+      const cuentas = await CuentaService.getCuentas({ codigoCrmFiltro: codigoEdisoft }) as CuentaResumen[];
       const existe = cuentas.some((cuenta) => cuenta.id_cuenta === codigoEdisoft);
       setCuentaExiste(existe);
     } catch (error) {

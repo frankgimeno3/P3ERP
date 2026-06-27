@@ -1,14 +1,10 @@
 "use client"
-import React, { FC, useState } from 'react';
+import React, { useState } from 'react';
 import Fase0 from './fases/fase0';
 import Fase1 from './fases/fase1';
 import MiddleNav from '@/app/general_components/componentes_recurrentes/MiddleNav';
 
-interface CrearServicioProps {
-  setFaseCrearServicio: React.Dispatch<React.SetStateAction<number>>;
-}
-
-const CrearServicio: FC<CrearServicioProps> = ({ }) => {
+const CrearServicio = () => {
   const [faseCrearServicio, setFaseCrearServicio] = useState(0);
   const [publicacionSeleccionada, setPublicacionSeleccionada] = useState('');
   const [nombreContenido, setNombreContenido] = useState('');
