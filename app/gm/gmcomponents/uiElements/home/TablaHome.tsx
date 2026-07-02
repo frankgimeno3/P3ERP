@@ -1,13 +1,11 @@
 "use client";
 
-import { useState, type KeyboardEvent } from "react";
+import { useEffect, useState, type KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
-import cuentasData from "@/app/gm/gmcomponents/contents/cuentas.json";
+import { GmService } from "@/app/service/GmService";
 
 type Account = {
   codigo: string;
-  nombre: string;
-  nCial: string;
   nFiscal: string;
   nComercial: string;
   email: string;
@@ -16,8 +14,6 @@ type Account = {
   web: string;
   agente: string;
 };
-
-const accounts = cuentasData as Account[];
 
 const columns = [
   { key: "codigo", label: "Código" },
@@ -37,7 +33,30 @@ type TablaHomeProps = {
 
 export default function TablaHome({ searchTerm, selectedField }: TablaHomeProps) {
   const router = useRouter();
-  const [selectedCode, setSelectedCode] = useState(accounts[0]?.codigo ?? "");
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [selectedCode, setSelectedCode] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchAccounts = async () => {
+      try {
+        setLoading(true);
+        setError("");
+        const data = await GmService.getCuentas();
+        const rows = Array.isArray(data) ? data : [];
+        setAccounts(rows);
+        setSelectedCode((current) => current || rows[0]?.codigo || "");
+      } catch (err) {
+        console.error("Error fetching GM cuentas:", err);
+        setError("No se han podido cargar las cuentas.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAccounts();
+  }, []);
 
   const filteredAccounts = accounts.filter((account) => {
     const term = searchTerm.trim().toLowerCase();
@@ -103,19 +122,21 @@ export default function TablaHome({ searchTerm, selectedField }: TablaHomeProps)
             <thead>
               <tr>
                 {columns.map((column) => (
-                  <th
-                    key={column.key}
-                    className="border-r border-slate-300 bg-slate-400 px-3 py-2 text-left text-sm font-semibold uppercase tracking-wide text-white last:border-r-0"
-                  >
+                  <th key={column.key} className="border-r border-slate-300 bg-slate-400 px-3 py-2 text-left text-sm font-semibold uppercase tracking-wide text-white last:border-r-0">
                     {column.label}
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {filteredAccounts.map((account) => {
+              {loading && (
+                <tr><td colSpan={columns.length} className="px-3 py-6 text-center text-sm text-slate-500">Cargando cuentas...</td></tr>
+              )}
+              {!loading && error && (
+                <tr><td colSpan={columns.length} className="px-3 py-6 text-center text-sm text-red-600">{error}</td></tr>
+              )}
+              {!loading && !error && filteredAccounts.map((account) => {
                 const isSelected = currentSelectedCode === account.codigo;
-
                 return (
                   <tr
                     key={account.codigo}
@@ -124,16 +145,16 @@ export default function TablaHome({ searchTerm, selectedField }: TablaHomeProps)
                     className={`cursor-pointer border-b border-slate-200 ${isSelected ? "bg-blue-100" : "bg-white"}`}
                   >
                     {columns.map((column) => (
-                      <td
-                        key={`${account.codigo}-${column.key}`}
-                        className="border-r border-slate-200 px-3 py-2 text-sm text-slate-700 last:border-r-0"
-                      >
-                        {String(account[column.key as keyof Account])}
+                      <td key={`${account.codigo}-${column.key}`} className="border-r border-slate-200 px-3 py-2 text-sm text-slate-700 last:border-r-0">
+                        {String(account[column.key as keyof Account] ?? "")}
                       </td>
                     ))}
                   </tr>
                 );
               })}
+              {!loading && !error && filteredAccounts.length === 0 && (
+                <tr><td colSpan={columns.length} className="px-3 py-6 text-center text-sm text-slate-500">No hay cuentas.</td></tr>
+              )}
             </tbody>
           </table>
         </div>

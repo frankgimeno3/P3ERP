@@ -10,15 +10,36 @@ ALTER TABLE ordenes_db
   ADD COLUMN IF NOT EXISTS base_imponible numeric,
   ADD COLUMN IF NOT EXISTS cobro_total numeric;
 
-UPDATE ordenes_db o
-SET
-  forma_cobro = COALESCE(NULLIF(o.forma_cobro, ''), NULLIF(o.tipo_cobro, ''), c.forma_cobro_contrato),
-  fecha_teorica_cobro = COALESCE(NULLIF(o.fecha_teorica_cobro, ''), c.fecha_cobro_prevista_contrato),
-  base_imponible = COALESCE(o.base_imponible, c.importe_total_bi_contrato),
-  cobro_total = COALESCE(o.cobro_total, c.importe_contrato_con_iva),
-  updated_at = now()
-FROM contratos_db c
-WHERE c.id_contrato = o.id_contrato;
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'ordenes_db'
+      AND column_name = 'tipo_cobro'
+  ) THEN
+    UPDATE ordenes_db o
+    SET
+      forma_cobro = COALESCE(NULLIF(o.forma_cobro, ''), NULLIF(o.tipo_cobro, ''), c.forma_cobro_contrato),
+      fecha_teorica_cobro = COALESCE(NULLIF(o.fecha_teorica_cobro, ''), c.fecha_cobro_prevista_contrato),
+      base_imponible = COALESCE(o.base_imponible, c.importe_total_bi_contrato),
+      cobro_total = COALESCE(o.cobro_total, c.importe_contrato_con_iva),
+      updated_at = now()
+    FROM contratos_db c
+    WHERE c.id_contrato = o.id_contrato;
+  ELSE
+    UPDATE ordenes_db o
+    SET
+      forma_cobro = COALESCE(NULLIF(o.forma_cobro, ''), c.forma_cobro_contrato),
+      fecha_teorica_cobro = COALESCE(NULLIF(o.fecha_teorica_cobro, ''), c.fecha_cobro_prevista_contrato),
+      base_imponible = COALESCE(o.base_imponible, c.importe_total_bi_contrato),
+      cobro_total = COALESCE(o.cobro_total, c.importe_contrato_con_iva),
+      updated_at = now()
+    FROM contratos_db c
+    WHERE c.id_contrato = o.id_contrato;
+  END IF;
+END $$;
 
 UPDATE ordenes_db
 SET

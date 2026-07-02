@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import CuentaDetalle from "@/app/gm/gmcomponents/uiElements/cuenta/CuentaDetalle";
-import type { Account } from "@/app/gm/gmcomponents/uiElements/cuenta/types";
-import cuentasData from "@/app/gm/gmcomponents/contents/cuentas.json";
+import { getGmCuentaByCodigo } from "@/server/features/gm/GmRepository.js";
 
 type PageProps = {
   params: Promise<{ codigo: string }>;
@@ -9,11 +8,11 @@ type PageProps = {
 
 export default async function CuentaPage({ params }: PageProps) {
   const { codigo } = await params;
-  const cuenta = (cuentasData as Account[]).find((item) => item.codigo === codigo);
+  const result = await getGmCuentaByCodigo(codigo);
 
-  if (!cuenta) {
+  if (!result) {
     notFound();
   }
 
-  return <CuentaDetalle cuenta={cuenta} />;
+  return <CuentaDetalle cuenta={result.cuenta} contactos={result.contactos} agentes={result.agentes} />;
 }

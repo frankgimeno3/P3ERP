@@ -1,10 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import agentsData from "@/app/gm/gmcomponents/contents/agentes.json";
-import commentsData from "@/app/gm/gmcomponents/contents/comments.json";
-import contactsData from "@/app/gm/gmcomponents/contents/contacts.json";
+import { GmService } from "@/app/service/GmService";
 import GuardarIcon from "@/app/gm/gmcomponents/svg/GuardarIcon";
 import SalirBarraIcon from "@/app/gm/gmcomponents/svg/SalirBarraIcon";
 import CuentaAgentesModal from "./CuentaAgentesModal";
@@ -13,48 +11,62 @@ import CuentaContactosModal, { type ContactEditableField } from "./CuentaContact
 import CuentaFormulario from "./CuentaFormulario";
 import CuentaShell from "./CuentaShell";
 import CuentaTabs from "./CuentaTabs";
-import type { Account, Agent, Comment, Contact, TabKey } from "./types";
+import type { Account, Agent, Contact, TabKey } from "./types";
 
 type CuentaDetalleProps = {
   cuenta: Account;
+  contactos?: Contact[];
+  agentes?: Agent[];
+  isNew?: boolean;
 };
 
-export default function CuentaDetalle({ cuenta }: CuentaDetalleProps) {
+export default function CuentaDetalle({ cuenta, contactos = [], agentes = [], isNew = false }: CuentaDetalleProps) {
   const router = useRouter();
   const [account, setAccount] = useState<Account>(cuenta);
   const [activeTab, setActiveTab] = useState<TabKey>("principal");
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
   const [isContactsOpen, setIsContactsOpen] = useState(false);
   const [isAgentsOpen, setIsAgentsOpen] = useState(false);
-  const [commentDraft, setCommentDraft] = useState(
-    () => (commentsData as Comment[]).find((item) => item.codigo === cuenta.codigo)?.fullComments ?? "",
-  );
+  const [commentDraft, setCommentDraft] = useState(cuenta.comentarios_gm ?? "");
+  const [contacts, setContacts] = useState<Contact[]>(contactos);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [contactForm, setContactForm] = useState<Contact | null>(null);
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [feedback, setFeedback] = useState("");
 
-  const agents = agentsData as Agent[];
-
-  const comments = useMemo(
-    () => (commentsData as Comment[]).filter((item) => item.codigo === account.codigo),
-    [account.codigo],
-  );
-
-  const contacts = useMemo(
-    () => (contactsData as Contact[]).filter((item) => item.codigo === account.codigo),
-    [account.codigo],
-  );
+  const agents = agentes;
 
   const openComments = useCallback(() => {
-    const storedComment = window.localStorage.getItem(`comment-${account.codigo}`);
-    const initialComment = comments[0]?.fullComments ?? "";
-    setCommentDraft(storedComment ?? initialComment);
+    setCommentDraft(account.comentarios_gm ?? "");
     setActiveTab("comments");
     setIsCommentsOpen(true);
     setIsContactsOpen(false);
     setSelectedContact(null);
     setContactForm(null);
-  }, [account.codigo, comments]);
+  }, [account.comentarios_gm]);
+
+  const saveCuenta = async (nextAccount = account, nextContacts = contacts) => {
+    try {
+      setSaving(true);
+      setFeedback("");
+      const result = await GmService.saveCuenta(nextAccount, nextContacts, isNew);
+      setAccount(result.cuenta);
+      setContacts(result.contactos || []);
+      setCommentDraft(result.cuenta.comentarios_gm || "");
+      setFeedback("Guardado");
+      if (isNew) {
+        router.replace(`/gm/cuentas/${result.cuenta.codigo}`);
+      }
+      return result;
+    } catch (err) {
+      console.error("Error saving GM cuenta:", err);
+      setFeedback("No se ha podido guardar");
+      return null;
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleCommentStamp = () => {
     const today = new Date();
@@ -121,8 +133,10 @@ export default function CuentaDetalle({ cuenta }: CuentaDetalleProps) {
     }
   };
 
-  const handleCommentSave = () => {
-    window.localStorage.setItem(`comment-${account.codigo}`, commentDraft);
+  const handleCommentSave = async () => {
+    const nextAccount = { ...account, comentarios_gm: commentDraft };
+    setAccount(nextAccount);
+    await saveCuenta(nextAccount, contacts);
     setActiveTab("principal");
     setIsCommentsOpen(false);
   };
@@ -133,9 +147,8 @@ export default function CuentaDetalle({ cuenta }: CuentaDetalleProps) {
   };
 
   const handleNewContact = () => {
-    const nextContactId = Math.max(0, ...contacts.map((contact) => contact.contactId)) + 1;
     const newContact: Contact = {
-      contactId: nextContactId,
+      contactId: `nuevo-${Date.now()}`,
       codigo: account.codigo,
       name: "",
       charge: "",
@@ -148,19 +161,18 @@ export default function CuentaDetalle({ cuenta }: CuentaDetalleProps) {
   };
 
   const handleEditContact = () => {
-    if (!selectedContact) {
-      return;
-    }
-
+    if (!selectedContact) return;
     setContactForm({ ...selectedContact });
   };
 
-  const handleDeleteContact = () => {
-    if (!selectedContact) {
-      return;
+  const handleDeleteContact = async () => {
+    if (!selectedContact) return;
+
+    if (!String(selectedContact.contactId).startsWith("nuevo-")) {
+      await GmService.deleteContacto(account.codigo, selectedContact.contactId);
     }
 
-    window.localStorage.removeItem(`contact-${selectedContact.contactId}`);
+    setContacts((current) => current.filter((contact) => contact.contactId !== selectedContact.contactId));
     setSelectedContact(null);
     setContactForm(null);
   };
@@ -169,13 +181,16 @@ export default function CuentaDetalle({ cuenta }: CuentaDetalleProps) {
     setContactForm((current) => (current ? { ...current, [field]: value } : current));
   };
 
-  const handleContactSave = () => {
-    if (!contactForm) {
-      return;
-    }
+  const handleContactSave = async () => {
+    if (!contactForm) return;
 
-    window.localStorage.setItem(`contact-${contactForm.contactId}`, JSON.stringify(contactForm));
+    const nextContacts = contacts.some((contact) => contact.contactId === contactForm.contactId)
+      ? contacts.map((contact) => contact.contactId === contactForm.contactId ? contactForm : contact)
+      : [...contacts, contactForm];
+
+    setContacts(nextContacts);
     setSelectedContact(contactForm);
+    await saveCuenta(account, nextContacts);
     setActiveTab("principal");
     setIsContactsOpen(false);
   };
@@ -189,9 +204,7 @@ export default function CuentaDetalle({ cuenta }: CuentaDetalleProps) {
   };
 
   const handleAgentSave = () => {
-    if (!selectedAgent) {
-      return;
-    }
+    if (!selectedAgent) return;
 
     setAccount((current) => ({
       ...current,
@@ -205,10 +218,16 @@ export default function CuentaDetalle({ cuenta }: CuentaDetalleProps) {
   return (
     <CuentaShell>
       <div className="flex flex-row bg-[#f3f5f7] px-8 pt-5 justify-between border ">
-        <div className="flex flex-row items-center gap-2 cursor-pointer hover:shadow-xl p-5 mb-5 ">
+        <button
+          type="button"
+          disabled={saving}
+          onClick={() => saveCuenta()}
+          className="flex flex-row items-center gap-2 cursor-pointer hover:shadow-xl p-5 mb-5 disabled:opacity-50"
+        >
           <GuardarIcon className="h-6 w-6 shrink-0" />
-          <p>Guardar</p>
-        </div>
+          <p>{saving ? "Guardando" : "Guardar"}</p>
+          {feedback && <span className="text-xs text-slate-500">{feedback}</span>}
+        </button>
         <div
           className="flex flex-row items-center gap-2 cursor-pointer hover:shadow-xl p-5 mb-5 "
           onClick={() => router.push("/gm")}

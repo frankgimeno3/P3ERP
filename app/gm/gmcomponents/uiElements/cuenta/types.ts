@@ -40,6 +40,7 @@ export type Account = {
   codigoAgente?: string;
   nombreAgente?: string;
   agente: string;
+  comentarios_gm?: string;
 };
 
 export type Comment = {
@@ -49,7 +50,7 @@ export type Comment = {
 };
 
 export type Contact = {
-  contactId: number;
+  contactId: string;
   codigo: string;
   name: string;
   charge: string;

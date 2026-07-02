@@ -180,7 +180,7 @@ export interface InterfazContrato {
 
   array_ordenes_cobro: {
     id_orden: string;
-    tipo_cobro: 'Recibo domiciliado' | 'Transferencia bancaria' | string;
+    forma_cobro: 'Recibo domiciliado' | 'Transferencia bancaria' | string;
     id_factura: string;
   }[];
 

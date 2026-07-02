@@ -1,3 +1,5 @@
+"use client";
+
 import React, { FC, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -23,7 +25,6 @@ const LoggedLeftMenu: FC = () => {
   const [isAdministracionOpen, setIsAdministracionOpen] = useState(false);
   const [isDireccionOpen, setIsDireccionOpen] = useState(false);
   const [isPrevisionesOpen, setIsPrevisionesOpen] = useState(false);
-  const [isPrevisionIngresosOpen, setIsPrevisionIngresosOpen] = useState(false);
 
   const isRouteActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
@@ -34,7 +35,6 @@ const LoggedLeftMenu: FC = () => {
     setIsAdministracionOpen(pathname.startsWith('/dashboard/administracion'));
     setIsDireccionOpen(pathname.startsWith('/dashboard/direccion'));
     setIsPrevisionesOpen(pathname.startsWith('/dashboard/direccion/previsiones'));
-    setIsPrevisionIngresosOpen(pathname.startsWith('/dashboard/direccion/previsiones/prevision-ingresos'));
   }, [pathname]);
 
   const getLinkClassName = (href: string) =>
@@ -46,8 +46,6 @@ const LoggedLeftMenu: FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen w-80 bg-white border-r border-gray-200 p-4 pl-6 shadow-sm text-gray-800" style={{ width: '170px', fontSize: '10px' }}>
-
-      {/* COMERCIAL */}
       <div className="mb-4">
         <div
           onClick={() => setIsComercialOpen(!isComercialOpen)}
@@ -74,7 +72,6 @@ const LoggedLeftMenu: FC = () => {
         )}
       </div>
 
-      {/* PRODUCCION */}
       <div className="mb-4">
         <div
           onClick={() => setIsProduccionOpen(!isProduccionOpen)}
@@ -95,7 +92,6 @@ const LoggedLeftMenu: FC = () => {
         )}
       </div>
 
-      {/* ADMINISTRACION */}
       <div className="mb-4">
         <div
           onClick={() => setIsAdministracionOpen(!isAdministracionOpen)}
@@ -115,6 +111,12 @@ const LoggedLeftMenu: FC = () => {
             <Link href="/dashboard/administracion/proveedores" className={getLinkClassName('/dashboard/administracion/proveedores')} aria-current={isRouteActive('/dashboard/administracion/proveedores') ? 'page' : undefined}>
               Proveedores
             </Link>
+            <Link href="/dashboard/administracion/facturas-clientes" className={getLinkClassName('/dashboard/administracion/facturas-clientes')} aria-current={isRouteActive('/dashboard/administracion/facturas-clientes') ? 'page' : undefined}>
+              Facturas clientes
+            </Link>
+            <Link href="/dashboard/administracion/facturas-proveedores" className={getLinkClassName('/dashboard/administracion/facturas-proveedores')} aria-current={isRouteActive('/dashboard/administracion/facturas-proveedores') ? 'page' : undefined}>
+              Facturas proveedores
+            </Link>
             <Link href="/dashboard/administracion/tareas-montse" className={getLinkClassName('/dashboard/administracion/tareas-montse')} aria-current={isRouteActive('/dashboard/administracion/tareas-montse') ? 'page' : undefined}>
               Tareas Montse
             </Link>
@@ -122,7 +124,6 @@ const LoggedLeftMenu: FC = () => {
         )}
       </div>
 
-      {/* OPERACIONES */}
       <div className="mb-4">
         <div
           onClick={() => setIsOperacionesOpen(!isOperacionesOpen)}
@@ -143,7 +144,6 @@ const LoggedLeftMenu: FC = () => {
         )}
       </div>
 
-      {/* DIRECCION */}
       <div className="mb-4">
         <div
           onClick={() => setIsDireccionOpen(!isDireccionOpen)}
@@ -172,28 +172,9 @@ const LoggedLeftMenu: FC = () => {
                   <Link href="/dashboard/direccion/previsiones/prevision-liquidez" className={getLinkClassName('/dashboard/direccion/previsiones/prevision-liquidez')} aria-current={isRouteActive('/dashboard/direccion/previsiones/prevision-liquidez') ? 'page' : undefined}>
                     Previsión liquidez
                   </Link>
-
-                  <div>
-                    <div
-                      onClick={() => setIsPrevisionIngresosOpen(!isPrevisionIngresosOpen)}
-                      className="flex justify-between items-center px-3 py-1.5 rounded cursor-pointer transition hover:bg-gray-100"
-                    >
-                      <span>Previsión ingresos</span>
-                      <ArrowIcon isOpen={isPrevisionIngresosOpen} />
-                    </div>
-
-                    {isPrevisionIngresosOpen && (
-                      <div className="ml-4 mt-2 space-y-2">
-                        <Link href="/dashboard/direccion/previsiones/prevision-ingresos/prevision-recibos" className={getLinkClassName('/dashboard/direccion/previsiones/prevision-ingresos/prevision-recibos')} aria-current={isRouteActive('/dashboard/direccion/previsiones/prevision-ingresos/prevision-recibos') ? 'page' : undefined}>
-                          Previsión recibos
-                        </Link>
-                        <Link href="/dashboard/direccion/previsiones/prevision-ingresos/prevision-transfers" className={getLinkClassName('/dashboard/direccion/previsiones/prevision-ingresos/prevision-transfers')} aria-current={isRouteActive('/dashboard/direccion/previsiones/prevision-ingresos/prevision-transfers') ? 'page' : undefined}>
-                          Previsión transfers
-                        </Link>
-                      </div>
-                    )}
-                  </div>
-
+                  <Link href="/dashboard/direccion/previsiones/prevision-ingresos" className={getLinkClassName('/dashboard/direccion/previsiones/prevision-ingresos')} aria-current={isRouteActive('/dashboard/direccion/previsiones/prevision-ingresos') ? 'page' : undefined}>
+                    Previsión ingresos
+                  </Link>
                   <Link href="/dashboard/direccion/previsiones/prevision-gastos" className={getLinkClassName('/dashboard/direccion/previsiones/prevision-gastos')} aria-current={isRouteActive('/dashboard/direccion/previsiones/prevision-gastos') ? 'page' : undefined}>
                     Previsión gastos
                   </Link>

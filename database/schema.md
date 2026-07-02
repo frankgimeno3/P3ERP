@@ -30,26 +30,6 @@ Update this file whenever tables, columns, primary keys, indexes, or constraints
 Constraints:
 - PRIMARY KEY agentes_db_pkey: PRIMARY KEY (id_agente)
 
-### cobros
-
-| # | Column | Type | Nullable | Default |
-|---:|---|---|---|---|
-| 1 | id_cobro | text | NO |  |
-| 2 | created_at | timestamp with time zone | NO | now() |
-| 3 | updated_at | timestamp with time zone | NO | now() |
-| 4 | id_propuesta | text | YES |  |
-| 5 | numero_cobro | integer | YES |  |
-| 6 | etiqueta_cobro | text | YES |  |
-| 7 | fecha_cobro | text | YES |  |
-| 8 | importe_cobro | numeric | YES |  |
-| 9 | forma_cobro | text | YES |  |
-
-Constraints:
-- PRIMARY KEY cobros_pkey: PRIMARY KEY (id_cobro)
-
-Indexes:
-- cobros_id_propuesta_idx: CREATE INDEX cobros_id_propuesta_idx ON public.cobros USING btree (id_propuesta)
-
 ### comentarios_contactos_db
 
 | # | Column | Type | Nullable | Default |
@@ -212,6 +192,7 @@ Indexes:
 | 40 | array_comentarios_cuenta | jsonb | NO | '[]'::jsonb |
 | 41 | created_at | timestamp with time zone | NO | now() |
 | 42 | updated_at | timestamp with time zone | NO | now() |
+| 43 | comentarios_gm | text | NO | ''::text |
 
 Constraints:
 - PRIMARY KEY cuentas_db_pkey: PRIMARY KEY (id_cuenta)
@@ -231,6 +212,44 @@ Indexes:
 
 Constraints:
 - PRIMARY KEY ferias_db_pkey: PRIMARY KEY (id_feria)
+
+### facturas_clientes_db
+
+| # | Column | Type | Nullable | Default |
+|---:|---|---|---|---|
+| 1 | id_factura_cliente | text | NO |  |
+| 2 | id_cuenta | text | YES |  |
+| 3 | base_imponible | numeric | YES |  |
+| 4 | importe_total | numeric | YES |  |
+| 5 | fecha_factura | text | YES |  |
+| 6 | comentarios | text | YES |  |
+| 7 | created_at | timestamp with time zone | NO | now() |
+| 8 | updated_at | timestamp with time zone | NO | now() |
+
+Constraints:
+- PRIMARY KEY facturas_clientes_db_pkey: PRIMARY KEY (id_factura_cliente)
+
+Indexes:
+- facturas_clientes_db_id_cuenta_idx: CREATE INDEX facturas_clientes_db_id_cuenta_idx ON public.facturas_clientes_db USING btree (id_cuenta)
+
+### facturas_proveedores_db
+
+| # | Column | Type | Nullable | Default |
+|---:|---|---|---|---|
+| 1 | id_factura_proveedor | text | NO |  |
+| 2 | id_proveedor | text | YES |  |
+| 3 | base_imponible | numeric | YES |  |
+| 4 | importe_total | numeric | YES |  |
+| 5 | fecha_factura | text | YES |  |
+| 6 | comentarios | text | YES |  |
+| 7 | created_at | timestamp with time zone | NO | now() |
+| 8 | updated_at | timestamp with time zone | NO | now() |
+
+Constraints:
+- PRIMARY KEY facturas_proveedores_db_pkey: PRIMARY KEY (id_factura_proveedor)
+
+Indexes:
+- facturas_proveedores_db_id_proveedor_idx: CREATE INDEX facturas_proveedores_db_id_proveedor_idx ON public.facturas_proveedores_db USING btree (id_proveedor)
 
 ### lineas_contratos_db
 
@@ -288,25 +307,46 @@ Indexes:
 | 2 | created_at | timestamp with time zone | NO | now() |
 | 3 | updated_at | timestamp with time zone | NO | now() |
 | 4 | id_contrato | text | YES |  |
-| 5 | tipo_cobro | text | YES |  |
-| 6 | id_factura | text | YES |  |
+| 5 | id_factura | text | YES |  |
+| 6 | numero_cobro | integer | YES |  |
+| 7 | etiqueta_cobro | text | YES |  |
+| 8 | fecha_teorica_cobro | text | YES |  |
+| 9 | fecha_real_cobro | text | YES |  |
+| 10 | forma_cobro | text | YES |  |
+| 11 | banco_cobro | text | YES |  |
+| 12 | base_imponible | numeric | YES |  |
+| 13 | cobro_total | numeric | YES |  |
 
 Constraints:
 - PRIMARY KEY ordenes_db_pkey: PRIMARY KEY (id_orden)
+- CHECK ordenes_db_banco_cobro_check: CHECK (((banco_cobro IS NULL) OR (banco_cobro = ''::text) OR (banco_cobro = ANY (ARRAY['Sabadell'::text, 'Santander'::text]))))
 
 Indexes:
 - ordenes_db_id_contrato_idx: CREATE INDEX ordenes_db_id_contrato_idx ON public.ordenes_db USING btree (id_contrato)
+- ordenes_db_fecha_teorica_cobro_idx: CREATE INDEX ordenes_db_fecha_teorica_cobro_idx ON public.ordenes_db USING btree (fecha_teorica_cobro)
+- ordenes_db_forma_cobro_idx: CREATE INDEX ordenes_db_forma_cobro_idx ON public.ordenes_db USING btree (forma_cobro)
 
 ### pagos_db
 
 | # | Column | Type | Nullable | Default |
 |---:|---|---|---|---|
-| 1 | id_pagos | text | NO |  |
+| 1 | id_pago | text | NO |  |
 | 2 | created_at | timestamp with time zone | NO | now() |
 | 3 | updated_at | timestamp with time zone | NO | now() |
+| 4 | fecha_pago | text | YES |  |
+| 5 | bi_pago | numeric | YES |  |
+| 6 | total_pago | numeric | YES |  |
+| 7 | forma_pago | text | YES |  |
+| 8 | cuenta_pago | text | YES |  |
+| 9 | id_proveedor | text | YES |  |
+| 10 | nombre_planificacion | text | YES |  |
+| 11 | descripcion_planificacion | text | YES |  |
 
 Constraints:
-- PRIMARY KEY pagos_db_pkey: PRIMARY KEY (id_pagos)
+- PRIMARY KEY pagos_db_pkey: PRIMARY KEY (id_pago)
+
+Indexes:
+- pagos_db_id_proveedor_idx: CREATE INDEX pagos_db_id_proveedor_idx ON public.pagos_db USING btree (id_proveedor)
 
 ### propuestas_db
 
@@ -339,6 +379,11 @@ Constraints:
 | 1 | id_proveedor | text | NO |  |
 | 2 | created_at | timestamp with time zone | NO | now() |
 | 3 | updated_at | timestamp with time zone | NO | now() |
+| 4 | nombre_proveedor | text | NO | ''::text |
+| 5 | nombre_fiscal_proveedor | text | NO | ''::text |
+| 6 | vat_code | text | NO | ''::text |
+| 7 | pais_proveedor | text | NO | ''::text |
+| 8 | moneda_proveedor | text | NO | ''::text |
 
 Constraints:
 - PRIMARY KEY proveedores_db_pkey: PRIMARY KEY (id_proveedor)

@@ -43,6 +43,7 @@ const writableColumns = [
   "array_direcciones_cuenta",
   "array_contactos_cuenta",
   "array_comentarios_cuenta",
+  "comentarios_gm",
 ];
 
 const jsonColumns = new Set([
@@ -97,6 +98,7 @@ function normalizeCuenta(row) {
     array_direcciones_cuenta: row.array_direcciones_cuenta ?? [],
     array_contactos_cuenta: row.array_contactos_cuenta ?? [],
     array_comentarios_cuenta: row.array_comentarios_cuenta ?? [],
+    comentarios_gm: row.comentarios_gm ?? "",
     created_at: row.created_at,
     updated_at: row.updated_at,
   };

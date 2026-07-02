@@ -1,0 +1,145 @@
+﻿<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<title>Informe de rendimiento P3ERP</title>
+<style>
+  @page { size: A4; margin: 16mm; }
+  body { font-family: Arial, Helvetica, sans-serif; color: #18212f; line-height: 1.42; font-size: 12px; }
+  h1 { color: #0f2f57; font-size: 24px; margin: 0 0 6px; }
+  h2 { color: #0f2f57; font-size: 17px; margin: 22px 0 8px; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; }
+  h3 { color: #164a75; font-size: 14px; margin: 14px 0 6px; }
+  p { margin: 6px 0; }
+  .meta { color: #536173; margin-bottom: 18px; }
+  .summary { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0 16px; }
+  .card { border: 1px solid #cbd5e1; background: #f8fafc; padding: 10px; border-radius: 6px; }
+  .severity { font-weight: bold; color: #991b1b; }
+  .good { color: #166534; font-weight: bold; }
+  .warn { color: #92400e; font-weight: bold; }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0 12px; page-break-inside: avoid; }
+  th, td { border: 1px solid #cbd5e1; padding: 6px; vertical-align: top; }
+  th { background: #164a75; color: white; text-align: left; }
+  code { background: #eef2f7; padding: 1px 4px; border-radius: 3px; font-family: Consolas, monospace; }
+  ul, ol { margin-top: 6px; padding-left: 18px; }
+  li { margin: 4px 0; }
+  .pagebreak { page-break-before: always; }
+</style>
+</head>
+<body>
+<h1>Informe de rendimiento: P3ERP en localhost con AWS RDS y Cognito</h1>
+<p class="meta">Fecha: 2 de julio de 2026. Entorno analizado: Next.js 15.5.19, Node 20.10.0, localhost, PostgreSQL en AWS RDS, Cognito, código actual del repo.</p>
+
+<div class="summary">
+  <div class="card"><span class="severity">Cuello principal observado:</span><br>no es la consulta SQL caliente, sino compilación/dev server, middleware Cognito, arranque con Sequelize y demasiada carga en cliente.</div>
+  <div class="card"><span class="good">RDS caliente:</span><br>consultas representativas con pool reutilizado rondan 20-22 ms. La conexión fría cuesta 170-275 ms.</div>
+  <div class="card"><span class="warn">Next dev:</span><br>primer golpe a APIs tarda 0.5-3.6 s por compilación. Luego baja a 40-165 ms.</div>
+  <div class="card"><span class="severity">Build:</span><br>falló tras 96.9 s por certificado RDS al prerenderizar <code>/gm/nuevo</code>. También aparecen warnings de módulos Node en Edge Runtime por Cognito.</div>
+</div>
+
+<h2>Pruebas realizadas</h2>
+<table>
+<thead><tr><th>Prueba</th><th>Objetivo</th><th>Resultado</th></tr></thead>
+<tbody>
+<tr><td>Inspección de arquitectura</td><td>Localizar auth, DB, layouts, fetches cliente, páginas críticas.</td><td>Middleware protege todas las rutas no API; dashboard tiene layout cliente; hay bootstrap Sequelize global; muchas páginas cargan datos por <code>useEffect</code>.</td></tr>
+<tr><td>RDS conexión fría</td><td>Medir coste de abrir conexión TLS nueva a RDS.</td><td>SELECT 1 con pool nuevo: min 170 ms, p50 174 ms, p90 275 ms, media 195 ms.</td></tr>
+<tr><td>RDS con pool caliente</td><td>Medir SQL real sin coste de conexión.</td><td>Consultas de cuentas/contactos/agentes/detalle: p50 20-22 ms.</td></tr>
+<tr><td>Next dev APIs</td><td>Medir coste de compilación y ejecución API interna.</td><td>Primer golpe: hasta 3.6 s. Golpes calientes: ~41-165 ms.</td></tr>
+<tr><td>Build producción</td><td>Detectar errores de prerender y coste de compilación.</td><td>Compilación OK en 58 s, pero build falla al generar páginas por RDS SSL: <code>SELF_SIGNED_CERT_IN_CHAIN</code>.</td></tr>
+<tr><td>Análisis estático</td><td>Cuantificar superficie cliente.</td><td>220 archivos TS/TSX/JS, 20.275 líneas, 76 archivos <code>use client</code>, 54 archivos con <code>useEffect</code>, 15 servicios con API client.</td></tr>
+</tbody>
+</table>
+
+<h2>Resultados medidos</h2>
+<h3>RDS directo</h3>
+<table>
+<thead><tr><th>Consulta</th><th>Filas</th><th>p50</th><th>p90</th><th>Conclusión</th></tr></thead>
+<tbody>
+<tr><td>SELECT 1, pool caliente</td><td>1</td><td>21 ms</td><td>22 ms</td><td>Latencia base de RDS desde localhost.</td></tr>
+<tr><td><code>cuentas_db ORDER BY created_at</code></td><td>3</td><td>22 ms</td><td>24 ms</td><td>No es lento con dataset actual.</td></tr>
+<tr><td><code>agentes_db ORDER BY nombre</code></td><td>7</td><td>20 ms</td><td>22 ms</td><td>Correcto.</td></tr>
+<tr><td><code>contactos_db ORDER BY nombre</code></td><td>8</td><td>21 ms</td><td>23 ms</td><td>Correcto.</td></tr>
+<tr><td>Detalle cuenta</td><td>1</td><td>22 ms</td><td>23 ms</td><td>Correcto.</td></tr>
+<tr><td>GM detalle + contactos</td><td>1 + 2</td><td>~22 ms por consulta</td><td>~23 ms</td><td>Mejorable si se agrupa, pero no crítico hoy.</td></tr>
+</tbody>
+</table>
+
+<h3>Next dev: APIs internas</h3>
+<table>
+<thead><tr><th>Endpoint</th><th>Primer golpe</th><th>Golpes calientes</th><th>Lectura</th></tr></thead>
+<tbody>
+<tr><td><code>/api/v1/comercial/cuentas</code></td><td>3627 ms</td><td>62, 439, 84 ms</td><td>Primer golpe dominado por compilación dev.</td></tr>
+<tr><td><code>/api/v1/admin/agentes</code></td><td>929 ms</td><td>101-102 ms</td><td>Se llama además de cuentas en la pantalla.</td></tr>
+<tr><td><code>/api/v1/comercial/contactos</code></td><td>536 ms</td><td>41-110 ms</td><td>Caliente aceptable.</td></tr>
+<tr><td><code>/api/v1/gm/cuentas</code></td><td>741 ms</td><td>55-106 ms</td><td>Caliente aceptable.</td></tr>
+<tr><td><code>/api/v1/gm/cuentas/62500001</code></td><td>1814 ms</td><td>120-165 ms</td><td>Primer golpe compila ruta dinámica y repo GM.</td></tr>
+</tbody>
+</table>
+
+<h2>Hallazgos principales</h2>
+<ol>
+<li><strong>Bootstrap Sequelize global en <code>instrumentation-node.js</code>.</strong> En cada arranque de Next se ejecuta conexión y <code>sequelize.sync()</code>, aunque la app nueva usa sobre todo <code>pg.Pool</code>. Esto añade latencia de arranque, ruido de logs, carga de Sequelize y warnings por dialectos dinámicos. También infla compilación: los logs muestran imports de dialectos SQLite/MariaDB aunque se use PostgreSQL.</li>
+<li><strong>Middleware Cognito costoso en cada navegación.</strong> El matcher aplica a todas las rutas no API, incluidas <code>/gm</code>. El middleware hace un <code>fetch</code> interno a <code>/api/validate-token</code> en cada request de página. Eso añade una vuelta HTTP local, verificación de tokens y potencial acceso a Cognito si hay refresh. Además el build avisa que <code>aws-jwt-verify</code> carga módulos Node no soportados en Edge Runtime.</li>
+<li><strong>Demasiado trabajo cliente.</strong> Muchas páginas críticas son <code>use client</code> y cargan datos en <code>useEffect</code>. Esto retrasa contenido hasta después de hidratar JS. Ejemplo: <code>/dashboard/comercial/cuentas</code> pide cuentas y agentes en dos requests cliente separados.</li>
+<li><strong>Filtros sin debounce.</strong> En cuentas, cada tecla cambia estado y dispara <code>CuentaService.getCuentas</code>. Con RDS remoto y APIs internas, escribir rápido puede lanzar muchas llamadas en paralelo.</li>
+<li><strong>Consultas poco selectivas para escalar.</strong> Hay varios <code>SELECT *</code>, filtros <code>ILIKE '%texto%'</code> y un filtro sobre <code>datos_comerciales::text</code>. Con pocos datos no duele; con miles de cuentas/contactos sí.</li>
+<li><strong>Contactos comercial todavía no consume RDS en la lista.</strong> La página <code>/dashboard/comercial/contactos</code> parte de un array vacío, por lo que no mide carga real ni aprovecha <code>ContactoService</code>. Cuando se conecte a RDS debería evitar traer todo y filtrar todo en cliente.</li>
+<li><strong>Build de producción roto por SSL RDS en prerender.</strong> <code>/gm/nuevo</code> consulta RDS durante prerender y falla con <code>SELF_SIGNED_CERT_IN_CHAIN</code>. En dev se tolera <code>rejectUnauthorized: false</code> en <code>pgClient</code>, pero en build/production cambia el comportamiento.</li>
+<li><strong>Build lento y warnings de hooks.</strong> <code>next build</code> compiló en 58 s y acabó fallando a los 96.9 s. Hay warnings de hooks condicionales y dependencias de <code>useEffect</code> que pueden causar rerenders o bugs.</li>
+</ol>
+
+<h2>Cuellos por pantalla</h2>
+<table>
+<thead><tr><th>Pantalla</th><th>Cuello más probable</th><th>Acción recomendada</th></tr></thead>
+<tbody>
+<tr><td>Cuentas</td><td>Dos requests cliente iniciales: cuentas + agentes. Filtros lanzan request por tecla. Paginación solo en cliente.</td><td>Server Component o endpoint combinado <code>cuentas_con_agente</code>; debounce 300 ms; paginación SQL con <code>LIMIT/OFFSET</code>; no <code>SELECT *</code>.</td></tr>
+<tr><td>Contactos</td><td>Lista aún no conectada a RDS; al migrarla, riesgo de traer todos los contactos y filtrar en cliente.</td><td>Crear endpoint con filtros SQL e índices; paginación real; cargar solo columnas de tabla.</td></tr>
+<tr><td>Detalle cuenta</td><td>Varias pestañas hacen fetch al activarse: comentarios, contactos, propuestas, etc. Correcto funcionalmente, pero puede sentirse fragmentado.</td><td>Prefetch de datos de pestañas más usadas, cache SWR/React Query o Server Component con datos iniciales.</td></tr>
+<tr><td>GM</td><td>Ahora lee RDS server-side para detalle, pero el middleware lo protege y redirige si no hay cookie. Home GM carga por cliente.</td><td>Si GM debe ser rápido, hacerlo server-render con datos iniciales o excluirlo del middleware si no requiere sesión.</td></tr>
+<tr><td>Barra izquierda</td><td>No es el cuello principal. Es cliente y recalcula apertura por pathname, pero es pequeño.</td><td>Puede simplificarse declarando estructura de menú y usando CSS/estado mínimo. El coste real viene del middleware al navegar, no del componente.</td></tr>
+</tbody>
+</table>
+
+<h2>Plan de optimización recomendado</h2>
+<h3>Prioridad 1: quitar lastre global y arreglar auth</h3>
+<ul>
+<li>Eliminar o condicionar <code>instrumentation-node.js</code> para que no haga <code>sequelize.sync()</code> en dev normal ni build. Si ya usas <code>pg.Pool</code>, retirar Sequelize o aislarlo detrás de una variable <code>ENABLE_SEQUELIZE_BOOTSTRAP=true</code>.</li>
+<li>Reescribir middleware para no hacer <code>fetch('/api/validate-token')</code> por navegación. Verificar el JWT directamente en middleware con una librería compatible Edge, o mover auth a Node en route handlers/layout protegido.</li>
+<li>Evitar refresh token desde middleware Edge. Refrescar desde cliente/API dedicada cuando haga falta.</li>
+<li>Configurar correctamente SSL RDS para producción/build: usar CA de AWS o ajustar <code>pgClient</code> para build local. Ahora el build falla por certificado.</li>
+</ul>
+
+<h3>Prioridad 2: reducir waterfalls de datos</h3>
+<ul>
+<li>En cuentas, devolver agente ya resuelto desde SQL: <code>LEFT JOIN agentes_db</code>. Así se elimina <code>/api/v1/admin/agentes</code> en la carga inicial.</li>
+<li>Convertir páginas de lista a Server Components donde sea posible, pasando datos iniciales a una tabla cliente solo para interacción.</li>
+<li>Implementar debounce en filtros y cancelar requests anteriores con <code>AbortController</code>.</li>
+<li>Paginación y filtros en servidor: <code>LIMIT</code>, <code>OFFSET</code>, <code>total_count</code>.</li>
+</ul>
+
+<h3>Prioridad 3: preparar RDS para volumen</h3>
+<ul>
+<li>Índices recomendados: <code>contactos_db(nombre_contacto)</code>, <code>contactos_db(apellidos_contacto)</code>, <code>contactos_db(nombre_empresa)</code>, <code>contactos_db(email_contacto)</code>, <code>cuentas_db(nombre_empresa)</code> ya existe, revisar índice para <code>id_cuenta</code> ya cubierto por PK.</li>
+<li>Para búsquedas parciales <code>%texto%</code>, valorar extensión <code>pg_trgm</code> e índices GIN trigram en nombres/emails.</li>
+<li>Evitar <code>datos_comerciales::text ILIKE</code>; extraer teléfono principal a columna real o índice expression si se mantiene JSONB.</li>
+<li>No usar <code>to_date()</code> en ORDER BY sobre columnas text si crecerá el dato; migrar fechas a <code>date</code>.</li>
+</ul>
+
+<h3>Prioridad 4: limpieza de frontend</h3>
+<ul>
+<li>Reducir archivos <code>use client</code>. Dejar client solo en componentes con estado/eventos.</li>
+<li>Revisar warnings de hooks del build: hay hooks condicionales que pueden provocar comportamiento errático y rerenders.</li>
+<li>Eliminar imports/código legado de fichajes y servicios antiguos que todavía aparecen en services.</li>
+<li>Considerar React Query/SWR para cachear listas como agentes, cuentas, contactos y evitar refetch al volver por la barra lateral.</li>
+</ul>
+
+<h2>Notas sobre desarrollo local</h2>
+<ul>
+<li>Next dev recompila rutas bajo demanda: el primer acceso puede tardar segundos aunque producción sea más rápida.</li>
+<li>OneDrive puede empeorar I/O y ya ha provocado bloqueos en <code>.next/trace</code>. Para desarrollo, mover el repo fuera de OneDrive suele mejorar mucho la experiencia.</li>
+<li><code>node_modules</code> pesa ~496 MB y <code>.next</code> tras build fallido ~378 MB. La carpeta de build puede bloquearse en OneDrive.</li>
+</ul>
+
+<h2>Conclusión</h2>
+<p>Con los datos actuales, RDS no es el problema principal una vez reutilizas conexión: las queries calientes son rápidas. La lentitud percibida viene de una combinación de Next dev, middleware Cognito en cada navegación, bootstrap Sequelize global, build/prerender consultando RDS y un patrón frontend de cargar datos después de hidratar. Las mejores mejoras inmediatas son quitar/condicionar Sequelize bootstrap, simplificar auth middleware, combinar endpoints de lista y mover filtros/paginación al servidor.</p>
+</body>
+</html>

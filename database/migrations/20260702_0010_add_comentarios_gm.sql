@@ -1,0 +1,6 @@
+BEGIN;
+
+ALTER TABLE cuentas_db
+  ADD COLUMN IF NOT EXISTS comentarios_gm text NOT NULL DEFAULT '';
+
+COMMIT;

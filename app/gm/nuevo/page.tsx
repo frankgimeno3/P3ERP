@@ -1,19 +1,12 @@
 import CuentaDetalle from "@/app/gm/gmcomponents/uiElements/cuenta/CuentaDetalle";
 import type { Account } from "@/app/gm/gmcomponents/uiElements/cuenta/types";
-import cuentasData from "@/app/gm/gmcomponents/contents/cuentas.json";
+import { getGmAgentes, getNextGmCodigo } from "@/server/features/gm/GmRepository.js";
 
-const getNextAccountCode = () => {
-  const maxCode = (cuentasData as Account[]).reduce((max, account) => {
-    const numericCode = Number.parseInt(account.codigo, 10);
-    return Number.isNaN(numericCode) ? max : Math.max(max, numericCode);
-  }, 0);
+export default async function NuevaCuentaPage() {
+  const [codigo, agentes] = await Promise.all([getNextGmCodigo(), getGmAgentes()]);
 
-  return String(maxCode + 1).padStart(3, "0");
-};
-
-export default function NuevaCuentaPage() {
   const cuenta: Account = {
-    codigo: getNextAccountCode(),
+    codigo,
     nombre: "",
     razonSocial: "",
     tipoCliente: "",
@@ -45,7 +38,7 @@ export default function NuevaCuentaPage() {
     sector: "",
     canal: "",
     observaciones: "",
-    fechaAlta: "",
+    fechaAlta: new Date().toISOString().slice(0, 10),
     fechaUltimaModificacion: "",
     riesgo: "",
     formaPago: "",
@@ -54,7 +47,8 @@ export default function NuevaCuentaPage() {
     codigoAgente: "",
     nombreAgente: "",
     agente: "",
+    comentarios_gm: "",
   };
 
-  return <CuentaDetalle cuenta={cuenta} />;
+  return <CuentaDetalle cuenta={cuenta} contactos={[]} agentes={agentes} isNew />;
 }
