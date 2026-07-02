@@ -1,0 +1,25 @@
+
+> p3erp@0.1.0 dev
+> next dev
+
+   ▲ Next.js 15.5.19
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.1.74:3000
+   - Environments: .env
+
+ ✓ Starting...
+ ○ Compiling /instrumentation ...
+Connecting to database
+[Sequelize]: Executing (default): SELECT 1+1 AS result
+Connected
+Synchronizing models with database
+[Sequelize]: Executing (default): SELECT 1+1 AS result
+Synchronized
+ ✓ Ready in 9s
+ GET /api/v1/comercial/cuentas 200 in 3328ms
+ GET /api/v1/comercial/cuentas 200 in 295ms
+ GET / 500 in 470ms
+ GET / 500 in 484ms
+ GET /favicon.ico 500 in 918ms
+ GET / 500 in 385ms
+ GET /favicon.ico 500 in 125ms

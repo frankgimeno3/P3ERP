@@ -20,9 +20,7 @@ const LoggedNav: FC<LoggedNavProps> = () => {
 
   const routeDescriptions: Record<string, string> = {
     '/dashboard': 'Haga click en un módulo para continuar',
-    '/dashboard/fichajes': 'Módulo de fichaje',
-    '/dashboard/clientes': 'Módulo de gestión de cuentas y contactos',
-    '/dashboard/comercial': 'Módulo de gestión de propuestas y contratos',
+    '/dashboard/comercial': 'Modulo de gestion comercial',
     '/dashboard/administracion': 'Módulo administrativo',
     '/dashboard/produccion': 'Módulo de producción',
     '/dashboard/operaciones': 'Módulo de operaciones como moderador',
@@ -37,7 +35,7 @@ const LoggedNav: FC<LoggedNavProps> = () => {
       }
     }
 
-    return 'Página de registro de fichajes';
+    return 'Página de gestión';
   };
 
   const description = getDescription(pathname, routeDescriptions);

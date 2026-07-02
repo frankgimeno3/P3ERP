@@ -5,7 +5,7 @@ import MiddleNav from '../../../general_components/componentes_recurrentes/Middl
 import Link from 'next/link';
 import TodasPropuestas from './componentesPropuestas/tablaspropuestas/TodasPropuestas';
 import MisPendientes from './componentesPropuestas/tablaspropuestas/MisPendientes';
-import agentes from '@/app/contents/agentesContents.json';
+import { AgenteService } from '@/app/service/AgenteService';
 
 const Propuestas: FC = () => {
   const [pestana, setPestana] = useState<'miasenproceso' | 'todasporcliente'>('todasporcliente');
@@ -16,6 +16,16 @@ const Propuestas: FC = () => {
   const [agenteFiltro, setAgenteFiltro] = useState('');
   const [estadoFiltro, setEstadoFiltro] = useState('');
   const [agenteActual, setAgenteActual] = useState('ag_25_0004');
+  const [agentes, setAgentes] = useState<any[]>([]);
+
+  useEffect(() => {
+    AgenteService.getAgentes()
+      .then((data) => setAgentes(Array.isArray(data) ? data : []))
+      .catch((error) => {
+        console.error('Error fetching agentes:', error);
+        setAgentes([]);
+      });
+  }, []);
 
   useEffect(() => {
     if (pestana === 'miasenproceso') {
@@ -58,6 +68,7 @@ const Propuestas: FC = () => {
             setEstadoFiltro={setEstadoFiltro}
             pestana={pestana}
             agenteActual={agenteActual}
+            agentes={agentes}
           />
  
         <div className="mt-5 p-12 rounded-lg shadow-xl bg-white">

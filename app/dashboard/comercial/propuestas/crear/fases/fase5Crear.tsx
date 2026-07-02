@@ -1,9 +1,8 @@
 import { useRouter } from 'next/navigation';
 import React, { FC, useMemo } from 'react';
-import cuentasContents from "@/app/contents/cuentasContents.json";
-import contactsContents from "@/app/contents/contactsContents.json";
-import agentesContents from "@/app/contents/agentesContents.json";
-
+const cuentasContents: any[] = [];
+const contactsContents: any[] = [];
+const agentesContents: any[] = [];
 interface Producto {
   medio: string;
   publicacion: string;

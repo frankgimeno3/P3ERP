@@ -1,8 +1,7 @@
 import { useRouter } from 'next/navigation';
 import React, { FC, useMemo } from 'react';
 import DetallePublicacion from '../crearComponents/DetallePublicacion';
-import data from '@/app/contents/publicacionesContents.json';
-
+const data: any[] = [];
 interface Fase1Props {
   publicacionSeleccionada: string;
   nombreContenido: string;

@@ -1,6 +1,6 @@
 import React, { FC, ChangeEvent } from "react";
-import propuestas from "@/app/contents/propuestasContents.json";
 import { InterfazPropuesta } from "@/app/interfaces/interfaces";
+const propuestas: any[] = [];
 
 interface OtrosDatosEnFacturaProps {
   codigoPropuesta: string;

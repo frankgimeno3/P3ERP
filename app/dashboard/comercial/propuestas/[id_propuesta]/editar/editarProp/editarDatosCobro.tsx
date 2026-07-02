@@ -1,6 +1,6 @@
 import React, { FC, useEffect } from "react";
-import propuestas from "@/app/contents/propuestasContents.json";
 import { InterfazPropuesta } from "@/app/interfaces/interfaces";
+const propuestas: any[] = [];
 
 interface DatosCobroPropuestaProps {
   codigoPropuesta: string;

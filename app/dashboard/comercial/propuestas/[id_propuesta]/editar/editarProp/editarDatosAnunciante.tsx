@@ -2,11 +2,11 @@
 
 import React, { FC, useState, useEffect } from "react";
 import Link from 'next/link';
-import cuentas from "@/app/contents/cuentasContents.json";
-import contactos from "@/app/contents/contactsContents.json";
 import { InterfazContacto, InterfazCuenta } from "@/app/interfaces/interfaces";
 import ChangeContactModal from "./modals/ChangeContactModal";
 import SearchAccountModal from "./modals/SearchAccountModal";
+const cuentas: any[] = [];
+const contactos: any[] = [];
 
 interface EditarDatosAnuncianteProps {
   empresaAnunciante: string;
@@ -110,7 +110,7 @@ const EditarDatosAnunciante: FC<EditarDatosAnuncianteProps> = ({
           <tr className="bg-white text-gray-700">
             <td className="px-4 py-2">
               <Link
-                href={`/dashboard/clientes/cuentas/${cuentaSeleccionada.id_cuenta}`}
+                href={`/dashboard/comercial/cuentas/${cuentaSeleccionada.id_cuenta}`}
                 className="bg-blue-950/80 text-gray-100 p-2 px-4 rounded-lg shadow-xl cursor-pointer hover:bg-blue-900"
               >
                 {cuentaSeleccionada.nombre_empresa}
@@ -147,7 +147,7 @@ const EditarDatosAnunciante: FC<EditarDatosAnuncianteProps> = ({
                 <>
                   {contactoActual?.id_contacto ? (
                     <Link
-                      href={`/dashboard/clientes/contactos/${contactoActual.id_contacto}`}
+                      href={`/dashboard/comercial/contactos/${contactoActual.id_contacto}`}
                       className="bg-blue-950/80 text-gray-100 p-2 px-4 rounded-lg shadow-xl cursor-pointer hover:bg-blue-900"
                     >
                       {contactoActual?.nombre_completo_contacto || contactoActual?.nombre_contacto || "Sin contacto"}

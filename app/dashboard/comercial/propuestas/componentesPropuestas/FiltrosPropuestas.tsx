@@ -1,6 +1,13 @@
 'use client';
+
 import React, { FC } from 'react';
-import { useRouter } from 'next/navigation';
+
+interface Agente {
+  id_agente: string;
+  nombre_completo_agente: string;
+  nombre_agente?: string;
+  apellidos_agente?: string;
+}
 
 interface FiltrosPropuestasProps {
   clienteFiltro: string;
@@ -17,7 +24,13 @@ interface FiltrosPropuestasProps {
   setEstadoFiltro: (value: string) => void;
   pestana: 'miasenproceso' | 'todasporcliente';
   agenteActual: string;
+  agentes: Agente[];
 }
+
+const getNombreAgente = (agente: Agente) =>
+  agente.nombre_completo_agente ||
+  `${agente.nombre_agente || ''} ${agente.apellidos_agente || ''}`.trim() ||
+  agente.id_agente;
 
 const FiltrosPropuestas: FC<FiltrosPropuestasProps> = ({
   clienteFiltro,
@@ -34,19 +47,16 @@ const FiltrosPropuestas: FC<FiltrosPropuestasProps> = ({
   setEstadoFiltro,
   pestana,
   agenteActual,
+  agentes,
 }) => {
-  const router = useRouter();
-
   const bloqueaAgente = pestana === 'miasenproceso';
   const bloqueaFechas = pestana === 'todasporcliente';
   const bloqueaEstado = pestana === 'miasenproceso';
 
   return (
-    <div className="flex flex-col  w-full  bg-white rounded p-5">
-
+    <div className="flex flex-col w-full bg-white rounded p-5">
       <p className="text-lg font-semibold mb-2">Buscador de propuestas</p>
-      <div className='flex flex-row w-full justify-between items-center'>
-
+      <div className="flex flex-row w-full justify-between items-center">
         <div className="flex flex-wrap gap-4 items-end p-5">
           <div className="flex flex-col">
             <label className="text-sm font-medium">Nombre cliente</label>
@@ -71,15 +81,20 @@ const FiltrosPropuestas: FC<FiltrosPropuestasProps> = ({
           </div>
 
           <div className="flex flex-col">
-            <label className="text-sm font-medium">Agente (número)</label>
-            <input
-              type="text"
+            <label className="text-sm font-medium">Agente</label>
+            <select
               value={bloqueaAgente ? agenteActual : agenteFiltro}
               onChange={(e) => !bloqueaAgente && setAgenteFiltro(e.target.value)}
-              placeholder="Ej: ag_25_0004"
               disabled={bloqueaAgente}
               className={`border px-2 py-1 rounded ${bloqueaAgente ? 'bg-blue-950/50 text-white cursor-not-allowed' : ''}`}
-            />
+            >
+              {!bloqueaAgente && <option value="">Todos</option>}
+              {agentes.map((agente) => (
+                <option key={agente.id_agente} value={agente.id_agente}>
+                  {getNombreAgente(agente)}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="flex flex-col">

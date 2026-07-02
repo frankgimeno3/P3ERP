@@ -1,7 +1,6 @@
   import React, { FC, useState, useEffect, useMemo } from "react";
 import { FilaContenido } from "../editarContenidoPropuesta";
-import serviciosData from "@/app/contents/ServiciosContents.json";
-
+const serviciosData: any[] = [];
 interface Servicio {
   id_servicio: string;
   medio_servicio_es: string;

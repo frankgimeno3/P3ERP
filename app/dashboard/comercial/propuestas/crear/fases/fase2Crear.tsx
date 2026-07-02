@@ -1,6 +1,5 @@
 import React, { FC, useState, useMemo, useEffect } from "react";
-import contactsContents from "@/app/contents/contactsContents.json";
-
+const contactsContents: any[] = [];
 interface Contacto {
   id_contacto: string;
   nombre_completo_contacto: string;

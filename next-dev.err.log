@@ -1,0 +1,359 @@
+ ⚠ ./node_modules/sequelize/lib/dialects/abstract/connection-manager.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/sequelize/lib/dialects/abstract/connection-manager.js
+./node_modules/sequelize/lib/dialects/sqlite/connection-manager.js
+./node_modules/sequelize/lib/dialects/sqlite/index.js
+./node_modules/sequelize/lib/sequelize.js
+./node_modules/sequelize/lib/index.js
+./node_modules/sequelize/lib/index.mjs
+./server/database/database.js
+./instrumentation-node.js
+ ⚠ ./node_modules/sequelize/lib/dialects/abstract/connection-manager.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/sequelize/lib/dialects/abstract/connection-manager.js
+./node_modules/sequelize/lib/dialects/sqlite/connection-manager.js
+./node_modules/sequelize/lib/dialects/sqlite/index.js
+./node_modules/sequelize/lib/sequelize.js
+./node_modules/sequelize/lib/index.js
+./node_modules/sequelize/lib/index.mjs
+./server/database/database.js
+./instrumentation-node.js
+ ⚠ ./node_modules/sequelize/lib/dialects/abstract/connection-manager.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/sequelize/lib/dialects/abstract/connection-manager.js
+./node_modules/sequelize/lib/dialects/mariadb/connection-manager.js
+./node_modules/sequelize/lib/dialects/mariadb/index.js
+./node_modules/sequelize/lib/sequelize.js
+./node_modules/sequelize/lib/index.js
+./node_modules/sequelize/lib/index.mjs
+./server/database/database.js
+./instrumentation-node.js
+ ⚠ ./node_modules/sequelize/lib/dialects/abstract/connection-manager.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/sequelize/lib/dialects/abstract/connection-manager.js
+./node_modules/sequelize/lib/dialects/mariadb/connection-manager.js
+./node_modules/sequelize/lib/dialects/mariadb/index.js
+./node_modules/sequelize/lib/sequelize.js
+./node_modules/sequelize/lib/index.js
+./node_modules/sequelize/lib/index.mjs
+./server/database/database.js
+./instrumentation-node.js
+ ⚠ ./node_modules/sequelize/lib/dialects/abstract/connection-manager.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/sequelize/lib/dialects/abstract/connection-manager.js
+./node_modules/sequelize/lib/dialects/mariadb/connection-manager.js
+./node_modules/sequelize/lib/dialects/mariadb/index.js
+./node_modules/sequelize/lib/sequelize.js
+./node_modules/sequelize/lib/index.js
+./node_modules/sequelize/lib/index.mjs
+./server/database/database.js
+./instrumentation-node.js
+ ⨯ [Error: ENOENT: no such file or directory, open 'C:\Users\frank\OneDrive\Escritorio\dev\proyectosFuncionales\p3\p3erp\.next\server\edge-instrumentation.js']
+ ⚠ ./node_modules/sequelize/lib/dialects/abstract/connection-manager.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/sequelize/lib/dialects/abstract/connection-manager.js
+./node_modules/sequelize/lib/dialects/mariadb/connection-manager.js
+./node_modules/sequelize/lib/dialects/mariadb/index.js
+./node_modules/sequelize/lib/sequelize.js
+./node_modules/sequelize/lib/index.js
+./node_modules/sequelize/lib/index.mjs
+./server/database/database.js
+./instrumentation-node.js
+ ⚠ ./node_modules/sequelize/lib/dialects/abstract/connection-manager.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/sequelize/lib/dialects/abstract/connection-manager.js
+./node_modules/sequelize/lib/dialects/mariadb/connection-manager.js
+./node_modules/sequelize/lib/dialects/mariadb/index.js
+./node_modules/sequelize/lib/sequelize.js
+./node_modules/sequelize/lib/index.js
+./node_modules/sequelize/lib/index.mjs
+./server/database/database.js
+./instrumentation-node.js
+ ⨯ [Error: ENOENT: no such file or directory, open 'C:\Users\frank\OneDrive\Escritorio\dev\proyectosFuncionales\p3\p3erp\.next\routes-manifest.json'] {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\frank\\OneDrive\\Escritorio\\dev\\proyectosFuncionales\\p3\\p3erp\\.next\\routes-manifest.json'
+}
+ ⚠ ./node_modules/sequelize/lib/dialects/abstract/connection-manager.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/sequelize/lib/dialects/abstract/connection-manager.js
+./node_modules/sequelize/lib/dialects/mariadb/connection-manager.js
+./node_modules/sequelize/lib/dialects/mariadb/index.js
+./node_modules/sequelize/lib/sequelize.js
+./node_modules/sequelize/lib/index.js
+./node_modules/sequelize/lib/index.mjs
+./server/database/database.js
+./instrumentation-node.js
+ ⚠ ./node_modules/sequelize/lib/dialects/abstract/connection-manager.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/sequelize/lib/dialects/abstract/connection-manager.js
+./node_modules/sequelize/lib/dialects/mariadb/connection-manager.js
+./node_modules/sequelize/lib/dialects/mariadb/index.js
+./node_modules/sequelize/lib/sequelize.js
+./node_modules/sequelize/lib/index.js
+./node_modules/sequelize/lib/index.mjs
+./server/database/database.js
+./instrumentation-node.js
+ ⨯ [Error: ENOENT: no such file or directory, open 'C:\Users\frank\OneDrive\Escritorio\dev\proyectosFuncionales\p3\p3erp\.next\routes-manifest.json'] {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\frank\\OneDrive\\Escritorio\\dev\\proyectosFuncionales\\p3\\p3erp\\.next\\routes-manifest.json'
+}
+ ⚠ ./node_modules/sequelize/lib/dialects/abstract/connection-manager.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/sequelize/lib/dialects/abstract/connection-manager.js
+./node_modules/sequelize/lib/dialects/mariadb/connection-manager.js
+./node_modules/sequelize/lib/dialects/mariadb/index.js
+./node_modules/sequelize/lib/sequelize.js
+./node_modules/sequelize/lib/index.js
+./node_modules/sequelize/lib/index.mjs
+./server/database/database.js
+./instrumentation-node.js
+[Error: ENOENT: no such file or directory, open 'C:\Users\frank\OneDrive\Escritorio\dev\proyectosFuncionales\p3\p3erp\.next\routes-manifest.json'] {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\frank\\OneDrive\\Escritorio\\dev\\proyectosFuncionales\\p3\\p3erp\\.next\\routes-manifest.json'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open 'C:\Users\frank\OneDrive\Escritorio\dev\proyectosFuncionales\p3\p3erp\.next\routes-manifest.json'] {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\frank\\OneDrive\\Escritorio\\dev\\proyectosFuncionales\\p3\\p3erp\\.next\\routes-manifest.json'
+}
+[Error: ENOENT: no such file or directory, open 'C:\Users\frank\OneDrive\Escritorio\dev\proyectosFuncionales\p3\p3erp\.next\routes-manifest.json'] {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\frank\\OneDrive\\Escritorio\\dev\\proyectosFuncionales\\p3\\p3erp\\.next\\routes-manifest.json'
+}
+ ⚠ ./node_modules/sequelize/lib/dialects/abstract/connection-manager.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/sequelize/lib/dialects/abstract/connection-manager.js
+./node_modules/sequelize/lib/dialects/mariadb/connection-manager.js
+./node_modules/sequelize/lib/dialects/mariadb/index.js
+./node_modules/sequelize/lib/sequelize.js
+./node_modules/sequelize/lib/index.js
+./node_modules/sequelize/lib/index.mjs
+./server/database/database.js
+./instrumentation-node.js
+ ⚠ ./node_modules/sequelize/lib/dialects/abstract/connection-manager.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/sequelize/lib/dialects/abstract/connection-manager.js
+./node_modules/sequelize/lib/dialects/mariadb/connection-manager.js
+./node_modules/sequelize/lib/dialects/mariadb/index.js
+./node_modules/sequelize/lib/sequelize.js
+./node_modules/sequelize/lib/index.js
+./node_modules/sequelize/lib/index.mjs
+./server/database/database.js
+./instrumentation-node.js
+ ⚠ ./node_modules/sequelize/lib/dialects/abstract/connection-manager.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/sequelize/lib/dialects/abstract/connection-manager.js
+./node_modules/sequelize/lib/dialects/mariadb/connection-manager.js
+./node_modules/sequelize/lib/dialects/mariadb/index.js
+./node_modules/sequelize/lib/sequelize.js
+./node_modules/sequelize/lib/index.js
+./node_modules/sequelize/lib/index.mjs
+./server/database/database.js
+./instrumentation-node.js
+ ⚠ ./node_modules/sequelize/lib/dialects/abstract/connection-manager.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/sequelize/lib/dialects/abstract/connection-manager.js
+./node_modules/sequelize/lib/dialects/mariadb/connection-manager.js
+./node_modules/sequelize/lib/dialects/mariadb/index.js
+./node_modules/sequelize/lib/sequelize.js
+./node_modules/sequelize/lib/index.js
+./node_modules/sequelize/lib/index.mjs
+./server/database/database.js
+./instrumentation-node.js
+ ⚠ ./node_modules/sequelize/lib/dialects/abstract/connection-manager.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/sequelize/lib/dialects/abstract/connection-manager.js
+./node_modules/sequelize/lib/dialects/mariadb/connection-manager.js
+./node_modules/sequelize/lib/dialects/mariadb/index.js
+./node_modules/sequelize/lib/sequelize.js
+./node_modules/sequelize/lib/index.js
+./node_modules/sequelize/lib/index.mjs
+./server/database/database.js
+./instrumentation-node.js
+ ⨯ [Error: ENOENT: no such file or directory, open 'C:\Users\frank\OneDrive\Escritorio\dev\proyectosFuncionales\p3\p3erp\.next\server\edge-instrumentation.js']
+ ⚠ ./node_modules/sequelize/lib/dialects/abstract/connection-manager.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/sequelize/lib/dialects/abstract/connection-manager.js
+./node_modules/sequelize/lib/dialects/mariadb/connection-manager.js
+./node_modules/sequelize/lib/dialects/mariadb/index.js
+./node_modules/sequelize/lib/sequelize.js
+./node_modules/sequelize/lib/index.js
+./node_modules/sequelize/lib/index.mjs
+./server/database/database.js
+./instrumentation-node.js
+ ⨯ [Error: ENOENT: no such file or directory, open 'C:\Users\frank\OneDrive\Escritorio\dev\proyectosFuncionales\p3\p3erp\.next\routes-manifest.json'] {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\frank\\OneDrive\\Escritorio\\dev\\proyectosFuncionales\\p3\\p3erp\\.next\\routes-manifest.json'
+}
+ ⚠ ./node_modules/sequelize/lib/dialects/abstract/connection-manager.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/sequelize/lib/dialects/abstract/connection-manager.js
+./node_modules/sequelize/lib/dialects/mariadb/connection-manager.js
+./node_modules/sequelize/lib/dialects/mariadb/index.js
+./node_modules/sequelize/lib/sequelize.js
+./node_modules/sequelize/lib/index.js
+./node_modules/sequelize/lib/index.mjs
+./server/database/database.js
+./instrumentation-node.js
+ ⚠ ./node_modules/sequelize/lib/dialects/abstract/connection-manager.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/sequelize/lib/dialects/abstract/connection-manager.js
+./node_modules/sequelize/lib/dialects/mariadb/connection-manager.js
+./node_modules/sequelize/lib/dialects/mariadb/index.js
+./node_modules/sequelize/lib/sequelize.js
+./node_modules/sequelize/lib/index.js
+./node_modules/sequelize/lib/index.mjs
+./server/database/database.js
+./instrumentation-node.js
+ ⨯ [Error: ENOENT: no such file or directory, open 'C:\Users\frank\OneDrive\Escritorio\dev\proyectosFuncionales\p3\p3erp\.next\routes-manifest.json'] {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\frank\\OneDrive\\Escritorio\\dev\\proyectosFuncionales\\p3\\p3erp\\.next\\routes-manifest.json'
+}
+[Error: ENOENT: no such file or directory, open 'C:\Users\frank\OneDrive\Escritorio\dev\proyectosFuncionales\p3\p3erp\.next\routes-manifest.json'] {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\frank\\OneDrive\\Escritorio\\dev\\proyectosFuncionales\\p3\\p3erp\\.next\\routes-manifest.json'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open 'C:\Users\frank\OneDrive\Escritorio\dev\proyectosFuncionales\p3\p3erp\.next\routes-manifest.json'] {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\frank\\OneDrive\\Escritorio\\dev\\proyectosFuncionales\\p3\\p3erp\\.next\\routes-manifest.json'
+}
+[Error: ENOENT: no such file or directory, open 'C:\Users\frank\OneDrive\Escritorio\dev\proyectosFuncionales\p3\p3erp\.next\routes-manifest.json'] {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\frank\\OneDrive\\Escritorio\\dev\\proyectosFuncionales\\p3\\p3erp\\.next\\routes-manifest.json'
+}
+ ⚠ ./node_modules/sequelize/lib/dialects/abstract/connection-manager.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/sequelize/lib/dialects/abstract/connection-manager.js
+./node_modules/sequelize/lib/dialects/mariadb/connection-manager.js
+./node_modules/sequelize/lib/dialects/mariadb/index.js
+./node_modules/sequelize/lib/sequelize.js
+./node_modules/sequelize/lib/index.js
+./node_modules/sequelize/lib/index.mjs
+./server/database/database.js
+./instrumentation-node.js
+ ⚠ ./node_modules/sequelize/lib/dialects/abstract/connection-manager.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/sequelize/lib/dialects/abstract/connection-manager.js
+./node_modules/sequelize/lib/dialects/mariadb/connection-manager.js
+./node_modules/sequelize/lib/dialects/mariadb/index.js
+./node_modules/sequelize/lib/sequelize.js
+./node_modules/sequelize/lib/index.js
+./node_modules/sequelize/lib/index.mjs
+./server/database/database.js
+./instrumentation-node.js
+ ⨯ [Error: ENOENT: no such file or directory, open 'C:\Users\frank\OneDrive\Escritorio\dev\proyectosFuncionales\p3\p3erp\.next\routes-manifest.json'] {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\frank\\OneDrive\\Escritorio\\dev\\proyectosFuncionales\\p3\\p3erp\\.next\\routes-manifest.json',
+  page: '/favicon.ico'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open 'C:\Users\frank\OneDrive\Escritorio\dev\proyectosFuncionales\p3\p3erp\.next\server\edge-instrumentation.js']
+ ⨯ [Error: ENOENT: no such file or directory, open 'C:\Users\frank\OneDrive\Escritorio\dev\proyectosFuncionales\p3\p3erp\.next\routes-manifest.json'] {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\frank\\OneDrive\\Escritorio\\dev\\proyectosFuncionales\\p3\\p3erp\\.next\\routes-manifest.json'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open 'C:\Users\frank\OneDrive\Escritorio\dev\proyectosFuncionales\p3\p3erp\.next\routes-manifest.json'] {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\frank\\OneDrive\\Escritorio\\dev\\proyectosFuncionales\\p3\\p3erp\\.next\\routes-manifest.json'
+}
+[Error: ENOENT: no such file or directory, open 'C:\Users\frank\OneDrive\Escritorio\dev\proyectosFuncionales\p3\p3erp\.next\routes-manifest.json'] {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\frank\\OneDrive\\Escritorio\\dev\\proyectosFuncionales\\p3\\p3erp\\.next\\routes-manifest.json'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open 'C:\Users\frank\OneDrive\Escritorio\dev\proyectosFuncionales\p3\p3erp\.next\routes-manifest.json'] {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\frank\\OneDrive\\Escritorio\\dev\\proyectosFuncionales\\p3\\p3erp\\.next\\routes-manifest.json'
+}
+[Error: ENOENT: no such file or directory, open 'C:\Users\frank\OneDrive\Escritorio\dev\proyectosFuncionales\p3\p3erp\.next\routes-manifest.json'] {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\frank\\OneDrive\\Escritorio\\dev\\proyectosFuncionales\\p3\\p3erp\\.next\\routes-manifest.json'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open 'C:\Users\frank\OneDrive\Escritorio\dev\proyectosFuncionales\p3\p3erp\.next\routes-manifest.json'] {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\frank\\OneDrive\\Escritorio\\dev\\proyectosFuncionales\\p3\\p3erp\\.next\\routes-manifest.json',
+  page: '/favicon.ico'
+}
+ ⚠ ./node_modules/sequelize/lib/dialects/abstract/connection-manager.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/sequelize/lib/dialects/abstract/connection-manager.js
+./node_modules/sequelize/lib/dialects/mariadb/connection-manager.js
+./node_modules/sequelize/lib/dialects/mariadb/index.js
+./node_modules/sequelize/lib/sequelize.js
+./node_modules/sequelize/lib/index.js
+./node_modules/sequelize/lib/index.mjs
+./server/database/database.js
+./instrumentation-node.js

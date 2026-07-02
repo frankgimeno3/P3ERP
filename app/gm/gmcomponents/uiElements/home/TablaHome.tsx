@@ -91,7 +91,7 @@ export default function TablaHome({ searchTerm, selectedField }: TablaHomeProps)
 
     if (event.key === "Enter") {
       event.preventDefault();
-      router.push(`/cuentas/${currentSelectedCode}`);
+      router.push(`/gm/cuentas/${currentSelectedCode}`);
     }
   };
 
@@ -120,7 +120,7 @@ export default function TablaHome({ searchTerm, selectedField }: TablaHomeProps)
                   <tr
                     key={account.codigo}
                     onClick={() => setSelectedCode(account.codigo)}
-                    onDoubleClick={() => router.push(`/cuentas/${account.codigo}`)}
+                    onDoubleClick={() => router.push(`/gm/cuentas/${account.codigo}`)}
                     className={`cursor-pointer border-b border-slate-200 ${isSelected ? "bg-blue-100" : "bg-white"}`}
                   >
                     {columns.map((column) => (

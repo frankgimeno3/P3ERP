@@ -22,12 +22,12 @@ const FiltrosServicios: FC<FiltrosServiciosProps> = ({
 
   return (
     <div className='flex flex-col justify-between mb-3'>
-      <div className='flex flex-row justify-between px-4'>
+      <div className='flex flex-col sm:flex-row justify-between gap-3 px-4'>
         <h2 className="text-lg font-semibold mb-4">Buscador de Servicios</h2>
-        <div className='my-auto'>
+        <div className='my-auto shrink-0'>
         <Link
           href="/dashboard/produccion/servicios/crear"
-          className='bg-blue-950 text-xs text-gray-100 p-2 px-4 rounded-lg shadow-xl cursor-pointer hover:bg-blue-900'
+          className='inline-flex whitespace-nowrap bg-blue-950 text-xs text-gray-100 p-2 px-4 rounded-lg shadow-xl cursor-pointer hover:bg-blue-900'
         >
           <p>Crear nuevo servicio</p>
         </Link>

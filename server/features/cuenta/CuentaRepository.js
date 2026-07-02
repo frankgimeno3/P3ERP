@@ -1,0 +1,206 @@
+import { getPgPool } from "../../database/pgClient.js";
+
+const tableName = "cuentas_db";
+
+const writableColumns = [
+  "id_cuenta",
+  "nombre_empresa",
+  "pais_cuenta",
+  "id_agente",
+  "id_edisoft",
+  "asignado_a",
+  "receptor_revista",
+  "potencial_actual_relacion",
+  "potencial_futuro_encaje",
+  "revisado_ricardo",
+  "campanas",
+  "estado_leads_frios",
+  "stands_ferias",
+  "tipo_cuenta",
+  "descripcion_cuenta",
+  "actividades_cuenta",
+  "descripcion_actividad",
+  "correo_principal",
+  "qq",
+  "presente_en_qq",
+  "ferias",
+  "red_social_prioritaria",
+  "catalogos",
+  "array_cuentas_distribuidoras",
+  "array_cuentas_distribuidas",
+  "cuenta_agencia",
+  "fuente_novedades_cuenta",
+  "vat_code",
+  "nombre_fiscal",
+  "pais_facturacion",
+  "direccion_facturacion",
+  "mail_contabilidad",
+  "poblacion_facturacion",
+  "cp_facturacion",
+  "detalles_facturacion",
+  "facturas_emitidas",
+  "datos_comerciales",
+  "array_direcciones_cuenta",
+  "array_contactos_cuenta",
+  "array_comentarios_cuenta",
+];
+
+const jsonColumns = new Set([
+  "datos_comerciales",
+  "array_cuentas_distribuidoras",
+  "array_cuentas_distribuidas",
+  "facturas_emitidas",
+  "array_direcciones_cuenta",
+  "array_contactos_cuenta",
+  "array_comentarios_cuenta",
+]);
+
+function normalizeCuenta(row) {
+  return {
+    id_cuenta: row.id_cuenta,
+    nombre_empresa: row.nombre_empresa ?? "",
+    pais_cuenta: row.pais_cuenta ?? "",
+    id_agente: row.id_agente ?? "",
+    id_edisoft: row.id_edisoft ?? "",
+    asignado_a: row.asignado_a ?? "",
+    receptor_revista: Boolean(row.receptor_revista),
+    potencial_actual_relacion: row.potencial_actual_relacion ?? "",
+    potencial_futuro_encaje: row.potencial_futuro_encaje ?? "",
+    revisado_ricardo: Boolean(row.revisado_ricardo),
+    campanas: row.campanas ?? "",
+    estado_leads_frios: row.estado_leads_frios ?? "",
+    stands_ferias: row.stands_ferias ?? "",
+    tipo_cuenta: row.tipo_cuenta ?? "",
+    descripcion_cuenta: row.descripcion_cuenta ?? "",
+    actividades_cuenta: row.actividades_cuenta ?? "",
+    descripcion_actividad: row.descripcion_actividad ?? "",
+    correo_principal: row.correo_principal ?? "",
+    qq: Boolean(row.qq),
+    presente_en_qq: Boolean(row.presente_en_qq),
+    ferias: row.ferias ?? "",
+    red_social_prioritaria: row.red_social_prioritaria ?? "",
+    catalogos: row.catalogos ?? "",
+    array_cuentas_distribuidoras: row.array_cuentas_distribuidoras ?? [],
+    array_cuentas_distribuidas: row.array_cuentas_distribuidas ?? [],
+    cuenta_agencia: row.cuenta_agencia ?? "",
+    fuente_novedades_cuenta: row.fuente_novedades_cuenta ?? "",
+    vat_code: row.vat_code ?? "",
+    nombre_fiscal: row.nombre_fiscal ?? "",
+    pais_facturacion: row.pais_facturacion ?? "",
+    direccion_facturacion: row.direccion_facturacion ?? "",
+    mail_contabilidad: row.mail_contabilidad ?? "",
+    poblacion_facturacion: row.poblacion_facturacion ?? "",
+    cp_facturacion: row.cp_facturacion ?? "",
+    detalles_facturacion: row.detalles_facturacion ?? "",
+    facturas_emitidas: row.facturas_emitidas ?? [],
+    datos_comerciales: row.datos_comerciales ?? {},
+    array_direcciones_cuenta: row.array_direcciones_cuenta ?? [],
+    array_contactos_cuenta: row.array_contactos_cuenta ?? [],
+    array_comentarios_cuenta: row.array_comentarios_cuenta ?? [],
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+  };
+}
+
+function normalizeValue(column, value) {
+  if (jsonColumns.has(column)) {
+    if (value === undefined || value === null) return column === "datos_comerciales" ? {} : [];
+    if (column === "datos_comerciales") return value;
+    return Array.isArray(value) ? value : [];
+  }
+
+  if (["presente_en_qq", "qq", "receptor_revista", "revisado_ricardo"].includes(column)) {
+    return Boolean(value);
+  }
+
+  return value;
+}
+
+export async function getCuentas(filters = {}) {
+  const pool = getPgPool();
+  const values = [];
+  const where = [];
+
+  if (filters.clienteFiltro) {
+    values.push(`%${filters.clienteFiltro}%`);
+    where.push(`nombre_empresa ILIKE $${values.length}`);
+  }
+
+  if (filters.codigoCrmFiltro) {
+    values.push(`%${filters.codigoCrmFiltro}%`);
+    where.push(`id_cuenta ILIKE $${values.length}`);
+  }
+
+  if (filters.agenteFiltro) {
+    values.push(filters.agenteFiltro);
+    where.push(`id_agente = $${values.length}`);
+  }
+
+  if (filters.telFiltro) {
+    values.push(`%${filters.telFiltro}%`);
+    where.push(`datos_comerciales::text ILIKE $${values.length}`);
+  }
+
+  const query = `
+    SELECT *
+    FROM ${tableName}
+    ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
+    ORDER BY created_at DESC
+  `;
+
+  const { rows } = await pool.query(query, values);
+  return rows.map(normalizeCuenta);
+}
+
+export async function getCuentaById(idCuenta) {
+  const pool = getPgPool();
+  const { rows } = await pool.query(
+    `SELECT * FROM ${tableName} WHERE id_cuenta = $1 LIMIT 1`,
+    [idCuenta],
+  );
+
+  return rows[0] ? normalizeCuenta(rows[0]) : null;
+}
+
+export async function createCuenta(cuentaData) {
+  const pool = getPgPool();
+  const columns = writableColumns.filter((column) => cuentaData[column] !== undefined);
+  const values = columns.map((column) => normalizeValue(column, cuentaData[column]));
+  const placeholders = columns.map((_, index) => `$${index + 1}`);
+
+  const { rows } = await pool.query(
+    `
+      INSERT INTO ${tableName} (${columns.join(", ")})
+      VALUES (${placeholders.join(", ")})
+      RETURNING *
+    `,
+    values,
+  );
+
+  return normalizeCuenta(rows[0]);
+}
+
+export async function updateCuenta(idCuenta, cuentaData) {
+  const pool = getPgPool();
+  const columns = writableColumns.filter((column) => column !== "id_cuenta" && cuentaData[column] !== undefined);
+  const values = columns.map((column) => normalizeValue(column, cuentaData[column]));
+
+  if (!columns.length) {
+    return getCuentaById(idCuenta);
+  }
+
+  values.push(idCuenta);
+  const assignments = columns.map((column, index) => `${column} = $${index + 1}`);
+
+  const { rows } = await pool.query(
+    `
+      UPDATE ${tableName}
+      SET ${assignments.join(", ")}, updated_at = NOW()
+      WHERE id_cuenta = $${values.length}
+      RETURNING *
+    `,
+    values,
+  );
+
+  return rows[0] ? normalizeCuenta(rows[0]) : null;
+}

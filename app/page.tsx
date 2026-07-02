@@ -68,7 +68,7 @@ export default function Home() {
     return (
         <div className="flex flex-col min-h-screen bg-white text-gray-600 p-8 gap-8">
             <div className="flex flex-row justify-left items-center">
-                <p className="text-xl font-bold">Sistema de fichaje PROPORCIÓN 3, S.A.</p>
+                <p className="text-xl font-bold">Portal de gestión PROPORCIÓN 3, S.A.</p>
             </div>
 
             <div className="flex flex-col items-center justify-center flex-grow">
@@ -133,7 +133,7 @@ export default function Home() {
                     </button>
 
                     <p className='text-xs text-white'>
-                        Si no puede identificarse, por favor envíe email a frank@vidrioperfil.com con el evento que deseaba fichar.
+                        Si no puede identificarse, por favor envíe email a frank@vidrioperfil.com.
                     </p>
                 </form>
             </div>

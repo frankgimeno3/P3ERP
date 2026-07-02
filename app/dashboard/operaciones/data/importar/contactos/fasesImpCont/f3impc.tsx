@@ -14,7 +14,7 @@ const F3impc: FC<F3impcProps> = ({ setFaseImportacionContacto, incidencias }) =>
   };
 
   const handleIrDashboard = () => {
-    router.push('/dashboard/clientes/contactos');
+    router.push('/dashboard/comercial/contactos');
   };
 
   return (

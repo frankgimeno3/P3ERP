@@ -1,7 +1,6 @@
 "use client"
 import React, { FC } from 'react';
-import data from '@/app/contents/publicacionesContents.json';
-
+const data: any[] = [];
 interface DetallePublicacionProps {
     publicacionSeleccionada: string;
 }

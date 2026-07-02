@@ -2,9 +2,8 @@
 import React, { FC } from 'react';
 import { useRouter } from 'next/navigation';
 import PropSvg from '../svg/PropSvg';
-import propuestas from '@/app/contents/propuestasContents.json';
-import cuentas from '@/app/contents/cuentasContents.json';
-
+const propuestas: any[] = [];
+const cuentas: any[] = [];
 interface MisPendientesProps {
   clienteFiltro: string;
   codigoCRMFiltro: string;

@@ -7,8 +7,7 @@ import PropsAprobadasContent from './propuestasclientecomponents/PropsAprobadas'
 import PropsPendientesContent from './propuestasclientecomponents/PropsPendientes';
 import PropsRechazadasContent from './propuestasclientecomponents/PropsRechazadas';
 import MiddleNav from '@/app/general_components/componentes_recurrentes/MiddleNav';
-import cuentas from '@/app/contents/cuentasContents.json'; 
-
+const cuentas: any[] = [];
 interface PropuestasClienteProps { }
 
 const PropuestasCliente: FC<PropuestasClienteProps> = () => {
@@ -35,7 +34,7 @@ const PropuestasCliente: FC<PropuestasClienteProps> = () => {
 
             <div className='flex flex-row gap-8 h-10'>
               <Link
-                href={`/dashboard/clientes/cuentas/${id_cuenta}`}
+                href={`/dashboard/comercial/cuentas/${id_cuenta}`}
                 className='bg-blue-950 text-gray-100 p-2 px-4 rounded-lg shadow-xl cursor-pointer hover:bg-blue-900'
               >
                 <p>Ficha del cliente</p>

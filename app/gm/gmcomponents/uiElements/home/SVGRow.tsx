@@ -1,6 +1,11 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+
 export default function SVGRow() {
+  const router = useRouter();
   const items = [
-    { label: "Nuevo", icon: (<svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14" strokeLinecap="round" /><path d="M5 12h14" strokeLinecap="round" /></svg>) },
+    { label: "Nuevo", onClick: () => router.push("/gm/nuevo"), icon: (<svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14" strokeLinecap="round" /><path d="M5 12h14" strokeLinecap="round" /></svg>) },
     { label: "Editar", icon: (<svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 20h4l10-10-4-4L4 16z" /><path d="m14 6 4 4" /></svg>) },
     { label: "Avanzada", icon: (<svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 7h14" strokeLinecap="round" /><path d="M8 12h8" strokeLinecap="round" /><path d="M10 17h4" strokeLinecap="round" /></svg>) },
     { label: "Imprimir", icon: (<svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2"><rect x="5" y="5" width="14" height="14" rx="2" /><path d="M8 5V3h8v2" /><path d="M8 19v2h8v-2" /></svg>) },
@@ -15,12 +20,17 @@ export default function SVGRow() {
   return (
     <div className="flex flex-row items-center justify-between  bg-[#f3f5f7] px-4 py-6 text-slate-800 sm:px-6 lg:px-8 border-b border-gray-800 shadow shadow-xl ">
       {items.map((item) => (
-        <div key={item.label} className="flex flex-col items-center gap-5 px-3 py-2 ">
+        <button
+          key={item.label}
+          type="button"
+          onClick={item.onClick}
+          className="flex flex-col items-center gap-5 px-3 py-2"
+        >
           <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#d9e2ea] text-slate-700">
             {item.icon}
           </div>
           <p className="text-xs font-medium text-slate-700">{item.label}</p>
-        </div>
+        </button>
       ))}
     </div>
   );

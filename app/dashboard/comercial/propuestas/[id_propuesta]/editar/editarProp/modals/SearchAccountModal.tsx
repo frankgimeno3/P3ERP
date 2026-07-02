@@ -1,6 +1,6 @@
 import React, { FC, useEffect, useState } from "react";
-import cuentas from "@/app/contents/cuentasContents.json";
 import { InterfazCuenta } from "@/app/interfaces/interfaces";
+const cuentas: any[] = [];
 
 interface SearchAccountModalProps {
   currentAccountId: string;

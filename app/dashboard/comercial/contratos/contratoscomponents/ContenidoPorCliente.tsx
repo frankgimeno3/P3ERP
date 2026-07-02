@@ -1,11 +1,7 @@
 'use client'
-import React, { FC } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import contratosContents from "@/app/contents/contratosContents.json";
-import cuentasContents from "@/app/contents/cuentasContents.json";
-import contactosContents from "@/app/contents/contactsContents.json";
-import { InterfazContacto, InterfazContrato, InterfazCuenta } from '@/app/interfaces/interfaces';
-import agentes from "@/app/contents/agentesContents.json"
+import { ContratoService } from '@/app/service/ContratoService';
 
 const parseDMY = (s?: string): Date | null => {
   if (!s) return null;
@@ -24,14 +20,36 @@ const formatDateToISO = (s?: string): string => {
   return `${dd}-${mm}-${yyyy}`;
 };
 
+const formatMoney = (value?: number): string => {
+  const amount = Number(value ?? 0);
+  return amount ? `${amount.toLocaleString('es-ES')} €` : '-';
+};
+
 interface ContenidoPorClienteProps {}
 
 const ContenidoPorCliente: FC<ContenidoPorClienteProps> = () => {
   const router = useRouter();
+  const [contratos, setContratos] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const contratos = contratosContents as InterfazContrato[];
-  const cuentas = cuentasContents as InterfazCuenta[];
-  const contactos = contactosContents as InterfazContacto[];
+  useEffect(() => {
+    const fetchContratos = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        const data = await ContratoService.getContratos();
+        setContratos(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error('Error fetching contratos:', err);
+        setError('No se han podido cargar los contratos.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchContratos();
+  }, []);
 
   const handleRowClick = (e: React.MouseEvent<HTMLTableRowElement>, href: string) => {
     if (e.ctrlKey || e.metaKey) {
@@ -44,40 +62,43 @@ const ContenidoPorCliente: FC<ContenidoPorClienteProps> = () => {
   
   return (
     <div className="flex flex-col gap-3 mt-12 rounded-xl">
+      {error && (
+        <div className="rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white">
           <thead className="bg-blue-950 text-white">
             <tr>
-              <th className="text-left p-2 font-light pl-6">Empresa</th>
+              <th className="text-left p-2 font-light pl-6">Contrato</th>
+              <th className="text-left p-2 font-light">Empresa</th>
               <th className="text-left p-2 font-light">Fecha de firma</th>
               <th className="text-left p-2 font-light">Contacto principal</th>
               <th className="text-left p-2 font-light">Agente</th>
+              <th className="text-left p-2 font-light">Importe</th>
             </tr>
           </thead>
           <tbody>
-            {contratos.map((c) => {
-              const idContrato =   `${c.id_contrato ?? 'no_id'}`;
+            {loading && (
+              <tr>
+                <td colSpan={6} className="p-6 text-center text-gray-500">
+                  Cargando contratos...
+                </td>
+              </tr>
+            )}
 
-              const idCuenta = c.cuenta_contrato?.id_cuenta_contrato;
-              const cuentaSeleccionada = cuentas.find(cta => cta.id_cuenta === idCuenta);
- 
-              const fechaFirmaRaw =
-                c.fecha_firma_contrato ??
-                c.fecha_firma_contrato;
-              const fechaFirma = formatDateToISO(fechaFirmaRaw); 
+            {!loading && contratos.length === 0 && (
+              <tr>
+                <td colSpan={6} className="p-6 text-center text-gray-500">
+                  No hay contratos disponibles.
+                </td>
+              </tr>
+            )}
 
-              const contactoPrincipalID = c.cuenta_contrato?.id_contacto;
-              
-              
-              const agenteSeleccionado = agentes.find(
-                ct => ct.id_agente === cuentaSeleccionada?.id_agente
-              );
-              
-              
-              const contactoInfo = contactos.find(
-                ct => ct.id_contacto === contactoPrincipalID
-              );
-            
+            {!loading && contratos.map((contrato) => {
+              const idContrato = `${contrato.id_contrato ?? 'no_id'}`;
 
               return (
                 <tr
@@ -85,10 +106,12 @@ const ContenidoPorCliente: FC<ContenidoPorClienteProps> = () => {
                   onClick={(e) => handleRowClick(e, `/dashboard/comercial/contratos/${idContrato}`)}
                   className="hover:bg-gray-50 cursor-pointer"
                 >
-                  <td className="p-2 border-b border-gray-200 pl-6">{cuentaSeleccionada?.nombre_empresa }</td>
-                  <td className="p-2 border-b border-gray-200">{fechaFirma}</td>
-                  <td className="p-2 border-b border-gray-200">{contactoInfo?.nombre_completo_contacto}</td>
-                  <td className="p-2 border-b border-gray-200">{agenteSeleccionado?.nombre_completo_agente}</td>
+                  <td className="p-2 border-b border-gray-200 pl-6 font-medium text-blue-950">{idContrato}</td>
+                  <td className="p-2 border-b border-gray-200">{contrato.nombre_empresa || contrato.id_cuenta_contrato || '-'}</td>
+                  <td className="p-2 border-b border-gray-200">{formatDateToISO(contrato.fecha_firma_contrato)}</td>
+                  <td className="p-2 border-b border-gray-200">{contrato.nombre_contacto || contrato.id_contacto_contrato || '-'}</td>
+                  <td className="p-2 border-b border-gray-200">{contrato.nombre_agente_contrato || contrato.id_agente_contrato || '-'}</td>
+                  <td className="p-2 border-b border-gray-200">{formatMoney(contrato.importe_contrato_con_iva)}</td>
                 </tr>
               );
             })}

@@ -1,6 +1,5 @@
 import React, { FC, useState, useMemo, useEffect } from "react";
-import cuentasContents from "@/app/contents/cuentasContents.json";
-
+const cuentasContents: any[] = [];
 interface Cuenta {
   id_cuenta: string;
   nombre_empresa: string;

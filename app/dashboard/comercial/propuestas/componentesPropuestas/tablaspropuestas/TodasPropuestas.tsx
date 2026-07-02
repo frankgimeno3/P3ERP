@@ -2,9 +2,9 @@
 import React, { FC } from 'react';
 import { useRouter } from 'next/navigation';
 import FolderSvg from '../svg/FolderSvg';
-import propuestas from '@/app/contents/propuestasContents.json';
-import cuentas from "@/app/contents/cuentasContents.json";
 import { InterfazPropuesta } from '@/app/interfaces/interfaces';
+const propuestas: any[] = [];
+const cuentas: any[] = [];
 
 interface ContenidoPropuesta {
   medio: string;

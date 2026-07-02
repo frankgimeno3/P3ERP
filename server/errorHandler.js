@@ -1,5 +1,4 @@
 import {NextResponse} from "next/server";
-import {TimeLogNotFound} from "./features/timeLog/TimeLogError.js";
 import {
     InvalidParameterException,
     InvalidPasswordException,
@@ -7,10 +6,6 @@ import {
 } from "@aws-sdk/client-cognito-identity-provider";
 
 export function errorHandler(error){
-
-    if(error instanceof TimeLogNotFound){
-        return NextResponse.json({message: error.message}, {status: 404});
-    }
 
     if(error instanceof InvalidPasswordException){
         return NextResponse.json({message: error.message}, {status: 400});

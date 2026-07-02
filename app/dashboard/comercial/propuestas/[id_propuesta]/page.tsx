@@ -6,11 +6,11 @@ import Link from 'next/link';
 import TablaDatosGenerales from './propuestacomponents/TablaDatosGenerales';
 import TablaDatosAnunciante from './propuestacomponents/TablaDatosAnunciante';
 import MiddleNav from '@/app/general_components/componentes_recurrentes/MiddleNav';
-import propuestasRaw from '@/app/contents/propuestasContents.json';
  import ModalBorrarPropuesta from './propuestacomponents/ModalBorrarPropuesta';
 import { InterfazPropuesta } from '@/app/interfaces/interfaces';
 import TablaDeCobros from './propuestacomponents/TablaDeCobros';
 import { TablaContenidoPropuesta } from './propuestacomponents/TablaContenidoPropuesta';
+const propuestasRaw: any[] = [];
 
 const ResumenPropuesta: FC = () => {
   const params = useParams();

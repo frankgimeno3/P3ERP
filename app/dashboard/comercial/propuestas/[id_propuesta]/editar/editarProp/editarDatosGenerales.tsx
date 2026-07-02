@@ -1,7 +1,7 @@
 import React, { FC } from "react";
-import propuestas from "@/app/contents/propuestasContents.json";
-import agentes from "@/app/contents/agentesContents.json";
 import { InterfazPropuesta, InterfazAgente } from "@/app/interfaces/interfaces";
+const propuestas: any[] = [];
+const agentes: any[] = [];
 
 interface TablaDatosGeneralesProps {
   codigoPropuesta: string;

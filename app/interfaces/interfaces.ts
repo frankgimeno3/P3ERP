@@ -35,10 +35,42 @@ export interface InterfazCuenta {
   nombre_empresa: string;
   pais_cuenta: string;
   id_agente: string;
+  id_edisoft?: string;
+  asignado_a?: string;
+  receptor_revista?: boolean;
+  potencial_actual_relacion?: string;
+  potencial_futuro_encaje?: string;
+  revisado_ricardo?: boolean;
+  campanas?: string;
+  estado_leads_frios?: string;
+  stands_ferias?: string;
+  tipo_cuenta?: string;
   descripcion_cuenta: string;
   actividades_cuenta: string;
+  descripcion_actividad?: string;
+  correo_principal?: string;
+  qq?: boolean;
   presente_en_qq: boolean;
+  ferias?: string;
+  red_social_prioritaria?: string;
+  catalogos?: string;
+  array_cuentas_distribuidoras?: { id_cuenta?: string; nombre_empresa?: string }[];
+  array_cuentas_distribuidas?: { id_cuenta?: string; nombre_empresa?: string }[];
+  cuenta_agencia?: string;
   fuente_novedades_cuenta: string;
+  vat_code?: string;
+  nombre_fiscal?: string;
+  pais_facturacion?: string;
+  direccion_facturacion?: string;
+  mail_contabilidad?: string;
+  poblacion_facturacion?: string;
+  cp_facturacion?: string;
+  detalles_facturacion?: string;
+  facturas_emitidas?: {
+    id_factura?: string;
+    fecha?: string;
+    importe?: number | string;
+  }[];
   datos_comerciales: {
     ciudad_principal_cuenta: string;
     telefono_principal_cuenta: string;
@@ -53,9 +85,12 @@ export interface InterfazCuenta {
 
 export interface InterfazServicio {
   id_servicio: string;
+  id_medio?: string;
+  nombre_medio?: string;
   ano_servicio: string;
   soporte_servicio: string;
   precio_servicio: string;
+  precio_tarifa?: number | null;
   fecha_deadline_servicio: string;
   fecha_publicacion_servicio: string;
   es: {

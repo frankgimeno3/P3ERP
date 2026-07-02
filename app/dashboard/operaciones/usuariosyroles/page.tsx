@@ -1,5 +1,5 @@
 'use client'
-import React, {FC, use, useEffect, useState} from 'react';
+import React, {FC, useEffect, useState} from 'react';
 
 import UserSerivce from "@/app/service/UserSerivce";
 import {UserType} from "./componentesusuarios/UserType";
@@ -87,7 +87,28 @@ const Usuarios: FC = () => {
                     </tr>
                     </thead>
                     <tbody>
-                    {users.map((user, index) => (
+                    {loading && (
+                        <tr className="border-t border-gray-300">
+                            <td className="px-4 py-3 text-gray-500" colSpan={6}>
+                                Cargando usuarios...
+                            </td>
+                        </tr>
+                    )}
+                    {!loading && error && (
+                        <tr className="border-t border-gray-300">
+                            <td className="px-4 py-3 text-red-600" colSpan={6}>
+                                {error}
+                            </td>
+                        </tr>
+                    )}
+                    {!loading && !error && users.length === 0 && (
+                        <tr className="border-t border-gray-300">
+                            <td className="px-4 py-3 text-gray-500" colSpan={6}>
+                                No hay usuarios para mostrar.
+                            </td>
+                        </tr>
+                    )}
+                    {!loading && !error && users.map((user, index) => (
                         <tr key={index} className="border-t border-gray-300">
                             <td className="px-4 py-2">{user.attributes.name || "-"}</td>
                             <td className="px-4 py-2">{user.attributes.email}</td>

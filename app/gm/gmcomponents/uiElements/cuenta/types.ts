@@ -57,4 +57,9 @@ export type Contact = {
   phone: string;
 };
 
+export type Agent = {
+  codigo: string;
+  nombre: string;
+};
+
 export type TabKey = "principal" | "comments" | "contacts";

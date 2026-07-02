@@ -1,7 +1,7 @@
 import React, { FC, useState, useEffect } from "react";
-import propuestas from "@/app/contents/propuestasContents.json";
 import { InterfazPropuesta } from "@/app/interfaces/interfaces";
 import AnadirContenido from "./modals/AnadirContenido";
+const propuestas: any[] = [];
  
 export interface FilaContenido {
   medio: string;

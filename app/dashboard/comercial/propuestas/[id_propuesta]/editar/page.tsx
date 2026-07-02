@@ -10,15 +10,13 @@ import EditarDatosAnunciante from "./editarProp/editarDatosAnunciante";
 import EditarContenidoPropuesta from "./editarProp/editarContenidoPropuesta";
 import EditarOtrosDatosEnFactura from "./editarProp/editarOtrosDatosEnFactura";
 import EditarDatosCobro from "./editarProp/editarDatosCobro";
-
-import propuestas from "@/app/contents/propuestasContents.json";
 import { InterfazPropuesta, InterfazContacto } from "@/app/interfaces/interfaces";
 import MiddleNav from "@/app/general_components/componentes_recurrentes/MiddleNav";
 import { FilaContenido } from "./editarProp/editarContenidoPropuesta";
 import { DatosGenerales } from "./editarProp/editarDatosGenerales";
 import { FormDataFactura } from "./editarProp/editarOtrosDatosEnFactura";
-import contactos from "@/app/contents/contactsContents.json";
-
+const propuestas: any[] = [];
+const contactos: any[] = [];
 const EditarPropuesta: FC = () => {
   const parametros = useParams();
   const idPropuestaParametro = parametros?.id_propuesta as string | undefined;

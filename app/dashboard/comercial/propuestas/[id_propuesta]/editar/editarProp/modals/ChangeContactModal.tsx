@@ -1,6 +1,6 @@
 import React, { FC, useEffect, useState } from "react";
-import contactos from "@/app/contents/contactsContents.json";
 import { InterfazCuenta } from "@/app/interfaces/interfaces";
+const contactos: any[] = [];
 
 interface ChangeContactModalProps {
   cuentaSeleccionada: InterfazCuenta;

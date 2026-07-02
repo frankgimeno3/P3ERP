@@ -1,14 +1,10 @@
 "use client"
 import MiddleNav from '@/app/general_components/componentes_recurrentes/MiddleNav';
-import VentanaFichaje from '@/app/general_components/otros_componentes/VentanaFichaje';
-import { useRouter } from 'next/navigation';
 import React, { FC, useState } from 'react';
 
 interface MainDashboardProps { }
 
 const MainDashboard: FC<MainDashboardProps> = ({ }) => {
-  const router = useRouter()
-
   const [usuarioActual] = useState("Usuario");
   const [userType] = useState("superadmin");
 
@@ -23,7 +19,6 @@ const MainDashboard: FC<MainDashboardProps> = ({ }) => {
           <p>Haz click en uno de los desplegables del menú izquierdo para comenzar.</p>
           <p>Se mostrarán módulos para usuario tipo {userType}.</p>
         </div>
-        <VentanaFichaje />
       </div>
 
     </div>

@@ -11,42 +11,72 @@ type TextFieldProps = {
   value: string;
   onChange: (value: string) => void;
   className?: string;
+  readOnly?: boolean;
 };
 
-function TextField({ label, value, onChange, className = "" }: TextFieldProps) {
+const customerTypes = [
+  { codigo: "001", nombre: "Cliente" },
+  { codigo: "002", nombre: "Proveedor" },
+  { codigo: "003", nombre: "Cliente potencial" },
+  { codigo: "004", nombre: "Colaborador" },
+];
+
+const getCustomerTypeCode = (typeName: string) =>
+  customerTypes.find((type) => type.nombre === typeName)?.codigo ?? "";
+
+function TextField({ label, value, onChange, className = "", readOnly = false }: TextFieldProps) {
   return (
     <label className={`flex min-w-0 items-center justify-start gap-2 text-left ${className}`}>
       <span className="w-36 shrink-0 text-left text-sm font-medium text-slate-700">{label}</span>
       <input
         type="text"
         value={value}
+        readOnly={readOnly}
         onChange={(event) => onChange(event.target.value)}
-        className="min-w-0 flex-1 rounded-md border border-gray-300 bg-white px-2 py-1 text-left text-sm text-slate-700 outline-none"
+        className={`min-w-0 flex-1 rounded-md border border-gray-300 px-2 py-1 text-left text-sm text-slate-700 outline-none ${
+          readOnly ? "bg-slate-100 text-slate-500" : "bg-white"
+        }`}
       />
     </label>
   );
 }
 
 export default function CuentaDatosPrincipales({ account, onFieldChange }: CuentaDatosPrincipalesProps) {
+  const accountCustomerType = account.tipoCliente ?? "";
+  const selectedCustomerType = customerTypes.some((type) => type.nombre === accountCustomerType)
+    ? accountCustomerType
+    : customerTypes[0].nombre;
+
   return (
     <div className="flex w-full flex-col gap-4 border-x border-gray-500 bg-[#f3f5f7] p-5 text-left">
       <div className="flex w-full items-center justify-start gap-4">
-        <TextField label="Codigo" value={account.codigo} onChange={(value) => onFieldChange("codigo", value)} className="flex-1" />
+        <TextField
+          label="Codigo"
+          value={account.codigo}
+          onChange={(value) => onFieldChange("codigo", value)}
+          className="flex-1"
+          readOnly
+        />
 
         <div className="flex min-w-0 flex-[2] items-center justify-start gap-2 text-left">
           <TextField
             label="Tipo de cliente"
-            value={account.tipoCliente ?? ""}
-            onChange={(value) => onFieldChange("tipoCliente", value)}
+            value={getCustomerTypeCode(selectedCustomerType)}
+            onChange={() => undefined}
             className="flex-1"
+            readOnly
           />
-          <Lupa />
-          <input
-            type="text"
-            value={account.estado}
-            onChange={(event) => onFieldChange("estado", event.target.value)}
+          <select
+            value={selectedCustomerType}
+            onChange={(event) => onFieldChange("tipoCliente", event.target.value)}
             className="min-w-0 flex-1 rounded-md border border-gray-300 bg-white px-2 py-1 text-left text-sm text-slate-700 outline-none"
-          />
+          >
+            {customerTypes.map((type) => (
+              <option key={type.codigo} value={type.nombre}>
+                {type.nombre}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 

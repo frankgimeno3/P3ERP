@@ -18,9 +18,7 @@ const MiddleNav: FC<MiddleNavProps> = ({ tituloprincipal }) => {
     '/' + pathSegments.slice(0, index + 1).join('/');
 
   const problematicSegments = [
-    '/dashboard/fichajes',
     '/dashboard/comercial',
-    '/dashboard/clientes',
     '/dashboard/produccion',
     '/dashboard/administracion',
     '/dashboard/operaciones',

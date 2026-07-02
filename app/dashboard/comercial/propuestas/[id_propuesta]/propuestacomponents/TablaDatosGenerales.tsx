@@ -1,7 +1,6 @@
 import { InterfazAgente, InterfazPropuesta } from '@/app/interfaces/interfaces';
 import React, { FC, useEffect, useState } from 'react';
-import agentes from "@/app/contents/agentesContents.json"
-
+const agentes: any[] = [];
 interface TablaDatosGeneralesProps {
     propuesta:InterfazPropuesta
 }

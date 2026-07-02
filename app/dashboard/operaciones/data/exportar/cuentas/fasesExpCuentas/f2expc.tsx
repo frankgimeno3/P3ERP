@@ -72,7 +72,7 @@ const F2expc: FC<F2expcProps> = ({ configuracion, setFaseExportacionCuenta }) =>
 
           <button
             className="bg-blue-950 hover:bg-blue-950/90 text-white font-bold rounded-lg shadow-xl px-4 py-2 cursor-pointer"
-            onClick={() => { router.push("/dashboard/clientes/cuentas") }}
+            onClick={() => { router.push("/dashboard/comercial/cuentas") }}
           >
             Ir a cuentas
           </button>

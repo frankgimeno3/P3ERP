@@ -1,0 +1,19 @@
+import { NextResponse } from "next/server";
+import { getPrevisionIngresosOrdenes } from "../../../../../server/features/orden/OrdenRepository.js";
+
+export const runtime = "nodejs";
+
+export async function GET(request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const tipo = searchParams.get("tipo") || "";
+    const ordenes = await getPrevisionIngresosOrdenes(tipo);
+    return NextResponse.json(ordenes);
+  } catch (error) {
+    console.error("Error in GET /api/v1/direccion/prevision-ingresos:", error);
+    return NextResponse.json(
+      { message: "Error al cargar la previsión de ingresos", detail: process.env.NODE_ENV === "development" ? error.message : undefined },
+      { status: 500 },
+    );
+  }
+}

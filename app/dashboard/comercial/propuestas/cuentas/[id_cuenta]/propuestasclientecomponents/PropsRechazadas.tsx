@@ -2,8 +2,7 @@
 import React, { FC, useState } from 'react';
 import PropSvg from '../../../componentesPropuestas/svg/PropSvg';
 import { useRouter } from 'next/navigation';
-import propuestas from '@/app/contents/propuestasContents.json';
-
+const propuestas: any[] = [];
 interface PropsRechazadasContentProps {
   id_cuenta: string;
 }

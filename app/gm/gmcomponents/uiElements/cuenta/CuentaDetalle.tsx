@@ -2,16 +2,18 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import agentsData from "@/app/gm/gmcomponents/contents/agentes.json";
 import commentsData from "@/app/gm/gmcomponents/contents/comments.json";
 import contactsData from "@/app/gm/gmcomponents/contents/contacts.json";
 import GuardarIcon from "@/app/gm/gmcomponents/svg/GuardarIcon";
 import SalirBarraIcon from "@/app/gm/gmcomponents/svg/SalirBarraIcon";
+import CuentaAgentesModal from "./CuentaAgentesModal";
 import CuentaComentariosModal from "./CuentaComentariosModal";
 import CuentaContactosModal, { type ContactEditableField } from "./CuentaContactosModal";
 import CuentaFormulario from "./CuentaFormulario";
 import CuentaShell from "./CuentaShell";
 import CuentaTabs from "./CuentaTabs";
-import type { Account, Comment, Contact, TabKey } from "./types";
+import type { Account, Agent, Comment, Contact, TabKey } from "./types";
 
 type CuentaDetalleProps = {
   cuenta: Account;
@@ -23,11 +25,15 @@ export default function CuentaDetalle({ cuenta }: CuentaDetalleProps) {
   const [activeTab, setActiveTab] = useState<TabKey>("principal");
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
   const [isContactsOpen, setIsContactsOpen] = useState(false);
+  const [isAgentsOpen, setIsAgentsOpen] = useState(false);
   const [commentDraft, setCommentDraft] = useState(
     () => (commentsData as Comment[]).find((item) => item.codigo === cuenta.codigo)?.fullComments ?? "",
   );
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [contactForm, setContactForm] = useState<Contact | null>(null);
+  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
+
+  const agents = agentsData as Agent[];
 
   const comments = useMemo(
     () => (commentsData as Comment[]).filter((item) => item.codigo === account.codigo),
@@ -64,8 +70,10 @@ export default function CuentaDetalle({ cuenta }: CuentaDetalleProps) {
         setActiveTab("principal");
         setIsCommentsOpen(false);
         setIsContactsOpen(false);
+        setIsAgentsOpen(false);
         setSelectedContact(null);
         setContactForm(null);
+        setSelectedAgent(null);
       }
 
       if (event.key === "F2" && isCommentsOpen) {
@@ -82,8 +90,10 @@ export default function CuentaDetalle({ cuenta }: CuentaDetalleProps) {
     setActiveTab("principal");
     setIsCommentsOpen(false);
     setIsContactsOpen(false);
+    setIsAgentsOpen(false);
     setSelectedContact(null);
     setContactForm(null);
+    setSelectedAgent(null);
   };
 
   const handleFieldChange = (key: keyof Account, value: string) => {
@@ -170,6 +180,28 @@ export default function CuentaDetalle({ cuenta }: CuentaDetalleProps) {
     setIsContactsOpen(false);
   };
 
+  const handleOpenAgents = () => {
+    const currentAgent = agents.find((agent) => agent.codigo === account.codigoAgente || agent.nombre === (account.nombreAgente ?? account.agente));
+    setSelectedAgent(currentAgent ?? null);
+    setIsAgentsOpen(true);
+    setIsCommentsOpen(false);
+    setIsContactsOpen(false);
+  };
+
+  const handleAgentSave = () => {
+    if (!selectedAgent) {
+      return;
+    }
+
+    setAccount((current) => ({
+      ...current,
+      codigoAgente: selectedAgent.codigo,
+      nombreAgente: selectedAgent.nombre,
+      agente: selectedAgent.nombre,
+    }));
+    setIsAgentsOpen(false);
+  };
+
   return (
     <CuentaShell>
       <div className="flex flex-row bg-[#f3f5f7] px-8 pt-5 justify-between border ">
@@ -179,14 +211,14 @@ export default function CuentaDetalle({ cuenta }: CuentaDetalleProps) {
         </div>
         <div
           className="flex flex-row items-center gap-2 cursor-pointer hover:shadow-xl p-5 mb-5 "
-          onClick={() => router.push("/")}
+          onClick={() => router.push("/gm")}
         >
           <SalirBarraIcon className="h-6 w-6 shrink-0 text-slate-800" />
           <p>Salir</p>
         </div>
       </div>
       <CuentaTabs activeTab={activeTab} onTabChange={handleTabChange} />
-      <CuentaFormulario account={account} onFieldChange={handleFieldChange} />
+      <CuentaFormulario account={account} onFieldChange={handleFieldChange} onOpenAgents={handleOpenAgents} />
 
       {isCommentsOpen && (
         <CuentaComentariosModal
@@ -211,6 +243,17 @@ export default function CuentaDetalle({ cuenta }: CuentaDetalleProps) {
           onDeleteContact={handleDeleteContact}
           onClose={closeOverlays}
           onSave={handleContactSave}
+        />
+      )}
+
+      {isAgentsOpen && (
+        <CuentaAgentesModal
+          account={account}
+          agents={agents}
+          selectedAgent={selectedAgent}
+          onAgentSelect={setSelectedAgent}
+          onClose={closeOverlays}
+          onSave={handleAgentSave}
         />
       )}
     </CuentaShell>

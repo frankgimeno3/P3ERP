@@ -1,8 +1,8 @@
 import React, { FC } from 'react';
 import Link from 'next/link';
-import cuentas from "@/app/contents/cuentasContents.json"
-import contactos from "@/app/contents/contactsContents.json"
 import { InterfazContacto } from '@/app/interfaces/interfaces';
+const cuentas: any[] = [];
+const contactos: any[] = [];
 
 interface TablaDatosAnuncianteProps {
   empresaAnunciante: string;
@@ -31,7 +31,7 @@ const TablaDatosAnunciante: FC<TablaDatosAnuncianteProps> = ({ empresaAnunciante
           <tr className="bg-white text-gray-700">
             <td className="px-4 py-2 flex-1/6">
               <Link 
-                href={`/dashboard/clientes/cuentas/${cuentaSeleccionada.id_cuenta}`}
+                href={`/dashboard/comercial/cuentas/${cuentaSeleccionada.id_cuenta}`}
                 className="bg-blue-950/80 text-gray-100 p-2 px-4 rounded-lg shadow-xl cursor-pointer hover:bg-blue-900"
               >
                 {cuentaSeleccionada.nombre_empresa}
@@ -41,7 +41,7 @@ const TablaDatosAnunciante: FC<TablaDatosAnuncianteProps> = ({ empresaAnunciante
             <td className="px-4 py-2 flex-1/6">{cuentaSeleccionada.pais_cuenta}</td>
             <td className="px-4 py-2 flex-1/6">
               <Link 
-                href={`/dashboard/clientes/contactos/${contactoPropuesta}`}
+                href={`/dashboard/comercial/contactos/${contactoPropuesta}`}
                 className="bg-blue-950/80 text-gray-100 p-2 px-4 rounded-lg shadow-xl cursor-pointer hover:bg-blue-900"
               >
                 {contactoSeleccionado?.nombre_completo_contacto}

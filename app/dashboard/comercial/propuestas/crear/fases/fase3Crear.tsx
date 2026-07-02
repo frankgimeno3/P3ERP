@@ -1,6 +1,5 @@
 import React, { FC, useState, useMemo } from "react";
-import serviciosData from "@/app/contents/ServiciosContents.json";
-
+const serviciosData: any[] = [];
 interface Servicio {
   id_servicio: string;
   medio_servicio_es: string;
