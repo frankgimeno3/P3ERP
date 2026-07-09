@@ -7,7 +7,7 @@ import MiddleNav from '../../../general_components/componentes_recurrentes/Middl
 import ButtonsRow from '@/app/general_components/componentes_recurrentes/ButtonsRow';
 import { InterfazContacto } from '@/app/interfaces/interfaces';
 import Link from 'next/link';
-const contactosJSON: any[] = [];
+import { ContactoService } from '@/app/service/ContactoService';
 
 const Contactos: FC = () => {
   const [contactoFiltro, setContactoFiltro] = useState('');
@@ -22,30 +22,53 @@ const Contactos: FC = () => {
   const itemsPerPage = 15;
 
   const [allContactos, setAllContactos] = useState<InterfazContacto[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
  useEffect(() => {
-  const mapeados: InterfazContacto[] = contactosJSON.map((c) => ({
-    ...c,
-    nombre_completo_contacto: `${c.nombre_contacto} ${c.apellidos_contacto}`,
-    suscripciones: c.suscripciones ?? [],
-    cargo_contacto: c.cargo_contacto ?? '',
-    conocido_en: c.conocido_en ?? '',
-    contactado_en_feria: c.contactado_en_feria ?? '',
-    otros_datos_interes: c.otros_datos_interes ?? '',
-    pais_contacto: c.pais_contacto ?? '',
-  }));
+  const fetchContactos = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await ContactoService.getContactos();
+      const mapeados: InterfazContacto[] = (Array.isArray(data) ? data : []).map((c) => ({
+        ...c,
+        nombre_contacto: c.nombre_contacto ?? '',
+        apellidos_contacto: c.apellidos_contacto ?? '',
+        nombre_completo_contacto: c.nombre_completo_contacto || `${c.nombre_contacto || ''} ${c.apellidos_contacto || ''}`.trim(),
+        id_cuenta: c.id_cuenta ?? '',
+        nombre_empresa: c.nombre_empresa ?? '',
+        telefono_contacto: c.telefono_contacto ?? '',
+        email_contacto: c.email_contacto ?? '',
+        suscripciones: c.suscripciones ?? [],
+        cargo_contacto: c.cargo_contacto ?? '',
+        conocido_en: c.conocido_en ?? '',
+        contactado_en_feria: c.contactado_en_feria ?? '',
+        otros_datos_interes: c.otros_datos_interes ?? '',
+        pais_contacto: c.pais_contacto ?? '',
+      }));
 
-  setAllContactos(mapeados);
+      setAllContactos(mapeados);
+    } catch (error: any) {
+      console.error('Error fetching contactos:', error);
+      setError(error?.message || 'No se han podido cargar los contactos.');
+      setAllContactos([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchContactos();
 }, []);
 
   const filteredContactos = allContactos.filter((c) =>
-    c.nombre_contacto.toLowerCase().includes(contactoFiltro.toLowerCase()) &&
-    c.apellidos_contacto.toLowerCase().includes(apellidosFiltro.toLowerCase()) &&
-    c.id_cuenta.toLowerCase().includes(codigoContactoFiltro.toLowerCase()) &&
-    c.nombre_empresa.toLowerCase().includes(empresaAsociadaFiltro.toLowerCase()) &&
-    c.telefono_contacto.includes(telFiltro) &&
-    c.email_contacto.toLowerCase().includes(emailFiltro.toLowerCase()) &&
-    c.pais_contacto.toLowerCase().includes(paisFiltro.toLowerCase())
+    (c.nombre_contacto || '').toLowerCase().includes(contactoFiltro.toLowerCase()) &&
+    (c.apellidos_contacto || '').toLowerCase().includes(apellidosFiltro.toLowerCase()) &&
+    (c.id_contacto || '').toLowerCase().includes(codigoContactoFiltro.toLowerCase()) &&
+    (c.nombre_empresa || '').toLowerCase().includes(empresaAsociadaFiltro.toLowerCase()) &&
+    (c.telefono_contacto || '').includes(telFiltro) &&
+    (c.email_contacto || '').toLowerCase().includes(emailFiltro.toLowerCase()) &&
+    (c.pais_contacto || '').toLowerCase().includes(paisFiltro.toLowerCase())
   );
 
   const startIdx = (currentPage - 1) * itemsPerPage;
@@ -81,7 +104,12 @@ const Contactos: FC = () => {
           setPaisFiltro={setPaisFiltro}  
         />
 
-        <TablaContactos contactosFiltrados={contactosFiltrados} />
+        {error && <div className="mt-4 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
+        {loading ? (
+          <div className="mt-5 rounded bg-white p-6 text-sm text-gray-500 shadow-xl">Cargando contactos...</div>
+        ) : (
+          <TablaContactos contactosFiltrados={contactosFiltrados} />
+        )}
 
         <div className="mt-4">
           <ButtonsRow

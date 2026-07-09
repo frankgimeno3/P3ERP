@@ -1,6 +1,11 @@
 import apiClient from "../apiClient.js";
 
 export class ContactoService {
+    static async createContacto(data) {
+        const response = await apiClient.post('/api/v1/comercial/contactos', data);
+        return response.data;
+    }
+
     static async getContactos(filters = {}) {
         const response = await apiClient.get('/api/v1/comercial/contactos', {
             params: filters

@@ -2,13 +2,23 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #1f2937;
+  --panel-navy: #1f2937;
+  --panel-navy-2: #334155;
+  --accent-blue: #2563eb;
+  --surface: #1e293b;
+  --surface-elevated: #334155;
+  --surface-hover: #475569;
+  --input-bg: #1e293b;
+  --input-border: #475569;
+  --input-focus: #2563eb;
+  --text-muted: #94a3b8;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-ubuntu), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
 }
 
@@ -22,5 +32,119 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-ubuntu), ui-sans-serif, system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+main,
+.min-h-screen {
+  scrollbar-color: #8b95a5 #eef1f5;
+}
+
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+  border-radius: 0.5rem;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+thead {
+  letter-spacing: 0.02em;
+}
+
+th {
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+td {
+  font-weight: 400;
+}
+
+.content-main input:not([type="checkbox"]):not([type="radio"]),
+.content-main select,
+.content-main textarea {
+  background-color: var(--input-bg);
+  border-color: var(--input-border);
+  color: #f1f5f9;
+}
+
+.content-main input::placeholder,
+.content-main textarea::placeholder {
+  color: var(--text-muted);
+}
+
+.content-main input:focus,
+.content-main select:focus,
+.content-main textarea:focus {
+  outline: none;
+  border-color: var(--input-focus);
+  box-shadow: 0 0 0 2px var(--input-focus);
+}
+
+.content-main select option {
+  background: var(--input-bg);
+  color: #f1f5f9;
+}
+
+.content-main table thead tr {
+  background-color: var(--surface-elevated);
+}
+
+.content-main table thead th {
+  color: #cbd5e1;
+}
+
+.content-main table tbody tr {
+  background-color: var(--surface);
+}
+
+.content-main table tbody tr:hover {
+  background-color: var(--surface-hover);
+}
+
+.content-main table tbody td {
+  color: #f1f5f9;
+}
+
+:where(a[href], button:not(:disabled), [role="button"]:not([aria-disabled="true"]), summary) {
+  cursor: pointer;
+  transition: filter 150ms ease, background-color 150ms ease, border-color 150ms ease, color 150ms ease, opacity 150ms ease;
+}
+
+:where(a[href], button:not(:disabled), [role="button"]:not([aria-disabled="true"]), summary):hover {
+  filter: brightness(0.96);
+}
+
+button:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+.global-modal-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 100;
+  display: inline-flex;
+  width: 2rem;
+  height: 2rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #374151;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.global-modal-close:hover {
+  border-color: #172554;
+  background: #f9fafb;
+  color: #172554;
 }

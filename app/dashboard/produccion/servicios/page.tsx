@@ -9,7 +9,8 @@ interface ServiciosProps {
 }
 
 const Servicios: FC<ServiciosProps> = ({ }) => {
-     const [medioFiltro, setMedioFiltro] = useState('')
+    const [grupoFiltro, setGrupoFiltro] = useState('')
+    const [medioFiltro, setMedioFiltro] = useState('')
     const [publicacionFiltro, setPublicacionFiltro] = useState('')
     const [servicioFiltro, setServicioFiltro] = useState('')
   
@@ -21,6 +22,8 @@ const Servicios: FC<ServiciosProps> = ({ }) => {
     <div className="bg-white min-h-screen  text-gray-600">      
       <div className='mt-8 p-3 rounded-lg shadow-xl bg-white'>
         <FiltrosServicios
+          grupoFiltro={grupoFiltro}
+          setGrupoFiltro={setGrupoFiltro}
           medioFiltro={medioFiltro}
           setMedioFiltro={setMedioFiltro}
           publicacionFiltro={publicacionFiltro}
@@ -30,6 +33,7 @@ const Servicios: FC<ServiciosProps> = ({ }) => {
         />
 
         <TablaServicios
+          grupoFiltro={grupoFiltro}
           medioFiltro={medioFiltro}
           publicacionFiltro={publicacionFiltro}
           servicioFiltro={servicioFiltro}

@@ -123,8 +123,8 @@ const FichaContacto: FC = () => {
               key={key}
               className={`p-3 rounded-tr-lg cursor-pointer w-60 text-center transition-all duration-300
               ${pestana === key
-                  ? 'bg-white z-30 rounded-tl-lg'
-                  : 'bg-blue-950 text-white z-10 hover:bg-blue-950/80'
+                  ? 'bg-blue-950 text-white z-30 rounded-tl-lg'
+                  : 'bg-white text-gray-700 z-10 hover:bg-gray-200'
                 }`}
               style={{ marginLeft: index === 0 ? '0px' : '-5px' }}
               onClick={() => setPestana(key as typeof pestana)}

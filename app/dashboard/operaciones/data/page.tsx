@@ -21,7 +21,7 @@ const Importexport: FC = () => {
           <div className="flex flex-row relative ">
             <div
               className={`p-3 rounded-tr-lg cursor-pointer w-60 text-center transition-all duration-300
-            ${pestana === 'importar' ? 'bg-blue-950 text-white z-30 rounded-tl-lg' : 'z-10 bg-gray-100 hover:bg-gray-200'}`}
+            ${pestana === 'importar' ? 'bg-blue-950 text-white z-30 rounded-tl-lg' : 'z-10 bg-white text-gray-700 hover:bg-gray-200'}`}
               style={{ marginLeft: '0px' }}
               onClick={() => setPestana('importar')}
             >
@@ -29,7 +29,7 @@ const Importexport: FC = () => {
             </div>
             <div
               className={`p-3 rounded-tr-lg cursor-pointer w-60 text-center transition-all duration-300
-            ${pestana === 'exportar' ? 'bg-blue-950 text-white z-30 rounded-tl-lg' : 'z-10 bg-gray-100 hover:bg-gray-200'}`}
+            ${pestana === 'exportar' ? 'bg-blue-950 text-white z-30 rounded-tl-lg' : 'z-10 bg-white text-gray-700 hover:bg-gray-200'}`}
               style={{ marginLeft: '0px' }}
               onClick={() => setPestana('exportar')}
             >

@@ -16,7 +16,7 @@ const ContenidoDatosAdministrativos: FC<ContenidoDatosAdministrativosProps> = ({
   setCuentaEditable,
   setIsContenidoEdited,
 }) => {
-  const [subpestana, setSubpestana] = useState<"facturas" | "facturacion">("facturacion");
+  const [subpestana, setSubpestana] = useState<"facturas" | "facturacion" | "cobros">("facturacion");
 
   const handleChange = (field: keyof InterfazCuenta, value: string) => {
     setCuentaEditable((prev) => (prev ? { ...prev, [field]: value } : prev));
@@ -29,12 +29,13 @@ const ContenidoDatosAdministrativos: FC<ContenidoDatosAdministrativosProps> = ({
         {[
           { key: "facturacion", label: "Datos de facturación" },
           { key: "facturas", label: "Facturas emitidas" },
+          { key: "cobros", label: "Estado de cobros" },
         ].map(({ key, label }, index) => (
           <button
             key={key}
             type="button"
             className={`p-3 w-56 text-center transition-all duration-300 ${
-              subpestana === key ? "bg-gray-100 text-gray-800" : "bg-blue-950 text-white hover:bg-blue-950/80"
+              subpestana === key ? "bg-blue-950 text-white" : "bg-white text-gray-700 hover:bg-gray-200"
             } ${index === 0 ? "rounded-tl-lg" : ""} rounded-tr-lg`}
             style={{ marginLeft: index === 0 ? "0px" : "-5px" }}
             onClick={() => setSubpestana(key as typeof subpestana)}
@@ -103,6 +104,38 @@ const ContenidoDatosAdministrativos: FC<ContenidoDatosAdministrativosProps> = ({
                 <tr>
                   <td colSpan={3} className="p-3 text-gray-500">
                     No hay facturas emitidas para esta cuenta.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </section>
+      )}
+
+      {subpestana === "cobros" && (
+        <section>
+          <table className="min-w-full border border-gray-300 text-sm bg-white">
+            <thead className="bg-blue-950/80 text-white">
+              <tr>
+                <th className="text-left p-2 font-light">Factura</th>
+                <th className="text-left p-2 font-light">Fecha</th>
+                <th className="text-left p-2 font-light">Importe</th>
+                <th className="text-left p-2 font-light">Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(cuentaEditable.facturas_emitidas || []).map((factura, index) => (
+                <tr key={`${factura.id_factura || "cobro"}-${index}`} className="border-t border-gray-200">
+                  <td className="p-2">{factura.id_factura || "-"}</td>
+                  <td className="p-2">{factura.fecha || "-"}</td>
+                  <td className="p-2">{factura.importe ?? "-"}</td>
+                  <td className="p-2">{(factura as any).estado_cobro || "Pendiente"}</td>
+                </tr>
+              ))}
+              {(!cuentaEditable.facturas_emitidas || cuentaEditable.facturas_emitidas.length === 0) && (
+                <tr>
+                  <td colSpan={4} className="p-3 text-gray-500">
+                    No hay cobros registrados para esta cuenta.
                   </td>
                 </tr>
               )}

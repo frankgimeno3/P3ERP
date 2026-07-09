@@ -9,7 +9,7 @@ const FolderSvg: FC<FolderSvgProps> = ({ }) => {
         viewBox="0 0 64 64"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className="w-10 h-10 text-gray-700 cursor-pointer "
+        className="h-10 w-10 cursor-pointer text-slate-300"
       >
         {/* Solapa superior de la carpeta */}
         <path

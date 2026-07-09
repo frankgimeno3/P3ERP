@@ -1,8 +1,10 @@
 import type {GetServerSideProps, Metadata} from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist_Mono, Ubuntu } from "next/font/google";
 import "./globals.css";
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+import ModalDismissManager from "./general_components/componentes_recurrentes/ModalDismissManager";
+const ubuntu = Ubuntu({
+  variable: "--font-ubuntu",
+  weight: ["300", "400", "500", "700"],
   subsets: ["latin"],
 });
 
@@ -24,8 +26,9 @@ export default function RootLayout({
     return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${ubuntu.variable} ${geistMono.variable} antialiased`}
       >
+        <ModalDismissManager />
         {children}
       </body>
     </html>

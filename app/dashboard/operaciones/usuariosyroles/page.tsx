@@ -1,150 +1,144 @@
-'use client'
-import React, {FC, useEffect, useState} from 'react';
+'use client';
 
-import UserSerivce from "@/app/service/UserSerivce";
-import {UserType} from "./componentesusuarios/UserType";
-import PopUpCrear from './componentesusuarios/PopUpCrear';
-import PopUpEditar from './componentesusuarios/PopUpEditar';
+import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { AgenteService } from '@/app/service/AgenteService';
+import { RoleService } from '@/app/service/RoleService';
 
-const Usuarios: FC = () => {
-    const handleCrearUsuario = () => {
-        setShowPopUpCrear(true);
-    };
+interface Agente {
+  id_agente: string;
+  nombre_agente: string;
+  apellidos_agente: string;
+  nombre_completo_agente: string;
+  email_agente: string;
+  rol_agente: string;
+  estado_agente: string;
+  accesos_personalizados: boolean;
+  array_accesos_adicionales: string[];
+}
 
-    const [users, setUsers] = useState<UserType[]>([]);
-    const [loading, setLoading] = useState<boolean>(true);
-    const [error, setError] = useState<string|null>(null);
+interface Role {
+  id_rol: string;
+  nombre_rol: string;
+  descripcion_rol: string;
+  permisos_rol: string[];
+  estado_rol: string;
+}
 
-    const [showPopUpCrear, setShowPopUpCrear] = useState<boolean>(false);
-    const [showPopUpEditar, setShowPopUpEditar] = useState<boolean>(false);
-    const [userToEdit, setUserToEdit] = useState<UserType|null>(null);
+export default function Usuarios() {
+  const router = useRouter();
+  const [agentes, setAgentes] = useState<Agente[]>([]);
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-    const handleClosePopUpCrear = () => {
-        setShowPopUpCrear(false);
-    };
+  useEffect(() => {
+    let isMounted = true;
 
-    const handleClosePopUpEditar = () => {
-        setShowPopUpEditar(false);
-    };
-
-    const handleCreateUser = (newUser: UserType) => {
-        setUsers([...users, newUser]);
-        setShowPopUpCrear(false);
-    };
-
-
-    const handlePressEditUser = (user: UserType) => {
-        setUserToEdit(user)
-        setShowPopUpEditar(true);
-    };
-
-    const handleEditUser = (username: string, name: string, email: string, status: boolean) => {
-        setUsers(users.map((user)=>{
-            if(user.username !== username) return user;
-
-            user.attributes.name = name
-            user.attributes.email = name
-            user.enabled = status
-            return user;
-        }))
-        setShowPopUpEditar(false);
-    };
-
-    const fetchUsers = async () => {
+    const fetchData = async () => {
+      try {
         setLoading(true);
-        try {
-            setUsers(await UserSerivce.getAllUsers());
-        } catch (error: any){
-            setError(error.message);
-        } finally {
-            setLoading(false);
+        setError(null);
+        const [agentesData, rolesData] = await Promise.all([
+          AgenteService.getAgentes(),
+          RoleService.getRoles().catch(() => []),
+        ]);
+
+        if (!isMounted) return;
+
+        const normalizedAgentes = Array.isArray(agentesData) ? agentesData : [];
+        setAgentes(normalizedAgentes);
+        setRoles(Array.isArray(rolesData) ? rolesData : []);
+
+      } catch (error: any) {
+        if (isMounted) {
+          setError(error?.message || 'Error al cargar los agentes');
+          setAgentes([]);
+          setRoles([]);
         }
-    }
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
 
-    useEffect(() => {
-        fetchUsers();
-    },[])
+    fetchData();
 
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
-    return (
-        <>
-            <div className="p-6 px-12 bg-gray-100 min-h-screen ">
-                <div className="flex justify-between items-center mb-4">
-                    <p className="text-xl text-gray-600">Usuarios</p>
-                    <button onClick={handleCrearUsuario}
-                            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 cursor-pointer">Crear nuevo usuario
-                    </button>
-                </div>
-                <table className="min-w-full bg-white text-black rounded overflow-hidden">
-                    <thead className="bg-gray-200">
-                    <tr>
-                        <th className="text-left px-4 py-2">Nombre</th>
-                        <th className="text-left px-4 py-2">Email</th>
-                        <th className="text-left px-4 py-2">Rol</th>
-                        <th className="text-left px-4 py-2">Contraseña</th>
-                        <th className="text-left px-4 py-2">Estado</th>
-                        <th className="text-left px-4 py-2">Editar</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {loading && (
-                        <tr className="border-t border-gray-300">
-                            <td className="px-4 py-3 text-gray-500" colSpan={6}>
-                                Cargando usuarios...
-                            </td>
-                        </tr>
-                    )}
-                    {!loading && error && (
-                        <tr className="border-t border-gray-300">
-                            <td className="px-4 py-3 text-red-600" colSpan={6}>
-                                {error}
-                            </td>
-                        </tr>
-                    )}
-                    {!loading && !error && users.length === 0 && (
-                        <tr className="border-t border-gray-300">
-                            <td className="px-4 py-3 text-gray-500" colSpan={6}>
-                                No hay usuarios para mostrar.
-                            </td>
-                        </tr>
-                    )}
-                    {!loading && !error && users.map((user, index) => (
-                        <tr key={index} className="border-t border-gray-300">
-                            <td className="px-4 py-2">{user.attributes.name || "-"}</td>
-                            <td className="px-4 py-2">{user.attributes.email}</td>
-                            <td className="px-4 py-2">Aquí tiene que ir el rol</td>
-                            <td className="px-4 py-2">***</td>
-                            <td className="px-4 py-2">{user.enabled ? "Activo" : "Inactivo"}</td>
-                            <td className="px-4 py-2">
-                                <button
-                                    className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
-                                    onClick={() => handlePressEditUser(user)}
-                                >
-                                    Editar
-                                </button>
-                            </td>
-                        </tr>
-                    ))}
-                    </tbody>
-                </table>
-            </div>
+  const rolesByName = useMemo(() => new Set(roles.map((role) => role.nombre_rol || role.id_rol).filter(Boolean)), [roles]);
 
-            {showPopUpCrear && (
-                <PopUpCrear
-                    onClose={handleClosePopUpCrear}
-                    onCreate={handleCreateUser}
-                />
-            )}
+  const getNombreAgente = (agente: Agente) => {
+    return agente.nombre_completo_agente || `${agente.nombre_agente || ''} ${agente.apellidos_agente || ''}`.trim() || '-';
+  };
 
-            {showPopUpEditar && userToEdit && (
-                <PopUpEditar
-                    user={userToEdit}
-                    onClose={handleClosePopUpEditar}
-                    onEdit={handleEditUser}
-                />
-            )}
-        </>
-    );
-};
+  return (
+    <div className="min-h-screen bg-gray-100 p-6 px-12 text-gray-800">
+      <div className="mb-5 flex items-center justify-between">
+        <div>
+          <p className="text-xl font-semibold text-gray-700">Usuarios</p>
+          <p className="text-sm text-gray-500">Agentes registrados y rol asignado</p>
+        </div>
+      </div>
 
-export default Usuarios;
+      {error && (
+        <div className="mb-4 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      <div className="overflow-hidden rounded bg-white shadow-sm">
+          <table className="min-w-full text-sm">
+            <thead className="bg-gray-200">
+              <tr>
+                <th className="px-4 py-2 text-left">ID</th>
+                <th className="px-4 py-2 text-left">Nombre</th>
+                <th className="px-4 py-2 text-left">Email</th>
+                <th className="px-4 py-2 text-left">Rol</th>
+                <th className="px-4 py-2 text-left">Estado</th>
+                <th className="px-4 py-2 text-left">Accesos extra</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading && (
+                <tr className="border-t border-gray-200">
+                  <td className="px-4 py-3 text-gray-500" colSpan={6}>
+                    Cargando usuarios...
+                  </td>
+                </tr>
+              )}
+
+              {!loading && agentes.length === 0 && (
+                <tr className="border-t border-gray-200">
+                  <td className="px-4 py-3 text-gray-500" colSpan={6}>
+                    No hay usuarios para mostrar.
+                  </td>
+                </tr>
+              )}
+
+              {!loading && agentes.map((agente) => {
+                return (
+                  <tr
+                    key={agente.id_agente}
+                    onClick={() => router.push(`/dashboard/operaciones/usuariosyroles/${agente.id_agente}`)}
+                    className="cursor-pointer border-t border-gray-200 hover:bg-blue-50"
+                  >
+                    <td className="px-4 py-2 font-medium">{agente.id_agente}</td>
+                    <td className="px-4 py-2">{getNombreAgente(agente)}</td>
+                    <td className="px-4 py-2">{agente.email_agente || '-'}</td>
+                    <td className="px-4 py-2">{agente.rol_agente || '-'}</td>
+                    <td className="px-4 py-2">{agente.estado_agente || '-'}</td>
+                    <td className="px-4 py-2">
+                      {agente.accesos_personalizados ? `${agente.array_accesos_adicionales?.length || 0} adicionales` : rolesByName.has(agente.rol_agente) ? 'rol base' : '-'}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+      </div>
+    </div>
+  );
+}

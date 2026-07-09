@@ -1,0 +1,7 @@
+BEGIN;
+
+ALTER TABLE publicaciones_paginas_db
+  ADD COLUMN IF NOT EXISTS nombre_mostrado TEXT NOT NULL DEFAULT '',
+  ADD COLUMN IF NOT EXISTS tipo TEXT NOT NULL DEFAULT '';
+
+COMMIT;

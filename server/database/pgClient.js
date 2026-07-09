@@ -1,8 +1,21 @@
 import pg from "pg";
+import fs from "node:fs";
+import path from "node:path";
 
 const { Pool } = pg;
 
 let pool;
+
+function getSslConfig() {
+  const caPath = process.env.DATABASE_CA_CERT_PATH || path.resolve(process.cwd(), "certs", "rds-ca.pem");
+  const hasCa = fs.existsSync(caPath);
+  const rejectUnauthorized = process.env.DATABASE_SSL_REJECT_UNAUTHORIZED === "true" || hasCa;
+
+  return {
+    rejectUnauthorized,
+    ...(hasCa ? { ca: fs.readFileSync(caPath, "utf8") } : {}),
+  };
+}
 
 export function getPgPool() {
   if (!pool) {
@@ -12,9 +25,7 @@ export function getPgPool() {
       password: process.env.DATABASE_PASSWORD,
       host: process.env.DATABASE_HOST,
       port: Number(process.env.DATABASE_PORT),
-      ssl: {
-        rejectUnauthorized: process.env.NODE_ENV !== "development",
-      },
+      ssl: getSslConfig(),
     });
   }
 

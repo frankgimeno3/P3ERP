@@ -1,42 +1,9 @@
-'use client';
-import React, { FC } from 'react';
-import { useRouter } from 'next/navigation';
-import FolderSvg from '../svg/FolderSvg';
-import { InterfazPropuesta } from '@/app/interfaces/interfaces';
-const propuestas: any[] = [];
-const cuentas: any[] = [];
+"use client";
 
-interface ContenidoPropuesta {
-  medio: string;
-  publicacion: string;
-  producto: string;
-  precio_producto: number;
-  deadline_publicacion: string;
-  fecha_publicacion_publicacion: string;
-}
-
-interface DetallesPropuesta {
-  id_propuesta: string;
-  id_agente_propuesta: string;
-  estado_propuesta: string;
-  fecha_envio_propuesta: string;
-}
-
-interface CuentaPropuesta {
-  id_cuenta_propuesta: string;
-  id_contacto: string;
-  cargoContacto: string;
-}
- 
-interface ResultadoCliente {
-  id: string;
-  nombreEmpresa: string;
-  codigoCRM: string;
-  numeroPropuestas: number;
-  agenteAsignado: string;
-  fechaUltimaPropuesta: string;
-  estadosIncluidos: string[];
-}
+import React, { FC, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import FolderSvg from "../svg/FolderSvg";
+import { PropuestaService } from "@/app/service/PropuestaService";
 
 interface TodasPropuestasProps {
   clienteFiltro: string;
@@ -56,122 +23,88 @@ const TodasPropuestas: FC<TodasPropuestasProps> = ({
   estadoFiltro,
 }) => {
   const router = useRouter();
+  const [propuestas, setPropuestas] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleRowClick = (e: React.MouseEvent<HTMLTableRowElement>, href: string) => {
-    if (e.ctrlKey || e.metaKey) {
-      e.preventDefault();
-      window.open(href, '_blank');
-    } else {
-      router.push(href);
-    }
-  };
+  useEffect(() => {
+    setLoading(true);
+    PropuestaService.getPropuestas({
+      cliente: clienteFiltro,
+      codigo_crm: codigoCRMFiltro,
+      agente: agenteFiltro,
+      estado: estadoFiltro,
+    })
+      .then((data) => setPropuestas(Array.isArray(data) ? data : []))
+      .catch(() => setPropuestas([]))
+      .finally(() => setLoading(false));
+  }, [clienteFiltro, codigoCRMFiltro, agenteFiltro, estadoFiltro]);
 
-  const agrupadasPorCliente = (propuestas as InterfazPropuesta[]).reduce(
-    (acc: Record<string, any>, p: InterfazPropuesta) => {
-      const idCuenta = p.cuenta_propuesta.id_cuenta_propuesta;
-
-      const cuentaInfo = cuentas.find((c: any) => c.id_cuenta === idCuenta);
-
-      if (!acc[idCuenta]) {
-        acc[idCuenta] = {
-          id: idCuenta,
-          nombreEmpresa: cuentaInfo ? cuentaInfo.nombre_empresa : `Cuenta ${idCuenta}`,
-          codigoCRM: idCuenta,
-          propuestas: [],
-          agenteAsignado: p.id_agente_propuesta,
-        };
-      }
-
-      acc[idCuenta].propuestas.push(p);
-      return acc;
-    },
-    {}
-  );
-
-  const resultados: ResultadoCliente[] = Object.values(agrupadasPorCliente).map(
-    (c: any) => {
-      const deadlines: Date[] = c.propuestas
-        .map((p: InterfazPropuesta) => p.contenido_propuesta?.[0]?.deadline_publicacion || '01/01/1970')
-        .map((f: string) => new Date(f.split('/').reverse().join('-')));
-
-      const fechaUltimaPropuesta =
-        deadlines.length > 0
-          ? new Date(Math.max(...deadlines.map((d: Date) => d.getTime())))
-              .toISOString()
-              .split('T')[0]
-          : '';
-
-      const estadosIncluidos = c.propuestas.map(
-        (p: InterfazPropuesta) => p.estado_propuesta
-      );
-
-      return {
-        id: c.id,
-        nombreEmpresa: c.nombreEmpresa,
-        codigoCRM: c.codigoCRM,
-        numeroPropuestas: c.propuestas.length,
-        agenteAsignado: c.agenteAsignado,
-        fechaUltimaPropuesta,
-        estadosIncluidos,
+  const resultados = useMemo(() => {
+    const agrupadas = new Map<string, any>();
+    for (const propuesta of propuestas) {
+      const idCuenta = propuesta.id_cuenta_propuesta || "sin-cuenta";
+      const current = agrupadas.get(idCuenta) ?? {
+        id: idCuenta,
+        nombreEmpresa: propuesta.cuenta?.nombre_empresa || `Cuenta ${idCuenta}`,
+        codigoCRM: idCuenta,
+        numeroPropuestas: 0,
+        agenteAsignado: propuesta.id_agente_propuesta || "",
+        fechaUltimaPropuesta: "",
+        estadosIncluidos: new Set<string>(),
       };
+      current.numeroPropuestas += 1;
+      current.estadosIncluidos.add(propuesta.estado_propuesta || "");
+      if (!current.fechaUltimaPropuesta || String(propuesta.fecha_envio_propuesta || "") > current.fechaUltimaPropuesta) {
+        current.fechaUltimaPropuesta = propuesta.fecha_envio_propuesta || "";
+      }
+      agrupadas.set(idCuenta, current);
     }
-  );
+    return Array.from(agrupadas.values()).map((item) => ({
+      ...item,
+      estadosIncluidos: Array.from(item.estadosIncluidos).filter(Boolean),
+    }));
+  }, [propuestas]);
 
-   const resultadosFiltrados = resultados.filter((r) => {
-    const coincideCliente =
-      clienteFiltro === '' || r.nombreEmpresa.toLowerCase().includes(clienteFiltro.toLowerCase());
-
-    const coincideCRM =
-      codigoCRMFiltro === '' || r.codigoCRM.toLowerCase().includes(codigoCRMFiltro.toLowerCase());
-
-    const coincideAgente = agenteFiltro === '' || r.agenteAsignado === agenteFiltro;
-
-    const coincideEstado =
-      estadoFiltro === '' || r.estadosIncluidos.includes(estadoFiltro);
-
-    const coincideFecha =
-      (!fechaInicio || new Date(r.fechaUltimaPropuesta) >= new Date(fechaInicio)) &&
-      (!fechaFin || new Date(r.fechaUltimaPropuesta) <= new Date(fechaFin));
-
-    return coincideCliente && coincideCRM && coincideAgente && coincideEstado && coincideFecha;
+  const resultadosFiltrados = resultados.filter((item) => {
+    const fecha = item.fechaUltimaPropuesta ? new Date(item.fechaUltimaPropuesta) : null;
+    return (
+      (!fechaInicio || (fecha && fecha >= new Date(fechaInicio))) &&
+      (!fechaFin || (fecha && fecha <= new Date(fechaFin)))
+    );
   });
 
   return (
-    <div className="h-full">
-      <table className="min-w-full">
-        <thead className="bg-blue-950 text-white">
+    <div className="h-full overflow-x-auto">
+      <table className="min-w-full divide-y divide-gray-700 rounded-lg border border-gray-700">
+        <thead>
           <tr>
-            <th className="text-left p-2 font-light"></th>
-            <th className="text-left p-2 font-light">Nombre Empresa</th>
-            <th className="text-left p-2 font-light">Código CRM</th>
-            <th className="text-left p-2 font-light">Agente asignado actual</th>
-            <th className="text-left p-2 font-light">Estados presentes</th>
-            <th className="text-left p-2 font-light">Fecha Última Propuesta</th>
-           </tr>
+            <th className="px-4 py-3 text-left"></th>
+            <th className="px-4 py-3 text-left">Nombre Empresa</th>
+            <th className="px-4 py-3 text-left">Codigo CRM</th>
+            <th className="px-4 py-3 text-left">Agente asignado actual</th>
+            <th className="px-4 py-3 text-left">Estados presentes</th>
+            <th className="px-4 py-3 text-left">Fecha ultima propuesta</th>
+          </tr>
         </thead>
-        <tbody>
+        <tbody className="divide-y divide-gray-700">
           {resultadosFiltrados.map((res) => (
             <tr
               key={res.id}
-              onClick={(e) => handleRowClick(e, `/dashboard/comercial/propuestas/cuentas/${res.codigoCRM}`)}
-              className="hover:bg-gray-50 cursor-pointer"
+              onClick={() => router.push(`/dashboard/comercial/propuestas/cuentas/${res.codigoCRM}`)}
+              className="cursor-pointer transition-colors"
             >
-              <td className="p-2 border-b border-gray-200">
-                <FolderSvg />
-              </td>
-              <td className="p-2 border-b border-gray-200">{res.nombreEmpresa}</td>
-              <td className="p-2 border-b border-gray-200">{res.codigoCRM}</td>
-              <td className="p-2 border-b border-gray-200">{res.agenteAsignado}</td>
-              <td className="p-2 border-b border-gray-200">{res.estadosIncluidos.join(', ')}</td>
-              <td className="p-2 border-b border-gray-200">{res.fechaUltimaPropuesta}</td>
+              <td className="px-4 py-3"><FolderSvg /></td>
+              <td className="px-4 py-3 text-sm">{res.nombreEmpresa}</td>
+              <td className="px-4 py-3 text-sm">{res.codigoCRM}</td>
+              <td className="px-4 py-3 text-sm">{res.agenteAsignado}</td>
+              <td className="px-4 py-3 text-sm">{res.estadosIncluidos.join(", ")}</td>
+              <td className="px-4 py-3 text-sm">{res.fechaUltimaPropuesta}</td>
             </tr>
           ))}
         </tbody>
       </table>
-
-      {resultadosFiltrados.length === 0 && (
-        <p className="mt-4 text-center text-gray-500">No se encontraron resultados.</p>
-      )}
+      {loading && <p className="mt-4 text-center text-sm text-gray-500">Cargando propuestas...</p>}
+      {!loading && resultadosFiltrados.length === 0 && <p className="mt-4 text-center text-sm text-gray-500">No se encontraron resultados.</p>}
     </div>
   );
 };

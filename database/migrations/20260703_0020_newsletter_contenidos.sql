@@ -1,0 +1,95 @@
+BEGIN;
+
+INSERT INTO contenidos_db (
+  id_contenido,
+  id_cuenta,
+  id_agente,
+  especificaciones_contenido,
+  estado_contenido,
+  deadline_contenido,
+  medio,
+  producto,
+  publicacion,
+  deadline_publicacion,
+  estado_material_contenido,
+  fecha_publicacion_publicacion,
+  destino_revista,
+  destino_vidrioperfil,
+  tipo_articulo,
+  hoja_prod
+)
+VALUES
+  (
+    'content_news_26_00001',
+    '62500001',
+    'ag_25_0004',
+    'Newsletter sectorial enero',
+    'Pendiente',
+    '10/01/2026',
+    'newsletter',
+    'Newsletter',
+    'Newsletter enero 2026',
+    '08/01/2026',
+    'Pendiente',
+    '15/01/2026',
+    false,
+    false,
+    'newsletter',
+    true
+  ),
+  (
+    'content_news_26_00002',
+    '62500002',
+    'ag_25_0004',
+    'Newsletter lanzamiento producto',
+    'Pendiente',
+    '24/01/2026',
+    'newsletter',
+    'Newsletter',
+    'Newsletter febrero 2026',
+    '22/01/2026',
+    'Pendiente',
+    '01/02/2026',
+    false,
+    false,
+    'newsletter',
+    true
+  ),
+  (
+    'content_news_25_00001',
+    '62500003',
+    'ag_25_0004',
+    'Newsletter resumen feria',
+    'Publicado',
+    '05/12/2025',
+    'newsletter',
+    'Newsletter',
+    'Newsletter diciembre 2025',
+    '03/12/2025',
+    'Publicado',
+    '10/12/2025',
+    false,
+    false,
+    'newsletter',
+    true
+  )
+ON CONFLICT (id_contenido) DO UPDATE
+SET
+  id_cuenta = EXCLUDED.id_cuenta,
+  id_agente = EXCLUDED.id_agente,
+  especificaciones_contenido = EXCLUDED.especificaciones_contenido,
+  estado_contenido = EXCLUDED.estado_contenido,
+  deadline_contenido = EXCLUDED.deadline_contenido,
+  medio = EXCLUDED.medio,
+  producto = EXCLUDED.producto,
+  publicacion = EXCLUDED.publicacion,
+  deadline_publicacion = EXCLUDED.deadline_publicacion,
+  estado_material_contenido = EXCLUDED.estado_material_contenido,
+  fecha_publicacion_publicacion = EXCLUDED.fecha_publicacion_publicacion,
+  destino_revista = EXCLUDED.destino_revista,
+  destino_vidrioperfil = EXCLUDED.destino_vidrioperfil,
+  tipo_articulo = EXCLUDED.tipo_articulo,
+  hoja_prod = EXCLUDED.hoja_prod,
+  updated_at = now();
+
+COMMIT;

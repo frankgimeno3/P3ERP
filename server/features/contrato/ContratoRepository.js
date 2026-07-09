@@ -26,6 +26,7 @@ function normalizeLinea(row) {
   return {
     id_linea_contrato: row.id_linea_contrato,
     numero_linea_contrato: row.numero_linea_contrato,
+    id_publicacion: row.id_publicacion ?? "",
     medio: row.medio ?? "",
     publicacion: row.publicacion ?? "",
     producto: row.producto ?? "",
@@ -34,6 +35,7 @@ function normalizeLinea(row) {
     fecha_publicacion_publicacion: row.fecha_publicacion_publicacion ?? "",
     estado_material_contrato: row.estado_material_contrato ?? "",
     url_contenido: row.url_contenido ?? "",
+    array_id_contenidos: row.array_id_contenidos ?? [],
   };
 }
 
@@ -47,6 +49,7 @@ function normalizeContrato(row) {
     fecha_firma_contrato: row.fecha_firma_contrato ?? "",
     fecha_fin_contrato: row.fecha_fin_contrato ?? "",
     id_campana_asociada: row.id_campana_asociada ?? "",
+    id_propuesta: row.id_propuesta ?? "",
     descuento_final_contrato: numberOrZero(row.descuento_final_contrato),
     importe_total_bi_contrato: numberOrZero(row.importe_total_bi_contrato),
     iva_aplicable: Boolean(row.iva_aplicable),

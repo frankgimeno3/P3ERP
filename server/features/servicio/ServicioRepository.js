@@ -11,6 +11,7 @@ function normalizeServicio(row) {
     precio_tarifa: row.precio_tarifa === null || row.precio_tarifa === undefined ? null : Number(row.precio_tarifa),
     fecha_deadline_servicio: row.fecha_deadline_servicio ?? "",
     fecha_publicacion_servicio: row.fecha_publicacion_servicio ?? "",
+    concepto_factura: row.concepto_factura ?? "",
     medio_servicio_es: row.medio_servicio_es ?? "",
     edicion_servicio_es: row.edicion_servicio_es ?? "",
     publicacion_servicio_es: row.publicacion_servicio_es ?? "",

@@ -1,4 +1,5 @@
 import { getPgPool } from "../../database/pgClient.js";
+import { randomUUID } from "node:crypto";
 
 function normalizeContacto(row) {
   return {
@@ -17,7 +18,13 @@ function normalizeContacto(row) {
     suscripciones: row.suscripciones ?? [],
     otros_datos_interes: row.otros_datos_interes ?? "",
     pais_contacto: row.pais_contacto ?? "",
+    linkedin_cuenta: row.linkedin_cuenta ?? "",
+    url_contacto: row.url_contacto ?? "",
   };
+}
+
+function createContactoId() {
+  return `cont_${new Date().getFullYear().toString().slice(-2)}_${randomUUID().slice(0, 8)}`;
 }
 
 export async function getContactos(filters = {}) {
@@ -41,6 +48,98 @@ export async function getContactos(filters = {}) {
   );
 
   return rows.map(normalizeContacto);
+}
+
+export async function createContacto(data = {}) {
+  const pool = getPgPool();
+  const idContacto = data.id_contacto?.trim() || createContactoId();
+  const nombre = data.nombre_contacto?.trim() || "";
+  const apellidos = data.apellidos_contacto?.trim() || "";
+  const nombreCompleto = data.nombre_completo_contacto?.trim() || `${nombre} ${apellidos}`.trim();
+  const idCuenta = data.id_cuenta?.trim() || null;
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query(`
+      ALTER TABLE contactos_db
+        ADD COLUMN IF NOT EXISTS linkedin_cuenta TEXT NOT NULL DEFAULT '',
+        ADD COLUMN IF NOT EXISTS url_contacto TEXT NOT NULL DEFAULT '';
+    `);
+
+    let nombreEmpresa = data.nombre_empresa || "";
+    if (idCuenta && !nombreEmpresa) {
+      const { rows } = await client.query(`SELECT nombre_empresa FROM cuentas_db WHERE id_cuenta = $1 LIMIT 1`, [idCuenta]);
+      nombreEmpresa = rows[0]?.nombre_empresa || "";
+    }
+
+    const { rows } = await client.query(
+      `
+        INSERT INTO contactos_db (
+          id_contacto,
+          id_cuenta,
+          nombre_contacto,
+          apellidos_contacto,
+          nombre_completo_contacto,
+          nombre_empresa,
+          telefono_contacto,
+          email_contacto,
+          cargo_contacto,
+          idiomas,
+          conocido_en,
+          contactado_en_feria,
+          suscripciones,
+          otros_datos_interes,
+          pais_contacto,
+          linkedin_cuenta,
+          url_contacto
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, '', '', '', '[]'::jsonb, '', $10, $11, $12)
+        RETURNING *
+      `,
+      [
+        idContacto,
+        idCuenta,
+        nombre,
+        apellidos,
+        nombreCompleto,
+        nombreEmpresa,
+        data.telefono_contacto || "",
+        data.email_contacto || "",
+        data.cargo_contacto || "",
+        data.pais_contacto || "",
+        data.linkedin_cuenta || "",
+        data.url_contacto || "",
+      ],
+    );
+
+    if (idCuenta) {
+      await client.query(
+        `
+          UPDATE cuentas_db
+          SET array_contactos_cuenta = (
+                SELECT COALESCE(jsonb_agg(item), '[]'::jsonb)
+                FROM (
+                  SELECT DISTINCT ON (elem->>'id_contacto') elem AS item
+                  FROM jsonb_array_elements(array_contactos_cuenta || $1::jsonb) AS elem
+                  WHERE COALESCE(elem->>'id_contacto', '') <> ''
+                ) dedup
+              ),
+              updated_at = NOW()
+          WHERE id_cuenta = $2
+        `,
+        [JSON.stringify([{ id_contacto: idContacto }]), idCuenta],
+      );
+    }
+
+    await client.query("COMMIT");
+    return normalizeContacto(rows[0]);
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 export async function unlinkContactoFromCuenta(idContacto, idCuenta) {

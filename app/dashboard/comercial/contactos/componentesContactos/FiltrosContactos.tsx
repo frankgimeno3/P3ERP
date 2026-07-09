@@ -66,7 +66,7 @@ const FiltrosContactos: FC<FiltrosContactosProps> = ({
           <div className='flex flex-1 flex-col mt-2'>
             <label className='text-sm font-medium'>Código Contacto</label>
             <input
-              type='number'
+              type='text'
               value={codigoContactoFiltro}
               onChange={(e) => setCodigoContactoFiltro(e.target.value)}
               placeholder='Código del contacto'
@@ -76,10 +76,10 @@ const FiltrosContactos: FC<FiltrosContactosProps> = ({
           <div className='flex flex-1 flex-col mt-2'>
             <label className='text-sm font-medium'>Empresa asociada</label>
             <input
-              type='number'
+              type='text'
               value={empresaAsociadaFiltro}
               onChange={(e) => setEmpresaAsociadaFiltro(e.target.value)}
-              placeholder='Ej: 123'
+              placeholder='Empresa asociada'
               className='border px-2 py-1 rounded text-sm'            />
           </div>
         </div>
@@ -87,7 +87,7 @@ const FiltrosContactos: FC<FiltrosContactosProps> = ({
           <div className='flex flex-1 flex-col mt-2'>
             <label className='text-sm font-medium'>Tel principal</label>
             <input
-              type='number'
+              type='text'
               value={telFiltro}
               onChange={(e) => setTelFiltro(e.target.value)}
               placeholder='Teléfono'

@@ -37,15 +37,15 @@ const MiddleNav: FC<MiddleNavProps> = ({ tituloprincipal }) => {
 
    const renderSegmentLabel = (segment: string, fullPath: string) => {
     if (fullPath === '/' || fullPath === '/dashboard') {
-      return <Home className="w-5 h-5  text-gray-600 mx-4" />;  
+      return <Home className="h-4 w-4 text-white" />;  
     }
     return segment.charAt(0).toUpperCase() + segment.slice(1);
   };
 
   return (
-    <div className="flex flex-row text-white  items-center justify-between bg-blue-950/70 px-8 py-1">
-      <h2 className="text-xl font-black">{tituloprincipal}</h2>
-      <div className="flex flex-row flex-wrap items-center gap-1 py-3 ">
+    <div className="flex flex-row items-center justify-between bg-gradient-to-r from-zinc-700 to-gray-800 px-4 py-2.5 text-white md:px-6">
+      <h2 className="text-sm font-semibold uppercase text-zinc-100 md:text-base">{tituloprincipal}</h2>
+      <div className="flex flex-row flex-wrap items-center gap-0 pr-2 text-sm md:pr-4">
         {pathSegments.map((segment, index) => {
           const fullPath = buildPath(index);
           const isProblematic = problematicSegments.includes(fullPath);
@@ -54,14 +54,14 @@ const MiddleNav: FC<MiddleNavProps> = ({ tituloprincipal }) => {
             <div className="flex items-center" key={index}>
               {isProblematic ? (
                 <p
-                  className="flex items-center gap-1 px-3 py-1 rounded bg-white text-sm text-gray-400 cursor-not-allowed text-gray-300"
+                  className="flex min-h-[36px] cursor-not-allowed items-center gap-1 rounded-md bg-gray-300/50 px-4 py-2 text-sm font-medium uppercase text-slate-200"
                 >
                   {renderSegmentLabel(segment, fullPath)}
                 </p>
               ) : (
                 <Link
                   href={getHref(index)}
-                  className="flex items-center gap-1 px-3 py-1 rounded bg-white text-sm text-gray-400 cursor-pointer hover:bg-gray-200 text-gray-600 font-base"
+                  className="flex min-h-[36px] items-center gap-1 rounded-md bg-gray-300/50 px-4 py-2 text-sm font-medium uppercase text-white transition-colors hover:bg-gray-300/60"
                 >
                   {renderSegmentLabel(segment, fullPath)}
                 </Link>
@@ -69,7 +69,7 @@ const MiddleNav: FC<MiddleNavProps> = ({ tituloprincipal }) => {
               {index < pathSegments.length - 1 && (
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="mx-1 h-4 w-4 text-gray-500"
+                  className="mx-1 h-4 w-4 text-blue-200/80"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"

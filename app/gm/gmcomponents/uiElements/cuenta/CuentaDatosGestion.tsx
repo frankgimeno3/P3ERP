@@ -31,21 +31,52 @@ function GestionField({ label, value, onChange, type = "text", readOnly = false 
   );
 }
 
+function splitDate(value = "") {
+  const text = String(value || "");
+  if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(text)) {
+    const [yyyy, mm, dd] = text.split("-");
+    return { dd, mm, yyyy };
+  }
+  const [dd = "", mm = "", yyyy = ""] = text.split(/[/-]/);
+  return { dd, mm, yyyy };
+}
+
+function joinDate(parts: any) {
+  return [parts.dd || "", parts.mm || "", parts.yyyy || ""].join("/");
+}
+
+function GestionDateField({ label, value, onChange, readOnly = false }: Omit<GestionFieldProps, "type">) {
+  const parts = splitDate(value);
+  const update = (field: string, nextValue: string) => {
+    const next = { ...parts, [field]: nextValue.replace(/\D/g, "") };
+    onChange(joinDate(next));
+  };
+
+  return (
+    <label className="flex min-w-0 items-center justify-start gap-2 text-left">
+      <span className="w-44 shrink-0 text-left text-sm font-medium text-slate-700">{label}</span>
+      <div className="flex min-w-0 flex-1 gap-2">
+        <input value={parts.dd || ""} readOnly={readOnly} onChange={(event) => update("dd", event.target.value.slice(0, 2))} placeholder="dd" className={`w-16 rounded-md border border-gray-300 px-2 py-1 text-sm outline-none ${readOnly ? "bg-slate-100 text-slate-500" : "bg-white text-slate-700"}`} />
+        <input value={parts.mm || ""} readOnly={readOnly} onChange={(event) => update("mm", event.target.value.slice(0, 2))} placeholder="mm" className={`w-16 rounded-md border border-gray-300 px-2 py-1 text-sm outline-none ${readOnly ? "bg-slate-100 text-slate-500" : "bg-white text-slate-700"}`} />
+        <input value={parts.yyyy || ""} readOnly={readOnly} onChange={(event) => update("yyyy", event.target.value.slice(0, 4))} placeholder="yyyy" className={`w-24 rounded-md border border-gray-300 px-2 py-1 text-sm outline-none ${readOnly ? "bg-slate-100 text-slate-500" : "bg-white text-slate-700"}`} />
+      </div>
+    </label>
+  );
+}
+
 export default function CuentaDatosGestion({ account, onFieldChange, onOpenAgents }: CuentaDatosGestionProps) {
   return (
     <div className="w-full border border-gray-500 bg-[#f3f5f7] p-5 text-left">
       <div className="grid w-full grid-cols-1 gap-4">
         <div className="grid w-full grid-cols-1 gap-4 lg:grid-cols-2">
-          <GestionField
+          <GestionDateField
             label="Fecha de alta"
-            type="date"
             value={account.fechaAlta}
             onChange={(value) => onFieldChange("fechaAlta", value)}
             readOnly
           />
-          <GestionField
+          <GestionDateField
             label="Fecha ultima modificacion"
-            type="date"
             value={account.fechaUltimaModificacion ?? ""}
             onChange={(value) => onFieldChange("fechaUltimaModificacion", value)}
           />

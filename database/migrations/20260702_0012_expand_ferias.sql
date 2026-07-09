@@ -1,0 +1,26 @@
+ALTER TABLE ferias_db ADD COLUMN IF NOT EXISTS titulo_especifico_edicion text NOT NULL DEFAULT '';
+ALTER TABLE ferias_db ADD COLUMN IF NOT EXISTS nombre_feria text NOT NULL DEFAULT '';
+ALTER TABLE ferias_db ADD COLUMN IF NOT EXISTS id_cuenta_feria text NOT NULL DEFAULT '';
+ALTER TABLE ferias_db ADD COLUMN IF NOT EXISTS id_cuenta_gestion text NOT NULL DEFAULT '';
+ALTER TABLE ferias_db ADD COLUMN IF NOT EXISTS pais text NOT NULL DEFAULT '';
+ALTER TABLE ferias_db ADD COLUMN IF NOT EXISTS ciudad text NOT NULL DEFAULT '';
+ALTER TABLE ferias_db ADD COLUMN IF NOT EXISTS edicion_numero text NOT NULL DEFAULT '';
+ALTER TABLE ferias_db ADD COLUMN IF NOT EXISTS hay_intercambio boolean NOT NULL DEFAULT false;
+ALTER TABLE ferias_db ADD COLUMN IF NOT EXISTS id_contrato text NOT NULL DEFAULT '';
+ALTER TABLE ferias_db ADD COLUMN IF NOT EXISTS hay_especial boolean NOT NULL DEFAULT false;
+ALTER TABLE ferias_db ADD COLUMN IF NOT EXISTS descripcion text NOT NULL DEFAULT '';
+ALTER TABLE ferias_db ADD COLUMN IF NOT EXISTS text_area_comentarios text NOT NULL DEFAULT '';
+ALTER TABLE ferias_db ADD COLUMN IF NOT EXISTS estado_vuelos text NOT NULL DEFAULT '';
+ALTER TABLE ferias_db ADD COLUMN IF NOT EXISTS estado_hotel text NOT NULL DEFAULT '';
+ALTER TABLE ferias_db ADD COLUMN IF NOT EXISTS estado_stand text NOT NULL DEFAULT '';
+ALTER TABLE ferias_db ADD COLUMN IF NOT EXISTS estado_material text NOT NULL DEFAULT '';
+ALTER TABLE ferias_db ADD COLUMN IF NOT EXISTS estado_transporte_revistas text NOT NULL DEFAULT '';
+ALTER TABLE ferias_db ADD COLUMN IF NOT EXISTS estado_pases text NOT NULL DEFAULT '';
+ALTER TABLE ferias_db ADD COLUMN IF NOT EXISTS textarea_gestion_evento text NOT NULL DEFAULT '';
+ALTER TABLE ferias_db ADD COLUMN IF NOT EXISTS fecha_incio text NOT NULL DEFAULT '';
+ALTER TABLE ferias_db ADD COLUMN IF NOT EXISTS fecha_finalizacion text NOT NULL DEFAULT '';
+ALTER TABLE ferias_db ADD COLUMN IF NOT EXISTS en_vidrioperfil boolean NOT NULL DEFAULT false;
+
+CREATE INDEX IF NOT EXISTS ferias_db_fecha_finalizacion_idx ON ferias_db (fecha_finalizacion);
+CREATE INDEX IF NOT EXISTS ferias_db_id_cuenta_feria_idx ON ferias_db (id_cuenta_feria);
+CREATE INDEX IF NOT EXISTS ferias_db_id_contrato_idx ON ferias_db (id_contrato);

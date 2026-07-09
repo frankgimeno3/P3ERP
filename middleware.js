@@ -1,86 +1,68 @@
-import {NextResponse} from "next/server";
-import {COGNITO} from "./env.js";
-import {decodeJWT} from "@aws-amplify/core";
-import {fetchNewTokens} from "./server/features/authentication/AuthenticationService.js";
+import { NextResponse } from "next/server";
+import { jwtVerify, createRemoteJWKSet } from "jose";
+import { COGNITO } from "./env.js";
+
+let jwks;
+
+function getJwks() {
+  if (!jwks) {
+    const issuer = `https://cognito-idp.${COGNITO.REGION}.amazonaws.com/${COGNITO.USER_POOL_ID}`;
+    jwks = createRemoteJWKSet(new URL(`${issuer}/.well-known/jwks.json`));
+  }
+
+  return jwks;
+}
+
+async function verifyAccessToken(accessToken) {
+  if (!COGNITO.USER_POOL_ID || !COGNITO.CLIENT_ID || !COGNITO.REGION) {
+    throw new Error("Cognito configuration is missing");
+  }
+
+  const issuer = `https://cognito-idp.${COGNITO.REGION}.amazonaws.com/${COGNITO.USER_POOL_ID}`;
+  const { payload } = await jwtVerify(accessToken, getJwks(), { issuer });
+
+  if (payload.token_use !== "access") {
+    throw new Error("Invalid Cognito token use");
+  }
+
+  if (payload.client_id !== COGNITO.CLIENT_ID) {
+    throw new Error("Invalid Cognito client");
+  }
+
+  return payload;
+}
 
 export async function middleware(request) {
-    const response = NextResponse.next();
-    const {pathname} = request.nextUrl;
-    const goToLogin = () => {
-        if (!(pathname === '/' || pathname === '/admin')) {
-            return NextResponse.redirect(new URL('/', request.url));
-        }
-    }
-    const goToPanel = () => {
-        return NextResponse.redirect(new URL('/dashboard', request.url));
-    }
+  const { pathname } = request.nextUrl;
+  const response = NextResponse.next();
 
-    const goToAdminPanel = () => {
-        return NextResponse.redirect(new URL('/dashboard', request.url));
-    }
+  const goToLogin = () => {
+    if (pathname === "/" || pathname === "/admin") return response;
+    return NextResponse.redirect(new URL("/", request.url));
+  };
 
-    const username = request.cookies.get(`CognitoIdentityServiceProvider.${COGNITO.CLIENT_ID}.LastAuthUser`)?.value;
-    if (!username) return goToLogin();
-    const cookieKeys = {
-        id: `CognitoIdentityServiceProvider.${COGNITO.CLIENT_ID}.${username}.idToken`,
-        access: `CognitoIdentityServiceProvider.${COGNITO.CLIENT_ID}.${username}.accessToken`,
-        refresh: `CognitoIdentityServiceProvider.${COGNITO.CLIENT_ID}.${username}.refreshToken`
-    }
-    const refreshToken = request.cookies.get(cookieKeys.refresh)?.value
-    if (!refreshToken) {
-        return goToLogin()
-    }
+  const goToPanel = () => NextResponse.redirect(new URL("/dashboard", request.url));
 
-    let idToken = request.cookies.get(cookieKeys.id)?.value
-    let accessToken = request.cookies.get(cookieKeys.access)?.value
+  const username = request.cookies.get(`CognitoIdentityServiceProvider.${COGNITO.CLIENT_ID}.LastAuthUser`)?.value;
+  if (!username) return goToLogin();
 
-    const { origin } = new URL(request.url)
-    const apiUrl = `${origin}/api/validate-token`
-    const res = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-            Cookie: request.headers.get('cookie') || '',
-        },
-    })
+  const accessToken = request.cookies.get(`CognitoIdentityServiceProvider.${COGNITO.CLIENT_ID}.${username}.accessToken`)?.value;
+  if (!accessToken) return goToLogin();
 
-    if(!res.ok){
-        try {
-            const data = await fetchNewTokens(refreshToken);
-            idToken = data.id_token;
-            accessToken = data.access_token;
-            response.cookies.set({
-                name: cookieKeys.access,
-                value: accessToken,
-                secure: true,
-                maxAge: data.expires_in
-            })
+  try {
+    const payload = await verifyAccessToken(accessToken);
+    const roles = payload["cognito:groups"] || [];
+    const isAdmin = Array.isArray(roles) && roles.includes("admin");
 
-            response.cookies.set({
-                name: cookieKeys.id,
-                value: idToken,
-                secure: true,
-                maxAge: data.expires_in
-            })
-        } catch (e) {
-            return goToLogin();
-        }
-    }
+    if ((pathname === "/" || pathname === "/admin")) return goToPanel();
+    if (!isAdmin && pathname.includes("/admin/dashboard")) return goToPanel();
+  } catch (error) {
+    return goToLogin();
+  }
 
-    try {
-        const {payload} = decodeJWT(accessToken);
-        const roles = payload['cognito:groups'] || [];
-        const isAdmin = roles.includes('admin');
-        if (isAdmin && (pathname === "/" || pathname === "/admin")) return goToAdminPanel();
-        if (!isAdmin && (pathname === "/" || pathname === "/admin")) return goToPanel();
-        if (!isAdmin && pathname.includes('/admin/dashboard')) return goToPanel();
-    } catch (e) {
-        console.log(e);
-        return goToLogin();
-    }
-
-    return response;
+  return response;
 }
 
 export const config = {
-    matcher: ['/((?!_next|favicon\\.ico|api).*)'],
-}
+  matcher: ["/((?!_next|favicon\\.ico|api).*)"],
+};

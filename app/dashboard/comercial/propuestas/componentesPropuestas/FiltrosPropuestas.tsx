@@ -32,6 +32,49 @@ const getNombreAgente = (agente: Agente) =>
   `${agente.nombre_agente || ''} ${agente.apellidos_agente || ''}`.trim() ||
   agente.id_agente;
 
+const parseDateParts = (value: string) => {
+  const match = String(value || '').match(/^(\d{4})-(\d{2})-(\d{2})$/) || String(value || '').match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!match) return { day: '', month: '', year: '' };
+  return match[0].includes('-')
+    ? { day: match[3], month: match[2], year: match[1] }
+    : { day: match[1], month: match[2], year: match[3] };
+};
+
+const joinDateParts = (current: string, field: 'day' | 'month' | 'year', nextValue: string) => {
+  const parts = parseDateParts(current);
+  const next = { ...parts, [field]: nextValue.replace(/\D/g, '').slice(0, field === 'year' ? 4 : 2) };
+  if (!next.day && !next.month && !next.year) return '';
+  return `${next.year.padStart(4, '0')}-${next.month.padStart(2, '0')}-${next.day.padStart(2, '0')}`;
+};
+
+function DatePartsFilter({
+  label,
+  value,
+  onChange,
+  disabled,
+  disabledClassName,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  disabled: boolean;
+  disabledClassName: string;
+}) {
+  const parts = parseDateParts(value);
+  const inputClass = `w-16 rounded-lg border px-3 py-2 text-sm ${disabled ? disabledClassName : ''}`;
+
+  return (
+    <div className="flex flex-col">
+      <label className="mb-1 block text-xs text-gray-600">{label}</label>
+      <div className="flex gap-1.5">
+        <input value={parts.day} onChange={(e) => !disabled && onChange(joinDateParts(value, 'day', e.target.value))} disabled={disabled} placeholder="dd" className={inputClass} />
+        <input value={parts.month} onChange={(e) => !disabled && onChange(joinDateParts(value, 'month', e.target.value))} disabled={disabled} placeholder="mm" className={inputClass} />
+        <input value={parts.year} onChange={(e) => !disabled && onChange(joinDateParts(value, 'year', e.target.value))} disabled={disabled} placeholder="yyyy" className={`w-20 rounded-lg border px-3 py-2 text-sm ${disabled ? disabledClassName : ''}`} />
+      </div>
+    </div>
+  );
+}
+
 const FiltrosPropuestas: FC<FiltrosPropuestasProps> = ({
   clienteFiltro,
   setClienteFiltro,
@@ -52,41 +95,43 @@ const FiltrosPropuestas: FC<FiltrosPropuestasProps> = ({
   const bloqueaAgente = pestana === 'miasenproceso';
   const bloqueaFechas = pestana === 'todasporcliente';
   const bloqueaEstado = pestana === 'miasenproceso';
+  const inputClass = "w-full rounded-lg border px-3 py-2 text-sm";
+  const disabledControlClass = "cursor-not-allowed opacity-70";
 
   return (
-    <div className="flex flex-col w-full bg-white rounded p-5">
-      <p className="text-lg font-semibold mb-2">Buscador de propuestas</p>
-      <div className="flex flex-row w-full justify-between items-center">
-        <div className="flex flex-wrap gap-4 items-end p-5">
+    <div className="flex w-full flex-col bg-white">
+      <p className="mb-3 text-sm font-semibold text-gray-700">Buscador de propuestas</p>
+      <div className="flex w-full flex-row items-center justify-between">
+        <div className="grid w-full grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           <div className="flex flex-col">
-            <label className="text-sm font-medium">Nombre cliente</label>
+            <label className="mb-1 block text-xs text-gray-600">Nombre cliente</label>
             <input
               type="text"
               value={clienteFiltro}
               onChange={(e) => setClienteFiltro(e.target.value)}
               placeholder="Nombre de empresa"
-              className="border px-2 py-1 rounded"
+              className={inputClass}
             />
           </div>
 
           <div className="flex flex-col">
-            <label className="text-sm font-medium">Código CRM</label>
+            <label className="mb-1 block text-xs text-gray-600">C&oacute;digo CRM</label>
             <input
               type="text"
               value={codigoCRMFiltro}
               onChange={(e) => setCodigoCRMFiltro(e.target.value)}
               placeholder="Cuenta de cliente"
-              className="border px-2 py-1 rounded"
+              className={inputClass}
             />
           </div>
 
           <div className="flex flex-col">
-            <label className="text-sm font-medium">Agente</label>
+            <label className="mb-1 block text-xs text-gray-600">Agente</label>
             <select
               value={bloqueaAgente ? agenteActual : agenteFiltro}
               onChange={(e) => !bloqueaAgente && setAgenteFiltro(e.target.value)}
               disabled={bloqueaAgente}
-              className={`border px-2 py-1 rounded ${bloqueaAgente ? 'bg-blue-950/50 text-white cursor-not-allowed' : ''}`}
+              className={`${inputClass} ${bloqueaAgente ? disabledControlClass : ''}`}
             >
               {!bloqueaAgente && <option value="">Todos</option>}
               {agentes.map((agente) => (
@@ -97,35 +142,16 @@ const FiltrosPropuestas: FC<FiltrosPropuestasProps> = ({
             </select>
           </div>
 
-          <div className="flex flex-col">
-            <label className="text-sm font-medium">Desde</label>
-            <input
-              type="date"
-              value={fechaInicio}
-              onChange={(e) => !bloqueaFechas && setFechaInicio(e.target.value)}
-              disabled={bloqueaFechas}
-              className={`border px-2 py-1 rounded ${bloqueaFechas ? 'bg-blue-950/50 text-white cursor-not-allowed' : ''}`}
-            />
-          </div>
+          <DatePartsFilter label="Desde" value={fechaInicio} onChange={setFechaInicio} disabled={bloqueaFechas} disabledClassName={disabledControlClass} />
+          <DatePartsFilter label="Hasta" value={fechaFin} onChange={setFechaFin} disabled={bloqueaFechas} disabledClassName={disabledControlClass} />
 
           <div className="flex flex-col">
-            <label className="text-sm font-medium">Hasta</label>
-            <input
-              type="date"
-              value={fechaFin}
-              onChange={(e) => !bloqueaFechas && setFechaFin(e.target.value)}
-              disabled={bloqueaFechas}
-              className={`border px-2 py-1 rounded ${bloqueaFechas ? 'bg-blue-950/50 text-white cursor-not-allowed' : ''}`}
-            />
-          </div>
-
-          <div className="flex flex-col">
-            <label className="text-sm font-medium">Estado</label>
+            <label className="mb-1 block text-xs text-gray-600">Estado</label>
             <select
               value={bloqueaEstado ? 'Pendiente' : estadoFiltro}
               onChange={(e) => !bloqueaEstado && setEstadoFiltro(e.target.value)}
               disabled={bloqueaEstado}
-              className={`border px-2 py-1 rounded ${bloqueaEstado ? 'bg-blue-950/50 text-white cursor-not-allowed' : ''}`}
+              className={`${inputClass} ${bloqueaEstado ? disabledControlClass : ''}`}
             >
               {!bloqueaEstado && <option value="">Todos</option>}
               <option value="Pendiente">Pendiente</option>

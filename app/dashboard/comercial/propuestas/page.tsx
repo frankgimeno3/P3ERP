@@ -39,60 +39,67 @@ const Propuestas: FC = () => {
   }, [pestana, agenteActual]);
 
   return (
-    <div className="flex flex-col bg-gray-200 h-full min-h-screen text-gray-600">
+    <div className="flex h-full min-h-screen flex-col bg-white text-gray-700">
       <MiddleNav
         tituloprincipal={`Propuestas para el agente ${agentes.find(a => a.id_agente === agenteActual)?.nombre_completo_agente || agenteActual}`}
       />
-      <div className="bg-gray-100 min-h-screen px-12 text-gray-600">
-        <div className="flex flex-row justify-end py-5">
+      <div className="content-main min-h-screen bg-white px-4 text-sm text-gray-700 md:px-6">
+        <div className="flex flex-row justify-end gap-2 py-5">
+          <Link
+            href="/dashboard/comercial/propuestas/plantillas"
+            className="flex min-h-[36px] items-center justify-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-blue-950 transition-colors hover:bg-gray-50"
+          >
+            <p>Plantillas</p>
+          </Link>
           <Link
             href="/dashboard/comercial/propuestas/crear"
-            className="bg-blue-950 text-gray-100 p-2 px-4 rounded-lg shadow-xl cursor-pointer hover:bg-blue-900 text-md"
+            className="flex min-h-[36px] items-center justify-center rounded-md bg-blue-950/90 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-900"
           >
             <p>Crear propuesta</p>
           </Link>
         </div>
- 
-          <FiltrosPropuestas
-            clienteFiltro={clienteFiltro}
-            setClienteFiltro={setClienteFiltro}
-            codigoCRMFiltro={codigoCRMFiltro}
-            setCodigoCRMFiltro={setCodigoCRMFiltro}
-            agenteFiltro={agenteFiltro}
-            setAgenteFiltro={setAgenteFiltro}
-            fechaInicio={fechaInicio}
-            setFechaInicio={setFechaInicio}
-            fechaFin={fechaFin}
-            setFechaFin={setFechaFin}
-            estadoFiltro={estadoFiltro}
-            setEstadoFiltro={setEstadoFiltro}
-            pestana={pestana}
-            agenteActual={agenteActual}
-            agentes={agentes}
-          />
- 
-        <div className="mt-5 p-12 rounded-lg shadow-xl bg-white">
-          <div className="flex flex-row relative mb-4">
+        <div className="overflow-hidden rounded-b-lg bg-white p-6">
+          <div className="mb-4 flex flex-row flex-wrap gap-1 border-b border-gray-200">
           <div
-              className={`p-3 rounded-tr-lg cursor-pointer w-60 text-center transition-all duration-300 ${
+              className={`relative cursor-pointer px-4 py-2.5 text-sm font-medium transition-colors ${
                 pestana === 'todasporcliente'
-                  ? 'bg-blue-950 text-white z-30 rounded-tl-lg'
-                  : 'z-10 bg-gray-100 hover:bg-gray-200'
+                  ? 'text-blue-800 after:absolute after:bottom-0 after:left-2 after:right-2 after:h-0.5 after:rounded-full after:bg-blue-800'
+                  : 'text-gray-600 hover:text-gray-900'
               }`}
               onClick={() => setPestana('todasporcliente')}
             >
               Todas las propuestas
             </div>
             <div
-              className={`p-3 rounded-tr-lg cursor-pointer w-60 text-center transition-all duration-300 ${
+              className={`relative cursor-pointer px-4 py-2.5 text-sm font-medium transition-colors ${
                 pestana === 'miasenproceso'
-                  ? 'bg-blue-950 text-white z-30 rounded-tl-lg'
-                  : 'z-10 bg-gray-100 hover:bg-gray-200'
+                  ? 'text-blue-800 after:absolute after:bottom-0 after:left-2 after:right-2 after:h-0.5 after:rounded-full after:bg-blue-800'
+                  : 'text-gray-600 hover:text-gray-900'
               }`}
               onClick={() => setPestana('miasenproceso')}
             >
               Mis propuestas pendientes
             </div>
+          </div>
+
+          <div className="mb-6">
+            <FiltrosPropuestas
+              clienteFiltro={clienteFiltro}
+              setClienteFiltro={setClienteFiltro}
+              codigoCRMFiltro={codigoCRMFiltro}
+              setCodigoCRMFiltro={setCodigoCRMFiltro}
+              agenteFiltro={agenteFiltro}
+              setAgenteFiltro={setAgenteFiltro}
+              fechaInicio={fechaInicio}
+              setFechaInicio={setFechaInicio}
+              fechaFin={fechaFin}
+              setFechaFin={setFechaFin}
+              estadoFiltro={estadoFiltro}
+              setEstadoFiltro={setEstadoFiltro}
+              pestana={pestana}
+              agenteActual={agenteActual}
+              agentes={agentes}
+            />
           </div>
 
           {pestana === 'miasenproceso' && (

@@ -45,6 +45,21 @@ interface Fase4CrearProps {
   setCobros: React.Dispatch<React.SetStateAction<Cobro[]>>;
 }
 
+const splitDate = (value: string) => {
+  const match = String(value || "").match(/^(\d{4})-(\d{2})-(\d{2})$/) || String(value || "").match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!match) return { day: "", month: "", year: "" };
+  return match[0].includes("-")
+    ? { day: match[3], month: match[2], year: match[1] }
+    : { day: match[1], month: match[2], year: match[3] };
+};
+
+const updateDatePart = (value: string, field: "day" | "month" | "year", nextValue: string) => {
+  const parts = splitDate(value);
+  const next = { ...parts, [field]: nextValue.replace(/\D/g, "").slice(0, field === "year" ? 4 : 2) };
+  if (!next.day && !next.month && !next.year) return "";
+  return `${next.day.padStart(2, "0")}/${next.month.padStart(2, "0")}/${next.year.padStart(4, "0")}`;
+};
+
 const Fase4Crear: FC<Fase4CrearProps> = ({
   setFaseCreacionPropuesta,
   codigoCliente,
@@ -470,12 +485,17 @@ const Fase4Crear: FC<Fase4CrearProps> = ({
 
                   <div className="flex flex-col">
                     <label className="text-sm font-semibold mb-1">Fecha de cobro</label>
-                    <input
-                      type="date"
-                      className={getCobroInputClassName(cobro, "fechaCobro")}
-                      value={cobro.fechaCobro}
-                      onChange={(e) => handleCobroChange(index, "fechaCobro", e.target.value)}
-                    />
+                    <div className="flex gap-1">
+                      {(["day", "month", "year"] as const).map((field) => (
+                        <input
+                          key={field}
+                          value={splitDate(cobro.fechaCobro)[field]}
+                          onChange={(e) => handleCobroChange(index, "fechaCobro", updateDatePart(cobro.fechaCobro, field, e.target.value))}
+                          placeholder={field === "day" ? "dd" : field === "month" ? "mm" : "yyyy"}
+                          className={`${getCobroInputClassName(cobro, "fechaCobro")} ${field === "year" ? "w-24" : "w-16"}`}
+                        />
+                      ))}
+                    </div>
                   </div>
 
                   <div className="flex flex-col">

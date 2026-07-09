@@ -6,12 +6,21 @@ import { OrdenService } from "@/app/service/OrdenService";
 
 const formatMoney = (value?: number) => {
   const amount = Number(value ?? 0);
-  return amount ? `${amount.toLocaleString("es-ES")} €` : "-";
+  return amount ? `${amount.toLocaleString("es-ES")} EUR` : "-";
 };
+
+const inputClass = "w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-950";
 
 export default function ControlAdministrativoPage() {
   const [ordenes, setOrdenes] = useState<any[]>([]);
-  const [filtro, setFiltro] = useState("");
+  const [filtros, setFiltros] = useState({
+    orden: "",
+    cliente: "",
+    agente: "",
+    contrato: "",
+    factura: "",
+    forma_cobro: "",
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -23,8 +32,8 @@ export default function ControlAdministrativoPage() {
         const data = await OrdenService.getOrdenesAdministrativas();
         setOrdenes(Array.isArray(data) ? data : []);
       } catch (err) {
-        console.error("Error fetching órdenes:", err);
-        setError("No se han podido cargar las órdenes.");
+        console.error("Error fetching ordenes:", err);
+        setError("No se han podido cargar las ordenes.");
       } finally {
         setLoading(false);
       }
@@ -34,38 +43,36 @@ export default function ControlAdministrativoPage() {
   }, []);
 
   const ordenesFiltradas = useMemo(() => {
-    const query = filtro.trim().toLowerCase();
-    if (!query) return ordenes;
+    const matches = (value: unknown, query: string) => String(value ?? "").toLowerCase().includes(query.trim().toLowerCase());
 
     return ordenes.filter((orden) =>
-      [
-        orden.id_orden,
-        orden.cliente,
-        orden.agente,
-        orden.id_contrato,
-        orden.id_factura,
-        orden.base_imponible,
-        orden.forma_cobro,
-      ]
-        .join(" ")
-        .toLowerCase()
-        .includes(query),
+      matches(orden.id_orden, filtros.orden)
+      && matches(orden.cliente, filtros.cliente)
+      && matches(orden.agente, filtros.agente)
+      && matches(orden.id_contrato, filtros.contrato)
+      && matches(orden.id_factura, filtros.factura)
+      && matches(orden.forma_cobro, filtros.forma_cobro),
     );
-  }, [filtro, ordenes]);
+  }, [filtros, ordenes]);
+
+  const handleFiltroChange = (field: keyof typeof filtros, value: string) => {
+    setFiltros((prev) => ({ ...prev, [field]: value }));
+  };
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-gray-200 text-gray-600">
       <MiddleNav tituloprincipal="Control administrativo" />
       <div className="min-h-screen w-full bg-gray-100 px-12 py-10 text-gray-600">
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-lg font-semibold text-blue-950">Órdenes</h2>
-          <input
-            type="search"
-            value={filtro}
-            onChange={(event) => setFiltro(event.target.value)}
-            placeholder="Filtrar por orden, cliente, agente, contrato, factura..."
-            className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-950 sm:w-96"
-          />
+        <div className="mb-4 flex flex-col gap-3">
+          <h2 className="text-lg font-semibold text-blue-950">Ordenes</h2>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3 xl:grid-cols-6">
+            <input type="search" value={filtros.orden} onChange={(event) => handleFiltroChange("orden", event.target.value)} placeholder="Orden" className={inputClass} />
+            <input type="search" value={filtros.cliente} onChange={(event) => handleFiltroChange("cliente", event.target.value)} placeholder="Cliente" className={inputClass} />
+            <input type="search" value={filtros.agente} onChange={(event) => handleFiltroChange("agente", event.target.value)} placeholder="Agente" className={inputClass} />
+            <input type="search" value={filtros.contrato} onChange={(event) => handleFiltroChange("contrato", event.target.value)} placeholder="Contrato" className={inputClass} />
+            <input type="search" value={filtros.factura} onChange={(event) => handleFiltroChange("factura", event.target.value)} placeholder="Factura" className={inputClass} />
+            <input type="search" value={filtros.forma_cobro} onChange={(event) => handleFiltroChange("forma_cobro", event.target.value)} placeholder="Forma de cobro" className={inputClass} />
+          </div>
         </div>
 
         {error && (
@@ -91,7 +98,7 @@ export default function ControlAdministrativoPage() {
               {loading && (
                 <tr>
                   <td colSpan={7} className="p-6 text-center text-gray-500">
-                    Cargando órdenes...
+                    Cargando ordenes...
                   </td>
                 </tr>
               )}
@@ -99,7 +106,7 @@ export default function ControlAdministrativoPage() {
               {!loading && ordenesFiltradas.length === 0 && (
                 <tr>
                   <td colSpan={7} className="p-6 text-center text-gray-500">
-                    No hay órdenes que coincidan con el filtro.
+                    No hay ordenes que coincidan con los filtros.
                   </td>
                 </tr>
               )}

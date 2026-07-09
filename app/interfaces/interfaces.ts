@@ -17,6 +17,8 @@ export interface InterfazContacto {
   suscripciones: string[],
   otros_datos_interes: string
   pais_contacto:string
+  linkedin_cuenta?: string
+  url_contacto?: string
 }
 
 export interface InterfazDireccion {
@@ -51,7 +53,7 @@ export interface InterfazCuenta {
   correo_principal?: string;
   qq?: boolean;
   presente_en_qq: boolean;
-  ferias?: string;
+  ferias?: string[];
   red_social_prioritaria?: string;
   catalogos?: string;
   array_cuentas_distribuidoras?: { id_cuenta?: string; nombre_empresa?: string }[];
@@ -80,7 +82,7 @@ export interface InterfazCuenta {
   };
   array_direcciones_cuenta: InterfazDireccion[];
   array_contactos_cuenta: { id_contacto: string }[];
-  array_comentarios_cuenta: string[];
+  array_comentarios_cuenta: any[];
 }
 
 export interface InterfazServicio {
@@ -91,6 +93,7 @@ export interface InterfazServicio {
   soporte_servicio: string;
   precio_servicio: string;
   precio_tarifa?: number | null;
+  concepto_factura?: string;
   fecha_deadline_servicio: string;
   fecha_publicacion_servicio: string;
   es: {
@@ -172,6 +175,7 @@ export interface InterfazContrato {
   fecha_firma_contrato: string;
   fecha_fin_contrato: string;
   id_campana_asociada: string;
+  id_propuesta?: string;
 
   descuento_final_contrato: number;
   importe_total_BI_contrato: number;

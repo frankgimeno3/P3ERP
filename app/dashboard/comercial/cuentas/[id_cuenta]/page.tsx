@@ -7,6 +7,7 @@ import ContenidoComentarios from './componentesFicha/ContenidoComentarios';
 import ContenidoContactosEmpresa from './componentesFicha/cards/ContenidoContactosEmpresa';
 import ContenidoDatosAdministrativos from './componentesFicha/ContenidoDatosAdministrativos';
 import ContenidoPropuestasCuenta from './componentesFicha/ContenidoPropuestasCuenta';
+import ContenidoCuenta from './componentesFicha/ContenidoCuenta';
 import MiddleNav from '@/app/general_components/componentes_recurrentes/MiddleNav';
 import BotonFlotante from '@/app/general_components/componentes_recurrentes/BotonFlotante';
 import { InterfazCuenta } from '@/app/interfaces/interfaces';
@@ -52,7 +53,7 @@ function mapCuenta(cuentaData: any): InterfazCuenta {
     correo_principal: cuentaData.correo_principal || '',
     qq: Boolean(cuentaData.qq),
     presente_en_qq: Boolean(cuentaData.presente_en_qq),
-    ferias: cuentaData.ferias || '',
+    ferias: Array.isArray(cuentaData.ferias) ? cuentaData.ferias : [],
     red_social_prioritaria: cuentaData.red_social_prioritaria || '',
     catalogos: cuentaData.catalogos || '',
     array_cuentas_distribuidoras: cuentaData.array_cuentas_distribuidoras || [],
@@ -121,7 +122,9 @@ const FichaCliente = () => {
         if (cuentaData.array_comentarios_cuenta && Array.isArray(cuentaData.array_comentarios_cuenta)) {
           const comentariosFormateados = cuentaData.array_comentarios_cuenta.map((c: any) => {
             const agente = agentes.find((a) => a.id_agente === c.id_autor);
-            const nombreAutor = agente ? agente.nombre_agente : c.id_autor || 'Desconocido';
+            const nombreAutor = agente
+              ? agente.nombre_completo_agente || `${agente.nombre_agente || ''} ${agente.apellidos_agente || ''}`.trim()
+              : c.id_autor || 'Desconocido';
 
             return {
               id_comentario: c.id_comentario || '',
@@ -153,7 +156,7 @@ const FichaCliente = () => {
     };
 
     fetchCuenta();
-  }, [id_cuenta]);
+  }, [id_cuenta, agentes]);
 
   useEffect(() => {
     AgenteService.getAgentes()
@@ -227,9 +230,11 @@ const FichaCliente = () => {
     );
   }
 
+  const tituloCuenta = cuentaEditable.nombre_empresa?.trim() || id_cuenta;
+
   return (
     <div className="flex flex-col h-full min-h-screen text-gray-600">
-      <MiddleNav tituloprincipal={`Ficha de la cuenta ${id_cuenta}`} />
+      <MiddleNav tituloprincipal={`Ficha de la cuenta ${tituloCuenta}`} />
 
       <div className="bg-gray-200 min-h-screen p-12 text-gray-600">
         <div className="flex flex-row justify-between relative">
@@ -247,8 +252,8 @@ const FichaCliente = () => {
                 key={key}
                 className={`p-3 rounded-tr-lg cursor-pointer w-44 text-center text-sm transition-all duration-300
                 ${pestana === key
-                    ? 'bg-gray-100 z-30 rounded-tl-lg'
-                    : 'bg-blue-950 text-white z-10 hover:bg-blue-950/80'
+                    ? 'bg-blue-950 text-white z-30 rounded-tl-lg'
+                    : 'bg-white text-gray-700 z-10 hover:bg-gray-200'
                   }`}
                 style={{ marginLeft: index === 0 ? '0px' : '-5px' }}
                 onClick={() => setPestana(key as PestanaCuenta)}
@@ -298,10 +303,7 @@ const FichaCliente = () => {
           )}
 
           {pestana === 'contenidos' && (
-            <div className="space-y-2">
-              <h2 className="text-xl font-bold">Contenidos</h2>
-              <p className="text-gray-500">Los contenidos asociados a esta cuenta se mostrarán aquí.</p>
-            </div>
+            <ContenidoCuenta id_cuenta={id_cuenta} />
           )}
 
           {pestana === 'datos_administrativos' && (

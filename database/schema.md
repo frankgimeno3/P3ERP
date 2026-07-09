@@ -87,6 +87,8 @@ Indexes:
 | 15 | suscripciones | jsonb | NO | '[]'::jsonb |
 | 16 | otros_datos_interes | text | YES |  |
 | 17 | pais_contacto | text | YES |  |
+| 18 | linkedin_cuenta | text | NO | ''::text |
+| 19 | url_contacto | text | NO | ''::text |
 
 Constraints:
 - PRIMARY KEY contactos_db_pkey: PRIMARY KEY (id_contacto)
@@ -154,45 +156,48 @@ Indexes:
 | 2 | nombre_empresa | text | NO | ''::text |
 | 3 | pais_cuenta | text | NO | ''::text |
 | 4 | id_agente | text | NO | ''::text |
-| 5 | id_edisoft | text | NO | ''::text |
-| 6 | asignado_a | text | NO | ''::text |
-| 7 | receptor_revista | boolean | NO | false |
-| 8 | potencial_actual_relacion | text | NO | ''::text |
-| 9 | potencial_futuro_encaje | text | NO | ''::text |
-| 10 | revisado_ricardo | boolean | NO | false |
-| 11 | campanas | text | NO | ''::text |
-| 12 | estado_leads_frios | text | NO | ''::text |
-| 13 | stands_ferias | text | NO | ''::text |
-| 14 | tipo_cuenta | text | NO | ''::text |
-| 15 | actividades_cuenta | text | YES |  |
-| 16 | descripcion_actividad | text | NO | ''::text |
-| 17 | correo_principal | text | NO | ''::text |
-| 18 | qq | boolean | NO | false |
-| 19 | presente_en_qq | boolean | NO | false |
-| 20 | ferias | text | NO | ''::text |
-| 21 | red_social_prioritaria | text | NO | ''::text |
-| 22 | catalogos | text | NO | ''::text |
-| 23 | array_cuentas_distribuidoras | jsonb | NO | '[]'::jsonb |
-| 24 | array_cuentas_distribuidas | jsonb | NO | '[]'::jsonb |
-| 25 | cuenta_agencia | text | NO | ''::text |
-| 26 | fuente_novedades_cuenta | text | YES |  |
-| 27 | descripcion_cuenta | text | YES |  |
-| 28 | vat_code | text | NO | ''::text |
-| 29 | nombre_fiscal | text | NO | ''::text |
-| 30 | pais_facturacion | text | NO | ''::text |
-| 31 | direccion_facturacion | text | NO | ''::text |
-| 32 | mail_contabilidad | text | NO | ''::text |
-| 33 | poblacion_facturacion | text | NO | ''::text |
-| 34 | cp_facturacion | text | NO | ''::text |
-| 35 | detalles_facturacion | text | NO | ''::text |
-| 36 | facturas_emitidas | jsonb | NO | '[]'::jsonb |
-| 37 | datos_comerciales | jsonb | NO | '{}'::jsonb |
-| 38 | array_direcciones_cuenta | jsonb | NO | '[]'::jsonb |
-| 39 | array_contactos_cuenta | jsonb | NO | '[]'::jsonb |
-| 40 | array_comentarios_cuenta | jsonb | NO | '[]'::jsonb |
-| 41 | created_at | timestamp with time zone | NO | now() |
-| 42 | updated_at | timestamp with time zone | NO | now() |
-| 43 | comentarios_gm | text | NO | ''::text |
+| 5 | website | text | NO | ''::text |
+| 6 | id_edisoft | text | NO | ''::text |
+| 7 | asignado_a | text | NO | ''::text |
+| 8 | receptor_revista | boolean | NO | false |
+| 9 | potencial_actual_relacion | text | NO | ''::text |
+| 10 | potencial_futuro_encaje | text | NO | ''::text |
+| 11 | revisado_ricardo | boolean | NO | false |
+| 12 | campanas | text | NO | ''::text |
+| 13 | estado_leads_frios | text | NO | ''::text |
+| 14 | stands_ferias | text | NO | ''::text |
+| 15 | tipo_cuenta | text | NO | ''::text |
+| 16 | actividades_cuenta | text | YES |  |
+| 17 | descripcion_actividad | text | NO | ''::text |
+| 18 | correo_principal | text | NO | ''::text |
+| 19 | qq | boolean | NO | false |
+| 20 | presente_en_qq | boolean | NO | false |
+| 21 | ferias | text | NO | ''::text |
+| 22 | red_social_prioritaria | text | NO | ''::text |
+| 23 | catalogos | text | NO | ''::text |
+| 24 | array_cuentas_distribuidoras | jsonb | NO | '[]'::jsonb |
+| 25 | array_cuentas_distribuidas | jsonb | NO | '[]'::jsonb |
+| 26 | cuenta_agencia | text | NO | ''::text |
+| 27 | fuente_novedades_cuenta | text | YES |  |
+| 28 | descripcion_cuenta | text | YES |  |
+| 29 | vat_code | text | NO | ''::text |
+| 30 | identificador_fiscal_tipo | text | NO | ''::text |
+| 31 | cif | text | NO | ''::text |
+| 32 | nombre_fiscal | text | NO | ''::text |
+| 33 | pais_facturacion | text | NO | ''::text |
+| 34 | direccion_facturacion | text | NO | ''::text |
+| 35 | mail_contabilidad | text | NO | ''::text |
+| 36 | poblacion_facturacion | text | NO | ''::text |
+| 37 | cp_facturacion | text | NO | ''::text |
+| 38 | detalles_facturacion | text | NO | ''::text |
+| 39 | facturas_emitidas | jsonb | NO | '[]'::jsonb |
+| 40 | datos_comerciales | jsonb | NO | '{}'::jsonb |
+| 41 | array_direcciones_cuenta | jsonb | NO | '[]'::jsonb |
+| 42 | array_contactos_cuenta | jsonb | NO | '[]'::jsonb |
+| 43 | array_comentarios_cuenta | jsonb | NO | '[]'::jsonb |
+| 44 | created_at | timestamp with time zone | NO | now() |
+| 45 | updated_at | timestamp with time zone | NO | now() |
+| 46 | comentarios_gm | text | NO | ''::text |
 
 Constraints:
 - PRIMARY KEY cuentas_db_pkey: PRIMARY KEY (id_cuenta)
@@ -209,9 +214,36 @@ Indexes:
 | 1 | id_feria | text | NO |  |
 | 2 | created_at | timestamp with time zone | NO | now() |
 | 3 | updated_at | timestamp with time zone | NO | now() |
+| 4 | titulo_especifico_edicion | text | NO | ''::text |
+| 5 | nombre_feria | text | NO | ''::text |
+| 6 | id_cuenta_feria | text | NO | ''::text |
+| 7 | id_cuenta_gestion | text | NO | ''::text |
+| 8 | pais | text | NO | ''::text |
+| 9 | ciudad | text | NO | ''::text |
+| 10 | edicion_numero | text | NO | ''::text |
+| 11 | hay_intercambio | boolean | NO | false |
+| 12 | id_contrato | text | NO | ''::text |
+| 13 | hay_especial | boolean | NO | false |
+| 14 | descripcion | text | NO | ''::text |
+| 15 | text_area_comentarios | text | NO | ''::text |
+| 16 | estado_vuelos | text | NO | ''::text |
+| 17 | estado_hotel | text | NO | ''::text |
+| 18 | estado_stand | text | NO | ''::text |
+| 19 | estado_material | text | NO | ''::text |
+| 20 | estado_transporte_revistas | text | NO | ''::text |
+| 21 | estado_pases | text | NO | ''::text |
+| 22 | textarea_gestion_evento | text | NO | ''::text |
+| 23 | fecha_incio | text | NO | ''::text |
+| 24 | fecha_finalizacion | text | NO | ''::text |
+| 25 | en_vidrioperfil | boolean | NO | false |
 
 Constraints:
 - PRIMARY KEY ferias_db_pkey: PRIMARY KEY (id_feria)
+
+Indexes:
+- ferias_db_fecha_finalizacion_idx: CREATE INDEX ferias_db_fecha_finalizacion_idx ON public.ferias_db USING btree (fecha_finalizacion)
+- ferias_db_id_contrato_idx: CREATE INDEX ferias_db_id_contrato_idx ON public.ferias_db USING btree (id_contrato)
+- ferias_db_id_cuenta_feria_idx: CREATE INDEX ferias_db_id_cuenta_feria_idx ON public.ferias_db USING btree (id_cuenta_feria)
 
 ### facturas_clientes_db
 
@@ -225,6 +257,10 @@ Constraints:
 | 6 | comentarios | text | YES |  |
 | 7 | created_at | timestamp with time zone | NO | now() |
 | 8 | updated_at | timestamp with time zone | NO | now() |
+| 9 | total_nac_iva | numeric | YES |  |
+| 10 | total_ue | numeric | YES |  |
+| 11 | total_resto | numeric | YES |  |
+| 12 | forma_cobro | text | YES |  |
 
 Constraints:
 - PRIMARY KEY facturas_clientes_db_pkey: PRIMARY KEY (id_factura_cliente)
@@ -244,6 +280,11 @@ Indexes:
 | 6 | comentarios | text | YES |  |
 | 7 | created_at | timestamp with time zone | NO | now() |
 | 8 | updated_at | timestamp with time zone | NO | now() |
+| 9 | orden_compra_p3 | text | YES |  |
+| 10 | numero_contabilidad | text | YES |  |
+| 11 | codigo_factura | text | YES |  |
+| 12 | forma_pago | text | YES |  |
+| 13 | estado | text | YES |  |
 
 Constraints:
 - PRIMARY KEY facturas_proveedores_db_pkey: PRIMARY KEY (id_factura_proveedor)
@@ -268,12 +309,40 @@ Indexes:
 | 11 | fecha_publicacion_publicacion | text | YES |  |
 | 12 | estado_material_contrato | text | YES |  |
 | 13 | url_contenido | text | YES |  |
+| 14 | array_id_contenidos | jsonb | NO | '[]'::jsonb |
 
 Constraints:
 - PRIMARY KEY lineas_contratos_db_pkey: PRIMARY KEY (id_linea_contrato)
 
 Indexes:
 - lineas_contratos_db_id_contrato_idx: CREATE INDEX lineas_contratos_db_id_contrato_idx ON public.lineas_contratos_db USING btree (id_contrato)
+- lineas_contratos_db_array_id_contenidos_idx: CREATE INDEX lineas_contratos_db_array_id_contenidos_idx ON public.lineas_contratos_db USING gin (array_id_contenidos)
+
+### lineas_bancos
+
+| # | Column | Type | Nullable | Default |
+|---:|---|---|---|---|
+| 1 | id_linea_banco | text | NO |  |
+| 2 | banco | text | NO |  |
+| 3 | fecha_operativa | text | NO | ''::text |
+| 4 | fecha_valor | text | NO | ''::text |
+| 5 | concepto | text | NO | ''::text |
+| 6 | importe | numeric | NO | 0 |
+| 7 | saldo | numeric | NO | 0 |
+| 8 | estado_revision | boolean | NO | false |
+| 9 | comentarios | text | NO | ''::text |
+| 10 | created_at | timestamp with time zone | NO | now() |
+| 11 | updated_at | timestamp with time zone | NO | now() |
+
+Constraints:
+- PRIMARY KEY lineas_bancos_pkey: PRIMARY KEY (id_linea_banco)
+- CHECK lineas_bancos_banco_check: CHECK (banco IN ('Sabadell', 'Santander'))
+- CHECK lineas_bancos_id_check: CHECK (id_linea_banco ~ '^(sab|san)_[0-9]{2}_[0-9]+$')
+
+Indexes:
+- lineas_bancos_banco_idx: CREATE INDEX lineas_bancos_banco_idx ON public.lineas_bancos USING btree (banco)
+- lineas_bancos_fecha_operativa_idx: CREATE INDEX lineas_bancos_fecha_operativa_idx ON public.lineas_bancos USING btree (fecha_operativa)
+- lineas_bancos_estado_revision_idx: CREATE INDEX lineas_bancos_estado_revision_idx ON public.lineas_bancos USING btree (estado_revision)
 
 ### lineas_propuestas_db
 
@@ -292,12 +361,79 @@ Indexes:
 | 11 | precio_unitario | numeric | YES |  |
 | 12 | deadline_publicacion | text | YES |  |
 | 13 | fecha_publicacion_publicacion | text | YES |  |
+| 14 | id_servicio | text | YES |  |
+| 15 | unidades | numeric | YES | 1 |
+| 16 | descripcion_linea | text | YES |  |
 
 Constraints:
 - PRIMARY KEY lineas_propuestas_db_pkey: PRIMARY KEY (id_linea_propuesta)
 
 Indexes:
 - lineas_propuestas_db_id_propuesta_idx: CREATE INDEX lineas_propuestas_db_id_propuesta_idx ON public.lineas_propuestas_db USING btree (id_propuesta)
+
+### mediateca_folders
+
+| # | Column | Type | Nullable | Default |
+|---:|---|---|---|---|
+| 1 | mediateca_folder_id | uuid | NO |  |
+| 2 | mediateca_folder_name | text | NO |  |
+| 3 | mediateca_parent_folder_id | uuid | YES |  |
+| 4 | mediateca_folder_created_at | timestamp with time zone | NO | now() |
+| 5 | mediateca_folder_updated_at | timestamp with time zone | NO | now() |
+
+Constraints:
+- PRIMARY KEY mediateca_folders_pkey: PRIMARY KEY (mediateca_folder_id)
+- FOREIGN KEY mediateca_folders_parent_fkey: FOREIGN KEY (mediateca_parent_folder_id) REFERENCES mediateca_folders(mediateca_folder_id) ON DELETE CASCADE
+
+Indexes:
+- mediateca_folders_parent_idx: CREATE INDEX mediateca_folders_parent_idx ON public.mediateca_folders USING btree (mediateca_parent_folder_id)
+- mediateca_folders_name_idx: CREATE INDEX mediateca_folders_name_idx ON public.mediateca_folders USING btree (mediateca_folder_name)
+
+### mediateca_contents
+
+| # | Column | Type | Nullable | Default |
+|---:|---|---|---|---|
+| 1 | mediateca_content_id | uuid | NO |  |
+| 2 | mediateca_folder_id | uuid | YES |  |
+| 3 | mediateca_content_name | text | NO |  |
+| 4 | mediateca_s3_key | text | NO |  |
+| 5 | mediateca_content_src | text | YES |  |
+| 6 | mediateca_content_mime_type | text | YES |  |
+| 7 | mediateca_content_type | text | NO | 'image'::text |
+| 8 | mediateca_content_created_at | timestamp with time zone | NO | now() |
+| 9 | mediateca_content_updated_at | timestamp with time zone | NO | now() |
+
+Constraints:
+- PRIMARY KEY mediateca_contents_pkey: PRIMARY KEY (mediateca_content_id)
+- UNIQUE mediateca_contents_mediateca_s3_key_key: UNIQUE (mediateca_s3_key)
+- CHECK mediateca_contents_type_check: CHECK (mediateca_content_type IN ('image', 'pdf'))
+- FOREIGN KEY mediateca_contents_folder_fkey: FOREIGN KEY (mediateca_folder_id) REFERENCES mediateca_folders(mediateca_folder_id) ON DELETE SET NULL
+
+Indexes:
+- mediateca_contents_folder_idx: CREATE INDEX mediateca_contents_folder_idx ON public.mediateca_contents USING btree (mediateca_folder_id)
+- mediateca_contents_type_idx: CREATE INDEX mediateca_contents_type_idx ON public.mediateca_contents USING btree (mediateca_content_type)
+- mediateca_contents_created_at_idx: CREATE INDEX mediateca_contents_created_at_idx ON public.mediateca_contents USING btree (mediateca_content_created_at)
+
+### cobros_propuestas_db
+
+| # | Column | Type | Nullable | Default |
+|---:|---|---|---|---|
+| 1 | id_cobro_propuesta | text | NO |  |
+| 2 | id_propuesta | text | YES |  |
+| 3 | numero_cobro | integer | YES |  |
+| 4 | fecha_cobro | text | YES |  |
+| 5 | importe_cobro | numeric | YES |  |
+| 6 | forma_cobro | text | YES |  |
+| 7 | banco_cobro | text | YES |  |
+| 8 | observaciones_cobro | text | YES |  |
+| 9 | created_at | timestamp with time zone | NO | now() |
+| 10 | updated_at | timestamp with time zone | NO | now() |
+
+Constraints:
+- PRIMARY KEY cobros_propuestas_db_pkey: PRIMARY KEY (id_cobro_propuesta)
+
+Indexes:
+- cobros_propuestas_db_id_propuesta_idx: CREATE INDEX cobros_propuestas_db_id_propuesta_idx ON public.cobros_propuestas_db USING btree (id_propuesta)
 
 ### ordenes_db
 
@@ -368,9 +504,18 @@ Indexes:
 | 14 | id_cuenta_propuesta | text | YES |  |
 | 15 | id_contacto_propuesta | text | YES |  |
 | 16 | cargo_contacto_propuesta | text | YES |  |
+| 17 | fase_propuesta | text | NO | '1'::text |
+| 18 | fecha_validez_propuesta | text | YES |  |
+| 19 | datos_facturacion | jsonb | NO | '{}'::jsonb |
+| 20 | contacto_personalizado | jsonb | YES |  |
 
 Constraints:
 - PRIMARY KEY propuestas_db_pkey: PRIMARY KEY (id_propuesta)
+
+Indexes:
+- propuestas_db_estado_idx: CREATE INDEX propuestas_db_estado_idx ON public.propuestas_db USING btree (estado_propuesta)
+- propuestas_db_fase_idx: CREATE INDEX propuestas_db_fase_idx ON public.propuestas_db USING btree (fase_propuesta)
+- propuestas_db_id_cuenta_idx: CREATE INDEX propuestas_db_id_cuenta_idx ON public.propuestas_db USING btree (id_cuenta_propuesta)
 
 ### proveedores_db
 
@@ -481,6 +626,27 @@ Constraints:
 
 Constraints:
 - PRIMARY KEY seguimientos_db_pkey: PRIMARY KEY (id_seguimiento)
+
+### tareas_db
+
+| # | Column | Type | Nullable | Default |
+|---:|---|---|---|---|
+| 1 | id_tarea | text | NO |  |
+| 2 | agente | text | NO | ''::text |
+| 3 | titulo | text | NO | ''::text |
+| 4 | contenido | text | NO | ''::text |
+| 5 | estado | text | NO | 'pendiente'::text |
+| 6 | prioridad | text | NO | 'media'::text |
+| 7 | created_at | timestamp with time zone | NO | now() |
+| 8 | updated_at | timestamp with time zone | NO | now() |
+
+Constraints:
+- PRIMARY KEY tareas_db_pkey: PRIMARY KEY (id_tarea)
+
+Indexes:
+- tareas_db_agente_idx: CREATE INDEX tareas_db_agente_idx ON public.tareas_db USING btree (agente)
+- tareas_db_estado_idx: CREATE INDEX tareas_db_estado_idx ON public.tareas_db USING btree (estado)
+- tareas_db_prioridad_idx: CREATE INDEX tareas_db_prioridad_idx ON public.tareas_db USING btree (prioridad)
 
 ### servicios_db
 

@@ -7,6 +7,7 @@ const writableColumns = [
   "nombre_empresa",
   "pais_cuenta",
   "id_agente",
+  "website",
   "id_edisoft",
   "asignado_a",
   "receptor_revista",
@@ -31,6 +32,8 @@ const writableColumns = [
   "cuenta_agencia",
   "fuente_novedades_cuenta",
   "vat_code",
+  "identificador_fiscal_tipo",
+  "cif",
   "nombre_fiscal",
   "pais_facturacion",
   "direccion_facturacion",
@@ -48,6 +51,7 @@ const writableColumns = [
 
 const jsonColumns = new Set([
   "datos_comerciales",
+  "ferias",
   "array_cuentas_distribuidoras",
   "array_cuentas_distribuidas",
   "facturas_emitidas",
@@ -62,6 +66,7 @@ function normalizeCuenta(row) {
     nombre_empresa: row.nombre_empresa ?? "",
     pais_cuenta: row.pais_cuenta ?? "",
     id_agente: row.id_agente ?? "",
+    website: row.website ?? "",
     id_edisoft: row.id_edisoft ?? "",
     asignado_a: row.asignado_a ?? "",
     receptor_revista: Boolean(row.receptor_revista),
@@ -78,7 +83,7 @@ function normalizeCuenta(row) {
     correo_principal: row.correo_principal ?? "",
     qq: Boolean(row.qq),
     presente_en_qq: Boolean(row.presente_en_qq),
-    ferias: row.ferias ?? "",
+    ferias: Array.isArray(row.ferias) ? row.ferias : [],
     red_social_prioritaria: row.red_social_prioritaria ?? "",
     catalogos: row.catalogos ?? "",
     array_cuentas_distribuidoras: row.array_cuentas_distribuidoras ?? [],
@@ -86,6 +91,8 @@ function normalizeCuenta(row) {
     cuenta_agencia: row.cuenta_agencia ?? "",
     fuente_novedades_cuenta: row.fuente_novedades_cuenta ?? "",
     vat_code: row.vat_code ?? "",
+    identificador_fiscal_tipo: row.identificador_fiscal_tipo ?? "",
+    cif: row.cif ?? "",
     nombre_fiscal: row.nombre_fiscal ?? "",
     pais_facturacion: row.pais_facturacion ?? "",
     direccion_facturacion: row.direccion_facturacion ?? "",
@@ -106,9 +113,9 @@ function normalizeCuenta(row) {
 
 function normalizeValue(column, value) {
   if (jsonColumns.has(column)) {
-    if (value === undefined || value === null) return column === "datos_comerciales" ? {} : [];
-    if (column === "datos_comerciales") return value;
-    return Array.isArray(value) ? value : [];
+    if (value === undefined || value === null) return JSON.stringify(column === "datos_comerciales" ? {} : []);
+    if (column === "datos_comerciales") return JSON.stringify(value && typeof value === "object" ? value : {});
+    return JSON.stringify(Array.isArray(value) ? value : []);
   }
 
   if (["presente_en_qq", "qq", "receptor_revista", "revisado_ricardo"].includes(column)) {
@@ -168,7 +175,10 @@ export async function createCuenta(cuentaData) {
   const pool = getPgPool();
   const columns = writableColumns.filter((column) => cuentaData[column] !== undefined);
   const values = columns.map((column) => normalizeValue(column, cuentaData[column]));
-  const placeholders = columns.map((_, index) => `$${index + 1}`);
+  const placeholders = columns.map((column, index) => {
+    const placeholder = `$${index + 1}`;
+    return jsonColumns.has(column) ? `${placeholder}::jsonb` : placeholder;
+  });
 
   const { rows } = await pool.query(
     `
@@ -192,7 +202,10 @@ export async function updateCuenta(idCuenta, cuentaData) {
   }
 
   values.push(idCuenta);
-  const assignments = columns.map((column, index) => `${column} = $${index + 1}`);
+  const assignments = columns.map((column, index) => {
+    const placeholder = `$${index + 1}`;
+    return jsonColumns.has(column) ? `${column} = ${placeholder}::jsonb` : `${column} = ${placeholder}`;
+  });
 
   const { rows } = await pool.query(
     `

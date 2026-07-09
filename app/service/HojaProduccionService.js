@@ -7,4 +7,9 @@ export class HojaProduccionService {
         });
         return response.data;
     }
+
+    static async createContenido(data) {
+        const response = await apiClient.post('/api/v1/produccion/hoja-produccion', data);
+        return response.data;
+    }
 }

@@ -12,11 +12,11 @@ export default function RegistroLayout({
   return (
     <>
       <LoggedNav />
-      <div className="flex flex-row w-full ">
-      <LoggedLeftMenu/>
-      <div className="flex flex-col w-full">
-      {children}
-      </div>
+      <div className="flex w-full min-w-0 flex-row overflow-x-hidden">
+        <LoggedLeftMenu />
+        <div className="flex min-w-0 flex-1 flex-col">
+          {children}
+        </div>
       </div>
     </>
   );

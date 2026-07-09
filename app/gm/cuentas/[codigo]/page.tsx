@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import CuentaDetalle from "@/app/gm/gmcomponents/uiElements/cuenta/CuentaDetalle";
 import { getGmCuentaByCodigo } from "@/server/features/gm/GmRepository.js";
 
+export const dynamic = "force-dynamic";
+
 type PageProps = {
   params: Promise<{ codigo: string }>;
 };

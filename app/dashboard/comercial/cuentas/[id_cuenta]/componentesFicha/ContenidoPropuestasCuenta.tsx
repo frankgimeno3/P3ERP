@@ -81,7 +81,7 @@ const ContenidoPropuestasCuenta: FC<ContenidoPropuestasCuentaProps> = ({ id_cuen
             className={`p-3 rounded-tr-lg cursor-pointer w-52 text-center transition-all duration-300 ${
               estado === tab.key
                 ? 'bg-blue-950 text-white z-30 rounded-tl-lg'
-                : 'z-10 bg-gray-100 hover:bg-gray-200'
+                : 'z-10 bg-white text-gray-700 hover:bg-gray-200'
             }`}
             style={{ marginLeft: index === 0 ? '0px' : '-5px' }}
             onClick={() => setEstado(tab.key)}

@@ -2,6 +2,21 @@ import React, { FC, useEffect } from "react";
 import { InterfazPropuesta } from "@/app/interfaces/interfaces";
 const propuestas: any[] = [];
 
+const splitDate = (value: string) => {
+  const match = String(value || "").match(/^(\d{4})-(\d{2})-(\d{2})$/) || String(value || "").match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!match) return { day: "", month: "", year: "" };
+  return match[0].includes("-")
+    ? { day: match[3], month: match[2], year: match[1] }
+    : { day: match[1], month: match[2], year: match[3] };
+};
+
+const updateDatePart = (value: string, field: "day" | "month" | "year", nextValue: string) => {
+  const parts = splitDate(value);
+  const next = { ...parts, [field]: nextValue.replace(/\D/g, "").slice(0, field === "year" ? 4 : 2) };
+  if (!next.day && !next.month && !next.year) return "";
+  return `${next.day.padStart(2, "0")}/${next.month.padStart(2, "0")}/${next.year.padStart(4, "0")}`;
+};
+
 interface DatosCobroPropuestaProps {
   codigoPropuesta: string;
   cobros: any[];
@@ -78,12 +93,17 @@ const DatosCobroPropuesta: FC<DatosCobroPropuestaProps> = ({
             <tr key={index} className="bg-white text-gray-700 border-t border-gray-100">
               <td className="px-4 py-2">{cobro.numero_cobro}</td>
               <td className="px-4 py-2">
-                <input
-                  type="date"
-                  value={cobro.fecha_cobro || ""}
-                  onChange={(e) => handleChange(index, "fecha_cobro", e.target.value)}
-                  className="border border-gray-300 rounded px-2 py-1 w-full"
-                />
+                <div className="flex gap-1">
+                  {(["day", "month", "year"] as const).map((field) => (
+                    <input
+                      key={field}
+                      value={splitDate(cobro.fecha_cobro || "")[field]}
+                      onChange={(e) => handleChange(index, "fecha_cobro", updateDatePart(cobro.fecha_cobro || "", field, e.target.value))}
+                      placeholder={field === "day" ? "dd" : field === "month" ? "mm" : "yyyy"}
+                      className={`border border-gray-300 rounded px-2 py-1 ${field === "year" ? "w-20" : "w-14"}`}
+                    />
+                  ))}
+                </div>
               </td>
               <td className="px-4 py-2">
                 <input
