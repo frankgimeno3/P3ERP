@@ -8,6 +8,7 @@ import ContenidoContactosEmpresa from './componentesFicha/cards/ContenidoContact
 import ContenidoDatosAdministrativos from './componentesFicha/ContenidoDatosAdministrativos';
 import ContenidoPropuestasCuenta from './componentesFicha/ContenidoPropuestasCuenta';
 import ContenidoCuenta from './componentesFicha/ContenidoCuenta';
+import RegistroEventosCuenta from './componentesFicha/RegistroEventosCuenta';
 import MiddleNav from '@/app/general_components/componentes_recurrentes/MiddleNav';
 import BotonFlotante from '@/app/general_components/componentes_recurrentes/BotonFlotante';
 import { InterfazCuenta } from '@/app/interfaces/interfaces';
@@ -21,7 +22,7 @@ interface Comentario {
   contenido: string;
 }
 
-type PestanaCuenta = 'general' | 'comentarios' | 'contactos' | 'propuestas' | 'contratos' | 'contenidos' | 'datos_administrativos';
+type PestanaCuenta = 'general' | 'comentarios' | 'contactos' | 'propuestas' | 'contratos' | 'contenidos' | 'datos_administrativos' | 'registro_eventos';
 
 const datosComercialesDefault = {
   ciudad_principal_cuenta: '',
@@ -40,6 +41,7 @@ function mapCuenta(cuentaData: any): InterfazCuenta {
     id_edisoft: cuentaData.id_edisoft || '',
     asignado_a: cuentaData.asignado_a || '',
     receptor_revista: Boolean(cuentaData.receptor_revista),
+    suscriptor_revista: Boolean(cuentaData.suscriptor_revista),
     potencial_actual_relacion: cuentaData.potencial_actual_relacion || '',
     potencial_futuro_encaje: cuentaData.potencial_futuro_encaje || '',
     revisado_ricardo: Boolean(cuentaData.revisado_ricardo),
@@ -247,6 +249,7 @@ const FichaCliente = () => {
               { key: 'contratos', label: 'Contratos' },
               { key: 'contenidos', label: 'Contenidos' },
               { key: 'datos_administrativos', label: 'Datos administrativos' },
+              { key: 'registro_eventos', label: 'Registro de eventos' },
             ].map(({ key, label }, index) => (
               <div
                 key={key}
@@ -292,18 +295,30 @@ const FichaCliente = () => {
           )}
 
           {pestana === 'propuestas' && (
-            <ContenidoPropuestasCuenta id_cuenta={id_cuenta} />
+            <div className="space-y-5">
+              <div className="rounded bg-gray-50 p-4 text-sm leading-6 text-gray-700">
+                Las propuestas son documentos en que se añaden servicios como líneas a un precio, con ciertas especificaciones, para hacer una oferta a un cliente a un precio determinado. Es el documento editable que se usa para hacer la gestión previa a la venta, y cuando el cliente firma, se convierte en un contrato, y cada servicio ofrecido pasa a considerarse un contenido.
+              </div>
+              <ContenidoPropuestasCuenta id_cuenta={id_cuenta} />
+            </div>
           )}
 
           {pestana === 'contratos' && (
             <div className="space-y-2">
               <h2 className="text-xl font-bold">Contratos</h2>
-              <p className="text-gray-500">Los contratos de esta cuenta se mostrarán aquí.</p>
+              <div className="rounded bg-gray-50 p-4 text-sm leading-6 text-gray-700">
+                Los contratos son los documentos que registran cada uno de los servicios contratados por un cliente al firmar una propuesta, detallando sus pagos y la cuantía de los mismos. Por la parte de producción, cuando se firma una propuesta, cada línea de la misma se convierte en un contenido que hay que gestionar hasta convertir en un contenido publicado, mientras que por la parte de administración cada contrato genera una o varias facturas por un lado, y una o varias órdenes por otro (cada órden es un pago asociable o no a algunos contenidos, una factura puede subdividirse en varias órdenes). Esto se gestiona desde el módulo de administración.
+              </div>
             </div>
           )}
 
           {pestana === 'contenidos' && (
-            <ContenidoCuenta id_cuenta={id_cuenta} />
+            <div className="space-y-5">
+              <ContenidoCuenta id_cuenta={id_cuenta} />
+              <div className="rounded bg-gray-50 p-4 text-sm leading-6 text-gray-700">
+                Un contenido es una forma de identificar "algo que se puede publicar a un cliente". Cuando un cliente firma una propuesta, cada fila de la propuesta se convierte en un contenido de pago que se debe gestionar hasta su publicación. Sin embargo, también hay contenidos que recibimos de clientes y procesamos para su publicación gratuita, ya sea para generar contenido de interés en nuestros medios, para buscar fidelizar potenciales clientes o calentar leads, o bien como complemento adicional a una campaña de pago, sin ser un contenido por el que se haya pagado. Cada contenido requiere para ser publicado la aportación de ciertos archivos (imágenes, texto, otros) que denominamos como materiales (cada archivo tiene un id de material propio). Desde el módulo de producción, cada contenido se asocia a una gestión de producción, que nos permite agruparlos (por ejemplo, con unos mismos materiales podemos hacer un artículo en vidrioperfil, uno en una revista de latam, y otro en una revista de españa). Sin embargo, a nivel identificativo, cada contenido es independiente y diferente, pudiendo diferenciar así entre fechas de publicación, versiones, etc. Por último existen también los artículos de revista, una entidad que agrupa el diseño maquetado de un artículo que puede ir en más de una revista, que además tiene un historial de versiones (permitiendo determinar cuál es la versión más nueva y comparar con la anterior para facilitar la revisión de correcciones del cliente o el editor, así como revisar que en revista efectivamente se ha publicado la versión más reciente del mismo).
+              </div>
+            </div>
           )}
 
           {pestana === 'datos_administrativos' && (
@@ -312,6 +327,10 @@ const FichaCliente = () => {
               setCuentaEditable={setCuentaEditable}
               setIsContenidoEdited={setIsContenidoEdited}
             />
+          )}
+
+          {pestana === 'registro_eventos' && (
+            <RegistroEventosCuenta id_cuenta={id_cuenta} />
           )}
         </div>
       </div>

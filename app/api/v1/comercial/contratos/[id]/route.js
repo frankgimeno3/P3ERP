@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getContratoById } from "../../../../../../server/features/contrato/ContratoRepository.js";
+import { getContratoById, updateContrato } from "../../../../../../server/features/contrato/ContratoRepository.js";
 
 export const runtime = "nodejs";
 
@@ -31,3 +31,25 @@ export async function GET(_request, context) {
     );
   }
 }
+
+export async function PATCH(request, context) {
+  try {
+    const id = await getId(context);
+    if (!id) {
+      return NextResponse.json({ message: "id es obligatorio" }, { status: 400 });
+    }
+    const contrato = await updateContrato(id, await request.json());
+    if (!contrato) {
+      return NextResponse.json({ message: "Contrato no encontrado" }, { status: 404 });
+    }
+    return NextResponse.json(contrato);
+  } catch (error) {
+    console.error("Error in PATCH /api/v1/comercial/contratos/[id]:", error);
+    return NextResponse.json(
+      { message: "Error al actualizar el contrato", detail: error.message },
+      { status: 500 },
+    );
+  }
+}
+
+export const PUT = PATCH;

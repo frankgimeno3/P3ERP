@@ -14,13 +14,23 @@ const tabs = [
 
 function SuscripcionCard({ suscripcion }: { suscripcion: any }) {
   const [open, setOpen] = useState(false);
+  const [renewalModalOpen, setRenewalModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (!renewalModalOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setRenewalModalOpen(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [renewalModalOpen]);
 
   return (
     <div className="border border-gray-200 bg-white shadow-sm">
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left hover:bg-gray-50"
+        className="flex w-full cursor-pointer items-center justify-between gap-4 px-5 py-4 text-left transition hover:bg-gray-50"
       >
         <div>
           <p className="font-semibold text-blue-950">{suscripcion.nombre_empresa || suscripcion.id_cuenta || "Cuenta sin nombre"}</p>
@@ -72,7 +82,31 @@ function SuscripcionCard({ suscripcion }: { suscripcion: any }) {
                 <span className="font-medium">Factura:</span> {suscripcion.id_factura || "Pendiente"}
               </p>
             </div>
+            <button
+              type="button"
+              onClick={() => setRenewalModalOpen(true)}
+              className="mt-4 cursor-pointer rounded bg-blue-950 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-900"
+            >
+              Generar renovación automática
+            </button>
           </section>
+        </div>
+      )}
+
+      {renewalModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" role="dialog" aria-modal="true" aria-label="Generar renovación automática">
+          <div className="min-h-64 w-full max-w-2xl rounded bg-white p-6 shadow-xl">
+            <div className="flex justify-end">
+              <button
+                type="button"
+                aria-label="Cerrar modal"
+                onClick={() => setRenewalModalOpen(false)}
+                className="cursor-pointer rounded px-2 py-1 text-2xl leading-none text-gray-500 transition hover:bg-gray-100 hover:text-gray-900"
+              >
+                ×
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -88,6 +122,15 @@ export default function SuscripcionesAdministracionPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!showCreateModal) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setShowCreateModal(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [showCreateModal]);
 
   useEffect(() => {
     setLoading(true);
@@ -138,7 +181,7 @@ export default function SuscripcionesAdministracionPage() {
               </button>
             ))}
           </div>
-          <button type="button" onClick={() => setShowCreateModal(true)} className="w-fit rounded bg-blue-950 px-4 py-2 text-sm font-medium text-white hover:bg-blue-900">
+          <button type="button" onClick={() => setShowCreateModal(true)} className="w-fit cursor-pointer rounded bg-blue-950 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-900">
             Agregar suscriptor
           </button>
         </div>
@@ -159,7 +202,7 @@ export default function SuscripcionesAdministracionPage() {
           <div className="w-full max-w-3xl rounded bg-white p-6 text-gray-700 shadow-xl">
             <div className="mb-4 flex items-center justify-between">
               <p className="text-lg font-semibold text-blue-950">Agregar suscriptor</p>
-              <button type="button" onClick={() => setShowCreateModal(false)} className="text-xl">x</button>
+              <button type="button" aria-label="Cerrar modal" onClick={() => setShowCreateModal(false)} className="cursor-pointer rounded px-2 py-1 text-2xl leading-none transition hover:bg-gray-100">×</button>
             </div>
             <input value={cuentaQuery} onChange={(event) => setCuentaQuery(event.target.value)} placeholder="Buscar cuenta..." className="mb-3 w-full rounded border border-gray-300 px-3 py-2 text-sm" />
             <div className="max-h-80 overflow-auto">

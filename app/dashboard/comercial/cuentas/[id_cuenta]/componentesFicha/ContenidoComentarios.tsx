@@ -1,5 +1,6 @@
 import React, { FC, useEffect } from "react";
 import CardComentario from "./cards/CardComentario";
+import { ComentarioService } from "@/app/service/ComentarioService";
 
 export interface Comentario {
   id_comentario: string;
@@ -34,8 +35,27 @@ const ContenidoComentarios: FC<ContenidoComentariosProps> = ({
   setMostrarInput,
   modal,
   setModal,
+  id_cuenta,
 }) => {
   const cerrarModal = () => setModal({ tipo: null });
+
+  const mapComentario = (comentario: any): Comentario => ({
+    id_comentario: comentario.id_comentario,
+    autor: comentario.id_last_editor || comentario.id_original_autor || "sistema",
+    fecha: comentario.created_at
+      ? new Date(comentario.created_at).toLocaleDateString("es-ES", { day: "2-digit", month: "long", year: "numeric" })
+      : new Date().toLocaleDateString("es-ES", { day: "2-digit", month: "long", year: "numeric" }),
+    contenido: comentario.contenido_comentario || "",
+  });
+
+  useEffect(() => {
+    ComentarioService.getComentarios("cuenta", id_cuenta)
+      .then((data) => setComentarios(Array.isArray(data) ? data.map(mapComentario) : []))
+      .catch((error) => {
+        console.error("Error fetching comentarios de cuenta:", error);
+        setComentarios([]);
+      });
+  }, [id_cuenta, setComentarios]);
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -45,39 +65,33 @@ const ContenidoComentarios: FC<ContenidoComentariosProps> = ({
     return () => window.removeEventListener("keydown", handleEsc);
   }, []);
 
-  const agregarComentario = () => {
+  const agregarComentario = async () => {
     if (nuevoComentario.trim() === "") return;
 
-    const hoy = new Date().toLocaleDateString("es-ES", {
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
+    const comentario = await ComentarioService.createComentario({
+      tipo_entidad: "cuenta",
+      id_entidad: id_cuenta,
+      contenido_comentario: nuevoComentario.trim(),
     });
-
-    const comentario: Comentario = {
-      id_comentario: `temp_${Date.now()}`,
-      autor: "Usuario Actual",
-      fecha: hoy,
-      contenido: nuevoComentario.trim(),
-    };
-
-    setComentarios([comentario, ...comentarios]);
+    setComentarios([mapComentario(comentario), ...comentarios]);
     setNuevoComentario("");
     setMostrarInput(false);
   };
 
-  const modificarComentario = (idComentario: string, contenido: string) => {
+  const modificarComentario = async (idComentario: string, contenido: string) => {
+    const comentarioActualizado = await ComentarioService.updateComentario(idComentario, { contenido_comentario: contenido });
     setComentarios((prev) =>
       prev.map((comentario) =>
         comentario.id_comentario === idComentario
-          ? { ...comentario, contenido }
+          ? mapComentario(comentarioActualizado)
           : comentario,
       ),
     );
   };
 
-  const borrarComentario = () => {
+  const borrarComentario = async () => {
     if (!modal.comentario) return;
+    await ComentarioService.deleteComentario(modal.comentario.id_comentario);
     setComentarios((prev) =>
       prev.filter((comentario) => comentario.id_comentario !== modal.comentario?.id_comentario),
     );

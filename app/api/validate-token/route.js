@@ -1,5 +1,6 @@
 import {COGNITO} from "../../../env.js";
 import {verifyAccessToken, verifyIdToken} from "../../../server/features/authentication/AuthenticationService.js";
+import {getAgenteByEmail} from "../../../server/features/agente/AgenteRepository.js";
 
 export async function POST(request) {
     try {
@@ -21,10 +22,16 @@ export async function POST(request) {
             return new Response("Missing token(s)", {status: 400});
         }
 
-        await Promise.all([verifyIdToken(idToken), verifyAccessToken(accessToken)]);
+        const [idPayload] = await Promise.all([verifyIdToken(idToken), verifyAccessToken(accessToken)]);
+        const email = String(idPayload.email || username || "");
+        const agent = email ? await getAgenteByEmail(email) : null;
 
-        return new Response("Ok", {status: 200});
-    } catch (error) {
+        return Response.json({
+            name: agent?.nombre_completo_agente || idPayload.name || email || username,
+            email,
+            role: agent?.rol_agente || (Array.isArray(idPayload["cognito:groups"]) ? idPayload["cognito:groups"][0] : "") || "sin rol",
+        });
+    } catch {
         return new Response("Invalid Token", {status: 401});
     }
 }

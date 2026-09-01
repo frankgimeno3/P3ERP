@@ -1,8 +1,10 @@
 "use client";
 import React, { FC, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import MiddleNav from "@/app/general_components/componentes_recurrentes/MiddleNav";
 import { ContratoService } from "@/app/service/ContratoService";
+import { AgenteService } from "@/app/service/AgenteService";
 
 const formatDate = (value?: string) => value || "-";
 const formatMoney = (value?: number) => {
@@ -22,15 +24,22 @@ const ResumenContrato: FC = () => {
   const id = params?.id as string;
   const [contrato, setContrato] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+  const [agentes, setAgentes] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchContrato = async () => {
       try {
         setLoading(true);
         setError("");
-        const data = await ContratoService.getContratoById(id);
+        const [data, agentRows] = await Promise.all([
+          ContratoService.getContratoById(id),
+          AgenteService.getAgentes(),
+        ]);
         setContrato(data);
+        setAgentes(Array.isArray(agentRows) ? agentRows : []);
       } catch (err) {
         console.error("Error fetching contrato:", err);
         setError("No se ha podido cargar el contrato.");
@@ -41,6 +50,27 @@ const ResumenContrato: FC = () => {
 
     if (id) fetchContrato();
   }, [id]);
+
+  const saveGeneralData = async () => {
+    setSaving(true);
+    setError("");
+    setMessage("");
+    try {
+      const updated = await ContratoService.updateContrato(id, {
+        id_agente_contrato: contrato.id_agente_contrato || "",
+      });
+      setContrato(updated);
+      setMessage("Datos generales actualizados correctamente.");
+    } catch (requestError: any) {
+      setError(
+        requestError?.response?.data?.detail ||
+          requestError?.response?.data?.message ||
+          "No se ha podido actualizar el contrato.",
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -62,12 +92,25 @@ const ResumenContrato: FC = () => {
     <div className="min-h-screen flex flex-col bg-gray-200 text-gray-600">
       <MiddleNav tituloprincipal={`Resumen del contrato nº ${contrato.id_contrato}`} />
       <div className="p-12 space-y-8">
+        {error && <p className="border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+        {message && <p className="border border-green-200 bg-green-50 p-3 text-sm text-green-700">{message}</p>}
         <section className="bg-white">
-          <h2 className="px-4 py-3 text-base font-semibold text-blue-950">Datos generales</h2>
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3">
+            <h2 className="text-base font-semibold text-blue-950">Datos generales</h2>
+            <button type="button" onClick={() => void saveGeneralData()} disabled={saving} className="cursor-pointer rounded bg-blue-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-50">
+              {saving ? "Guardando..." : "Guardar cambios"}
+            </button>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-3">
             <Field label="Contrato" value={contrato.id_contrato} />
-            <Field label="Agente" value={contrato.nombre_agente_contrato || contrato.id_agente_contrato} />
-            <Field label="Campaña asociada" value={contrato.id_campana_asociada} />
+            <label className="border-b border-gray-200 px-4 py-3">
+              <span className="text-xs uppercase text-gray-400">Agente</span>
+              <select value={contrato.id_agente_contrato || ""} onChange={(event) => setContrato({ ...contrato, id_agente_contrato: event.target.value })} className="mt-1 w-full cursor-pointer rounded border bg-white px-3 py-2 text-sm transition hover:border-blue-950">
+                <option value="">Sin agente</option>
+                {agentes.map((agente) => <option key={agente.id_agente} value={agente.id_agente}>{agente.nombre_completo_agente || agente.nombre_agente || agente.id_agente}</option>)}
+              </select>
+            </label>
+            <Field label="Propuesta de origen" value={contrato.id_propuesta ? <Link href={`/dashboard/comercial/propuestas/${encodeURIComponent(contrato.id_propuesta)}`} className="cursor-pointer font-medium text-blue-950 underline decoration-blue-300 underline-offset-2 transition hover:text-blue-700">{contrato.id_propuesta}</Link> : "-"} />
             <Field label="Fecha de firma" value={formatDate(contrato.fecha_firma_contrato)} />
             <Field label="Fecha fin" value={formatDate(contrato.fecha_fin_contrato)} />
             <Field label="Fecha cobro prevista" value={formatDate(contrato.fecha_cobro_prevista_contrato)} />

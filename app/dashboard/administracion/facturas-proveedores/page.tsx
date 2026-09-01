@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import MiddleNav from "@/app/general_components/componentes_recurrentes/MiddleNav";
 import { FacturaService } from "@/app/service/FacturaService";
+import Link from "next/link";
 
 const quarters = ["1T", "2T", "3T", "4T"];
 const columns = [
@@ -77,6 +78,7 @@ export default function FacturasProveedoresPage() {
     <div className="flex min-h-screen w-full flex-col bg-gray-200 text-gray-600">
       <MiddleNav tituloprincipal="Facturas proveedores" />
       <div className="min-h-screen w-full bg-gray-100 px-12 py-10 text-gray-600">
+        <div className="mb-4 flex justify-end"><Link href="/dashboard/administracion/facturas-proveedores/agregar" className="cursor-pointer rounded bg-blue-950 px-5 py-2 text-sm text-white transition hover:bg-blue-800">Agregar factura</Link></div>
         <div className="mb-3 flex flex-wrap gap-1">
           {years.map((year) => (
             <button key={year} type="button" onClick={() => setActiveYear(year)} className={`rounded-t px-5 py-2 text-sm ${activeYear === year ? "bg-blue-950 text-white" : "bg-white text-gray-700 hover:bg-gray-200"}`}>

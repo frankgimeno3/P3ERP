@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import MiddleNav from "@/app/general_components/componentes_recurrentes/MiddleNav";
 import { OrdenService } from "@/app/service/OrdenService";
+import { AgenteService } from "@/app/service/AgenteService";
 
 const formatMoney = (value?: number) => {
   const amount = Number(value ?? 0);
@@ -12,7 +14,9 @@ const formatMoney = (value?: number) => {
 const inputClass = "w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-950";
 
 export default function ControlAdministrativoPage() {
+  const router = useRouter();
   const [ordenes, setOrdenes] = useState<any[]>([]);
+  const [agentes, setAgentes] = useState<any[]>([]);
   const [filtros, setFiltros] = useState({
     orden: "",
     cliente: "",
@@ -29,8 +33,9 @@ export default function ControlAdministrativoPage() {
       try {
         setLoading(true);
         setError("");
-        const data = await OrdenService.getOrdenesAdministrativas();
+        const [data, agentesData] = await Promise.all([OrdenService.getOrdenesAdministrativas(), AgenteService.getAgentes()]);
         setOrdenes(Array.isArray(data) ? data : []);
+        setAgentes(Array.isArray(agentesData) ? agentesData : []);
       } catch (err) {
         console.error("Error fetching ordenes:", err);
         setError("No se han podido cargar las ordenes.");
@@ -48,7 +53,7 @@ export default function ControlAdministrativoPage() {
     return ordenes.filter((orden) =>
       matches(orden.id_orden, filtros.orden)
       && matches(orden.cliente, filtros.cliente)
-      && matches(orden.agente, filtros.agente)
+      && (!filtros.agente || String(orden.id_agente || orden.agente) === filtros.agente)
       && matches(orden.id_contrato, filtros.contrato)
       && matches(orden.id_factura, filtros.factura)
       && matches(orden.forma_cobro, filtros.forma_cobro),
@@ -68,7 +73,7 @@ export default function ControlAdministrativoPage() {
           <div className="grid grid-cols-1 gap-3 md:grid-cols-3 xl:grid-cols-6">
             <input type="search" value={filtros.orden} onChange={(event) => handleFiltroChange("orden", event.target.value)} placeholder="Orden" className={inputClass} />
             <input type="search" value={filtros.cliente} onChange={(event) => handleFiltroChange("cliente", event.target.value)} placeholder="Cliente" className={inputClass} />
-            <input type="search" value={filtros.agente} onChange={(event) => handleFiltroChange("agente", event.target.value)} placeholder="Agente" className={inputClass} />
+            <select aria-label="Filtrar por agente" value={filtros.agente} onChange={(event) => handleFiltroChange("agente", event.target.value)} className={inputClass}><option value="">Todos los agentes</option>{agentes.map((agente) => <option key={agente.id_agente} value={agente.id_agente}>{agente.nombre_completo_agente || `${agente.nombre_agente || ""} ${agente.apellidos_agente || ""}`.trim()}</option>)}</select>
             <input type="search" value={filtros.contrato} onChange={(event) => handleFiltroChange("contrato", event.target.value)} placeholder="Contrato" className={inputClass} />
             <input type="search" value={filtros.factura} onChange={(event) => handleFiltroChange("factura", event.target.value)} placeholder="Factura" className={inputClass} />
             <input type="search" value={filtros.forma_cobro} onChange={(event) => handleFiltroChange("forma_cobro", event.target.value)} placeholder="Forma de cobro" className={inputClass} />
@@ -112,7 +117,7 @@ export default function ControlAdministrativoPage() {
               )}
 
               {!loading && ordenesFiltradas.map((orden) => (
-                <tr key={orden.id_orden} className="hover:bg-gray-50">
+                <tr key={orden.id_orden} onClick={()=>router.push(`/dashboard/administracion/control-administrativo/${orden.id_orden}`)} className="cursor-pointer transition hover:bg-blue-50">
                   <td className="border-b border-gray-200 p-2 pl-6 font-medium text-blue-950">{orden.id_orden || "-"}</td>
                   <td className="border-b border-gray-200 p-2">{orden.cliente || "-"}</td>
                   <td className="border-b border-gray-200 p-2">{orden.agente || "-"}</td>

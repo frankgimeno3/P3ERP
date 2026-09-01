@@ -7,6 +7,7 @@ import { ContratoService } from "@/app/service/ContratoService";
 import { FeriaService } from "@/app/service/FeriaService";
 import { PropuestaService } from "@/app/service/PropuestaService";
 import { RevistaService } from "@/app/service/RevistaService";
+import CountrySelect from "@/app/components/CountrySelect";
 
 const emptyFeria = {
   titulo_especifico_edicion: "",
@@ -21,6 +22,8 @@ const emptyFeria = {
   hay_especial: false,
   en_vidrioperfil: false,
   descripcion: "",
+  periodicidad: "",
+  tematica: "",
   id_revista_especial: "",
   id_propuesta_intercambio: "",
   estado_intercambio: "",
@@ -47,6 +50,12 @@ export default function CrearFeriaPage() {
     PropuestaService.getPropuestas().then((data) => setPropuestas(Array.isArray(data) ? data : [])).catch(() => setPropuestas([]));
     ContratoService.getContratos().then((data) => setContratos(Array.isArray(data) ? data : [])).catch(() => setContratos([]));
   }, []);
+  useEffect(() => {
+    if (!modal) return;
+    const close = (event: KeyboardEvent) => { if (event.key === "Escape") { setModal(null); setQuery(""); } };
+    window.addEventListener("keydown", close);
+    return () => window.removeEventListener("keydown", close);
+  }, [modal]);
 
   const updateDate = (kind: "inicio" | "fin", field: string, value: string) => {
     const setter = kind === "inicio" ? setInicio : setFin;
@@ -85,10 +94,10 @@ export default function CrearFeriaPage() {
         {error && <div className="mb-4 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
         <section className="bg-white p-6 shadow-sm">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {["titulo_especifico_edicion", "nombre_feria", "pais", "ciudad", "edicion_numero", "descripcion"].map((field) => (
+            {["titulo_especifico_edicion", "nombre_feria", "pais", "ciudad", "edicion_numero", "periodicidad", "tematica", "descripcion"].map((field) => (
               <label key={field} className="text-sm">
                 <span className="mb-1 block text-xs font-semibold uppercase text-gray-500">{field}</span>
-                <input value={form[field] || ""} onChange={(event) => setForm({ ...form, [field]: event.target.value })} className="w-full rounded border px-3 py-2" />
+                {field === "pais" ? <CountrySelect value={form.pais} onChange={(pais) => setForm({ ...form, pais })} className="w-full rounded border px-3 py-2" /> : <input value={form[field] || ""} onChange={(event) => setForm({ ...form, [field]: event.target.value })} className="w-full rounded border px-3 py-2" />}
               </label>
             ))}
             {[
@@ -131,7 +140,7 @@ export default function CrearFeriaPage() {
           <div className="w-full max-w-4xl rounded bg-white p-6 shadow-xl">
             <div className="mb-4 flex items-center justify-between">
               <p className="text-lg font-semibold text-blue-950">Seleccionar</p>
-              <button type="button" onClick={() => { setModal(null); setQuery(""); }} className="text-xl">x</button>
+              <button type="button" aria-label="Cerrar" onClick={() => { setModal(null); setQuery(""); }} className="cursor-pointer text-3xl leading-none transition hover:text-blue-700">×</button>
             </div>
             {modal === "intercambio" ? (
               <div className="space-y-2">

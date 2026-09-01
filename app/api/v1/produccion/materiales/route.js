@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getMateriales, saveMaterial } from "../../../../../server/features/gestionProduccion/GestionProduccionRepository.js";
+import { getMateriales, saveMaterial } from "../../../../../server/features/material/MaterialRepository.js";
 
 export const runtime = "nodejs";
 export async function GET() {

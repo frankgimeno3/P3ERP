@@ -1,0 +1,185 @@
+{
+  "/dashboard/comercial/cuentas": {
+    "summary": "Consulta y administra la cartera de cuentas de cliente.",
+    "steps": [
+      "Usa los filtros para localizar una cuenta.",
+      "Abre una fila para consultar su ficha, contactos, propuestas, comentarios y actividad.",
+      "Pulsa Nueva cuenta para iniciar el alta guiada."
+    ]
+  },
+  "/dashboard/comercial/contactos": {
+    "summary": "Gestiona las personas de contacto asociadas a las cuentas.",
+    "steps": [
+      "Filtra la lista por los datos conocidos.",
+      "Abre un contacto para revisar o modificar su ficha y eventos.",
+      "Usa el alta de contacto para registrar una nueva persona y vincularla a una cuenta."
+    ]
+  },
+  "/dashboard/comercial/propuestas": {
+    "summary": "Crea y realiza el seguimiento de propuestas comerciales.",
+    "steps": [
+      "Cambia entre las vistas de propuestas pendientes y el listado completo.",
+      "Abre una propuesta para consultar su contenido, estado y seguimiento.",
+      "Crea, edita, replica o actualiza la propuesta según el flujo comercial."
+    ]
+  },
+  "/dashboard/comercial/contratos": {
+    "summary": "Consulta los contratos generados para cada cliente.",
+    "steps": [
+      "Localiza el cliente o contrato en el listado.",
+      "Abre el contrato para revisar empresa, contenidos y condiciones de cobro.",
+      "Verifica los datos antes de continuar con facturación y producción."
+    ]
+  },
+  "/dashboard/comercial/documentacion": {
+    "summary": "Centraliza las guías internas y otros documentos de consulta.",
+    "steps": [
+      "Selecciona Guías de uso u Otros documentos.",
+      "En las guías, elige módulo y página y abre su explicación.",
+      "En otros documentos, consulta el calendario laboral o el de publicaciones y deadlines."
+    ]
+  },
+  "/dashboard/produccion/hoja_produccion": {
+    "summary": "Controla los contenidos que deben prepararse y producirse.",
+    "steps": [
+      "Filtra por estado, cuenta o publicación.",
+      "Abre un contenido para consultar y completar sus datos de producción.",
+      "Mantén actualizados responsables, materiales y fechas."
+    ]
+  },
+  "/dashboard/administracion/ferias": {
+    "summary": "Mantiene el catálogo de ferias y eventos comerciales.",
+    "steps": [
+      "Busca y filtra las ferias disponibles.",
+      "Abre una feria para modificar sus datos y relevancia.",
+      "Usa Crear para registrar un nuevo evento."
+    ]
+  },
+  "/dashboard/administracion/control-administrativo": {
+    "summary": "Supervisa órdenes y operaciones pendientes de control administrativo.",
+    "steps": [
+      "Utiliza los filtros para encontrar una orden.",
+      "Abre el detalle para revisar datos comerciales y administrativos.",
+      "Completa las acciones necesarias antes de facturar o cerrar la orden."
+    ]
+  },
+  "/dashboard/administracion/facturas-clientes": {
+    "summary": "Gestiona facturas de clientes y su cumplimiento Verifactu.",
+    "steps": [
+      "Consulta o filtra las facturas existentes.",
+      "Crea una factura desde contratos y revisa impuestos, importes y destinatario.",
+      "Abre registros Verifactu o crea una rectificativa cuando corresponda."
+    ]
+  },
+  "/dashboard/administracion/pendiente-cobro": {
+    "summary": "Controla importes facturados que todavía están pendientes de cobro.",
+    "steps": [
+      "Filtra por cliente, vencimiento o estado.",
+      "Revisa los importes y fechas de cada factura.",
+      "Registra o comprueba el cobro cuando se produzca."
+    ]
+  },
+  "/dashboard/administracion/suscripciones": {
+    "summary": "Administra las suscripciones activas de clientes.",
+    "steps": [
+      "Localiza la suscripción por cuenta o publicación.",
+      "Revisa vigencia, servicio y último número.",
+      "Actualiza los datos cuando cambien las condiciones."
+    ]
+  },
+  "/dashboard/administracion/proveedores": {
+    "summary": "Mantiene las fichas de proveedores.",
+    "steps": [
+      "Busca un proveedor por sus datos.",
+      "Abre su ficha para revisar información fiscal y de contacto.",
+      "Crea un proveedor antes de asociarle facturas o tickets."
+    ]
+  },
+  "/dashboard/administracion/facturas-proveedores": {
+    "summary": "Registra y consulta facturas recibidas de proveedores.",
+    "steps": [
+      "Filtra el listado para localizar una factura.",
+      "Pulsa Agregar para registrar una nueva factura con sus importes y vencimientos.",
+      "Abre el detalle para revisar o completar la contabilización."
+    ]
+  },
+  "/dashboard/administracion/proveedores/tickets": {
+    "summary": "Registra tickets y justificantes de gastos de proveedor.",
+    "steps": [
+      "Consulta los tickets ya registrados.",
+      "Pulsa Añadir para introducir un nuevo justificante.",
+      "Comprueba proveedor, concepto, importes y fecha antes de guardar."
+    ]
+  },
+  "/dashboard/operaciones/data": {
+    "summary": "Centraliza las operaciones de importación, exportación y mantenimiento de datos.",
+    "steps": [
+      "Selecciona la operación necesaria.",
+      "Revisa el formato y alcance de los datos antes de ejecutarla.",
+      "Comprueba el resultado y corrige los registros rechazados."
+    ]
+  },
+  "/dashboard/operaciones/agentesyroles": {
+    "summary": "Administra agentes, altas en Cognito y su asignación segura de roles.",
+    "steps": [
+      "Pulsa Crear agente para iniciar el alta guiada y asigna uno de los roles base, administración, operaciones o superadmin.",
+      "El rol determina los módulos visibles y el servidor bloquea las rutas y APIs no autorizadas aunque se intente acceder directamente.",
+      "Abre la ficha de un agente para modificarlo o borrarlo; el borrado exige escribir borrar y elimina su cuenta, sus listas y sus tareas, sin afectar las de otros agentes."
+    ]
+  },
+  "/dashboard/operaciones/roles": {
+    "summary": "Define roles y permisos de acceso a la aplicación.",
+    "steps": [
+      "Abre un rol existente o crea uno nuevo.",
+      "Activa únicamente los accesos requeridos.",
+      "Guarda y comprueba el efecto con un agente que tenga ese rol."
+    ]
+  },
+  "/dashboard/operaciones/gestion_cuentas": {
+    "summary": "Configura procesos operativos relacionados con cuentas.",
+    "steps": [
+      "Selecciona la gestión que necesitas revisar.",
+      "Consulta cuentas, responsables y estado.",
+      "Actualiza los datos operativos y guarda."
+    ]
+  },
+  "/dashboard/direccion/bancos": {
+    "summary": "Importa, ordena y revisa los movimientos de las cuentas bancarias de la empresa.",
+    "steps": [
+      "Pulsa Añadir extracto y selecciona el banco. Santander y Sabadell muestran las columnas exactas esperadas para sus respectivos formatos oficiales.",
+      "La aplicación detecta el sentido cronológico y compara la secuencia completa para reconocer movimientos registrados e intercalar los ausentes con identificadores ordinales.",
+      "Usa Gestión de previsión de gastos o Gestión de previsión de ingresos para acceder directamente a la planificación financiera."
+    ]
+  },
+  "/dashboard/direccion/previsiones/prevision-liquidez": {
+    "summary": "Proyecta la liquidez a partir de cobros y pagos previstos.",
+    "steps": [
+      "Selecciona el periodo de análisis.",
+      "Revisa entradas, salidas y saldo acumulado.",
+      "Actualiza previsiones cuando cambien vencimientos o importes."
+    ]
+  },
+  "/dashboard/direccion/previsiones/prevision-ingresos": {
+    "summary": "Reúne cobros contractuales e ingresos adicionales previstos.",
+    "steps": [
+      "Filtra los ingresos y cambia entre Recibos y Transfers.",
+      "Pulsa Agregar ingreso sin contrato y completa el asistente: cliente o texto manual, factura opcional, fecha teórica, forma de cobro, banco y base imponible.",
+      "Los ingresos adicionales aparecen junto a la previsión contractual, identificados como ingreso adicional sin contrato."
+    ]
+  },
+  "/dashboard/direccion/previsiones/prevision-gastos": {
+    "summary": "Gestiona los pagos previstos y los gastos que todavía necesitan asociarse.",
+    "steps": [
+      "Cambia entre Gastos previstos registrados y Gastos pendientes de asociar; estos últimos son pagos sin proveedor.",
+      "Crea un registro por cada pago o vencimiento y selecciona proveedor, fecha, forma —recibo, transferencia o pagaré—, banco —Sabadell o Santander— e importes.",
+      "Pulsa cualquier fila para abrir su ficha, asociar un proveedor o modificar los datos del pago."
+    ]
+  },
+  "/dashboard/produccion/control_redaccion": {
+    "summary": "Centraliza el futuro control del trabajo de redacción.",
+    "steps": [
+      "Accede desde Producción.",
+      "Consulta esta página para las próximas funciones de control de redacción."
+    ]
+  }
+}

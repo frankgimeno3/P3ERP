@@ -5,18 +5,26 @@ import { useRouter } from "next/navigation";
 import MiddleNav from "@/app/general_components/componentes_recurrentes/MiddleNav";
 import { AgenteService } from "@/app/service/AgenteService";
 import { CuentaService } from "@/app/service/CuentaService";
-import TaskBoard from "./direccion/tareas/TaskBoard";
+import MisPendientes from "@/app/dashboard/comercial/propuestas/componentesPropuestas/tablaspropuestas/MisPendientes";
+import { canViewModule, normalizeRole } from "@/app/config/roleAccess";
 
 const tabs = [
-  { key: "campanas", label: "Mis campañas" },
   { key: "contenidos", label: "Mis contenidos" },
   { key: "clientes", label: "Mis cuentas" },
-  { key: "tareas", label: "Mis tareas" },
+  { key: "propuestas", label: "Mis propuestas pendientes" },
 ];
+
+const moduleTutorials: Record<string, string> = {
+  Comercial: "El modulo comercial concentra cuentas, contactos, propuestas, contratos y documentacion. Sirve para gestionar el trabajo con clientes y potenciales clientes desde el primer contacto hasta la firma.",
+  Produccion: "El modulo de produccion permite seguir los contenidos comprometidos, ver la hoja de produccion, consultar y mantener la hoja de producción.",
+  Administracion: "El modulo de administracion agrupa facturacion, cobros, suscripciones, ferias, proveedores, tickets y pagos. Conecta la venta y la produccion con la gestion economica y documental.",
+  Operaciones: "El modulo de operaciones se usa para gestionar usuarios, roles, importaciones, exportaciones y configuraciones estructurales de los modulos, como servicios y operaciones internas.",
+  Direccion: "El modulo de direccion reune vistas de control, bancos y previsiones para revisar la situacion general y tomar decisiones con datos conectados.",
+};
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState("campanas");
+  const [activeTab, setActiveTab] = useState("contenidos");
   const [email, setEmail] = useState("");
   const [roles, setRoles] = useState<string[]>([]);
   const [agente, setAgente] = useState<any | null>(null);
@@ -26,6 +34,8 @@ export default function DashboardPage() {
   const [cuentasError, setCuentasError] = useState("");
   const [clienteFilters, setClienteFilters] = useState<Record<string, string>>({});
   const [userIdentity, setUserIdentity] = useState<any>({});
+  const [tutorialOpen, setTutorialOpen] = useState(false);
+  const [openModuleCards, setOpenModuleCards] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     let payload: any = {};
@@ -66,6 +76,7 @@ export default function DashboardPage() {
       })
       .finally(() => setCuentasLoading(false));
   }, [activeTab, agente?.id_agente]);
+
 
   const agenteLabel = agente?.nombre_completo_agente || agente?.nombre_agente || email || "Agente";
   const rolLabel = agente?.rol_agente || roles.join(", ") || "Sin rol asignado";
@@ -127,10 +138,97 @@ export default function DashboardPage() {
     setClienteFilters((current) => ({ ...current, [field]: value }));
   };
 
+  const normalizedRole = normalizeRole(rolLabel);
+  const visibleModules = [
+    { id: "comercial", label: "Comercial" },
+    { id: "produccion", label: "Producción" },
+    { id: "administracion", label: "Administración" },
+    { id: "operaciones", label: "Operaciones" },
+    { id: "direccion", label: "Dirección" },
+  ].filter((module) => canViewModule(normalizedRole, module.id)).map((module) => module.label);
+  const roleTutorial = normalizedRole.includes("produccion")
+    ? "Como usuario de producción, puedes ver el área comercial y de producción. En producción encontrarás la hoja de producción con lo pendiente de publicar y su destino, fichas concretas de contenido, las maquetas de cada revista con su estado actual y gestiones de producción para el trabajo diario: validar materiales, subir artículos para revisión, mostrar correcciones y actualizar estados."
+    : normalizedRole.includes("comercial")
+      ? "Como usuario comercial, tienes acceso a lo mismo que producción, pero tu foco principal está en el módulo de clientes. Usarás producción para revisar tus gestiones o subir y seguir el estado de contenidos."
+      : normalizedRole.includes("administr")
+        ? "Como usuario de administración, tu módulo principal engloba facturación, gestión administrativa de órdenes, cobro, suscripciones, ferias, proveedores, pagos a proveedores, facturas de cliente y proveedor, y tickets. También tienes acceso a comercial y producción."
+        : normalizedRole.includes("operac")
+          ? "Como usuario de operaciones, puedes gestionar usuarios, roles, importaciones, exportaciones y elementos estructurales del CRM como campañas, revistas y módulos."
+          : "Tu rol determina qué módulos y páginas puedes ver en el ERP.";
+
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-gray-200 text-gray-600">
       <MiddleNav tituloprincipal={middleTitle} />
       <div className="min-h-screen w-full bg-gray-100 px-12 py-10 text-gray-600">
+        <section className="mb-5 bg-white/80 p-5 text-sm text-gray-700 shadow-sm">
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="text-base font-medium text-gray-500">Tutorial de funcionamiento</h2>
+            <button
+              type="button"
+              onClick={() => setTutorialOpen((current) => !current)}
+              className="cursor-pointer rounded border border-gray-300 bg-white px-4 py-2 text-sm text-gray-600 transition hover:bg-gray-50 hover:shadow-sm"
+            >
+              {tutorialOpen ? "Ocultar" : "Desplegar"}
+            </button>
+          </div>
+          {tutorialOpen && (
+            <div className="mt-4 space-y-3 leading-6">
+              <p>Bienvenido a la página principal, a la que puedes acceder desde el nav superior.</p>
+              <p>Este ERP digitaliza los procesos de la empresa y los conecta a partir de módulos: secciones especializadas en las gestiones que lleva a cabo un departamento o área. En resumen, sirven para generar trazabilidad y automatizar procesos.</p>
+              <p>Estás accediendo como agente <strong>{agenteLabel}</strong> con rol <strong>{rolLabel}</strong>, lo que te concede acceso a los módulos {visibleModules.length ? visibleModules.join(", ") : "asignados a tu perfil"}.</p>
+              <p>Cada módulo es una carpeta en el menú izquierdo y da acceso a páginas con funcionalidades concretas, donde pueden hacerse gestiones que conectan diferentes entidades. La entidad principal que conecta todo son las cuentas: la base de datos de clientes o potenciales clientes sobre los que se trabaja comercialmente y a nivel de producción para generar contenidos.</p>
+              <p>También verás aquí una tabla con tus procesos en curso (tareas). Si tu agente tiene cuentas asignadas, podrás ver desde esta página principal esas cuentas y elementos relacionados.</p>
+              <div className="border border-gray-200 bg-white/80 shadow-sm">
+                <button
+                  type="button"
+                  onClick={() => setOpenModuleCards((current) => ({ ...current, Dashboard: !current.Dashboard }))}
+                  className="flex w-full cursor-pointer items-center justify-between px-4 py-3 text-left text-sm font-semibold text-blue-950 transition hover:bg-gray-50"
+                  aria-expanded={Boolean(openModuleCards.Dashboard)}
+                >
+                  <span>Dashboard — página de atajos</span>
+                  <span className="text-lg leading-none">{openModuleCards.Dashboard ? "−" : "+"}</span>
+                </button>
+                {openModuleCards.Dashboard && (
+                  <div className="space-y-3 border-t border-gray-100 px-4 py-4 text-sm leading-6 text-gray-600">
+                    <p>
+                      El Dashboard es la página principal y funciona como un centro de atajos personalizado. Reúne la información más útil de tu trabajo diario para que puedas consultarla y acceder a ella sin recorrer cada módulo del menú.
+                    </p>
+                    <p>Desde esta página también puedes acceder rápidamente a información vinculada contigo:</p>
+                    <ul className="list-disc space-y-1 pl-5">
+                      <li><strong>Mis contenidos:</strong> los contenidos relacionados con las campañas que gestionas.</li>
+                      <li><strong>Mis cuentas:</strong> las cuentas de clientes o potenciales clientes que tienes asignadas.</li>
+                      <li><strong>Mis propuestas pendientes:</strong> las propuestas que has creado y que todavía esperan la aceptación o el rechazo del cliente.</li>
+                    </ul>
+                  </div>
+                )}
+              </div>
+              {visibleModules.length > 0 && (
+                <div className="grid gap-3 pt-1 md:grid-cols-2">
+                  {visibleModules.map((moduleName) => (
+                    <div key={moduleName} className="border border-gray-200 bg-white/80 shadow-sm">
+                      <button
+                        type="button"
+                        onClick={() => setOpenModuleCards((current) => ({ ...current, [moduleName]: !current[moduleName] }))}
+                        className="flex w-full cursor-pointer items-center justify-between px-4 py-3 text-left text-sm font-semibold text-blue-950 hover:bg-gray-50"
+                      >
+                        <span>{moduleName}</span>
+                        <span className="text-lg leading-none">{openModuleCards[moduleName] ? "-" : "+"}</span>
+                      </button>
+                      {openModuleCards[moduleName] && (
+                        <p className="border-t border-gray-100 px-4 py-3 text-sm leading-6 text-gray-600">
+                          {moduleTutorials[moduleName]}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+              <p>{roleTutorial}</p>
+            </div>
+          )}
+        </section>
+
         <div className="mb-4 flex flex-row">
           {tabs.map((tab, index) => (
             <button
@@ -147,7 +245,7 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        {activeTab !== "clientes" && activeTab !== "contenidos" && activeTab !== "tareas" && (
+        {activeTab !== "clientes" && activeTab !== "contenidos" && activeTab !== "propuestas" && (
           <div className="bg-white p-6 shadow-sm">
             <h2 className="text-lg font-semibold text-blue-950">{currentTab?.label}</h2>
             <p className="mt-2 text-sm text-gray-500">Sin datos para mostrar.</p>
@@ -172,15 +270,23 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {activeTab === "tareas" && (
+        {activeTab === "propuestas" && (
           <div className="bg-white p-6 shadow-sm">
-            <div className="mb-4">
-              <h2 className="text-lg font-semibold text-blue-950">Mis tareas</h2>
+            <div className="mb-5">
+              <h2 className="text-lg font-semibold text-blue-950">Mis propuestas pendientes</h2>
               <p className="mt-1 text-sm text-gray-500">
-                {agente?.id_agente ? `Tareas de ${agenteLabel}` : "No se ha encontrado un agente asociado a tu usuario."}
+                {agente?.id_agente ? `Propuestas pendientes asignadas a ${agenteLabel}` : "No se ha encontrado un agente asociado a tu usuario."}
               </p>
             </div>
-            {agente?.id_agente ? <TaskBoard agenteId={agente.id_agente} embedded /> : null}
+            {agente?.id_agente && (
+              <MisPendientes
+                clienteFiltro=""
+                codigoCRMFiltro=""
+                agenteActual={agente.id_agente}
+                fechaInicio=""
+                fechaFin=""
+              />
+            )}
           </div>
         )}
 
@@ -258,3 +364,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+

@@ -12,4 +12,9 @@ export class ContratoService {
         const response = await apiClient.get(`/api/v1/comercial/contratos/${idContrato}`);
         return response.data;
     }
+
+    static async updateContrato(idContrato, data) {
+        const response = await apiClient.patch(`/api/v1/comercial/contratos/${encodeURIComponent(idContrato)}`, data);
+        return response.data;
+    }
 }

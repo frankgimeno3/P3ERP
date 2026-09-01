@@ -7,4 +7,14 @@ export class OrdenService {
         });
         return response.data;
     }
+
+    static async getOrdenAdministrativa(idOrden) {
+        const response = await apiClient.get('/api/v1/admin/control-administrativo/ordenes', { params: { id: idOrden } });
+        return response.data;
+    }
+
+    static async updateOrdenAdministrativa(idOrden, data) {
+        const response = await apiClient.put(`/api/v1/admin/control-administrativo/ordenes?id=${encodeURIComponent(idOrden)}`, data);
+        return response.data;
+    }
 }

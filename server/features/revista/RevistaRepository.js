@@ -3,13 +3,59 @@ import { getPgPool } from "../../database/pgClient.js";
 let schemaReady = false;
 let contenidosRevistasTableCache = null;
 
+const basePagePreferences = [
+  [-1, "portada"],
+  [0, "interior_portada"],
+  [1, "pag_pref_1"],
+  [2, "pag_pref_2"],
+  [3, "pag_pref_3"],
+  [4, "sumario"],
+  [5, "pag_pref_5"],
+  [6, "indice"],
+  [7, "pag_pref_5"],
+];
+
+function normalizePageCount(value) {
+  const requested = Math.max(9, Number(value) || 9);
+  return requested % 2 === 0 ? requested + 1 : requested;
+}
+
+function pagePreference(pageNumber) {
+  return basePagePreferences.find(([number]) => number === pageNumber)?.[1] || `pag_pref_${pageNumber}`;
+}
+
+function preferredPageType(preference = "") {
+  const value = String(preference || "").toLowerCase();
+  if (value === "portada") return "Portada";
+  if (value === "indice") return "Indice";
+  if (value === "sumario") return "Sumario";
+  if (value === "interior_portada") return "Interior portada";
+  if (value.startsWith("pag_pref_")) return "Anuncio";
+  return "";
+}
+
 function normalizeRevista(row) {
+  const rawTitle = String(row.revista ?? row.detalle_publicacion ?? "").trim();
+  const title = rawTitle === "Vidrio Plano" ? "Revista del Vidrio Plano"
+    : rawTitle === "Ventanas, Puertas, Cerramientos y Protección Solar" ? "Revista Ventanas, Puertas, Cerramientos y Protección Solar"
+      : rawTitle === "Hueco Arquitectura" ? "Revista Hueco Arquitectura"
+        : rawTitle === "Quién es Quién" ? "Revista Quién es Quién"
+          : rawTitle;
+  const rawEdition = String(row.edicion ?? row.edicion_publicacion ?? "").trim().replace(/^Edición\s+/i, "");
+  const edition = rawTitle === "Quién es Quién" ? `Edición ${rawEdition}` : rawEdition;
+  const version = String(row.version_publicacion ?? row.impresa_o_digital ?? "").toLowerCase();
+  const versionLabel = /impresa.*digital|digital.*impresa/.test(version) ? "versión digital e impresa" : version.includes("impresa") ? "versión impresa" : version.includes("digital") ? "versión digital" : "";
+  const serial = String(row.numero_publicacion ?? row.publicacion ?? "").trim();
+  const detail = [serial, ["Vidrio Plano", "Ventanas, Puertas, Cerramientos y Protección Solar"].includes(rawTitle) ? versionLabel : ""].filter(Boolean).join(" · ");
   return {
     id_publicacion: row.id_publicacion ?? "",
     id_revista: row.id_revista,
-    edicion: row.edicion ?? "",
-    revista: row.revista ?? "",
-    publicacion: row.numero_publicacion ?? row.publicacion ?? "",
+    medio_publicacion: title,
+    edicion_publicacion: edition,
+    detalle_publicacion: detail || row.detalle_publicacion || "",
+    edicion: edition,
+    revista: title,
+    publicacion: detail || row.detalle_publicacion || "",
     numero: row.numero_publicacion ?? row.publicacion ?? "",
     numero_publicacion: row.numero_publicacion ?? row.publicacion ?? "",
     deadline_materiales: row.deadline_materiales ?? row.deadline_material ?? "",
@@ -45,7 +91,7 @@ async function ensurePublicacionesSchema(pool = getPgPool()) {
       ADD COLUMN IF NOT EXISTS link TEXT NOT NULL DEFAULT '';
   `);
   await pool.query(`
-    CREATE TABLE IF NOT EXISTS publicaciones_paginas_db (
+    CREATE TABLE IF NOT EXISTS revistas_paginas_db (
       id_pagina_publicacion TEXT PRIMARY KEY,
       publication_id TEXT NOT NULL,
       pagina_actual INTEGER NOT NULL,
@@ -54,6 +100,7 @@ async function ensurePublicacionesSchema(pool = getPgPool()) {
       id_cuenta TEXT,
       nombre_mostrado TEXT NOT NULL DEFAULT '',
       tipo TEXT NOT NULL DEFAULT '',
+      pagina_preferente TEXT NOT NULL DEFAULT '',
       ordinal TEXT NOT NULL DEFAULT '1/1',
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -61,10 +108,38 @@ async function ensurePublicacionesSchema(pool = getPgPool()) {
     )
   `);
   await pool.query(`
-    ALTER TABLE publicaciones_paginas_db
+    ALTER TABLE revistas_paginas_db
       ADD COLUMN IF NOT EXISTS nombre_mostrado TEXT NOT NULL DEFAULT '',
       ADD COLUMN IF NOT EXISTS tipo TEXT NOT NULL DEFAULT '',
+      ADD COLUMN IF NOT EXISTS pagina_preferente TEXT NOT NULL DEFAULT '',
       ADD COLUMN IF NOT EXISTS ordinal TEXT NOT NULL DEFAULT '1/1'
+  `);
+  await pool.query(`
+    DO $$
+    BEGIN
+      IF EXISTS (
+        SELECT 1 FROM information_schema.tables
+        WHERE table_schema='public' AND table_name='publicaciones_paginas_db'
+      ) THEN
+        INSERT INTO revistas_paginas_db (
+          id_pagina_publicacion, publication_id, pagina_actual, has_content, id_contenido, id_cuenta,
+          nombre_mostrado, tipo, ordinal, created_at, updated_at
+        )
+        SELECT
+          id_pagina_publicacion, publication_id, pagina_actual, has_content, id_contenido, id_cuenta,
+          nombre_mostrado, tipo, ordinal, created_at, updated_at
+        FROM publicaciones_paginas_db
+        ON CONFLICT (publication_id, pagina_actual) DO UPDATE
+        SET has_content=EXCLUDED.has_content,
+            id_contenido=EXCLUDED.id_contenido,
+            id_cuenta=EXCLUDED.id_cuenta,
+            nombre_mostrado=EXCLUDED.nombre_mostrado,
+            tipo=EXCLUDED.tipo,
+            ordinal=EXCLUDED.ordinal,
+            updated_at=EXCLUDED.updated_at;
+        DROP TABLE publicaciones_paginas_db;
+      END IF;
+    END $$;
   `);
   await pool.query(`CREATE INDEX IF NOT EXISTS publicaciones_db_tipo_publicacion_idx ON publicaciones_db (tipo_publicacion);`);
   await pool.query(`CREATE INDEX IF NOT EXISTS publicaciones_db_revista_id_idx ON publicaciones_db (revista_id);`);
@@ -98,6 +173,93 @@ async function ensurePublicacionesSchema(pool = getPgPool()) {
     WHERE COALESCE(r.id_revista, '') <> ''
     ON CONFLICT (id_publicacion) DO NOTHING
   `);
+  await pool.query(`
+    WITH base_pages(pagina_actual, pagina_preferente) AS (
+      VALUES
+        (-1, 'portada'),
+        (0, 'interior_portada'),
+        (1, 'pag_pref_1'),
+        (2, 'pag_pref_2'),
+        (3, 'pag_pref_3'),
+        (4, 'sumario'),
+        (5, 'pag_pref_5'),
+        (6, 'indice'),
+        (7, 'pag_pref_5')
+    ),
+    revista_publicaciones AS (
+      SELECT id_publicacion
+      FROM publicaciones_db
+      WHERE tipo_publicacion = 'revista' OR (tipo_publicacion = '' AND medio_publicacion ILIKE '%revista%')
+    )
+    INSERT INTO revistas_paginas_db (id_pagina_publicacion, publication_id, pagina_actual, pagina_preferente, tipo)
+    SELECT
+      'pag_' || rp.id_publicacion || '_' || bp.pagina_actual,
+      rp.id_publicacion,
+      bp.pagina_actual,
+      bp.pagina_preferente,
+      CASE
+        WHEN bp.pagina_preferente = 'portada' THEN 'Portada'
+        WHEN bp.pagina_preferente = 'indice' THEN 'Indice'
+        WHEN bp.pagina_preferente = 'sumario' THEN 'Sumario'
+        WHEN bp.pagina_preferente = 'interior_portada' THEN 'Interior portada'
+        WHEN bp.pagina_preferente LIKE 'pag_pref_%' THEN 'Anuncio'
+        ELSE ''
+      END
+    FROM revista_publicaciones rp
+    CROSS JOIN base_pages bp
+    ON CONFLICT (publication_id, pagina_actual) DO UPDATE
+    SET pagina_preferente = CASE
+      WHEN revistas_paginas_db.pagina_preferente = '' THEN EXCLUDED.pagina_preferente
+      ELSE revistas_paginas_db.pagina_preferente
+    END
+  `);
+  await pool.query(`
+    UPDATE revistas_paginas_db
+    SET tipo = CASE
+      WHEN pagina_preferente = 'portada' THEN 'Portada'
+      WHEN pagina_preferente = 'indice' THEN 'Indice'
+      WHEN pagina_preferente = 'sumario' THEN 'Sumario'
+      WHEN pagina_preferente = 'interior_portada' THEN 'Interior portada'
+      WHEN pagina_preferente LIKE 'pag_pref_%' THEN 'Anuncio'
+      ELSE tipo
+    END,
+    updated_at = NOW()
+    WHERE pagina_preferente IN ('portada', 'indice', 'sumario', 'interior_portada')
+       OR pagina_preferente LIKE 'pag_pref_%'
+  `);
+  await pool.query(`
+    WITH counts AS (
+      SELECT publication_id, COUNT(*)::int AS page_count, MAX(pagina_actual)::int AS max_page
+      FROM revistas_paginas_db
+      GROUP BY publication_id
+    ),
+    even_counts AS (
+      SELECT publication_id, max_page + 1 AS next_page
+      FROM counts
+      WHERE page_count % 2 = 0
+    )
+    INSERT INTO revistas_paginas_db (id_pagina_publicacion, publication_id, pagina_actual, pagina_preferente, tipo)
+    SELECT
+      'pag_' || publication_id || '_' || next_page,
+      publication_id,
+      next_page,
+      'pag_pref_' || next_page,
+      'Anuncio'
+    FROM even_counts
+    ON CONFLICT (publication_id, pagina_actual) DO NOTHING
+  `);
+  await pool.query(`
+    UPDATE publicaciones_db p
+    SET num_paginas = pages.page_count,
+        updated_at = NOW()
+    FROM (
+      SELECT publication_id, COUNT(*)::int AS page_count
+      FROM revistas_paginas_db
+      GROUP BY publication_id
+    ) pages
+    WHERE p.id_publicacion = pages.publication_id
+      AND (p.tipo_publicacion = 'revista' OR (p.tipo_publicacion = '' AND p.medio_publicacion ILIKE '%revista%'))
+  `);
   schemaReady = true;
 }
 
@@ -121,6 +283,9 @@ export async function getRevistas() {
     SELECT
       r.*,
       p.id_publicacion,
+      p.medio_publicacion,
+      p.edicion_publicacion,
+      p.detalle_publicacion,
       p.numero_publicacion,
       p.fecha_publicacion,
       p.estado_publicacion,
@@ -128,11 +293,11 @@ export async function getRevistas() {
       p.version_publicacion
     FROM publicaciones_db p
     LEFT JOIN revistas_db r ON r.id_revista = p.revista_id
-    WHERE (p.tipo_publicacion = 'revista' OR (p.tipo_publicacion = '' AND p.medio_publicacion ILIKE '%revista%'))
+    WHERE (p.tipo_publicacion = 'revista' OR p.medio_publicacion ILIKE '%revista%')
       AND r.id_revista IS NOT NULL
     ORDER BY
-      r.revista ASC,
-      r.edicion ASC,
+      p.medio_publicacion ASC,
+      p.edicion_publicacion ASC,
       nullif(regexp_replace(p.numero_publicacion, '\\D', '', 'g'), '')::int ASC NULLS LAST,
       p.numero_publicacion ASC,
       p.id_publicacion ASC
@@ -282,8 +447,14 @@ export async function getPaginasPublicacion(idPublicacion) {
   const [publication, pages] = await Promise.all([
     pool.query("SELECT id_publicacion,num_paginas FROM publicaciones_db WHERE id_publicacion=$1", [resolvedId]),
     pool.query(`
-      SELECT pp.*,c.especificaciones_contenido AS contenido,cu.nombre_empresa AS cuenta
-      FROM publicaciones_paginas_db pp
+      SELECT pp.*,c.especificaciones_contenido AS contenido,cu.nombre_empresa AS cuenta,
+        EXISTS (
+          SELECT 1 FROM lineas_propuestas_db lp
+          JOIN propuestas_db pr ON pr.id_propuesta = lp.id_propuesta
+          WHERE lp.id_pagina_publicacion = pp.id_pagina_publicacion
+            AND LOWER(COALESCE(pr.estado_propuesta, '')) NOT IN ('rechazada', 'cancelada')
+        ) AS ofrecida
+      FROM revistas_paginas_db pp
       LEFT JOIN contenidos_db c ON c.id_contenido=pp.id_contenido
       LEFT JOIN cuentas_db cu ON cu.id_cuenta=pp.id_cuenta
       WHERE pp.publication_id=$1
@@ -298,7 +469,7 @@ export async function setNumeroPaginas(idPublicacion, requestedPages) {
   await ensurePublicacionesSchema(pool);
   const resolvedId = await resolvePublicationId(idPublicacion, pool);
   if (!resolvedId) return null;
-  const numPaginas = Math.max(0, Number(requestedPages) || 0);
+  const numPaginas = normalizePageCount(requestedPages);
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
@@ -306,14 +477,14 @@ export async function setNumeroPaginas(idPublicacion, requestedPages) {
     for (let index = 0; index < numPaginas; index += 1) {
       const paginaActual = index - 1;
       await client.query(
-        `INSERT INTO publicaciones_paginas_db
-          (id_pagina_publicacion,publication_id,pagina_actual)
-         VALUES ($1,$2,$3)
+        `INSERT INTO revistas_paginas_db
+          (id_pagina_publicacion,publication_id,pagina_actual,pagina_preferente,tipo)
+         VALUES ($1,$2,$3,$4,$5)
          ON CONFLICT (publication_id,pagina_actual) DO NOTHING`,
-        [`pag_${resolvedId}_${paginaActual}`, resolvedId, paginaActual],
+        [`pag_${resolvedId}_${paginaActual}`, resolvedId, paginaActual, pagePreference(paginaActual), preferredPageType(pagePreference(paginaActual))],
       );
     }
-    await client.query("DELETE FROM publicaciones_paginas_db WHERE publication_id=$1 AND pagina_actual >= $2", [resolvedId, numPaginas - 1]);
+    await client.query("DELETE FROM revistas_paginas_db WHERE publication_id=$1 AND pagina_actual >= $2", [resolvedId, numPaginas - 1]);
     await client.query("COMMIT");
   } catch (error) {
     await client.query("ROLLBACK");
@@ -330,7 +501,7 @@ export async function updatePaginaPublicacion(idPublicacion, idPagina, data = {}
   const resolvedId = await resolvePublicationId(idPublicacion, pool);
   if (!resolvedId) return null;
   const currentResult = await pool.query(
-    "SELECT * FROM publicaciones_paginas_db WHERE id_pagina_publicacion=$1 AND publication_id=$2",
+    "SELECT * FROM revistas_paginas_db WHERE id_pagina_publicacion=$1 AND publication_id=$2",
     [idPagina, resolvedId],
   );
   const current = currentResult.rows[0];
@@ -344,7 +515,7 @@ export async function updatePaginaPublicacion(idPublicacion, idPagina, data = {}
     idCuenta = null;
   }
   const { rows } = await pool.query(
-    `UPDATE publicaciones_paginas_db
+    `UPDATE revistas_paginas_db
      SET has_content=$1,id_contenido=$2,id_cuenta=$3,updated_at=NOW()
         ,nombre_mostrado=$4,tipo=$5
      WHERE id_pagina_publicacion=$6 AND publication_id=$7
@@ -376,7 +547,7 @@ export async function assignContentToPages(idPublicacion, data = {}) {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
-    const { rows: allPages } = await client.query("SELECT * FROM publicaciones_paginas_db WHERE publication_id=$1 ORDER BY pagina_actual FOR UPDATE", [resolvedId]);
+    const { rows: allPages } = await client.query("SELECT * FROM revistas_paginas_db WHERE publication_id=$1 ORDER BY pagina_actual FOR UPDATE", [resolvedId]);
     const selected = allPages.filter((page) => selectedIds.includes(page.id_pagina_publicacion));
     if (selected.length !== selectedIds.length) throw new Error("Alguna página seleccionada ya no existe.");
     const conflicts = selected.filter((page) => page.id_contenido && page.id_contenido !== data.id_contenido);
@@ -392,14 +563,14 @@ export async function assignContentToPages(idPublicacion, data = {}) {
       for (const contentId of conflictContentIds) {
         const group = allPages.filter((page) => page.id_contenido === contentId).sort((a, b) => a.pagina_actual - b.pagina_actual);
         shiftedSourcePageIds.push(...group.map((page) => page.id_pagina_publicacion));
-        const currentMaxResult = await client.query("SELECT COALESCE(MAX(pagina_actual),-2)::int AS value FROM publicaciones_paginas_db WHERE publication_id=$1", [resolvedId]);
+        const currentMaxResult = await client.query("SELECT COALESCE(MAX(pagina_actual),-2)::int AS value FROM revistas_paginas_db WHERE publication_id=$1", [resolvedId]);
         let nextNumber = currentMaxResult.rows[0].value + 1;
         for (const oldPage of group) {
           await client.query(
-            `INSERT INTO publicaciones_paginas_db
-              (id_pagina_publicacion,publication_id,pagina_actual,has_content,id_contenido,id_cuenta,nombre_mostrado,tipo,ordinal)
-             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
-            [pageId(resolvedId, nextNumber), resolvedId, nextNumber, oldPage.has_content, oldPage.id_contenido, oldPage.id_cuenta, oldPage.nombre_mostrado, oldPage.tipo, oldPage.ordinal],
+            `INSERT INTO revistas_paginas_db
+              (id_pagina_publicacion,publication_id,pagina_actual,has_content,id_contenido,id_cuenta,nombre_mostrado,tipo,pagina_preferente,ordinal)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+            [pageId(resolvedId, nextNumber), resolvedId, nextNumber, oldPage.has_content, oldPage.id_contenido, oldPage.id_cuenta, oldPage.nombre_mostrado, preferredPageType(pagePreference(nextNumber)) || oldPage.tipo, pagePreference(nextNumber), oldPage.ordinal],
           );
           nextNumber += 1;
         }
@@ -408,13 +579,13 @@ export async function assignContentToPages(idPublicacion, data = {}) {
     if (conflictContentIds.length) {
       if (data.conflict_action === "shift") {
         await client.query(
-          `UPDATE publicaciones_paginas_db SET has_content=FALSE,id_contenido=NULL,id_cuenta=NULL,ordinal='1/1',updated_at=NOW()
+          `UPDATE revistas_paginas_db SET has_content=FALSE,id_contenido=NULL,id_cuenta=NULL,ordinal='1/1',updated_at=NOW()
            WHERE publication_id=$1 AND id_pagina_publicacion=ANY($2::text[])`,
           [resolvedId, shiftedSourcePageIds],
         );
       } else {
         await client.query(
-          `UPDATE publicaciones_paginas_db SET has_content=FALSE,id_contenido=NULL,id_cuenta=NULL,ordinal='1/1',updated_at=NOW()
+          `UPDATE revistas_paginas_db SET has_content=FALSE,id_contenido=NULL,id_cuenta=NULL,ordinal='1/1',updated_at=NOW()
            WHERE publication_id=$1 AND id_contenido=ANY($2::text[])`,
           [resolvedId, conflictContentIds],
         );
@@ -428,14 +599,80 @@ export async function assignContentToPages(idPublicacion, data = {}) {
       .sort((a, b) => a.pagina_actual - b.pagina_actual);
     for (const [index, page] of ordered.entries()) {
       await client.query(
-        `UPDATE publicaciones_paginas_db
+        `UPDATE revistas_paginas_db
          SET has_content=TRUE,id_contenido=$1,id_cuenta=$2,ordinal=$3,updated_at=NOW()
          WHERE id_pagina_publicacion=$4 AND publication_id=$5`,
         [data.id_contenido, accountId, `${index + 1}/${ordered.length}`, page.id_pagina_publicacion, resolvedId],
       );
     }
-    const count = await client.query("SELECT COUNT(*)::int AS value FROM publicaciones_paginas_db WHERE publication_id=$1", [resolvedId]);
+    const shiftedCount = await client.query("SELECT COUNT(*)::int AS value, COALESCE(MAX(pagina_actual), -2)::int AS max_page FROM revistas_paginas_db WHERE publication_id=$1", [resolvedId]);
+    if (shiftedCount.rows[0].value % 2 === 0) {
+      const nextPage = shiftedCount.rows[0].max_page + 1;
+      await client.query(
+        `INSERT INTO revistas_paginas_db (id_pagina_publicacion,publication_id,pagina_actual,pagina_preferente,tipo)
+         VALUES ($1,$2,$3,$4,$5)
+         ON CONFLICT (publication_id,pagina_actual) DO NOTHING`,
+        [pageId(resolvedId, nextPage), resolvedId, nextPage, pagePreference(nextPage), preferredPageType(pagePreference(nextPage))],
+      );
+    }
+    const count = await client.query("SELECT COUNT(*)::int AS value FROM revistas_paginas_db WHERE publication_id=$1", [resolvedId]);
     await client.query("UPDATE publicaciones_db SET num_paginas=$1,updated_at=NOW() WHERE id_publicacion=$2", [count.rows[0].value, resolvedId]);
+    await client.query("COMMIT");
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+  return getPaginasPublicacion(resolvedId);
+}
+
+export async function insertPagesAfterRow(idPublicacion, data = {}) {
+  const pool = getPgPool();
+  await ensurePublicacionesSchema(pool);
+  const resolvedId = await resolvePublicationId(idPublicacion, pool);
+  if (!resolvedId) return null;
+  const afterPage = Number(data.after_pagina_actual);
+  if (!Number.isFinite(afterPage)) throw new Error("Selecciona la fila tras la que insertar paginas.");
+  const firstNewPage = afterPage + 1;
+  const secondNewPage = afterPage + 2;
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const exists = await client.query(
+      "SELECT 1 FROM revistas_paginas_db WHERE publication_id=$1 AND pagina_actual=$2 LIMIT 1",
+      [resolvedId, afterPage],
+    );
+    if (!exists.rows[0]) throw new Error("La fila seleccionada ya no existe.");
+
+    await client.query(
+      "UPDATE revistas_paginas_db SET pagina_actual = pagina_actual + 1000000 WHERE publication_id=$1 AND pagina_actual > $2",
+      [resolvedId, afterPage],
+    );
+    await client.query(
+      "UPDATE revistas_paginas_db SET pagina_actual = pagina_actual - 999998, pagina_preferente = '', updated_at=NOW() WHERE publication_id=$1 AND pagina_actual > $2",
+      [resolvedId, afterPage + 1000000],
+    );
+
+    for (const pageNumber of [firstNewPage, secondNewPage]) {
+      const preference = pagePreference(pageNumber);
+      await client.query(
+        `INSERT INTO revistas_paginas_db (id_pagina_publicacion,publication_id,pagina_actual,pagina_preferente,tipo)
+         VALUES ($1,$2,$3,$4,$5)
+         ON CONFLICT (publication_id,pagina_actual) DO NOTHING`,
+        [pageId(resolvedId, pageNumber), resolvedId, pageNumber, preference, preferredPageType(preference)],
+      );
+    }
+
+    const pages = await client.query("SELECT id_pagina_publicacion,pagina_actual FROM revistas_paginas_db WHERE publication_id=$1 ORDER BY pagina_actual", [resolvedId]);
+    for (const page of pages.rows) {
+      const preference = pagePreference(page.pagina_actual);
+      await client.query(
+        "UPDATE revistas_paginas_db SET pagina_preferente=$1,tipo=$2,updated_at=NOW() WHERE id_pagina_publicacion=$3",
+        [preference, preferredPageType(preference), page.id_pagina_publicacion],
+      );
+    }
+    await client.query("UPDATE publicaciones_db SET num_paginas=$1,updated_at=NOW() WHERE id_publicacion=$2", [pages.rows.length, resolvedId]);
     await client.query("COMMIT");
   } catch (error) {
     await client.query("ROLLBACK");
@@ -455,25 +692,36 @@ export async function deletePublicationPages(idPublicacion, data = {}) {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
-    const { rows: pages } = await client.query("SELECT * FROM publicaciones_paginas_db WHERE publication_id=$1 ORDER BY pagina_actual FOR UPDATE", [resolvedId]);
+    const { rows: pages } = await client.query("SELECT * FROM revistas_paginas_db WHERE publication_id=$1 ORDER BY pagina_actual FOR UPDATE", [resolvedId]);
     const indexes = requestedIds.map((id) => pages.findIndex((page) => page.id_pagina_publicacion === id)).filter((index) => index >= 0);
     if (!indexes.length) throw new Error("No hay páginas para eliminar.");
     if (indexes.some((index) => index <= 1 || index === pages.length - 1)) throw new Error("No se puede eliminar la primera, segunda o última página.");
     const affectedContentIds = [...new Set(indexes.map((index) => pages[index].id_contenido).filter(Boolean))];
     if (affectedContentIds.length) {
       await client.query(
-        `UPDATE publicaciones_paginas_db SET has_content=FALSE,id_contenido=NULL,id_cuenta=NULL,ordinal='1/1',updated_at=NOW()
+        `UPDATE revistas_paginas_db SET has_content=FALSE,id_contenido=NULL,id_cuenta=NULL,ordinal='1/1',updated_at=NOW()
          WHERE publication_id=$1 AND id_contenido=ANY($2::text[])`,
         [resolvedId, affectedContentIds],
       );
     }
-    await client.query("DELETE FROM publicaciones_paginas_db WHERE publication_id=$1 AND id_pagina_publicacion=ANY($2::text[])", [resolvedId, requestedIds]);
-    const remaining = await client.query("SELECT id_pagina_publicacion FROM publicaciones_paginas_db WHERE publication_id=$1 ORDER BY pagina_actual", [resolvedId]);
-    await client.query("UPDATE publicaciones_paginas_db SET pagina_actual=pagina_actual+100000 WHERE publication_id=$1", [resolvedId]);
+    await client.query("DELETE FROM revistas_paginas_db WHERE publication_id=$1 AND id_pagina_publicacion=ANY($2::text[])", [resolvedId, requestedIds]);
+    const remaining = await client.query("SELECT id_pagina_publicacion FROM revistas_paginas_db WHERE publication_id=$1 ORDER BY pagina_actual", [resolvedId]);
+    await client.query("UPDATE revistas_paginas_db SET pagina_actual=pagina_actual+100000 WHERE publication_id=$1", [resolvedId]);
     for (const [index, page] of remaining.rows.entries()) {
-      await client.query("UPDATE publicaciones_paginas_db SET pagina_actual=$1,updated_at=NOW() WHERE id_pagina_publicacion=$2", [index - 1, page.id_pagina_publicacion]);
+      await client.query("UPDATE revistas_paginas_db SET pagina_actual=$1,pagina_preferente=$2,tipo=$3,updated_at=NOW() WHERE id_pagina_publicacion=$4", [index - 1, pagePreference(index - 1), preferredPageType(pagePreference(index - 1)), page.id_pagina_publicacion]);
     }
-    await client.query("UPDATE publicaciones_db SET num_paginas=$1,updated_at=NOW() WHERE id_publicacion=$2", [remaining.rows.length, resolvedId]);
+    let finalCount = remaining.rows.length;
+    if (finalCount % 2 === 0) {
+      const nextPage = finalCount - 1;
+      await client.query(
+        `INSERT INTO revistas_paginas_db (id_pagina_publicacion,publication_id,pagina_actual,pagina_preferente,tipo)
+         VALUES ($1,$2,$3,$4,$5)
+         ON CONFLICT (publication_id,pagina_actual) DO NOTHING`,
+        [pageId(resolvedId, nextPage), resolvedId, nextPage, pagePreference(nextPage), preferredPageType(pagePreference(nextPage))],
+      );
+      finalCount += 1;
+    }
+    await client.query("UPDATE publicaciones_db SET num_paginas=$1,updated_at=NOW() WHERE id_publicacion=$2", [finalCount, resolvedId]);
     await client.query("COMMIT");
   } catch (error) {
     await client.query("ROLLBACK");
@@ -547,6 +795,8 @@ export async function createRevista(data = {}) {
       data.deadline_materiales || "",
     ],
   );
+
+  await setNumeroPaginas(idPublicacion, data.num_paginas || 9);
 
   return getRevistaById(rows[0].id_revista);
 }

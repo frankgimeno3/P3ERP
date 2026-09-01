@@ -10,4 +10,10 @@ export class AgenteService {
         const response = await apiClient.put(`/api/v1/admin/agentes/${idAgente}`, rolesData);
         return response.data;
     }
+
+
+    static async deleteAgente(idAgente) {
+        const response = await apiClient.delete(`/api/v1/admin/agentes/${idAgente}`);
+        return response.data;
+    }
 }

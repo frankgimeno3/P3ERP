@@ -9,4 +9,5 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - En formularios de la aplicación, las fechas nunca deben ser un único input ni `type="date"`: deben representarse siempre como 3 inputs separados para `dd`, `mm` y `yyyy`, respectivamente.
 - Toda pestaña, enlace, fila interactiva o botón habilitado debe mostrar `cursor: pointer` y una respuesta visual al pasar el cursor. Los controles deshabilitados no deben aparentar ser interactivos.
 - Todo modal debe tener un botón visible `×` para cerrarlo y debe poder cerrarse también pulsando `Escape`.
+- El menú lateral del dashboard se define únicamente en `app/config/dashboardMenu.ts`. Al añadir, eliminar o renombrar una página del menú, debe actualizarse también su explicación en `app/dashboard/comercial/documentacion/guias.json`. Si cambia el funcionamiento de una página existente, su guía JSON debe actualizarse en el mismo cambio.
 <!-- END:nextjs-agent-rules -->

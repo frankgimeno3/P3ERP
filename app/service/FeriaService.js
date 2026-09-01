@@ -15,4 +15,9 @@ export class FeriaService {
         const response = await apiClient.post('/api/v1/admin/ferias', data);
         return response.data;
     }
+
+    static async markRelevant(ids) {
+        const response = await apiClient.patch('/api/v1/admin/ferias/relevancia', { ids });
+        return response.data;
+    }
 }

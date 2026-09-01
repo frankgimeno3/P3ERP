@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getServicios } from "../../../../../server/features/servicio/ServicioRepository.js";
+import { createServicio, getServicios } from "../../../../../server/features/servicio/ServicioRepository.js";
 
 export const runtime = "nodejs";
 
@@ -20,5 +20,13 @@ export async function GET(request) {
       { message: "Error al cargar los servicios", detail: process.env.NODE_ENV === "development" ? error.message : undefined },
       { status: 500 },
     );
+  }
+}
+
+export async function POST(request) {
+  try {
+    return NextResponse.json(await createServicio(await request.json()), { status: 201 });
+  } catch (error) {
+    return NextResponse.json({ message: "Error al crear el servicio", detail: error.message }, { status: 500 });
   }
 }

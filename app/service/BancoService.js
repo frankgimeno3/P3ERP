@@ -6,8 +6,8 @@ export class BancoService {
         return response.data;
     }
 
-    static async importLineasBanco(lineas) {
-        const response = await apiClient.post('/api/v1/direccion/bancos', { lineas });
+    static async importLineasBanco(banco, lineas) {
+        const response = await apiClient.post('/api/v1/direccion/bancos', { banco, lineas });
         return response.data;
     }
 

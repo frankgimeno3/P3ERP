@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createFacturaProveedor, getFacturasProveedores } from "../../../../../server/features/factura/FacturaRepository.js";
+import { createFacturaProveedor, createFacturaProveedorCompleta, getFacturasProveedores } from "../../../../../server/features/factura/FacturaRepository.js";
 
 export const runtime = "nodejs";
 
@@ -20,6 +20,9 @@ export async function POST(request) {
   try {
     const body = await request.json();
 
+    if (body?.pagos) {
+      return NextResponse.json(await createFacturaProveedorCompleta(body), { status: 201 });
+    }
     if (!body?.id_factura_proveedor && !body?.orden_compra_p3) {
       return NextResponse.json({ message: "id_factura_proveedor u orden_compra_p3 es obligatorio" }, { status: 400 });
     }

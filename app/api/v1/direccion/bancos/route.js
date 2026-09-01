@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createLineasBanco, getLineasBanco } from "../../../../../server/features/banco/BancoRepository.js";
+import { getLineasBanco, reconcileLineasBanco } from "../../../../../server/features/banco/BancoRepository.js";
 
 export const runtime = "nodejs";
 
@@ -20,13 +20,14 @@ export async function POST(request) {
   try {
     const body = await request.json();
     const lineas = Array.isArray(body?.lineas) ? body.lineas : [];
+    const banco = String(body?.banco || "");
 
-    if (!lineas.length) {
+    if (!lineas.length || !["Sabadell", "Santander"].includes(banco)) {
       return NextResponse.json({ message: "No hay lineas para importar" }, { status: 400 });
     }
 
-    const created = await createLineasBanco(lineas);
-    return NextResponse.json(created, { status: 201 });
+    const result = await reconcileLineasBanco(banco, lineas);
+    return NextResponse.json(result, { status: 201 });
   } catch (error) {
     console.error("Error in POST /api/v1/direccion/bancos:", error);
     return NextResponse.json(

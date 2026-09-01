@@ -2,6 +2,7 @@
 
 import React, { FC, useState } from "react";
 import { InterfazCuenta } from "@/app/interfaces/interfaces";
+import CountrySelect from "@/app/components/CountrySelect";
 
 interface ContenidoDatosAdministrativosProps {
   cuentaEditable: InterfazCuenta;
@@ -57,7 +58,7 @@ const ContenidoDatosAdministrativos: FC<ContenidoDatosAdministrativosProps> = ({
           </label>
           <label className="space-y-1">
             <span className="font-medium">País facturación</span>
-            <input value={cuentaEditable.pais_facturacion} onChange={(e) => handleChange("pais_facturacion", e.target.value)} className={fieldClass} />
+            <CountrySelect value={cuentaEditable.pais_facturacion || ""} onChange={(value) => handleChange("pais_facturacion", value)} className={fieldClass} />
           </label>
           <label className="space-y-1">
             <span className="font-medium">Mail contabilidad</span>

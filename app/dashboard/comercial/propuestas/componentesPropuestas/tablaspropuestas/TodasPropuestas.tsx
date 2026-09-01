@@ -1,8 +1,8 @@
 "use client";
 
-import React, { FC, useEffect, useMemo, useState } from "react";
+import React, { FC, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import FolderSvg from "../svg/FolderSvg";
+import PropSvg from "../svg/PropSvg";
 import { PropuestaService } from "@/app/service/PropuestaService";
 
 interface TodasPropuestasProps {
@@ -12,6 +12,7 @@ interface TodasPropuestasProps {
   fechaInicio: string;
   fechaFin: string;
   estadoFiltro: string;
+  agentes: any[];
 }
 
 const TodasPropuestas: FC<TodasPropuestasProps> = ({
@@ -21,6 +22,7 @@ const TodasPropuestas: FC<TodasPropuestasProps> = ({
   fechaInicio,
   fechaFin,
   estadoFiltro,
+  agentes,
 }) => {
   const router = useRouter();
   const [propuestas, setPropuestas] = useState<any[]>([]);
@@ -39,34 +41,8 @@ const TodasPropuestas: FC<TodasPropuestasProps> = ({
       .finally(() => setLoading(false));
   }, [clienteFiltro, codigoCRMFiltro, agenteFiltro, estadoFiltro]);
 
-  const resultados = useMemo(() => {
-    const agrupadas = new Map<string, any>();
-    for (const propuesta of propuestas) {
-      const idCuenta = propuesta.id_cuenta_propuesta || "sin-cuenta";
-      const current = agrupadas.get(idCuenta) ?? {
-        id: idCuenta,
-        nombreEmpresa: propuesta.cuenta?.nombre_empresa || `Cuenta ${idCuenta}`,
-        codigoCRM: idCuenta,
-        numeroPropuestas: 0,
-        agenteAsignado: propuesta.id_agente_propuesta || "",
-        fechaUltimaPropuesta: "",
-        estadosIncluidos: new Set<string>(),
-      };
-      current.numeroPropuestas += 1;
-      current.estadosIncluidos.add(propuesta.estado_propuesta || "");
-      if (!current.fechaUltimaPropuesta || String(propuesta.fecha_envio_propuesta || "") > current.fechaUltimaPropuesta) {
-        current.fechaUltimaPropuesta = propuesta.fecha_envio_propuesta || "";
-      }
-      agrupadas.set(idCuenta, current);
-    }
-    return Array.from(agrupadas.values()).map((item) => ({
-      ...item,
-      estadosIncluidos: Array.from(item.estadosIncluidos).filter(Boolean),
-    }));
-  }, [propuestas]);
-
-  const resultadosFiltrados = resultados.filter((item) => {
-    const fecha = item.fechaUltimaPropuesta ? new Date(item.fechaUltimaPropuesta) : null;
+  const resultadosFiltrados = propuestas.filter((propuesta) => {
+    const fecha = propuesta.fecha_envio_propuesta ? new Date(propuesta.fecha_envio_propuesta) : null;
     return (
       (!fechaInicio || (fecha && fecha >= new Date(fechaInicio))) &&
       (!fechaFin || (fecha && fecha <= new Date(fechaFin)))
@@ -77,28 +53,31 @@ const TodasPropuestas: FC<TodasPropuestasProps> = ({
     <div className="h-full overflow-x-auto">
       <table className="min-w-full divide-y divide-gray-700 rounded-lg border border-gray-700">
         <thead>
-          <tr>
-            <th className="px-4 py-3 text-left"></th>
+          <tr className="text-left">
+            <th className="px-4 py-3 text-left">ID Propuesta</th>
             <th className="px-4 py-3 text-left">Nombre Empresa</th>
-            <th className="px-4 py-3 text-left">Codigo CRM</th>
-            <th className="px-4 py-3 text-left">Agente asignado actual</th>
-            <th className="px-4 py-3 text-left">Estados presentes</th>
-            <th className="px-4 py-3 text-left">Fecha ultima propuesta</th>
+            <th className="px-4 py-3 text-left">Precio</th>
+            <th className="px-4 py-3 text-left">Fecha de envio</th>
+            <th className="px-4 py-3 text-left">Agente</th>
+            <th className="px-4 py-3 text-left">Estado</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-700">
           {resultadosFiltrados.map((res) => (
             <tr
-              key={res.id}
-              onClick={() => router.push(`/dashboard/comercial/propuestas/cuentas/${res.codigoCRM}`)}
-              className="cursor-pointer transition-colors"
+              key={res.id_propuesta}
+              onClick={() => router.push(/construcci/i.test(String(res.estado_propuesta || "")) ? `/dashboard/comercial/propuestas/${res.id_propuesta}/editar` : `/dashboard/comercial/propuestas/${res.id_propuesta}`)}
+              className="cursor-pointer transition-colors hover:bg-blue-50"
             >
-              <td className="px-4 py-3"><FolderSvg /></td>
-              <td className="px-4 py-3 text-sm">{res.nombreEmpresa}</td>
-              <td className="px-4 py-3 text-sm">{res.codigoCRM}</td>
-              <td className="px-4 py-3 text-sm">{res.agenteAsignado}</td>
-              <td className="px-4 py-3 text-sm">{res.estadosIncluidos.join(", ")}</td>
-              <td className="px-4 py-3 text-sm">{res.fechaUltimaPropuesta}</td>
+              <td className="flex flex-row items-center gap-2 px-4 py-3 text-sm">
+                <PropSvg />
+                {res.id_propuesta}
+              </td>
+              <td className="px-4 py-3 text-sm">{res.cuenta?.nombre_empresa || res.id_cuenta_propuesta}</td>
+              <td className="px-4 py-3 text-sm">{Number(res.importe_propuesta_con_iva || res.importe_total_bi_propuesta || 0).toFixed(2)} EUR</td>
+              <td className="px-4 py-3 text-sm">{res.fecha_envio_propuesta || "Sin fecha"}</td>
+              <td className="px-4 py-3 text-sm">{agentes.find((agente) => agente.id_agente === res.id_agente_propuesta)?.nombre_completo_agente || agentes.find((agente) => agente.id_agente === res.id_agente_propuesta)?.nombre_agente || res.id_agente_propuesta || "-"}</td>
+              <td className="px-4 py-3 text-sm">{res.estado_propuesta || "-"}</td>
             </tr>
           ))}
         </tbody>

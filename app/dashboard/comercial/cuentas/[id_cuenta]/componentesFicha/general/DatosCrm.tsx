@@ -4,6 +4,7 @@ import React, { FC, ChangeEvent, useEffect, useMemo, useState } from "react";
 import { AgenteService } from "@/app/service/AgenteService";
 import { CuentaService } from "@/app/service/CuentaService";
 import { FeriaService } from "@/app/service/FeriaService";
+import countries from "@/app/dashboard/comercial/contactos/crear/fases/fasescomponents/countries.json";
 
 interface DatosCRMProps {
   id_cuenta: string;
@@ -11,6 +12,7 @@ interface DatosCRMProps {
   id_agente: string;
   id_edisoft: string;
   asignado_a: string;
+  pais_cuenta: string;
   receptor_revista: boolean;
   potencial_actual_relacion: string;
   potencial_futuro_encaje: string;
@@ -173,6 +175,7 @@ const DatosCRM: FC<DatosCRMProps> = ({
   id_agente,
   id_edisoft,
   asignado_a,
+  pais_cuenta,
   receptor_revista,
   potencial_actual_relacion,
   potencial_futuro_encaje,
@@ -198,7 +201,15 @@ const DatosCRM: FC<DatosCRMProps> = ({
   const [agentes, setAgentes] = useState<Agente[]>([]);
   const [feriasDisponibles, setFeriasDisponibles] = useState<any[]>([]);
   const [modalCuenta, setModalCuenta] = useState<"distribuidoras" | "distribuidas" | null>(null);
+  const [paisQuery, setPaisQuery] = useState(pais_cuenta);
+  const [paisOpen, setPaisOpen] = useState(false);
   const feriasSeleccionadas = useMemo(() => new Set(Array.isArray(ferias) ? ferias : []), [ferias]);
+  const paisesFiltrados = useMemo(() => {
+    const term = paisQuery.trim().toLowerCase();
+    return (countries as { name: string; code: string }[])
+      .filter((country) => !term || country.name.toLowerCase().includes(term))
+      .slice(0, 12);
+  }, [paisQuery]);
 
   useEffect(() => {
     AgenteService.getAgentes()
@@ -208,6 +219,10 @@ const DatosCRM: FC<DatosCRMProps> = ({
       .then((data) => setFeriasDisponibles(Array.isArray(data) ? data : []))
       .catch(() => setFeriasDisponibles([]));
   }, []);
+
+  useEffect(() => {
+    setPaisQuery(pais_cuenta);
+  }, [pais_cuenta]);
 
   const handleTextChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     onChange(e.target.name, e.target.value);
@@ -273,13 +288,40 @@ const DatosCRM: FC<DatosCRMProps> = ({
               ))}
             </select>
           </label>
-          <label className="space-y-1">
-            <span className="font-medium">Receptor Revista</span>
-            <select name="receptor_revista" value={String(receptor_revista)} onChange={handleBooleanChange} className={fieldClass}>
-              <option value="false">No</option>
-              <option value="true">Sí</option>
-            </select>
-          </label>
+          <div id="pais-cuenta-detalles" className="relative space-y-1">
+            <span className="font-medium">País</span>
+            <input
+              value={paisQuery}
+              onFocus={() => setPaisOpen(true)}
+              onChange={(event) => {
+                setPaisQuery(event.target.value);
+                onChange("pais_cuenta", "");
+                setPaisOpen(true);
+              }}
+              className={fieldClass}
+              placeholder="Escribe y selecciona un país"
+            />
+            {paisOpen && (
+              <div className="absolute z-40 mt-1 max-h-56 w-full overflow-y-auto rounded border border-gray-200 bg-white shadow-xl">
+                {paisesFiltrados.map((country) => (
+                  <button
+                    key={country.code}
+                    type="button"
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => {
+                      setPaisQuery(country.name);
+                      onChange("pais_cuenta", country.name);
+                      setPaisOpen(false);
+                    }}
+                    className="block w-full px-3 py-2 text-left text-sm hover:bg-blue-50"
+                  >
+                    {country.name}
+                  </button>
+                ))}
+                {paisesFiltrados.length === 0 && <div className="px-3 py-2 text-sm text-gray-500">Sin resultados</div>}
+              </div>
+            )}
+          </div>
           <label className="space-y-1 md:col-span-3 lg:col-span-1">
             <span className="font-medium">Potencial actual - Relación</span>
             <select name="potencial_actual_relacion" value={potencial_actual_relacion} onChange={handleTextChange} className={fieldClass}>

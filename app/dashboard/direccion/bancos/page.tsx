@@ -1,6 +1,7 @@
 ﻿'use client';
 
-import { ChangeEvent, useEffect, useMemo, useState } from 'react';
+import { ChangeEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import * as XLSX from 'xlsx';
 import { BancoService } from '@/app/service/BancoService';
 
@@ -19,7 +20,7 @@ interface LineaBanco {
 }
 
 interface ImportedLinea {
-  id_linea_banco: string;
+  id_linea_banco?: string;
   banco: Banco;
   fecha_operativa: string;
   fecha_valor: string;
@@ -30,8 +31,8 @@ interface ImportedLinea {
 
 type DateParts = { day: string; month: string; year: string };
 
-const REQUIRED_COLUMNS = ['id_linea_banco', 'F.Operativa', 'F.Valor', 'Concepto', 'Importe', 'Saldo'];
-const BANK_PREFIX: Record<Banco, string> = { Sabadell: 'sab', Santander: 'san' };
+const SABADELL_COLUMNS = ['F. Operativa', 'Concepto', 'F. Valor', 'Importe', 'Saldo', 'Referencia 1', 'Referencia 2'];
+const SANTANDER_COLUMNS = ['Fecha Operación', 'Fecha Valor', 'Concepto', 'Importe', 'Divisa', 'Saldo', 'Divisa', 'Código', 'Número de documento', 'Referencia 1', 'Referencia 2', 'Información adicional'];
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(value || 0));
@@ -117,22 +118,27 @@ function normalizeDate(value: unknown) {
   return `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`;
 }
 
-function getYearSuffix(date: string) {
-  return date.slice(-2);
-}
-
-function getIdSerial(id: string) {
-  const value = Number(id.split('_')[2]);
+function getIdSerial(id = '') {
+  const value = Number(id.split('_')[3]?.replace(/\./g, ''));
   return Number.isFinite(value) ? value : 0;
 }
 
+function getIdYear(id = '') {
+  return id.split('_')[2] || '';
+}
+
+function movementFingerprint(row: Pick<ImportedLinea, 'fecha_operativa' | 'fecha_valor' | 'concepto' | 'importe' | 'saldo'>) {
+  return [row.fecha_operativa, row.fecha_valor, row.concepto.trim().replace(/\s+/g, ' ').toLowerCase(), Number(row.importe).toFixed(2), Number(row.saldo).toFixed(2)].join('|');
+}
+
 function sortByBankId(a: ImportedLinea, b: ImportedLinea) {
-  const yearCompare = a.id_linea_banco.split('_')[1].localeCompare(b.id_linea_banco.split('_')[1]);
+  const yearCompare = getIdYear(a.id_linea_banco).localeCompare(getIdYear(b.id_linea_banco));
   if (yearCompare !== 0) return yearCompare;
   return getIdSerial(a.id_linea_banco) - getIdSerial(b.id_linea_banco);
 }
 
 export default function BancosPage() {
+  const router = useRouter();
   const [lineas, setLineas] = useState<LineaBanco[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -143,8 +149,9 @@ export default function BancosPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [phase, setPhase] = useState(1);
   const [selectedBank, setSelectedBank] = useState<Banco>('Sabadell');
-  const [importRows, setImportRows] = useState<ImportedLinea[]>([]);
+  const [importReadCount, setImportReadCount] = useState(0);
   const [newRows, setNewRows] = useState<ImportedLinea[]>([]);
+  const [sourceRows, setSourceRows] = useState<ImportedLinea[]>([]);
   const [importErrors, setImportErrors] = useState<string[]>([]);
   const [importInfo, setImportInfo] = useState<string>('');
   const [importing, setImporting] = useState(false);
@@ -219,20 +226,30 @@ export default function BancosPage() {
     return `SABADELL:\n${formatRows(informeCobros.Sabadell)}\n\nSANTANDER:\n${formatRows(informeCobros.Santander)}`;
   }, [informeCobros]);
 
-  const resetModal = () => {
+  const resetModal = useCallback(() => {
     setPhase(1);
     setSelectedBank('Sabadell');
-    setImportRows([]);
+    setImportReadCount(0);
     setNewRows([]);
+    setSourceRows([]);
     setImportErrors([]);
     setImportInfo('');
     setImporting(false);
-  };
+  }, []);
 
-  const closeModal = () => {
+  const closeModal = useCallback(() => {
     setIsModalOpen(false);
     resetModal();
-  };
+  }, [resetModal]);
+
+  useEffect(() => {
+    if (!isModalOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !importing) closeModal();
+    };
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, [closeModal, importing, isModalOpen]);
 
   const closeInformeModal = () => {
     setIsInformeModalOpen(false);
@@ -246,45 +263,37 @@ export default function BancosPage() {
 
   const validateRows = (rows: ImportedLinea[]) => {
     const errors: string[] = [];
-    const prefix = BANK_PREFIX[selectedBank];
-    const existingIds = new Set(lineas.filter((linea) => linea.banco === selectedBank).map((linea) => linea.id_linea_banco));
-    const seenIds = new Set<string>();
 
     rows.forEach((row, index) => {
       const rowNumber = index + 2;
-      const expectedYear = getYearSuffix(row.fecha_operativa);
-      const expectedPattern = new RegExp(`^${prefix}_${expectedYear}_[0-9]+$`);
-
-      if (!expectedPattern.test(row.id_linea_banco)) {
-        errors.push(`Fila ${rowNumber}: id_linea_banco debe tener formato ${prefix}_${expectedYear}_numero.`);
-      }
-
-      if (seenIds.has(row.id_linea_banco)) errors.push(`Fila ${rowNumber}: id duplicado en el Excel (${row.id_linea_banco}).`);
-      seenIds.add(row.id_linea_banco);
-
-      if (!row.fecha_operativa) errors.push(`Fila ${rowNumber}: F.Operativa no es una fecha valida.`);
-      if (!row.fecha_valor) errors.push(`Fila ${rowNumber}: F.Valor no es una fecha valida.`);
+      if (!row.fecha_operativa) errors.push(`Fila ${rowNumber}: la fecha operativa no es válida.`);
+      if (!row.fecha_valor) errors.push(`Fila ${rowNumber}: la fecha valor no es válida.`);
       if (!row.concepto) errors.push(`Fila ${rowNumber}: Concepto es obligatorio.`);
-      if (!Number.isFinite(row.importe)) errors.push(`Fila ${rowNumber}: Importe no es numerico.`);
-      if (!Number.isFinite(row.saldo)) errors.push(`Fila ${rowNumber}: Saldo no es numerico.`);
+      if (!Number.isFinite(row.importe)) errors.push(`Fila ${rowNumber}: Importe no es numérico.`);
+      if (!Number.isFinite(row.saldo)) errors.push(`Fila ${rowNumber}: Saldo no es numérico.`);
     });
 
-    const sortedRows = [...rows].sort(sortByBankId);
-    const firstNewIndex = sortedRows.findIndex((row) => !existingIds.has(row.id_linea_banco));
-    const rowsToImport = firstNewIndex === -1 ? [] : sortedRows.slice(firstNewIndex);
-    const existingAfterFirstNew = rowsToImport.filter((row) => existingIds.has(row.id_linea_banco));
-
-    if (existingAfterFirstNew.length) {
-      errors.push(`Hay ids ya existentes despues del primer nuevo: ${existingAfterFirstNew.map((row) => row.id_linea_banco).join(', ')}.`);
-    }
-
-    if (!rowsToImport.length) {
-      setImportInfo('Todos los ids del Excel ya existen. No hay lineas nuevas para subir.');
-    } else {
-      setImportInfo(`Todo ok. Se importara a partir de ${rowsToImport[0].id_linea_banco}: ${rowsToImport.length} lineas nuevas.`);
-    }
-
-    setNewRows(errors.length ? [] : rowsToImport);
+    const firstDate = rows.find((row) => dateToComparable(row.fecha_operativa));
+    const lastDate = [...rows].reverse().find((row) => dateToComparable(row.fecha_operativa));
+    const descending = Boolean(firstDate && lastDate && dateToComparable(firstDate.fecha_operativa)! > dateToComparable(lastDate.fecha_operativa)!);
+    const chronological = descending ? [...rows].reverse() : [...rows];
+    const existing = lineas.filter((linea) => linea.banco === selectedBank).sort(sortByBankId);
+    const previous = new Uint32Array(chronological.length + 1);
+    existing.forEach((stored) => {
+      const current = new Uint32Array(chronological.length + 1);
+      chronological.forEach((incoming, index) => {
+        current[index + 1] = movementFingerprint(stored) === movementFingerprint(incoming)
+          ? previous[index] + 1
+          : Math.max(previous[index + 1], current[index]);
+      });
+      previous.set(current);
+    });
+    const matchingSequenceLength = previous[chronological.length];
+    const newCount = chronological.length - matchingSequenceLength;
+    setImportInfo(newCount
+      ? `Orden detectado: ${descending ? 'más nuevo a más antiguo' : 'más antiguo a más nuevo'}. Se han encontrado ${matchingSequenceLength} movimientos ya registrados y ${newCount} movimientos para intercalar.`
+      : `Orden detectado: ${descending ? 'más nuevo a más antiguo' : 'más antiguo a más nuevo'}. La secuencia completa ya está registrada.`);
+    setNewRows(errors.length ? [] : chronological.slice(0, newCount));
     setImportErrors(errors);
   };
 
@@ -294,43 +303,48 @@ export default function BancosPage() {
 
     setImportErrors([]);
     setImportInfo('');
-    setImportRows([]);
+    setImportReadCount(0);
     setNewRows([]);
+    setSourceRows([]);
 
     const buffer = await file.arrayBuffer();
     const workbook = XLSX.read(buffer, { type: 'array' });
     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
     const rawRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet, { defval: '' });
+    setImportReadCount(rawRows.length);
     const headers = XLSX.utils.sheet_to_json<string[]>(worksheet, { header: 1 })[0] || [];
-    const missingColumns = REQUIRED_COLUMNS.filter((column) => !headers.includes(column));
+    const expectedColumns = selectedBank === 'Santander' ? SANTANDER_COLUMNS : SABADELL_COLUMNS;
+    const missingColumns = expectedColumns
+      .filter((column, index) => headers[index] !== column);
 
     if (missingColumns.length) {
-      setImportErrors([`Faltan columnas: ${missingColumns.join(', ')}.`]);
+      setImportErrors([selectedBank === 'Santander'
+        ? `El formato no coincide con el Excel de Santander. Se esperaban, en este orden: ${SANTANDER_COLUMNS.join(', ')}.`
+        : `El formato no coincide con el Excel de Sabadell. Se esperaban, en este orden: ${SABADELL_COLUMNS.join(', ')}.`]);
       setPhase(3);
       return;
     }
 
     const parsedRows = rawRows.map((row) => ({
-      id_linea_banco: String(row.id_linea_banco ?? '').trim(),
       banco: selectedBank,
-      fecha_operativa: normalizeDate(row['F.Operativa']),
-      fecha_valor: normalizeDate(row['F.Valor']),
+      fecha_operativa: normalizeDate(row[selectedBank === 'Santander' ? 'Fecha Operación' : 'F. Operativa']),
+      fecha_valor: normalizeDate(row[selectedBank === 'Santander' ? 'Fecha Valor' : 'F. Valor']),
       concepto: String(row.Concepto ?? '').trim(),
       importe: parseNumber(row.Importe),
       saldo: parseNumber(row.Saldo),
     }));
 
-    setImportRows(parsedRows);
+    setSourceRows(parsedRows);
     validateRows(parsedRows);
     setPhase(3);
   };
 
   const handleImport = async () => {
-    if (!newRows.length) return;
+    if (!newRows.length || !sourceRows.length) return;
 
     try {
       setImporting(true);
-      await BancoService.importLineasBanco(newRows);
+      await BancoService.importLineasBanco(selectedBank, sourceRows);
       await loadLineas();
       closeModal();
     } catch (error: any) {
@@ -367,6 +381,8 @@ export default function BancosPage() {
           <p className="text-sm text-gray-500">Lineas bancarias importadas y revision de movimientos</p>
         </div>
         <div className="flex gap-2">
+          <button type="button" onClick={() => router.push('/dashboard/direccion/previsiones/prevision-gastos')} className="cursor-pointer rounded border border-blue-950 px-4 py-2 text-sm font-medium text-blue-950 transition hover:bg-blue-50 hover:shadow-sm">Gestión de previsión de gastos</button>
+          <button type="button" onClick={() => router.push('/dashboard/direccion/previsiones/prevision-ingresos')} className="cursor-pointer rounded border border-blue-950 px-4 py-2 text-sm font-medium text-blue-950 transition hover:bg-blue-50 hover:shadow-sm">Gestión de previsión de ingresos</button>
           <button
             type="button"
             onClick={() => setIsInformeModalOpen(true)}
@@ -464,7 +480,7 @@ export default function BancosPage() {
           <div className="w-full max-w-2xl rounded bg-white p-6 shadow-xl">
             <div className="mb-5 flex items-center justify-between">
               <p className="text-lg font-semibold">Importar extracto</p>
-              <button type="button" onClick={closeModal} className="text-xl font-semibold text-gray-500 hover:text-gray-800">x</button>
+              <button type="button" onClick={closeModal} disabled={importing} aria-label="Cerrar" className="cursor-pointer text-2xl font-semibold text-gray-500 transition hover:text-gray-800 disabled:cursor-not-allowed disabled:opacity-40">×</button>
             </div>
 
             <div className="mb-5 flex gap-2 text-xs">
@@ -477,17 +493,30 @@ export default function BancosPage() {
 
             {phase === 1 && (
               <div className="space-y-4">
-                <p className="text-sm text-gray-700">El Excel debe contener exactamente estas columnas: id_linea_banco, F.Operativa, F.Valor, Concepto, Importe y Saldo.</p>
-                <p className="text-sm text-gray-700">Los ids deben seguir el banco y aÃ±o: sab_yy_numero para Sabadell y san_yy_numero para Santander.</p>
                 <label className="block">
                   <span className="text-sm font-medium">Banco</span>
-                  <select value={selectedBank} onChange={(event) => setSelectedBank(event.target.value as Banco)} className="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm">
+                  <select value={selectedBank} onChange={(event) => setSelectedBank(event.target.value as Banco)} className="mt-1 w-full cursor-pointer rounded border border-gray-300 px-3 py-2 text-sm transition hover:border-blue-950">
                     <option value="Sabadell">Sabadell</option>
                     <option value="Santander">Santander</option>
                   </select>
                 </label>
+                {selectedBank === 'Santander' ? (
+                  <div className="rounded border border-blue-200 bg-blue-50 p-4 text-sm leading-6 text-blue-950">
+                    <p className="font-semibold">Formato esperado del Excel de Banco Santander</p>
+                    <p className="mt-1">La primera hoja debe contener, en este orden, las columnas: {SANTANDER_COLUMNS.join(', ')}.</p>
+                    <p className="mt-2">La aplicación transformará automáticamente <strong>Fecha Operación</strong> en fecha operativa, <strong>Fecha Valor</strong> en fecha valor y conservará <strong>Concepto</strong>, <strong>Importe</strong> y <strong>Saldo</strong>. Las columnas restantes se validan como parte del formato oficial, pero no se almacenan porque no son necesarias para la conciliación.</p>
+                    <p className="mt-2">No debes añadir ningún identificador: se generará respetando el orden original, con el formato <strong>banc_san_26_000.000.001</strong>.</p>
+                  </div>
+                ) : (
+                  <div className="rounded border border-blue-200 bg-blue-50 p-4 text-sm leading-6 text-blue-950">
+                    <p className="font-semibold">Formato esperado del Excel de Banco Sabadell</p>
+                    <p className="mt-1">La primera hoja debe contener, en este orden, las columnas: {SABADELL_COLUMNS.join(', ')}.</p>
+                    <p className="mt-2">La aplicación transformará automáticamente <strong>F. Operativa</strong> en fecha operativa, <strong>F. Valor</strong> en fecha valor y conservará <strong>Concepto</strong>, <strong>Importe</strong> y <strong>Saldo</strong>. Las referencias se validan como parte del formato del banco, pero no se almacenan.</p>
+                    <p className="mt-2">No debes añadir identificadores. El sistema detectará el sentido cronológico del Excel, comparará la secuencia completa con los movimientos existentes e intercalará únicamente los que falten usando identificadores como <strong>banc_sab_26_000.000.001</strong>.</p>
+                  </div>
+                )}
                 <div className="flex justify-end">
-                  <button type="button" onClick={() => setPhase(2)} className="rounded bg-blue-950 px-4 py-2 text-sm font-medium text-white hover:bg-blue-900">Continuar</button>
+                  <button type="button" onClick={() => setPhase(2)} className="cursor-pointer rounded bg-blue-950 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-900 hover:shadow-sm">Continuar</button>
                 </div>
               </div>
             )}
@@ -513,7 +542,7 @@ export default function BancosPage() {
                     <p>{importInfo}</p>
                   )}
                 </div>
-                <p className="text-sm text-gray-500">Filas leidas: {importRows.length}. Nuevas a subir: {newRows.length}.</p>
+                <p className="text-sm text-gray-500">Filas leídas: {importReadCount}. Nuevas a subir: {newRows.length}.</p>
                 <div className="flex justify-between">
                   <button type="button" onClick={() => setPhase(2)} className="rounded border border-gray-300 px-4 py-2 text-sm">Volver</button>
                   <button

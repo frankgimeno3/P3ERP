@@ -11,6 +11,7 @@ const Cuentas: FC = () => {
   const [codigoCrmFiltro, setCodigoCrmFiltro] = useState('');
   const [agenteFiltro, setAgenteFiltro] = useState('');
   const [telFiltro, setTelFiltro] = useState('');
+  const [paisFiltro, setPaisFiltro] = useState('');
   
   return (
     <div className="flex flex-col bg-gray-200 h-full min-h-screen text-gray-600">
@@ -35,6 +36,8 @@ const Cuentas: FC = () => {
             setAgenteFiltro={setAgenteFiltro}
             telFiltro={telFiltro}
             setTelFiltro={setTelFiltro}
+            paisFiltro={paisFiltro}
+            setPaisFiltro={setPaisFiltro}
           />
 
           <Tablacuentas
@@ -42,6 +45,7 @@ const Cuentas: FC = () => {
             codigoCrmFiltro={codigoCrmFiltro}
             agenteFiltro={agenteFiltro}
             telFiltro={telFiltro}
+            paisFiltro={paisFiltro}
           />
         </div>
       </div>

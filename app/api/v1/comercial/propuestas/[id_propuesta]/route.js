@@ -37,7 +37,7 @@ export async function PUT(request, { params }) {
   } catch (error) {
     console.error("Error in PUT /api/v1/comercial/propuestas/[id_propuesta]:", error);
     return NextResponse.json(
-      { message: "Error al actualizar la propuesta", detail: process.env.NODE_ENV === "development" ? error.message : undefined },
+      { message: "Error al actualizar la propuesta", detail: error.message || "Error interno al procesar la propuesta" },
       { status: 500 },
     );
   }

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AgenteService } from '@/app/service/AgenteService';
 import { RoleService } from '@/app/service/RoleService';
+import CreateUserWizard from './CreateUserWizard';
 
 interface Agente {
   id_agente: string;
@@ -25,12 +26,13 @@ interface Role {
   estado_rol: string;
 }
 
-export default function Usuarios() {
+export default function Agentes() {
   const router = useRouter();
   const [agentes, setAgentes] = useState<Agente[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [showCreateUser, setShowCreateUser] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -78,9 +80,12 @@ export default function Usuarios() {
     <div className="min-h-screen bg-gray-100 p-6 px-12 text-gray-800">
       <div className="mb-5 flex items-center justify-between">
         <div>
-          <p className="text-xl font-semibold text-gray-700">Usuarios</p>
+          <p className="text-xl font-semibold text-gray-700">Agentes</p>
           <p className="text-sm text-gray-500">Agentes registrados y rol asignado</p>
         </div>
+        <button type="button" onClick={() => setShowCreateUser(true)} className="cursor-pointer rounded-md bg-blue-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-800 hover:shadow-md">
+          Crear agente
+        </button>
       </div>
 
       {error && (
@@ -105,7 +110,7 @@ export default function Usuarios() {
               {loading && (
                 <tr className="border-t border-gray-200">
                   <td className="px-4 py-3 text-gray-500" colSpan={6}>
-                    Cargando usuarios...
+                    Cargando agentes...
                   </td>
                 </tr>
               )}
@@ -113,7 +118,7 @@ export default function Usuarios() {
               {!loading && agentes.length === 0 && (
                 <tr className="border-t border-gray-200">
                   <td className="px-4 py-3 text-gray-500" colSpan={6}>
-                    No hay usuarios para mostrar.
+                    No hay agentes para mostrar.
                   </td>
                 </tr>
               )}
@@ -122,7 +127,7 @@ export default function Usuarios() {
                 return (
                   <tr
                     key={agente.id_agente}
-                    onClick={() => router.push(`/dashboard/operaciones/usuariosyroles/${agente.id_agente}`)}
+                    onClick={() => router.push(`/dashboard/operaciones/agentesyroles/${agente.id_agente}`)}
                     className="cursor-pointer border-t border-gray-200 hover:bg-blue-50"
                   >
                     <td className="px-4 py-2 font-medium">{agente.id_agente}</td>
@@ -139,6 +144,19 @@ export default function Usuarios() {
             </tbody>
           </table>
       </div>
+      {showCreateUser && (
+        <CreateUserWizard
+          roles={roles}
+          onClose={() => setShowCreateUser(false)}
+          onCreated={(agent) => setAgentes((current) => [...current, {
+            ...agent,
+            nombre_agente: agent.nombre_completo_agente,
+            apellidos_agente: '',
+            accesos_personalizados: false,
+            array_accesos_adicionales: [],
+          }].sort((a, b) => getNombreAgente(a).localeCompare(getNombreAgente(b))))}
+        />
+      )}
     </div>
   );
 }

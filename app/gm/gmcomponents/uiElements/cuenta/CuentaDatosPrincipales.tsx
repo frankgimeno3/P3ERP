@@ -1,5 +1,6 @@
 import Lupa from "@/app/gm/gmcomponents/svg/lupa";
 import type { Account } from "./types";
+import CountrySelect from "@/app/components/CountrySelect";
 
 type CuentaDatosPrincipalesProps = {
   account: Account;
@@ -128,10 +129,9 @@ export default function CuentaDatosPrincipales({ account, onFieldChange }: Cuent
       <div className="flex w-full min-w-0 items-center justify-start gap-2">
         <TextField label="Pais" value={account.prefijo ?? ""} onChange={(value) => onFieldChange("prefijo", value)} className="flex-1" />
         <Lupa />
-        <input
-          type="text"
+        <CountrySelect
           value={account.pais ?? ""}
-          onChange={(event) => onFieldChange("pais", event.target.value)}
+          onChange={(value) => onFieldChange("pais", value)}
           className="min-w-0 flex-1 rounded-md border border-gray-300 bg-white px-2 py-1 text-left text-sm text-slate-700 outline-none"
         />
       </div>

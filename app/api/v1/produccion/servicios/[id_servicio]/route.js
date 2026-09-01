@@ -1,11 +1,20 @@
 import { NextResponse } from "next/server";
-import { getServicioById } from "../../../../../../server/features/servicio/ServicioRepository.js";
+import { getServicioById, saveServicio } from "../../../../../../server/features/servicio/ServicioRepository.js";
 
 export const runtime = "nodejs";
 
 async function getIdServicio(context) {
   const params = await context.params;
   return params?.id_servicio;
+}
+
+export async function PUT(request, context) {
+  try {
+    const idServicio = await getIdServicio(context);
+    return NextResponse.json(await saveServicio(idServicio, await request.json()));
+  } catch (error) {
+    return NextResponse.json({ message: "Error al actualizar el servicio", detail: error.message }, { status: 500 });
+  }
 }
 
 export async function GET(_request, context) {

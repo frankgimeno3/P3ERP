@@ -53,7 +53,7 @@ export default function RolesPage() {
     <div className="min-h-screen bg-gray-100 p-6 px-12 text-gray-800">
       <div className="mb-5">
         <p className="text-xl font-semibold text-gray-700">Roles</p>
-        <p className="text-sm text-gray-500">Roles disponibles, usuarios asignados y accesos al dashboard</p>
+        <p className="text-sm text-gray-500">Roles disponibles, agentes asignados y accesos al dashboard</p>
       </div>
 
       {error && <div className="mb-4 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
@@ -66,7 +66,7 @@ export default function RolesPage() {
               <th className="px-4 py-2 text-left">Nombre</th>
               <th className="px-4 py-2 text-left">Descripción</th>
               <th className="px-4 py-2 text-left">Personalizado</th>
-              <th className="px-4 py-2 text-left">Usuarios</th>
+              <th className="px-4 py-2 text-left">Agentes</th>
               <th className="px-4 py-2 text-left">Accesos</th>
             </tr>
           </thead>

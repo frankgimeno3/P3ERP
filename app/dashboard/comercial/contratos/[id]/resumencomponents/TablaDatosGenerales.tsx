@@ -27,7 +27,6 @@ const TablaDatosGenerales: FC<TablaDatosGeneralesProps> = ({ contrato, agenteSel
           <td className="px-4 py-2">
             {agenteSeleccionado ? agenteSeleccionado.nombre_completo_agente : "—"}
           </td>
-          <td className="px-4 py-2">{contrato.id_campana_asociada || "—"}</td>
         </tr>
       </tbody>
     </table>

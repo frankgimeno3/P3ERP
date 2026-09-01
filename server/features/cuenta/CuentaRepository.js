@@ -1,4 +1,5 @@
 import { getPgPool } from "../../database/pgClient.js";
+import { addCuentaEvento, formatChangeDetail } from "../registroEventos/RegistroEventosRepository.js";
 
 const tableName = "cuentas_db";
 
@@ -11,6 +12,7 @@ const writableColumns = [
   "id_edisoft",
   "asignado_a",
   "receptor_revista",
+  "suscriptor_revista",
   "potencial_actual_relacion",
   "potencial_futuro_encaje",
   "revisado_ricardo",
@@ -70,6 +72,7 @@ function normalizeCuenta(row) {
     id_edisoft: row.id_edisoft ?? "",
     asignado_a: row.asignado_a ?? "",
     receptor_revista: Boolean(row.receptor_revista),
+    suscriptor_revista: Boolean(row.suscriptor_revista),
     potencial_actual_relacion: row.potencial_actual_relacion ?? "",
     potencial_futuro_encaje: row.potencial_futuro_encaje ?? "",
     revisado_ricardo: Boolean(row.revisado_ricardo),
@@ -118,7 +121,7 @@ function normalizeValue(column, value) {
     return JSON.stringify(Array.isArray(value) ? value : []);
   }
 
-  if (["presente_en_qq", "qq", "receptor_revista", "revisado_ricardo"].includes(column)) {
+  if (["presente_en_qq", "qq", "receptor_revista", "suscriptor_revista", "revisado_ricardo"].includes(column)) {
     return Boolean(value);
   }
 
@@ -148,6 +151,11 @@ export async function getCuentas(filters = {}) {
   if (filters.telFiltro) {
     values.push(`%${filters.telFiltro}%`);
     where.push(`datos_comerciales::text ILIKE $${values.length}`);
+  }
+
+  if (filters.paisFiltro) {
+    values.push(`%${filters.paisFiltro}%`);
+    where.push(`pais_cuenta ILIKE $${values.length}`);
   }
 
   const query = `
@@ -180,20 +188,40 @@ export async function createCuenta(cuentaData) {
     return jsonColumns.has(column) ? `${placeholder}::jsonb` : placeholder;
   });
 
-  const { rows } = await pool.query(
-    `
-      INSERT INTO ${tableName} (${columns.join(", ")})
-      VALUES (${placeholders.join(", ")})
-      RETURNING *
-    `,
-    values,
-  );
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const { rows } = await client.query(
+      `
+        INSERT INTO ${tableName} (${columns.join(", ")})
+        VALUES (${placeholders.join(", ")})
+        RETURNING *
+      `,
+      values,
+    );
 
-  return normalizeCuenta(rows[0]);
+    const created = normalizeCuenta(rows[0]);
+    const actor = cuentaData._id_agente || cuentaData.id_agente || "";
+    await addCuentaEvento({
+      idCuenta: created.id_cuenta,
+      idAgente: actor,
+      eventType: actor ? "Cambio por agente" : "Acción automatizada",
+      detalles: `el usuario ${actor || "sistema"}, ha creado esta cuenta`,
+    }, client);
+
+    await client.query("COMMIT");
+    return created;
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 export async function updateCuenta(idCuenta, cuentaData) {
   const pool = getPgPool();
+  const before = await getCuentaById(idCuenta);
   const columns = writableColumns.filter((column) => column !== "id_cuenta" && cuentaData[column] !== undefined);
   const values = columns.map((column) => normalizeValue(column, cuentaData[column]));
 
@@ -217,5 +245,39 @@ export async function updateCuenta(idCuenta, cuentaData) {
     values,
   );
 
+  const updated = rows[0] ? normalizeCuenta(rows[0]) : null;
+
+  if (before && updated) {
+    const actor = cuentaData._id_agente || cuentaData.id_last_editor || cuentaData.id_agente || "";
+    await Promise.allSettled(
+      columns
+        .filter((column) => JSON.stringify(before[column] ?? "") !== JSON.stringify(updated[column] ?? ""))
+        .map((column) => addCuentaEvento({
+          idCuenta,
+          idAgente: actor,
+          eventType: actor ? "Cambio por agente" : "Acción automatizada",
+          detalles: formatChangeDetail(actor, column, before[column], updated[column]),
+        })),
+    );
+  }
+
+  return updated;
+}
+
+export async function deleteCuenta(idCuenta, actor = "") {
+  const pool = getPgPool();
+  const before = await getCuentaById(idCuenta);
+  const { rows } = await pool.query(
+    `DELETE FROM ${tableName} WHERE id_cuenta = $1 RETURNING *`,
+    [idCuenta],
+  );
+  if (before && rows[0]) {
+    await addCuentaEvento({
+      idCuenta,
+      idAgente: actor,
+      eventType: actor ? "Cambio por agente" : "AcciÃ³n automatizada",
+      detalles: `el usuario ${actor || "sistema"}, ha eliminado la cuenta ${idCuenta}`,
+    }).catch(() => {});
+  }
   return rows[0] ? normalizeCuenta(rows[0]) : null;
 }

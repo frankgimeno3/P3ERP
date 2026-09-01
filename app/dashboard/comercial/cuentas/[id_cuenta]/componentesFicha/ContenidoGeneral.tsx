@@ -79,6 +79,7 @@ const ContenidoGeneral: FC<ContenidoGeneralProps> = ({
         id_agente={cuentaEditable.id_agente}
         id_edisoft={cuentaEditable.id_edisoft || ""}
         asignado_a={cuentaEditable.asignado_a || ""}
+        pais_cuenta={cuentaEditable.pais_cuenta}
         receptor_revista={Boolean(cuentaEditable.receptor_revista)}
         potencial_actual_relacion={cuentaEditable.potencial_actual_relacion || ""}
         potencial_futuro_encaje={cuentaEditable.potencial_futuro_encaje || ""}
@@ -110,6 +111,10 @@ const ContenidoGeneral: FC<ContenidoGeneralProps> = ({
 
       <Direcciones
         direcciones={cuentaEditable.array_direcciones_cuenta}
+        receptorRevista={Boolean(cuentaEditable.receptor_revista)}
+        suscriptorRevista={Boolean(cuentaEditable.suscriptor_revista)}
+        onReceptorRevistaChange={(value) => handleCRMChange("receptor_revista", value)}
+        onSuscriptorRevistaChange={(value) => handleCRMChange("suscriptor_revista", value)}
         onChange={(updatedDirecciones) => {
           setCuentaEditable(prev =>
             prev ? { ...prev, array_direcciones_cuenta: updatedDirecciones } : prev

@@ -11,6 +11,7 @@ function getFilters(request) {
     codigoCrmFiltro: params.get("codigoCrmFiltro")?.trim() || "",
     agenteFiltro: params.get("agenteFiltro")?.trim() || "",
     telFiltro: params.get("telFiltro")?.trim() || "",
+    paisFiltro: params.get("paisFiltro")?.trim() || "",
   };
 }
 

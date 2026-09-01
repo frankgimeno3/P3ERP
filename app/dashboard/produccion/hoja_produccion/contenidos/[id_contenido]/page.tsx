@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import MiddleNav from "@/app/general_components/componentes_recurrentes/MiddleNav";
 import { ContenidoService } from "@/app/service/ContenidoService";
+import { MaterialService } from "@/app/service/MaterialService";
 
 const estados = ["Pendiente", "Pendiente de publicar", "En revision", "Publicado"];
 
@@ -23,7 +24,6 @@ const fields = [
   { key: "destino_vidrioperfil", label: "Vidrioperfil" },
   { key: "fecha_maxima_publicacion_vidrioperfil", label: "Fecha maxima Vidrioperfil" },
   { key: "tipo_articulo", label: "Tipo articulo" },
-  { key: "id_gestion_prod", label: "Gestion de produccion" },
   { key: "destinos_publicacion", label: "Destinos" },
 ];
 
@@ -43,6 +43,9 @@ export default function ContenidoDetallePage() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [materiales, setMateriales] = useState<any[]>([]);
+  const [materialModalOpen, setMaterialModalOpen] = useState(false);
+  const [newMaterial, setNewMaterial] = useState({ nombre_material: "", validacion_produccion: "pendiente validar", comentarios: "", archivo_url: "" });
 
   useEffect(() => {
     if (!params.id_contenido) return;
@@ -52,6 +55,7 @@ export default function ContenidoDetallePage() {
       .then(setContenido)
       .catch((error) => setError(error?.message || "No se ha podido cargar el contenido."))
       .finally(() => setLoading(false));
+    MaterialService.getMateriales().then((rows) => setMateriales(Array.isArray(rows) ? rows : [])).catch(() => setMateriales([]));
   }, [params.id_contenido]);
 
   const handleEstadoChange = async (estado: string) => {
@@ -86,6 +90,28 @@ export default function ContenidoDetallePage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const updateMaterialesContenido = async (ids: string[]) => {
+    if (!contenido?.id_contenido) return;
+    setSaving(true);
+    setError("");
+    try {
+      const actualizado = await ContenidoService.updateContenido(contenido.id_contenido, { array_ids_materiales: ids });
+      setContenido(actualizado);
+      setMessage("Materiales actualizados");
+    } catch (error: any) {
+      setError(error?.message || "No se han podido actualizar los materiales.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const updateMaterial = async (idMaterial: string, patch: any) => {
+    const current = materiales.find((item) => item.id_material === idMaterial);
+    if (!current) return;
+    const saved = await MaterialService.saveMaterial(idMaterial, { ...current, ...patch });
+    setMateriales((rows) => rows.map((item) => item.id_material === idMaterial ? saved : item));
   };
 
   return (
@@ -138,6 +164,40 @@ export default function ContenidoDetallePage() {
                 ))}
               </div>
 
+              <section className="mt-8 border-t border-gray-100 pt-6">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <h2 className="text-lg font-semibold text-blue-950">Materiales</h2>
+                  <button type="button" onClick={() => setMaterialModalOpen(true)} className="rounded border border-blue-950 px-4 py-2 text-sm text-blue-950 hover:bg-blue-50">
+                    {(contenido.array_ids_materiales || []).length ? "Agregar mas materiales" : "Agregar materiales"}
+                  </button>
+                </div>
+                {(contenido.array_ids_materiales || []).length === 0 && <p className="text-sm text-gray-500">No hay materiales vinculados.</p>}
+                <div className="grid gap-3 md:grid-cols-2">
+                  {(contenido.array_ids_materiales || []).map((idMaterial: string) => {
+                    const material = materiales.find((item) => item.id_material === idMaterial) || { id_material: idMaterial, nombre_material: idMaterial, validacion_produccion: "pendiente validar", comentarios: "" };
+                    return (
+                      <div key={idMaterial} className="rounded border border-gray-200 bg-gray-50 p-3">
+                        <div className="mb-3 flex items-start justify-between gap-3">
+                          <div>
+                            <strong className="block text-blue-950">{material.nombre_material || idMaterial}</strong>
+                            <span className="text-xs text-gray-500">{idMaterial}</span>
+                          </div>
+                          <button type="button" onClick={() => updateMaterialesContenido((contenido.array_ids_materiales || []).filter((item: string) => item !== idMaterial))} className="rounded border bg-white px-2 py-1 text-sm hover:bg-red-50" aria-label="Quitar material">×</button>
+                        </div>
+                        <label className="block text-xs font-semibold uppercase text-gray-400">Estado</label>
+                        <select value={material.validacion_produccion || "pendiente validar"} onChange={(event) => updateMaterial(idMaterial, { validacion_produccion: event.target.value })} className="mt-1 w-full rounded border bg-white px-3 py-2 text-sm">
+                          <option value="pendiente validar">Pendiente validar</option>
+                          <option value="ok produccion">Ok produccion</option>
+                          <option value="no vale">No vale</option>
+                        </select>
+                        <label className="mt-3 block text-xs font-semibold uppercase text-gray-400">Comentarios</label>
+                        <textarea value={material.comentarios || ""} onChange={(event) => updateMaterial(idMaterial, { comentarios: event.target.value })} className="mt-1 min-h-20 w-full rounded border px-3 py-2 text-sm" />
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+
               <div className="mt-8">
                 <h2 className="mb-3 text-lg font-semibold text-blue-950">Revistas</h2>
                 <div className="overflow-x-auto">
@@ -157,9 +217,7 @@ export default function ContenidoDetallePage() {
                       {contenido.revistas?.map((revista: any) => (
                         <tr key={`${revista.revista_id}-${revista.numero_pagina}-${revista.pagina_del_contenido}`} className="border-b hover:bg-gray-50">
                           <td className="p-2">
-                            <Link href={`/dashboard/produccion/publicaciones/revistas/${revista.revista_id}`} className="font-medium text-blue-950 underline">
-                              {revista.revista || revista.revista_id}
-                            </Link>
+                            <span className="font-medium text-blue-950">{revista.revista || revista.revista_id}</span>
                           </td>
                           <td className="p-2">{revista.edicion || "-"}</td>
                           <td className="p-2">{revista.publicacion || "-"}</td>
@@ -176,6 +234,58 @@ export default function ContenidoDetallePage() {
           )}
         </div>
       </div>
+      {materialModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded bg-white p-6 text-gray-700 shadow-xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-blue-950">Agregar materiales</h2>
+              <button type="button" onClick={() => setMaterialModalOpen(false)} aria-label="Cerrar" className="text-xl">×</button>
+            </div>
+            <div className="grid gap-5 lg:grid-cols-2">
+              <div>
+                <h3 className="mb-3 text-sm font-semibold uppercase text-gray-500">Buscar en mediateca</h3>
+                <div className="max-h-96 overflow-auto border">
+                  <table className="min-w-full text-sm">
+                    <thead className="bg-blue-950 text-white"><tr><th className="p-2 text-left">Material</th><th className="p-2 text-left">Estado</th><th className="p-2 text-left">Comentarios</th></tr></thead>
+                    <tbody>
+                      {materiales.map((material) => (
+                        <tr key={material.id_material} onClick={() => { updateMaterialesContenido([...new Set([...(contenido?.array_ids_materiales || []), material.id_material])]); setMaterialModalOpen(false); }} className="cursor-pointer border-b hover:bg-blue-50">
+                          <td className="p-2 font-medium text-blue-950">{material.nombre_material || material.id_material}</td>
+                          <td className="p-2">{material.validacion_produccion || "-"}</td>
+                          <td className="p-2">{material.comentarios || "-"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div>
+                <h3 className="mb-3 text-sm font-semibold uppercase text-gray-500">Crear material</h3>
+                <div className="grid gap-3">
+                  <label className="text-sm"><span className="mb-1 block font-medium">Nombre material</span><input value={newMaterial.nombre_material} onChange={(event) => setNewMaterial({ ...newMaterial, nombre_material: event.target.value })} className="w-full rounded border px-3 py-2" /></label>
+                  <label className="text-sm"><span className="mb-1 block font-medium">Estado</span><select value={newMaterial.validacion_produccion} onChange={(event) => setNewMaterial({ ...newMaterial, validacion_produccion: event.target.value })} className="w-full rounded border bg-white px-3 py-2"><option value="pendiente validar">Pendiente validar</option><option value="ok produccion">Ok produccion</option><option value="no vale">No vale</option></select></label>
+                  <label className="text-sm"><span className="mb-1 block font-medium">Archivo / mediateca</span><input value={newMaterial.archivo_url} onChange={(event) => setNewMaterial({ ...newMaterial, archivo_url: event.target.value })} className="w-full rounded border px-3 py-2" /></label>
+                  <label className="text-sm"><span className="mb-1 block font-medium">Comentarios</span><textarea value={newMaterial.comentarios} onChange={(event) => setNewMaterial({ ...newMaterial, comentarios: event.target.value })} className="min-h-24 w-full rounded border px-3 py-2" /></label>
+                  <button
+                    type="button"
+                    disabled={!newMaterial.nombre_material.trim()}
+                    onClick={async () => {
+                      const created = await MaterialService.saveMaterial("", newMaterial);
+                      setMateriales((rows) => [created, ...rows]);
+                      await updateMaterialesContenido([...new Set([...(contenido?.array_ids_materiales || []), created.id_material])]);
+                      setNewMaterial({ nombre_material: "", validacion_produccion: "pendiente validar", comentarios: "", archivo_url: "" });
+                      setMaterialModalOpen(false);
+                    }}
+                    className="rounded bg-blue-950 px-4 py-2 text-sm text-white disabled:bg-gray-400"
+                  >
+                    Crear y agregar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
           <div className="w-full max-w-md rounded bg-white p-6 text-gray-700 shadow-xl">

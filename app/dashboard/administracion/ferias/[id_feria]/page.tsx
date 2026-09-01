@@ -44,6 +44,9 @@ export default function FeriaDetallePage() {
       ["Cuenta gestion", feria.id_cuenta_gestion],
       ["Pais", feria.pais],
       ["Ciudad", feria.ciudad],
+      ["Periodicidad", feria.periodicidad],
+      ["Temática", feria.tematica],
+      ["Fecha indicada en origen", feria.fecha_texto_original],
       ["Edicion", feria.edicion_numero],
       ["Intercambio", formatBool(feria.hay_intercambio)],
       ["Contrato", feria.id_contrato],
@@ -59,6 +62,7 @@ export default function FeriaDetallePage() {
       ["Gestion evento", feria.textarea_gestion_evento],
       ["Fecha inicio", feria.fecha_incio],
       ["Fecha finalizacion", feria.fecha_finalizacion],
+      ["Fuente", feria.fuente_importacion ? `${feria.fuente_importacion} · fila ${feria.fuente_fila}` : ""],
       ["En Vidrioperfil", formatBool(feria.en_vidrioperfil)],
     ];
   }, [feria]);

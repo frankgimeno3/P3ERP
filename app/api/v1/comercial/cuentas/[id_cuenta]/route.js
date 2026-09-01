@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getCuentaById, updateCuenta } from "../../../../../../server/features/cuenta/CuentaRepository.js";
+import { deleteCuenta, getCuentaById, updateCuenta } from "../../../../../../server/features/cuenta/CuentaRepository.js";
 
 export const runtime = "nodejs";
 
@@ -52,6 +52,31 @@ export async function PUT(request, context) {
     console.error("Error in PUT /api/v1/comercial/cuentas/[id_cuenta]:", error);
     return NextResponse.json(
       { message: "Error al actualizar la cuenta", detail: process.env.NODE_ENV === "development" ? error.message : undefined },
+      { status: 500 },
+    );
+  }
+}
+
+export async function DELETE(request, context) {
+  try {
+    const idCuenta = await getIdCuenta(context);
+
+    if (!idCuenta) {
+      return NextResponse.json({ message: "id_cuenta es obligatorio" }, { status: 400 });
+    }
+
+    const actor = new URL(request.url).searchParams.get("id_agente") || "";
+    const cuenta = await deleteCuenta(idCuenta, actor);
+
+    if (!cuenta) {
+      return NextResponse.json({ message: "Cuenta no encontrada" }, { status: 404 });
+    }
+
+    return NextResponse.json({ ok: true, cuenta });
+  } catch (error) {
+    console.error("Error in DELETE /api/v1/comercial/cuentas/[id_cuenta]:", error);
+    return NextResponse.json(
+      { message: "Error al eliminar la cuenta", detail: process.env.NODE_ENV === "development" ? error.message : undefined },
       { status: 500 },
     );
   }

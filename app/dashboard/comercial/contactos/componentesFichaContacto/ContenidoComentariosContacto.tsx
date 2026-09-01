@@ -1,6 +1,7 @@
-import React, { FC } from "react";
+import React, { FC, useEffect, useState } from "react";
 import CardComentarioContacto from "./CardComentarioContacto";
 import { InterfazContacto } from "@/app/interfaces/interfaces";
+import { ComentarioService } from "@/app/service/ComentarioService";
 
 export interface Comentario {
   id_comentario: string;
@@ -38,43 +39,70 @@ const ContenidoComentariosContacto: FC<ContenidoComentariosContactoProps> = ({
   modal,
   setModal,
 }) => {
+  const [editingText, setEditingText] = useState("");
 
-  const agregarComentario = () => {
+  const mapComentario = (comentario: any): Comentario => ({
+    id_comentario: comentario.id_comentario,
+    autor: comentario.id_last_editor || comentario.id_original_autor || "sistema",
+    fecha: comentario.created_at
+      ? new Date(comentario.created_at).toLocaleDateString("es-ES", { day: "2-digit", month: "long", year: "numeric" })
+      : new Date().toLocaleDateString("es-ES", { day: "2-digit", month: "long", year: "numeric" }),
+    contenido: comentario.contenido_comentario || "",
+  });
+
+  useEffect(() => {
+    ComentarioService.getComentarios("contacto", contacto.id_contacto)
+      .then((data) => setComentarios(Array.isArray(data) ? data.map(mapComentario) : []))
+      .catch((error) => {
+        console.error("Error fetching comentarios de contacto:", error);
+        setComentarios([]);
+      });
+  }, [contacto.id_contacto, setComentarios]);
+
+  const agregarComentario = async () => {
     if (nuevoComentario.trim() === "") return;
-
-    const hoy = new Date().toLocaleDateString("es-ES", {
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
+    const comentario = await ComentarioService.createComentario({
+      tipo_entidad: "contacto",
+      id_entidad: contacto.id_contacto,
+      contenido_comentario: nuevoComentario.trim(),
     });
-
-    const comentario: Comentario = {
-      id_comentario: `temp_${Date.now()}`,
-      autor: "Usuario Actual",
-      fecha: hoy,
-      contenido: nuevoComentario,
-    };
-
-    setComentarios([comentario, ...comentarios]);
+    setComentarios([mapComentario(comentario), ...comentarios]);
     setNuevoComentario("");
     setMostrarInput(false);
   };
 
   const cerrarModal = () => setModal({ tipo: null });
 
+  const modificarComentario = async () => {
+    if (!modal.comentario) return;
+    const comentarioActualizado = await ComentarioService.updateComentario(modal.comentario.id_comentario, {
+      contenido_comentario: editingText,
+    });
+    setComentarios((current) => current.map((comentario) => (
+      comentario.id_comentario === modal.comentario?.id_comentario ? mapComentario(comentarioActualizado) : comentario
+    )));
+    cerrarModal();
+  };
+
+  const borrarComentario = async () => {
+    if (!modal.comentario) return;
+    await ComentarioService.deleteComentario(modal.comentario.id_comentario);
+    setComentarios((current) => current.filter((comentario) => comentario.id_comentario !== modal.comentario?.id_comentario));
+    cerrarModal();
+  };
+
   return (
     <div>
-      <h3 className="text-lg font-semibold mb-4">
+      <h3 className="mb-4 text-lg font-semibold">
         Comentarios sobre {contacto.nombre_completo_contacto}
       </h3>
       <p className="mb-4 text-gray-600">
-        Aviso: Los comentarios agregados aquí se agregarán automáticamente
-        también en la ficha de la empresa
+        Aviso: Los comentarios agregados aquí se registran también como evento de la cuenta si el contacto está asociado a una.
       </p>
 
-      <div className="text-right w-full mb-4">
+      <div className="mb-4 w-full text-right">
         <button
-          className="bg-blue-950 text-gray-100 p-2 px-4 rounded-lg shadow-xl cursor-pointer hover:bg-blue-950/90"
+          className="cursor-pointer rounded-lg bg-blue-950 p-2 px-4 text-gray-100 shadow-xl hover:bg-blue-950/90"
           onClick={() => setMostrarInput(!mostrarInput)}
         >
           {mostrarInput ? "Cancelar" : "Añadir comentario"}
@@ -82,16 +110,16 @@ const ContenidoComentariosContacto: FC<ContenidoComentariosContactoProps> = ({
       </div>
 
       {mostrarInput && (
-        <div className="flex flex-col gap-2 mb-6">
+        <div className="mb-6 flex flex-col gap-2">
           <textarea
             value={nuevoComentario}
             onChange={(e) => setNuevoComentario(e.target.value)}
             placeholder="Escribe un nuevo comentario..."
-            className="border border-gray-300 rounded-lg p-3 resize-none w-full"
+            className="w-full resize-none rounded-lg border border-gray-300 p-3"
           />
           <button
             onClick={agregarComentario}
-            className="bg-blue-600 text-white rounded-lg px-5 py-2 hover:bg-blue-700 self-end"
+            className="self-end rounded-lg bg-blue-600 px-5 py-2 text-white hover:bg-blue-700"
           >
             Guardar comentario
           </button>
@@ -104,44 +132,34 @@ const ContenidoComentariosContacto: FC<ContenidoComentariosContactoProps> = ({
           autor={comentario.autor}
           fecha={comentario.fecha}
           contenido={comentario.contenido}
-          onEditar={() => setModal({ tipo: "editar", comentario })}
+          onEditar={() => {
+            setEditingText(comentario.contenido);
+            setModal({ tipo: "editar", comentario });
+          }}
           onBorrar={() => setModal({ tipo: "borrar", comentario })}
         />
       ))}
 
       {modal.tipo && (
-        <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
-          <div className="bg-white rounded-xl shadow-2xl w-96 p-6 relative">
-            <button
-              onClick={cerrarModal}
-              className="absolute top-2 right-3 text-gray-500 hover:text-gray-800 text-xl"
-            >
-              ✕
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="relative w-96 rounded-xl bg-white p-6 shadow-2xl">
+            <button onClick={cerrarModal} className="absolute right-3 top-2 text-xl text-gray-500 hover:text-gray-800">
+              x
             </button>
 
             {modal.tipo === "editar" && (
               <div className="flex flex-col gap-3">
-                <h2 className="text-lg font-semibold text-gray-800">
-                  Editar comentario
-                </h2>
+                <h2 className="text-lg font-semibold text-gray-800">Editar comentario</h2>
                 <textarea
-                  defaultValue={modal.comentario?.contenido}
-                  className="border border-gray-300 rounded-lg p-3 resize-none"
+                  value={editingText}
+                  onChange={(event) => setEditingText(event.target.value)}
+                  className="resize-none rounded-lg border border-gray-300 p-3"
                 />
                 <div className="flex justify-end gap-3">
-                  <button
-                    onClick={cerrarModal}
-                    className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 cursor-pointer"
-                  >
+                  <button onClick={cerrarModal} className="cursor-pointer rounded-lg bg-gray-200 px-4 py-2 hover:bg-gray-300">
                     Cancelar
                   </button>
-                  <button
-                    onClick={() => {
-                      // TODO: Implementar edición
-                      cerrarModal();
-                    }}
-                    className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
-                  >
+                  <button onClick={modificarComentario} className="cursor-pointer rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
                     Modificar
                   </button>
                 </div>
@@ -150,25 +168,12 @@ const ContenidoComentariosContacto: FC<ContenidoComentariosContactoProps> = ({
 
             {modal.tipo === "borrar" && (
               <div className="flex flex-col gap-4">
-                <h2 className="text-lg font-semibold text-gray-800">
-                  ¿Seguro que quieres borrar el comentario?
-                </h2>
+                <h2 className="text-lg font-semibold text-gray-800">¿Seguro que quieres borrar el comentario?</h2>
                 <div className="flex justify-end gap-3">
-                  <button
-                    onClick={cerrarModal}
-                    className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 cursor-pointer"
-                  >
+                  <button onClick={cerrarModal} className="cursor-pointer rounded-lg bg-gray-200 px-4 py-2 hover:bg-gray-300">
                     No, cancelar
                   </button>
-                  <button
-                    onClick={() => {
-                      if (modal.comentario) {
-                        setComentarios(comentarios.filter(c => c.id_comentario !== modal.comentario?.id_comentario));
-                        cerrarModal();
-                      }
-                    }}
-                    className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 cursor-pointer"
-                  >
+                  <button onClick={borrarComentario} className="cursor-pointer rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700">
                     Sí, borrar
                   </button>
                 </div>

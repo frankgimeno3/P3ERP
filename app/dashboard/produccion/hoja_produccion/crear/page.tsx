@@ -1,11 +1,12 @@
 "use client";
 
-import React, { FormEvent, useState } from "react";
+import React, { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import MiddleNav from "@/app/general_components/componentes_recurrentes/MiddleNav";
 import { HojaProduccionService } from "@/app/service/HojaProduccionService";
-import { GestionProduccionService } from "@/app/service/GestionProduccionService";
+import { MaterialService } from "@/app/service/MaterialService";
 import { MediatecaService } from "@/app/service/MediatecaService";
+import { AgenteService } from "@/app/service/AgenteService";
 
 const fieldClass = "w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-950";
 
@@ -50,6 +51,11 @@ export default function CrearContenidoHojaProduccionPage() {
   const [error, setError] = useState("");
   const [destinos, setDestinos] = useState<string[]>([]);
   const [materiales, setMateriales] = useState<{ nombre: string; archivo: File | null; comentarios: string }[]>([]);
+  const [agentes, setAgentes] = useState<any[]>([]);
+
+  useEffect(() => {
+    AgenteService.getAgentes().then((data) => setAgentes(Array.isArray(data) ? data : [])).catch(() => setAgentes([]));
+  }, []);
 
   const handleChange = (field: keyof typeof initialForm, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -69,7 +75,7 @@ export default function CrearContenidoHojaProduccionPage() {
         const upload = await fetch(presign.uploadUrl, { method: "PUT", headers: { "Content-Type": material.archivo.type || "application/octet-stream" }, body: material.archivo });
         if (!upload.ok) throw new Error(`No se ha podido almacenar ${material.nombre}.`);
         await MediatecaService.createMedia({ mediaId: presign.mediaId, contentName: material.nombre, s3Key: presign.s3Key, cdnUrl: presign.cdnUrl, folderPath: "produccion/materiales", contentType: material.archivo.type, type: material.archivo.type.includes("image") ? "image" : "pdf" });
-        const saved = await GestionProduccionService.saveMaterial("", { nombre_material: material.nombre, comentarios: material.comentarios, mediateca_id: presign.mediaId, archivo_url: presign.cdnUrl });
+        const saved = await MaterialService.saveMaterial("", { nombre_material: material.nombre, comentarios: material.comentarios, mediateca_id: presign.mediaId, archivo_url: presign.cdnUrl });
         materialIds.push(saved.id_material);
       }
       await HojaProduccionService.createContenido({
@@ -104,8 +110,8 @@ export default function CrearContenidoHojaProduccionPage() {
             </label>
 
             <label className="space-y-1">
-              <span className="text-sm font-medium">ID agente</span>
-              <input value={form.id_agente} onChange={(e) => handleChange("id_agente", e.target.value)} className={fieldClass} />
+              <span className="text-sm font-medium">Agente</span>
+              <select value={form.id_agente} onChange={(e) => handleChange("id_agente", e.target.value)} className={fieldClass}><option value="">Seleccionar agente</option>{agentes.map((agente) => <option key={agente.id_agente} value={agente.id_agente}>{agente.nombre_completo_agente || `${agente.nombre_agente || ""} ${agente.apellidos_agente || ""}`.trim()}</option>)}</select>
             </label>
 
             <label className="space-y-1">

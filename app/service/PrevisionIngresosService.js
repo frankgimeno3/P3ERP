@@ -7,4 +7,9 @@ export class PrevisionIngresosService {
         });
         return response.data;
     }
+
+    static async createIngresoAdicional(data) {
+        const response = await apiClient.post('/api/v1/direccion/prevision-ingresos', data);
+        return response.data;
+    }
 }

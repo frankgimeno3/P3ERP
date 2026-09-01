@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import MiddleNav from "@/app/general_components/componentes_recurrentes/MiddleNav";
+import { useRouter } from "next/navigation";
 import { ProveedorService } from "@/app/service/ProveedorService";
 
 type TabKey = "proveedores" | "pagos";
@@ -17,6 +18,7 @@ const formatMoney = (value?: number) => {
 };
 
 export default function ProveedoresPage() {
+  const router = useRouter();
   const [tab, setTab] = useState<TabKey>("proveedores");
   const [proveedores, setProveedores] = useState<any[]>([]);
   const [pagos, setPagos] = useState<any[]>([]);
@@ -112,7 +114,7 @@ export default function ProveedoresPage() {
                 {loading && <tr><td colSpan={9} className="p-6 text-center text-gray-500">Cargando proveedores...</td></tr>}
                 {!loading && proveedoresFiltrados.length === 0 && <tr><td colSpan={9} className="p-6 text-center text-gray-500">No hay proveedores.</td></tr>}
                 {!loading && proveedoresFiltrados.map((proveedor) => (
-                  <tr key={proveedor.id_proveedor} className="hover:bg-gray-50">
+                  <tr key={proveedor.id_proveedor} onClick={() => router.push(`/dashboard/administracion/proveedores/${encodeURIComponent(proveedor.id_proveedor)}`)} className="cursor-pointer transition hover:bg-blue-50">
                     <td className="border-b border-gray-200 p-2 pl-6 font-medium text-blue-950">{proveedor.id_proveedor || "-"}</td>
                     <td className="border-b border-gray-200 p-2">{proveedor.nombre_proveedor || "-"}</td>
                     <td className="border-b border-gray-200 p-2">{proveedor.nombre_fiscal_proveedor || "-"}</td>

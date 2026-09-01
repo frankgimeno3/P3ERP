@@ -279,6 +279,7 @@ export async function createPresign(data) {
   return createPresignedUpload({
     filename: data?.filename,
     contentType: data?.contentType,
+    prefix: data?.prefix,
   });
 }
 

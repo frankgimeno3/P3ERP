@@ -20,6 +20,11 @@ export class ContactoService {
         return response.data;
     }
 
+    static async updateContacto(idContacto, data) {
+        const response = await apiClient.put(`/api/v1/comercial/contactos/${idContacto}`, data);
+        return response.data;
+    }
+
     static async deleteContacto(idContacto) {
         const response = await apiClient.delete(`/api/v1/comercial/contactos/${idContacto}`);
         return response.data;

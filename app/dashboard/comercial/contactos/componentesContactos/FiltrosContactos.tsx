@@ -54,7 +54,7 @@ const FiltrosContactos: FC<FiltrosContactosProps> = ({
           </div>
 
           <div className='flex flex-1 flex-col mt-2'>
-            <label className='text-sm font-medium'>Apellidos cliente</label>
+            <label className='text-sm font-medium'>Apellidos contacto</label>
             <input
               type='text'
               value={apellidosFiltro}

@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import AuthenticationService from "@/app/service/AuthenticationService";
@@ -5,6 +6,18 @@ import AuthenticationService from "@/app/service/AuthenticationService";
 const LoggedNav = () => {
   const router = useRouter();
   const pathname = usePathname();
+  const [currentUser, setCurrentUser] = useState({ name: "usuario", role: "sin rol" });
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/validate-token", { method: "POST", credentials: "include" })
+      .then((response) => response.ok ? response.json() : null)
+      .then((profile) => {
+        if (!active || !profile) return;
+        setCurrentUser({ name: String(profile.name || "usuario"), role: String(profile.role || "sin rol") });
+      });
+    return () => { active = false; };
+  }, []);
 
  
   const handleLogout = async () => {
@@ -36,13 +49,13 @@ const LoggedNav = () => {
     return 'Página de gestión';
   };
 
-  const description = getDescription(pathname, routeDescriptions);
+  const description = `${getDescription(pathname, routeDescriptions)} - usuario ${currentUser.name} con rol ${currentUser.role}`;
 
   return (
-    <nav className="relative flex flex-row items-center justify-between bg-gradient-to-r from-gray-950 via-gray-900 to-gray-950 px-4 py-3 text-gray-200 md:px-6 md:py-3.5">
+    <nav className="relative flex flex-row items-center justify-between bg-gradient-to-r from-gray-950 via-gray-900 to-gray-950 px-4 py-3 text-gray-200 uppercase md:px-6 md:py-3.5">
       <div className="flex flex-col text-left">
         <p
-          className="cursor-pointer text-xl font-semibold text-gray-100 hover:text-white md:text-2xl"
+          className="cursor-pointer text-xl font-normal text-gray-100 hover:text-white md:text-2xl"
           onClick={() => handleRedirection('/dashboard')}
         >
           Portal de gestión PROPORCIÓN 3, S.A.
@@ -52,12 +65,18 @@ const LoggedNav = () => {
       <div className="flex flex-row items-center gap-2 text-sm uppercase md:gap-3 md:text-base">
         <Link
           href="/dashboard/mediateca"
-          className="rounded-lg bg-white/10 px-3 py-2 font-medium text-gray-200 transition-colors hover:bg-white/20 hover:text-white md:px-4"
+          className="rounded-lg bg-white/10 px-3 py-2 font-normal text-gray-200 transition-colors hover:bg-white/20 hover:text-white md:px-4"
         >
           Mediateca
         </Link>
+        <Link
+          href="/gm"
+          className="cursor-pointer rounded-lg bg-white/10 px-3 py-2 font-normal text-gray-200 transition-colors hover:bg-white/20 hover:text-white md:px-4"
+        >
+          Modo GM
+        </Link>
         <button
-          className="rounded-lg bg-white/10 px-3 py-2 font-medium text-gray-200 transition-colors hover:bg-white/20 hover:text-white md:px-4"
+          className="rounded-lg bg-white/10 px-3 py-2 font-normal text-gray-200 transition-colors hover:bg-white/20 hover:text-white md:px-4"
           onClick={handleLogout}
         >
           Cerrar sesión

@@ -6,6 +6,7 @@ import MiddleNav from "@/app/general_components/componentes_recurrentes/MiddleNa
 import { AgenteService } from "@/app/service/AgenteService";
 import { CuentaService } from "@/app/service/CuentaService";
 import paises from "@/app/data/paises.json";
+import CountrySelect from "@/app/components/CountrySelect";
 
 type Agente = {
   id_agente: string;
@@ -66,6 +67,7 @@ export default function CrearCuenta() {
   const [agentes, setAgentes] = useState<Agente[]>([]);
   const [paisQuery, setPaisQuery] = useState("");
   const [paisOpen, setPaisOpen] = useState(false);
+  const [contactUnavailable, setContactUnavailable] = useState({ correo_principal: false, telefono_principal: false });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -83,8 +85,12 @@ export default function CrearCuenta() {
   }, [paisQuery]);
 
   const agenteNombre = agentes.find((agente) => agente.id_agente === form.id_agente)?.nombre_completo_agente || "";
-  const step1Valid = Boolean(form.nombre_empresa.trim() && form.id_agente && form.pais_cuenta && websiteValida(form.website));
-  const step3Valid = Boolean(form.correo_principal.trim() && form.telefono_principal.trim());
+  const step1Valid = Boolean(form.nombre_empresa.trim() && form.id_agente && form.pais_cuenta);
+  const step3Valid = Boolean(
+    websiteValida(form.website) &&
+    (contactUnavailable.correo_principal || form.correo_principal.trim()) &&
+    (contactUnavailable.telefono_principal || form.telefono_principal.trim()),
+  );
 
   const update = (patch: Partial<CuentaForm>) => setForm((current) => ({ ...current, ...patch }));
 
@@ -187,8 +193,6 @@ export default function CrearCuenta() {
                     ))}
                   </select>
                 </label>
-                <TextField label="Website" required value={form.website} onChange={(value) => update({ website: value })} placeholder="www.empresa.com" />
-                {form.website && !websiteValida(form.website) && <p className="text-sm text-red-600">La web debe tener formato www.nombre.dominio. Puede incluir http o https si lo necesitas.</p>}
               </section>
             )}
 
@@ -196,7 +200,7 @@ export default function CrearCuenta() {
               <section className="space-y-5">
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <h2 className="text-lg font-semibold text-blue-950">Informacion fiscal</h2>
+                    <h2 className="text-lg font-semibold text-blue-950">Informacion fiscal (opcional)</h2>
                     <p className="mt-1 text-sm text-gray-500">Esta fase es opcional y se puede completar despues.</p>
                   </div>
                   <button type="button" onClick={() => setStep(3)} className="rounded border border-blue-950 px-4 py-2 text-sm text-blue-950 hover:bg-blue-50">Saltar fase</button>
@@ -215,7 +219,7 @@ export default function CrearCuenta() {
                 )}
                 <TextField label="Nombre fiscal" value={form.nombre_fiscal} onChange={(value) => update({ nombre_fiscal: value })} />
                 <div className="grid gap-4 md:grid-cols-2">
-                  <TextField label="Pais de facturacion" value={form.pais_facturacion} onChange={(value) => update({ pais_facturacion: value })} />
+                  <label className="space-y-1"><span className="block text-sm font-medium">País de facturación</span><CountrySelect value={form.pais_facturacion} onChange={(value) => update({ pais_facturacion: value })} /></label>
                   <TextField label="Mail contabilidad" value={form.mail_contabilidad} onChange={(value) => update({ mail_contabilidad: value })} />
                 </div>
                 <TextField label="Direccion de facturacion" value={form.direccion_facturacion} onChange={(value) => update({ direccion_facturacion: value })} />
@@ -236,8 +240,32 @@ export default function CrearCuenta() {
                   <h2 className="text-lg font-semibold text-blue-950">Informacion de contacto</h2>
                   <p className="mt-1 text-sm text-gray-500">Email y telefono generales de la cuenta. No crea un contacto nuevo.</p>
                 </div>
-                <TextField label="Email principal" required value={form.correo_principal} onChange={(value) => update({ correo_principal: value })} placeholder="info@empresa.com" />
-                <TextField label="Telefono principal" required value={form.telefono_principal} onChange={(value) => update({ telefono_principal: value })} placeholder="+34 900 000 000" />
+                <TextField label="Pagina web" required value={form.website} onChange={(value) => update({ website: value })} placeholder="www.empresa.com" />
+                {form.website && !websiteValida(form.website) && <p className="text-sm text-red-600">La web debe tener formato www.nombre.dominio. Puede incluir http o https si lo necesitas.</p>}
+                <TextField
+                  label="Email principal"
+                  required={!contactUnavailable.correo_principal}
+                  value={form.correo_principal}
+                  onChange={(value) => update({ correo_principal: value })}
+                  placeholder="info@empresa.com"
+                  unavailableChecked={contactUnavailable.correo_principal}
+                  onUnavailableChange={(checked) => {
+                    setContactUnavailable((current) => ({ ...current, correo_principal: checked }));
+                    if (checked) update({ correo_principal: "" });
+                  }}
+                />
+                <TextField
+                  label="Telefono principal"
+                  required={!contactUnavailable.telefono_principal}
+                  value={form.telefono_principal}
+                  onChange={(value) => update({ telefono_principal: value })}
+                  placeholder="+34 900 000 000"
+                  unavailableChecked={contactUnavailable.telefono_principal}
+                  onUnavailableChange={(checked) => {
+                    setContactUnavailable((current) => ({ ...current, telefono_principal: checked }));
+                    if (checked) update({ telefono_principal: "" });
+                  }}
+                />
               </section>
             )}
 
@@ -295,17 +323,43 @@ function StepHeader({ current }: { current: number }) {
   );
 }
 
-function TextField({ label, value, onChange, placeholder = "", required = false, readOnly = false }: { label: string; value: string; onChange?: (value: string) => void; placeholder?: string; required?: boolean; readOnly?: boolean }) {
+function TextField({
+  label,
+  value,
+  onChange,
+  placeholder = "",
+  required = false,
+  readOnly = false,
+  unavailableChecked,
+  onUnavailableChange,
+}: {
+  label: string;
+  value: string;
+  onChange?: (value: string) => void;
+  placeholder?: string;
+  required?: boolean;
+  readOnly?: boolean;
+  unavailableChecked?: boolean;
+  onUnavailableChange?: (checked: boolean) => void;
+}) {
   return (
     <label className="block text-sm">
       <span className="mb-1 block font-medium">{label} {required && <span className="text-red-600">*</span>}</span>
       <input
         value={value}
-        readOnly={readOnly}
+        readOnly={readOnly || Boolean(unavailableChecked)}
         onChange={(event) => onChange?.(event.target.value)}
         placeholder={placeholder}
-        className={`w-full rounded border border-gray-300 px-3 py-3 text-sm ${readOnly ? "bg-gray-100 text-gray-600" : "bg-white hover:border-blue-950"}`}
+        className={`w-full rounded border border-gray-300 px-3 py-3 text-sm ${readOnly || unavailableChecked ? "bg-gray-100 text-gray-600" : "bg-white hover:border-blue-950"}`}
       />
+      {onUnavailableChange && (
+        <span className="mt-2 flex justify-end">
+          <span className="inline-flex items-center gap-2 text-xs text-gray-500">
+            <input type="checkbox" checked={Boolean(unavailableChecked)} onChange={(event) => onUnavailableChange(event.target.checked)} />
+            dato no disponible
+          </span>
+        </span>
+      )}
     </label>
   );
 }

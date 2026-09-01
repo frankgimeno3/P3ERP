@@ -48,7 +48,6 @@ function normalizeContrato(row) {
     forma_cobro_contrato: row.forma_cobro_contrato ?? "",
     fecha_firma_contrato: row.fecha_firma_contrato ?? "",
     fecha_fin_contrato: row.fecha_fin_contrato ?? "",
-    id_campana_asociada: row.id_campana_asociada ?? "",
     id_propuesta: row.id_propuesta ?? "",
     descuento_final_contrato: numberOrZero(row.descuento_final_contrato),
     importe_total_bi_contrato: numberOrZero(row.importe_total_bi_contrato),
@@ -129,4 +128,35 @@ export async function getContratoById(idContrato) {
     lineas_contrato: lineas.rows.map(normalizeLinea),
     ordenes: ordenes.rows.map(normalizeOrden),
   });
+}
+
+export async function updateContrato(idContrato, data = {}) {
+  const pool = getPgPool();
+  const agentId = String(data.id_agente_contrato ?? "").trim();
+
+  if (agentId) {
+    const agent = await pool.query(
+      "SELECT 1 FROM agentes_db WHERE id_agente=$1 LIMIT 1",
+      [agentId],
+    );
+    if (!agent.rowCount) throw new Error("El agente seleccionado no existe");
+  }
+
+  const { rowCount } = await pool.query(
+    `UPDATE contratos_db
+     SET id_agente_contrato=$1,
+         updated_at=NOW()
+     WHERE id_contrato=$2`,
+    [agentId, idContrato],
+  );
+  if (!rowCount) return null;
+
+  await pool.query(
+    `UPDATE contenidos_db
+     SET id_agente=$1,updated_at=NOW()
+     WHERE id_contrato=$2`,
+    [agentId || null, idContrato],
+  );
+
+  return getContratoById(idContrato);
 }

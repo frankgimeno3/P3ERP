@@ -13,6 +13,7 @@ function normalizeFeria(row) {
     hay_intercambio: Boolean(row.hay_intercambio),
     id_contrato: row.id_contrato ?? "",
     hay_especial: Boolean(row.hay_especial),
+    es_relevante: Boolean(row.es_relevante),
     descripcion: row.descripcion ?? "",
     text_area_comentarios: row.text_area_comentarios ?? "",
     estado_vuelos: row.estado_vuelos ?? "",
@@ -24,6 +25,13 @@ function normalizeFeria(row) {
     textarea_gestion_evento: row.textarea_gestion_evento ?? "",
     fecha_incio: row.fecha_incio ?? "",
     fecha_finalizacion: row.fecha_finalizacion ?? "",
+    periodicidad: row.periodicidad ?? "",
+    tematica: row.tematica ?? "",
+    fecha_texto_original: row.fecha_texto_original ?? "",
+    fecha_inicio: row.fecha_inicio ?? null,
+    fecha_fin: row.fecha_fin ?? null,
+    fuente_importacion: row.fuente_importacion ?? "",
+    fuente_fila: row.fuente_fila ?? null,
     en_vidrioperfil: Boolean(row.en_vidrioperfil),
     id_revista_especial: row.id_revista_especial ?? "",
     id_propuesta_intercambio: row.id_propuesta_intercambio ?? "",
@@ -33,12 +41,30 @@ function normalizeFeria(row) {
   };
 }
 
+export async function markFeriasRelevant(ids = []) {
+  const uniqueIds = [...new Set((Array.isArray(ids) ? ids : []).map((id) => String(id || "").trim()).filter(Boolean))];
+  if (!uniqueIds.length) return [];
+  const { rows } = await getPgPool().query(
+    `UPDATE ferias_db
+     SET es_relevante = true, updated_at = NOW()
+     WHERE id_feria = ANY($1::text[])
+     RETURNING *`,
+    [uniqueIds],
+  );
+  return rows.map(normalizeFeria);
+}
+
+function isoFromLegacyDate(value) {
+  const match = String(value || "").match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  return match ? `${match[3]}-${match[2].padStart(2, "0")}-${match[1].padStart(2, "0")}` : "";
+}
+
 export async function getFerias() {
   const pool = getPgPool();
   const { rows } = await pool.query(`
     SELECT *
     FROM ferias_db
-    ORDER BY to_date(NULLIF(fecha_finalizacion, ''), 'DD/MM/YYYY') ASC NULLS LAST, nombre_feria ASC, id_feria ASC
+    ORDER BY COALESCE(fecha_inicio, to_date(NULLIF(fecha_incio, ''), 'DD/MM/YYYY')) ASC NULLS LAST, nombre_feria ASC, id_feria ASC
   `);
 
   return rows.map(normalizeFeria);
@@ -81,8 +107,13 @@ export async function createFeria(data = {}) {
         id_revista_especial,
         id_propuesta_intercambio,
         estado_intercambio
+        ,periodicidad
+        ,tematica
+        ,fecha_texto_original
+        ,fecha_inicio
+        ,fecha_fin
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, NULLIF($20,'')::date, NULLIF($21,'')::date)
       RETURNING *
     `,
     [
@@ -102,6 +133,11 @@ export async function createFeria(data = {}) {
       data.id_revista_especial || "",
       data.id_propuesta_intercambio || "",
       data.estado_intercambio || "",
+      data.periodicidad || "",
+      data.tematica || "",
+      data.fecha_texto_original || "",
+      data.fecha_inicio || isoFromLegacyDate(data.fecha_incio),
+      data.fecha_fin || isoFromLegacyDate(data.fecha_finalizacion),
     ],
   );
 

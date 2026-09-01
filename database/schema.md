@@ -12,6 +12,24 @@ Update this file whenever tables, columns, primary keys, indexes, or constraints
 
 ## Tables
 
+The 2026-07-23 proposal-to-invoice workflow extends `contratos_db`,
+`lineas_contratos_db`, `contenidos_db`, `gestiones_produccion_db`, `tareas_db`,
+`facturas_clientes_db`, and `ordenes_db`; it also introduces
+`cobros_contratos_db` and `lineas_facturas_db`. The authoritative additive
+definition is `database/migrations/20260723_0001_propuesta_contrato_facturacion.sql`.
+
+The VERI*FACTU extension adds fiscal-state and immutable-record mirror columns
+to `facturas_clientes_db`, plus `verifactu_records`, `verifactu_counters`, and
+`verifactu_jobs`. Database triggers prevent mutation/deletion of emitted
+invoices and fiscal records and reject fiscal-record inserts outside the
+billing transaction. See `database/migrations/20260723_0002_verifactu.sql`.
+
+The AEAT-compliance extension adds the stable installation and per-version
+responsible declaration (`verifactu_installations`), the asynchronous delivery
+outbox (`verifactu_outbox`), tax-detail fields, global installation chaining,
+official hash metadata and XML record payloads. See
+`database/migrations/20260723_0003_verifactu_aeat_compliance.sql`.
+
 ### agentes_db
 
 | # | Column | Type | Nullable | Default |
@@ -647,6 +665,57 @@ Indexes:
 - tareas_db_agente_idx: CREATE INDEX tareas_db_agente_idx ON public.tareas_db USING btree (agente)
 - tareas_db_estado_idx: CREATE INDEX tareas_db_estado_idx ON public.tareas_db USING btree (estado)
 - tareas_db_prioridad_idx: CREATE INDEX tareas_db_prioridad_idx ON public.tareas_db USING btree (prioridad)
+
+### gestiones_produccion_db
+
+| # | Column | Type | Nullable | Default |
+|---:|---|---|---|---|
+| 1 | id_gestion_prod | text | NO |  |
+| 2 | nombre_gestion | text | NO | ''::text |
+| 3 | articulos_array | jsonb | NO | '[]'::jsonb |
+| 4 | materiales_array | jsonb | NO | '[]'::jsonb |
+| 5 | created_at | timestamp with time zone | NO | now() |
+| 6 | updated_at | timestamp with time zone | NO | now() |
+| 7 | id_publicacion_espana | text | YES |  |
+| 8 | id_publicacion_latam | text | YES |  |
+| 9 | id_publicacion_hueco | text | YES |  |
+| 10 | asociada_a_gestiones | jsonb | NO | '[]'::jsonb |
+| 11 | rev_prioridad | text | NO | ''::text |
+| 12 | rev_carpeta_produccion | text | NO | ''::text |
+| 13 | id_cuenta | text | YES |  |
+| 14 | rev_titulo_articulo | text | NO | ''::text |
+| 15 | rev_estado_proceso_produccion | text | NO | ''::text |
+| 16 | rev_responsable_correccion | text | NO | ''::text |
+| 17 | rev_numero_paginas_actuales | integer | YES |  |
+| 18 | comentarios | text | NO | ''::text |
+| 19 | tipo_contenido | text | NO | 'articulo'::text |
+
+Constraints:
+- PRIMARY KEY gestiones_produccion_db_pkey: PRIMARY KEY (id_gestion_prod)
+
+Indexes:
+- gestiones_produccion_db_id_cuenta_idx: CREATE INDEX gestiones_produccion_db_id_cuenta_idx ON public.gestiones_produccion_db USING btree (id_cuenta)
+
+### gestiones_prod_listas
+
+| # | Column | Type | Nullable | Default |
+|---:|---|---|---|---|
+| 1 | id_lista_gestiones_prod | text | NO |  |
+| 2 | nombre_lista | text | NO | ''::text |
+| 3 | array_objetos_gestiones | jsonb | NO | '[]'::jsonb |
+| 4 | posicion_lista | integer | NO |  |
+| 5 | created_at | timestamp with time zone | NO | now() |
+| 6 | updated_at | timestamp with time zone | NO | now() |
+| 7 | es_lista_sistema | boolean | NO | false |
+| 8 | oculta_tablero | boolean | NO | false |
+| 9 | pestana_lista | text | NO | 'revista'::text |
+
+Constraints:
+- PRIMARY KEY gestiones_prod_listas_pkey: PRIMARY KEY (id_lista_gestiones_prod)
+- CHECK gestiones_prod_listas_posicion_lista_check: CHECK (posicion_lista >= 0)
+
+Indexes:
+- gestiones_prod_listas_pestana_posicion_idx: CREATE UNIQUE INDEX gestiones_prod_listas_pestana_posicion_idx ON public.gestiones_prod_listas USING btree (pestana_lista, posicion_lista)
 
 ### servicios_db
 

@@ -1,4 +1,7 @@
+"use client";
+import { useRouter } from "next/navigation";
 export default function Cabezal() {
+  const router = useRouter();
   return (
       <div className="flex flex-row justify-between">
         <div className="pt-2">
@@ -21,13 +24,13 @@ export default function Cabezal() {
         </div>
 
         <div className="mb-4 flex flex-row items-end justify-end pt-2">
-          <button className="flex h-8 w-8 items-center justify-center rounded-sm border border-black text-lg font-bold text-black">
+          <button disabled className="flex h-8 w-8 items-center justify-center rounded-sm border border-black text-lg font-bold text-black">
             −
           </button>
-          <button className="flex h-8 w-8 items-center justify-center rounded-sm border border-black text-lg font-bold text-black">
+          <button disabled className="flex h-8 w-8 items-center justify-center rounded-sm border border-black text-lg font-bold text-black">
             □
           </button>
-          <button className="flex h-8 w-8 items-center justify-center rounded-sm border border-black bg-red-600 text-lg font-bold text-white">
+          <button type="button" aria-label="Volver al dashboard" onClick={() => router.push("/dashboard")} className="flex h-8 w-8 items-center justify-center rounded-sm border border-black bg-red-600 text-lg font-bold text-white">
             ×
           </button>
         </div>

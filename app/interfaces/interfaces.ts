@@ -40,6 +40,7 @@ export interface InterfazCuenta {
   id_edisoft?: string;
   asignado_a?: string;
   receptor_revista?: boolean;
+  suscriptor_revista?: boolean;
   potencial_actual_relacion?: string;
   potencial_futuro_encaje?: string;
   revisado_ricardo?: boolean;
@@ -174,7 +175,6 @@ export interface InterfazContrato {
     | string;
   fecha_firma_contrato: string;
   fecha_fin_contrato: string;
-  id_campana_asociada: string;
   id_propuesta?: string;
 
   descuento_final_contrato: number;

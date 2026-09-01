@@ -14,7 +14,7 @@ export default function SVGRow() {
     { label: "Diseño", icon: (<svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="4" width="16" height="16" rx="2" /><path d="M4 10h16" /></svg>) },
     { label: "Informes", icon: (<svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 4h8l4 4v12H6z" /><path d="M14 4v4h4" /></svg>) },
     { label: "Estadísticas", icon: (<svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 19V9" strokeLinecap="round" /><path d="M12 19V5" strokeLinecap="round" /><path d="M19 19v-7" strokeLinecap="round" /></svg>) },
-    { label: "Salir", icon: (<svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10 17l5-5-5-5" strokeLinecap="round" strokeLinejoin="round" /><path d="M15 12H3" strokeLinecap="round" /></svg>) },
+    { label: "Salir", onClick: () => router.push("/dashboard"), icon: (<svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10 17l5-5-5-5" strokeLinecap="round" strokeLinejoin="round" /><path d="M15 12H3" strokeLinecap="round" /></svg>) },
   ];
 
   return (
@@ -23,8 +23,9 @@ export default function SVGRow() {
         <button
           key={item.label}
           type="button"
+          disabled={!item.onClick}
           onClick={item.onClick}
-          className="flex flex-col items-center gap-5 px-3 py-2"
+          className="flex flex-col items-center gap-5 border border-transparent px-3 py-2 disabled:opacity-60"
         >
           <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#d9e2ea] text-slate-700">
             {item.icon}

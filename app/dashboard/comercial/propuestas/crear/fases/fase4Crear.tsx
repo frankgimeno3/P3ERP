@@ -1,4 +1,5 @@
 import React, { FC, useState, useEffect, useMemo } from "react";
+import CountrySelect from "@/app/components/CountrySelect";
 const cuentasContents: any[] = [];
 interface Producto {
   medio: string;
@@ -340,12 +341,10 @@ const Fase4Crear: FC<Fase4CrearProps> = ({
             </div>
             <div className="flex flex-col">
               <label className="text-sm font-semibold mb-1">País</label>
-              <input
-                type="text"
-                placeholder="País"
+              <CountrySelect
                 className={getInputClassName("pais")}
                 value={pais}
-                onChange={(e) => setPais(e.target.value)}
+                onChange={setPais}
               />
             </div>
             <div className="flex flex-col">

@@ -22,4 +22,9 @@ export class CuentaService {
         const response = await apiClient.put(`/api/v1/comercial/cuentas/${idCuenta}`, cuentaData);
         return response.data;
     }
+
+    static async deleteCuenta(idCuenta, params = {}) {
+        const response = await apiClient.delete(`/api/v1/comercial/cuentas/${idCuenta}`, { params });
+        return response.data;
+    }
 }

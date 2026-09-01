@@ -1,4 +1,5 @@
 import React, { FC, useState, useEffect } from 'react';
+import CountrySelect from '@/app/components/CountrySelect';
 
 interface Direccion {
   nombre_direccion: string;
@@ -101,7 +102,9 @@ const ModalEditarDireccion: FC<ModalEditarDireccionProps> = ({
           {Object.keys(form).map((key) => (
             <div key={key} className="flex flex-col">
               <label className="text-sm capitalize">{key.replace('_', ' ')}</label>
-              {key === 'descripcion_direccion' ? (
+              {key === 'pais_direccion' ? (
+                <CountrySelect value={form.pais_direccion} onChange={(value) => setForm({ ...form, pais_direccion: value })} className="border p-1 rounded" required />
+              ) : key === 'descripcion_direccion' ? (
                 <textarea
                   name={key}
                   value={(form as any)[key]}

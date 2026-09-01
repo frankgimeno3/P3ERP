@@ -17,7 +17,13 @@ export async function getRoles() {
   const { rows } = await pool.query(`
     SELECT *
     FROM roles_db
-    ORDER BY nombre_rol ASC, id_rol ASC
+    ORDER BY CASE id_rol
+      WHEN 'base' THEN 1
+      WHEN 'administracion' THEN 2
+      WHEN 'operaciones' THEN 3
+      WHEN 'superadmin' THEN 4
+      ELSE 99
+    END, nombre_rol ASC, id_rol ASC
   `);
 
   return rows.map(normalizeRole);

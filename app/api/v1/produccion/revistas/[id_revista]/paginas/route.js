@@ -17,8 +17,8 @@ export async function PUT(request, { params }) {
   try {
     const { id_revista: id } = await params;
     const body = await request.json();
-    const numPaginas = Math.max(0, Number(body.num_paginas) || 0);
-    if (numPaginas % 2 !== 0) return NextResponse.json({ message: "El planillo debe tener un numero par de paginas" }, { status: 400 });
+    const numPaginas = Math.max(9, Number(body.num_paginas) || 9);
+    if (numPaginas % 2 === 0) return NextResponse.json({ message: "El planillo debe tener un numero impar de paginas" }, { status: 400 });
     const result = await setNumeroPaginas(id, numPaginas);
     return result ? NextResponse.json(result) : NextResponse.json({ message: "Publicacion no encontrada" }, { status: 404 });
   } catch (error) {

@@ -56,7 +56,7 @@ const PopUpCrear: FC<PopUpCrearProps> = ({ onClose, onCreate }) => {
                     ×
                 </button>
                 <h3 className="text-lg font-semibold mb-4 text-center">
-                    Introduzca los datos del nuevo usuario
+                    Introduzca los datos del nuevo agente
                 </h3>
                 <div className="space-y-4 mb-4">
                     <div className="flex flex-col">
@@ -66,7 +66,7 @@ const PopUpCrear: FC<PopUpCrearProps> = ({ onClose, onCreate }) => {
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             className="px-4 py-2 border rounded-xl"
-                            placeholder="Nombre del usuario"
+                            placeholder="Nombre del agente"
                         />
                     </div>
                     <div className="flex flex-col">

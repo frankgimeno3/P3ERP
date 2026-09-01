@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
-import { updateAgenteRoles } from "../../../../../../server/features/agente/AgenteRepository.js";
+import { createEndpoint } from "../../../../../../server/createEndpoint.js";
+import { deleteAgente, getAgenteByEmail, updateAgenteRoles } from "../../../../../../server/features/agente/AgenteRepository.js";
+import { deleteCognitoUser } from "../../../../../../server/features/user/UserSerivce.js";
 
 export const runtime = "nodejs";
 
@@ -32,3 +34,30 @@ export async function PUT(request, { params }) {
     );
   }
 }
+
+export const DELETE = createEndpoint(async (request, _body, { params }) => {
+  const currentAgent = await getAgenteByEmail(request.email);
+  const currentRole = String(currentAgent?.rol_agente || "").trim().toLowerCase();
+  if (!["admin", "superadmin", "operaciones"].includes(currentRole)) {
+    return NextResponse.json({ message: "No tienes permisos para borrar usuarios" }, { status: 403 });
+  }
+
+  const { id_agente: idAgente } = await params;
+  try {
+    const deleted = await deleteAgente(idAgente, async (agente) => {
+      if (agente.email_agente) await deleteCognitoUser(agente.email_agente);
+    });
+    if (!deleted) return NextResponse.json({ message: "Agente no encontrado" }, { status: 404 });
+    return NextResponse.json({
+      deleted: true,
+      id_agente: deleted.id_agente,
+      deleted_tasks: deleted.deleted_tasks,
+      deleted_task_lists: deleted.deleted_task_lists,
+    });
+  } catch (error) {
+    if (error?.name === "AccessDeniedException") {
+      return NextResponse.json({ message: "AWS no permite eliminar el usuario de Cognito. Falta el permiso cognito-idp:AdminDeleteUser; no se ha borrado el agente." }, { status: 503 });
+    }
+    throw error;
+  }
+}, null, true);

@@ -1,6 +1,7 @@
-import React, { FC, ChangeEvent, useState } from 'react';
+import React, { FC, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {CuentaService} from '@/app/service/CuentaService';
+import CountrySelect from '@/app/components/CountrySelect';
 
 interface Agente {
   id_usuario: string;
@@ -12,7 +13,7 @@ interface CuentaResumen {
   id_cuenta: string;
 }
 
-const paises = [
+export const paises = [
   "Afganistán", "Albania", "Alemania", "Andorra", "Angola", "Antigua y Barbuda", "Arabia Saudita", "Argelia", "Argentina", "Armenia", "Australia", "Austria", "Azerbaiyán",
   "Bahamas", "Bangladés", "Barbados", "Baréin", "Bélgica", "Belice", "Benín", "Bhután", "Bolivia", "Bosnia y Herzegovina", "Botsuana", "Brasil", "Brunéi", "Bulgaria", "Burkina Faso", "Burundi",
   "Cabo Verde", "Camboya", "Camerún", "Canadá", "Catar", "Chad", "Chile", "China", "Chipre", "Colombia", "Comoras", "Corea del Norte", "Corea del Sur", "Costa de Marfil", "Costa Rica", "Croacia", "Cuba", "Dinamarca", "Dominica", "Ecuador", "Egipto", "El Salvador", "Emiratos Árabes Unidos", "Eritrea", "Eslovaquia", "Eslovenia", "España", "Estados Unidos", "Estonia", "Etiopía",
@@ -257,10 +258,9 @@ const Fase0: FC<Fase0Props> = ({
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">País de la cuenta <span className="text-red-500">*</span></label>
-              <input
-                type="text"
+              <CountrySelect
                 value={paisCuenta}
-                onChange={(e) => setPaisCuenta(e.target.value)}
+                onChange={setPaisCuenta}
                 className={getInputClass(paisCuenta, true)}
                 placeholder="País de la cuenta"
               />
@@ -294,14 +294,11 @@ const Fase0: FC<Fase0Props> = ({
           <div className="flex flex-col gap-3">
             <div>
               <label className="block text-sm font-medium mb-1">País <span className="text-red-500">*</span></label>
-              <select
+              <CountrySelect
                 value={paisUbicacion}
-                onChange={(e) => setPaisUbicacion(e.target.value)}
+                onChange={setPaisUbicacion}
                 className={getInputClass(paisUbicacion, true)}
-              >
-                <option value="" disabled>Selecciona un país</option>
-                {paises.map((p, i) => <option key={i} value={p}>{p}</option>)}
-              </select>
+              />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Teléfono principal <span className="text-red-500">*</span></label>

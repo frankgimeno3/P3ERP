@@ -19,6 +19,6 @@ export async function getUserRoles(username) {
     });
 
     const result = await client.send(command);
-    const roles = result.Groups.map(group => group.GroupName)|| ['employee'];
-    return roles;
+    const roles = (result.Groups || []).map((group) => group.GroupName).filter(Boolean);
+    return roles.length ? roles : ["base"];
 }

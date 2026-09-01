@@ -1,5 +1,6 @@
 import { InterfazContacto } from "@/app/interfaces/interfaces";
 import React, { FC } from "react";
+import CountrySelect from "@/app/components/CountrySelect";
  
 interface OtrosDatosContactoProps {
   contacto: InterfazContacto;
@@ -86,8 +87,7 @@ const OtrosDatosContacto: FC<OtrosDatosContactoProps> = ({
     onChange();
   };
 
-  const handlePaisChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
+  const handlePaisChange = (value: string) => {
     setPais(value);
     setContactoEditable(prev => 
       prev ? { ...prev, pais_contacto: value } : prev
@@ -121,12 +121,10 @@ const OtrosDatosContacto: FC<OtrosDatosContactoProps> = ({
          <div className="flex flex-col gap-4">
           <div className="flex items-center gap-4">
             <label className="w-1/3 text-gray-700">País</label>
-            <input
-              type="text"
+            <CountrySelect
               value={pais}
               onChange={handlePaisChange}
               className="flex-1 border border-gray-300 rounded-lg p-2 text-gray-700"
-              placeholder="Ej: España"
             />
           </div>
 

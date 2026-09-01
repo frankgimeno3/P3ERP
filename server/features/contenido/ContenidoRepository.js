@@ -1,4 +1,5 @@
 import { getPgPool } from "../../database/pgClient.js";
+import { addCuentaEntityEvent, formatChangeDetail } from "../registroEventos/RegistroEventosRepository.js";
 
 function getYearFromDate(value) {
   if (!value) return "";
@@ -28,7 +29,7 @@ function normalizeHojaProd(row) {
     pagina: paginaMatch?.[1] || "",
     caducidad: row.deadline_contenido || row.deadline_publicacion || "",
     fecha_publicacion: fechaPublicacion,
-    ano_publicacion: getYearFromDate(fechaPublicacion),
+    ano_publicacion: row.ano_publicacion || getYearFromDate(fechaPublicacion),
   };
 }
 
@@ -54,8 +55,8 @@ function normalizeContenido(row) {
     destino_vidrioperfil: Boolean(row.destino_vidrioperfil),
     fecha_maxima_publicacion_vidrioperfil: row.fecha_maxima_publicacion_vidrioperfil ?? "",
     tipo_articulo: row.tipo_articulo ?? "",
-    id_gestion_prod: row.id_gestion_prod ?? "",
     destinos_publicacion: Array.isArray(row.destinos_publicacion) ? row.destinos_publicacion : [],
+    array_ids_materiales: Array.isArray(row.array_ids_materiales) ? row.array_ids_materiales : [],
     revistas: row.revistas ?? [],
     created_at: row.created_at,
     updated_at: row.updated_at,
@@ -93,6 +94,13 @@ async function hasContenidosRevistasTable(pool) {
   return hasContenidosRevistasCache;
 }
 
+async function ensureContenidoMateriales(pool) {
+  await pool.query(`
+    ALTER TABLE contenidos_db
+      ADD COLUMN IF NOT EXISTS array_ids_materiales JSONB NOT NULL DEFAULT '[]'::jsonb
+  `);
+}
+
 export async function getHojaProduccionContenidos(filters = {}) {
   const pool = getPgPool();
   const columns = await getContenidosColumns(pool);
@@ -106,6 +114,7 @@ export async function getHojaProduccionContenidos(filters = {}) {
     values.push(String(filters.year));
     where.push(`
       COALESCE(
+        NULLIF(c.ano_publicacion, ''),
         NULLIF(
           CASE
             WHEN split_part(COALESCE(p.fecha_publicacion, ${fechaContenidoExpr}, ''), '/', 3) <> ''
@@ -117,8 +126,7 @@ export async function getHojaProduccionContenidos(filters = {}) {
             ELSE ''
           END,
           ''
-        ),
-        ''
+        )
       ) = $${values.length}
     `);
   }
@@ -148,7 +156,7 @@ export async function getHojaProduccionContenidos(filters = {}) {
         s.nombre_servicio_es AS servicio_nombre,
         a.nombre_completo_agente,
         cu.nombre_empresa,
-        cc.id_contrato,
+        COALESCE(NULLIF(c.id_contrato, ''), cc.id_contrato) AS id_contrato,
         fc.factura
       FROM contenidos_db c
       LEFT JOIN publicaciones_db p ON p.id_publicacion = ${contenidoEspecificoExpr}
@@ -171,7 +179,6 @@ export async function getHojaProduccionContenidos(filters = {}) {
 export async function createHojaProduccionContenido(data = {}) {
   const pool = getPgPool();
   const idContenido = data.id_contenido?.trim() || `CONT-${Date.now()}`;
-  const idGestion = data.id_gestion_prod || `gestion_${Date.now()}`;
   const destinos = Array.isArray(data.destinos_publicacion) ? data.destinos_publicacion : [];
   const materiales = Array.isArray(data.materiales_array) ? data.materiales_array : [];
   const client = await pool.connect();
@@ -179,8 +186,8 @@ export async function createHojaProduccionContenido(data = {}) {
     await client.query("BEGIN");
     await client.query(`
       ALTER TABLE contenidos_db
-        ADD COLUMN IF NOT EXISTS id_gestion_prod TEXT,
-        ADD COLUMN IF NOT EXISTS destinos_publicacion JSONB NOT NULL DEFAULT '[]'::jsonb
+        ADD COLUMN IF NOT EXISTS destinos_publicacion JSONB NOT NULL DEFAULT '[]'::jsonb,
+        ADD COLUMN IF NOT EXISTS array_ids_materiales JSONB NOT NULL DEFAULT '[]'::jsonb
     `);
     const { rows } = await client.query(
       `
@@ -195,12 +202,12 @@ export async function createHojaProduccionContenido(data = {}) {
         servicio,
         estado_material_contenido,
         hoja_prod,
-        id_gestion_prod,
         destinos_publicacion,
+        array_ids_materiales,
         destino_revista,
         destino_vidrioperfil
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true, $10, $11::jsonb, $12, $13)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true, $10, $11::jsonb, $12::jsonb, $13, $14)
       RETURNING *
     `,
       [
@@ -213,24 +220,19 @@ export async function createHojaProduccionContenido(data = {}) {
         data.deadline_contenido || "",
         data.tipo || "",
         data.estado_contenido || "",
-        idGestion,
         JSON.stringify(destinos),
+        JSON.stringify(materiales),
         destinos.some((item) => item.startsWith("revista_")),
         destinos.includes("vidrioperfil"),
       ],
     );
-    await client.query(
-      `INSERT INTO gestiones_produccion_db
-        (id_gestion_prod,nombre_gestion,publicaciones_array,articulos_array,materiales_array)
-       VALUES ($1,$2,$3::jsonb,'[]'::jsonb,$4::jsonb)`,
-      [idGestion, data.nombre_gestion || data.especificaciones_contenido || idContenido, JSON.stringify(data.id_publicacion ? [data.id_publicacion] : []), JSON.stringify(materiales)],
-    );
-    const { rows: listRows } = await client.query("SELECT * FROM gestiones_prod_listas ORDER BY posicion_lista LIMIT 1");
-    if (listRows[0]) {
-      const existing = Array.isArray(listRows[0].array_objetos_gestiones) ? listRows[0].array_objetos_gestiones : [];
-      existing.push([existing.length, idGestion]);
-      await client.query("UPDATE gestiones_prod_listas SET array_objetos_gestiones=$1::jsonb,updated_at=NOW() WHERE id_lista_gestiones_prod=$2", [JSON.stringify(existing), listRows[0].id_lista_gestiones_prod]);
-    }
+    await addCuentaEntityEvent({
+      idCuenta: data.id_cuenta,
+      idAgente: data.id_agente || "",
+      entity: "contenido",
+      entityId: idContenido,
+      action: "creado",
+    }, client);
     await client.query("COMMIT");
     return normalizeHojaProd(rows[0]);
   } catch (error) {
@@ -305,6 +307,7 @@ export async function getContenidosProduccion(filters = {}) {
 
 export async function getContenidoProduccionById(idContenido) {
   const pool = getPgPool();
+  await ensureContenidoMateriales(pool);
   const columns = await getContenidosColumns(pool);
   const hasRevistasTable = await hasContenidosRevistasTable(pool);
   const contenidoEspecificoExpr = columns.has("contenido_especifico_id") ? "c.contenido_especifico_id" : columns.has("publicacion") ? "c.publicacion" : "c.id_publicacion";
@@ -350,16 +353,29 @@ export async function getContenidoProduccionById(idContenido) {
 
 export async function deleteContenidoProduccion(idContenido) {
   const pool = getPgPool();
+  const before = await getContenidoProduccionById(idContenido);
   const { rowCount } = await pool.query(
     `DELETE FROM contenidos_db WHERE id_contenido = $1`,
     [idContenido],
   );
+
+  if (rowCount > 0 && before?.id_cuenta) {
+    await addCuentaEntityEvent({
+      idCuenta: before.id_cuenta,
+      idAgente: before.id_agente || "",
+      entity: "contenido",
+      entityId: idContenido,
+      action: "eliminado",
+    });
+  }
 
   return rowCount > 0;
 }
 
 export async function updateContenidoProduccion(idContenido, data = {}) {
   const pool = getPgPool();
+  await ensureContenidoMateriales(pool);
+  const before = await getContenidoProduccionById(idContenido);
   const values = [];
   const sets = [];
 
@@ -371,6 +387,11 @@ export async function updateContenidoProduccion(idContenido, data = {}) {
   if (Object.prototype.hasOwnProperty.call(data, "estado_material_contenido")) {
     values.push(data.estado_material_contenido || "");
     sets.push(`estado_material_contenido = $${values.length}`);
+  }
+
+  if (Object.prototype.hasOwnProperty.call(data, "array_ids_materiales")) {
+    values.push(JSON.stringify(Array.isArray(data.array_ids_materiales) ? data.array_ids_materiales.filter(Boolean) : []));
+    sets.push(`array_ids_materiales = $${values.length}::jsonb`);
   }
 
   if (!sets.length) return getContenidoProduccionById(idContenido);
@@ -386,7 +407,28 @@ export async function updateContenidoProduccion(idContenido, data = {}) {
     values,
   );
 
-  return rows[0] ? getContenidoProduccionById(rows[0].id_contenido) : null;
+  const updated = rows[0] ? await getContenidoProduccionById(rows[0].id_contenido) : null;
+  if (before && updated?.id_cuenta) {
+    const idAgente = data.id_agente || updated.id_agente || before.id_agente || "";
+    for (const field of ["estado", "estado_material_contenido", "array_ids_materiales"]) {
+      if (Object.prototype.hasOwnProperty.call(data, field)) {
+        const beforeValue = field === "estado" ? before.estado : before[field];
+        const afterValue = field === "estado" ? updated.estado : updated[field];
+        if (String(beforeValue ?? "") !== String(afterValue ?? "")) {
+          await addCuentaEntityEvent({
+            idCuenta: updated.id_cuenta,
+            idAgente,
+            entity: "contenido",
+            entityId: idContenido,
+            action: "modificado",
+            details: formatChangeDetail(idAgente, `contenido.${field}`, beforeValue, afterValue),
+          });
+        }
+      }
+    }
+  }
+
+  return updated;
 }
 
 export async function createContenidoProduccion(data = {}) {
@@ -430,6 +472,16 @@ export async function createContenidoProduccion(data = {}) {
       data.tipo_articulo || "articulo",
     ],
   );
+
+  if (rows[0]?.id_cuenta) {
+    await addCuentaEntityEvent({
+      idCuenta: rows[0].id_cuenta,
+      idAgente: data.id_agente || "",
+      entity: "contenido",
+      entityId: idContenido,
+      action: "creado",
+    });
+  }
 
   return normalizeContenido(rows[0]);
 }

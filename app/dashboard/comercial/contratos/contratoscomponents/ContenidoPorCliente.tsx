@@ -4,6 +4,7 @@ import Link from 'next/link';
 import React, { FC, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ContratoService } from '@/app/service/ContratoService';
+import { AgenteService } from '@/app/service/AgenteService';
 
 const parseDMY = (s?: string): Date | null => {
   if (!s) return null;
@@ -33,6 +34,7 @@ const inputClass = "rounded border border-gray-300 px-3 py-2 text-sm";
 const ContenidoPorCliente: FC<ContenidoPorClienteProps> = ({ estado = 'curso' }) => {
   const router = useRouter();
   const [contratos, setContratos] = useState<any[]>([]);
+  const [agentes, setAgentes] = useState<any[]>([]);
   const [clienteFiltro, setClienteFiltro] = useState('');
   const [agenteFiltro, setAgenteFiltro] = useState('');
   const [contactoFiltro, setContactoFiltro] = useState('');
@@ -45,8 +47,9 @@ const ContenidoPorCliente: FC<ContenidoPorClienteProps> = ({ estado = 'curso' })
       try {
         setLoading(true);
         setError('');
-        const data = await ContratoService.getContratos();
+        const [data, agentesData] = await Promise.all([ContratoService.getContratos(), AgenteService.getAgentes()]);
         setContratos(Array.isArray(data) ? data : []);
+        setAgentes(Array.isArray(agentesData) ? agentesData : []);
       } catch (err) {
         console.error('Error fetching contratos:', err);
         setError('No se han podido cargar los contratos.');
@@ -75,7 +78,7 @@ const ContenidoPorCliente: FC<ContenidoPorClienteProps> = ({ estado = 'curso' })
       const fechaFin = parseDMY(contrato.fecha_fin_contrato);
       const matchEstado = estado === 'anteriores' ? Boolean(fechaFin && fechaFin < today) : !fechaFin || fechaFin >= today;
       const matchCliente = !clienteFiltro || `${contrato.nombre_empresa || ''} ${contrato.id_cuenta_contrato || ''}`.toLowerCase().includes(clienteFiltro.toLowerCase());
-      const matchAgente = !agenteFiltro || `${contrato.nombre_agente_contrato || ''} ${contrato.id_agente_contrato || ''}`.toLowerCase().includes(agenteFiltro.toLowerCase());
+      const matchAgente = !agenteFiltro || contrato.id_agente_contrato === agenteFiltro;
       const matchContacto = !contactoFiltro || `${contrato.nombre_contacto || ''} ${contrato.id_contacto_contrato || ''}`.toLowerCase().includes(contactoFiltro.toLowerCase());
       const matchPropuesta = !propuestaFiltro || String(contrato.id_propuesta || '').toLowerCase().includes(propuestaFiltro.toLowerCase());
       return matchEstado && matchCliente && matchAgente && matchContacto && matchPropuesta;
@@ -86,7 +89,7 @@ const ContenidoPorCliente: FC<ContenidoPorClienteProps> = ({ estado = 'curso' })
     <div className="mt-8 flex flex-col gap-4 rounded-xl">
       <div className="flex flex-wrap gap-3 rounded bg-white p-4 shadow-sm">
         <input value={clienteFiltro} onChange={(event) => setClienteFiltro(event.target.value)} placeholder="Filtrar cliente" className={inputClass} />
-        <input value={agenteFiltro} onChange={(event) => setAgenteFiltro(event.target.value)} placeholder="Filtrar agente" className={inputClass} />
+        <select aria-label="Filtrar por agente" value={agenteFiltro} onChange={(event) => setAgenteFiltro(event.target.value)} className={`${inputClass} bg-white`}><option value="">Todos los agentes</option>{agentes.map((agente) => <option key={agente.id_agente} value={agente.id_agente}>{agente.nombre_completo_agente || `${agente.nombre_agente || ''} ${agente.apellidos_agente || ''}`.trim()}</option>)}</select>
         <input value={contactoFiltro} onChange={(event) => setContactoFiltro(event.target.value)} placeholder="Filtrar contacto" className={inputClass} />
         <input value={propuestaFiltro} onChange={(event) => setPropuestaFiltro(event.target.value)} placeholder="Filtrar propuesta" className={inputClass} />
       </div>

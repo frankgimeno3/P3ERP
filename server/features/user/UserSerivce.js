@@ -1,10 +1,14 @@
 import {
+    AdminAddUserToGroupCommand,
     AdminCreateUserCommand,
+    AdminDeleteUserCommand,
     AdminDisableUserCommand,
     AdminEnableUserCommand, AdminSetUserPasswordCommand,
+    AdminGetUserCommand,
     AdminUpdateUserAttributesCommand,
     CognitoIdentityProviderClient,
-    paginateListUsers
+    paginateListUsers,
+    UserNotFoundException
 } from "@aws-sdk/client-cognito-identity-provider";
 
 const cognito = new CognitoIdentityProviderClient({region: process.env.NEXT_PUBLIC_COGNITO_REGION});
@@ -98,4 +102,58 @@ export async function updateUser({username, name, email, enabled, password}) {
     }
 
     return {message: "User updated successfully"};
+}
+
+export async function cognitoUserExists(email) {
+    try {
+        await cognito.send(new AdminGetUserCommand({UserPoolId: USER_POOL_ID, Username: email}));
+        return true;
+    } catch (error) {
+        if (error instanceof UserNotFoundException || error?.name === "UserNotFoundException") return false;
+        throw error;
+    }
+}
+
+async function assignUserGroup(email, groupName) {
+    try {
+        await cognito.send(new AdminAddUserToGroupCommand({
+            UserPoolId: USER_POOL_ID,
+            Username: email,
+            GroupName: groupName,
+        }));
+        return {groupAssigned: true};
+    } catch (error) {
+        if (error?.name === "AccessDeniedException") {
+            console.warn(`Cognito group assignment skipped for ${email}: IAM does not allow AdminAddUserToGroup.`);
+            return {groupAssigned: false, groupReason: "access-denied"};
+        }
+        if (error?.name === "ResourceNotFoundException") {
+            console.warn(`Cognito group assignment skipped for ${email}: group ${groupName} does not exist.`);
+            return {groupAssigned: false, groupReason: "group-not-found"};
+        }
+        throw error;
+    }
+}
+
+export async function createConfirmedUser(name, email, password, groupName) {
+    await createUser(name, email, password);
+    try {
+        return await assignUserGroup(email, groupName);
+    } catch (error) {
+        await cognito.send(new AdminDeleteUserCommand({UserPoolId: USER_POOL_ID, Username: email})).catch(() => {});
+        throw error;
+    }
+}
+
+export async function confirmExistingUser(name, email, password, groupName) {
+    await updateUser({username: email, name, email, enabled: true, password});
+    return assignUserGroup(email, groupName);
+}
+
+export async function deleteCognitoUser(email) {
+    try {
+        await cognito.send(new AdminDeleteUserCommand({UserPoolId: USER_POOL_ID, Username: email}));
+    } catch (error) {
+        if (!(error instanceof UserNotFoundException) && error?.name !== "UserNotFoundException") throw error;
+    }
 }

@@ -1,0 +1,107 @@
+[
+  {
+    "estado": false,
+    "nombre": "Estado fiscal de envío",
+    "descripcion": "Diferenciar las facturas en borrador de las facturas emitidas y hacer irreversible la emisión."
+  },
+  {
+    "estado": false,
+    "nombre": "Confirmación antes de emitir",
+    "descripcion": "Solicitar confirmación explícita antes de convertir una factura en factura emitida e inalterable."
+  },
+  {
+    "estado": false,
+    "nombre": "Identificación fiscal de la factura",
+    "descripcion": "Almacenar emisor, serie, número y fecha de expedición VERI*FACTU."
+  },
+  {
+    "estado": false,
+    "nombre": "Bloqueo de facturas emitidas",
+    "descripcion": "Impedir la edición y eliminación de facturas emitidas, excepto el estado de cobro y los comentarios internos."
+  },
+  {
+    "estado": false,
+    "nombre": "Facturas rectificativas y de abono",
+    "descripcion": "Permitir crear una factura rectificativa o de abono a partir de una factura anterior."
+  },
+  {
+    "estado": false,
+    "nombre": "Información de inalterabilidad",
+    "descripcion": "Mostrar en la ficha qué datos fiscales no pueden cambiar después de emitir la factura."
+  },
+  {
+    "estado": false,
+    "nombre": "Registro fiscal independiente",
+    "descripcion": "Crear verifactu_records con todos los datos fiscales, huellas, respuestas AEAT y metadatos del software."
+  },
+  {
+    "estado": false,
+    "nombre": "Copia fiscal en la factura",
+    "descripcion": "Guardar en la factura las columnas del registro fiscal con el prefijo verifactu_."
+  },
+  {
+    "estado": false,
+    "nombre": "Unicidad fiscal",
+    "descripcion": "Garantizar la unicidad por emisor, serie, número y fecha mediante una restricción de PostgreSQL."
+  },
+  {
+    "estado": false,
+    "nombre": "Inmutabilidad física del registro",
+    "descripcion": "Bloquear físicamente actualizaciones, eliminaciones e inserciones fuera del servicio de facturación."
+  },
+  {
+    "estado": false,
+    "nombre": "Numeración transaccional",
+    "descripcion": "Asignar números mediante contadores por emisor y serie bloqueados con SELECT FOR UPDATE."
+  },
+  {
+    "estado": false,
+    "nombre": "Emisión y alta atómicas",
+    "descripcion": "Emitir la factura, calcular su hash, crear el registro fiscal y generar el trabajo AEAT en una única transacción."
+  },
+  {
+    "estado": false,
+    "nombre": "Encadenamiento de registros",
+    "descripcion": "Conservar el registro previo, número, fecha y hash para formar una cadena fiscal verificable."
+  },
+  {
+    "estado": false,
+    "nombre": "Seguimiento de AEAT",
+    "descripcion": "Guardar estado, CSV, errores, XML enviado y recibido, fechas de envío y aceptación."
+  },
+  {
+    "estado": false,
+    "nombre": "Registro de facturación de alta AEAT",
+    "descripcion": "Generar al expedir cada factura un RegistroAlta estructurado conforme a SuministroInformacion.xsd y a los diseños oficiales publicados por la AEAT."
+  },
+  {
+    "estado": false,
+    "nombre": "Cadena global por instalación",
+    "descripcion": "Encadenar cada alta con el registro inmediatamente anterior de la instalación y bloquear transaccionalmente la cadena para evitar bifurcaciones concurrentes."
+  },
+  {
+    "estado": false,
+    "nombre": "Huella oficial AEAT",
+    "descripcion": "Calcular la huella SHA-256 con los campos, orden, formato UTF-8 y salida hexadecimal mayúscula definidos en la especificación AEAT 0.1.2, con tests de sus vectores oficiales."
+  },
+  {
+    "estado": false,
+    "nombre": "Identidad estable del sistema",
+    "descripcion": "Registrar productor, P3ERP, versión 1.0.1-verifactu, sistema P3 e instalación estable P3ERP-PRODUCCION-01 en cada registro."
+  },
+  {
+    "estado": false,
+    "nombre": "Outbox de remisión AEAT",
+    "descripcion": "Separar la expedición local de la remisión mediante verifactu_outbox, bloqueo SKIP LOCKED, reintentos y estados estructurados de respuesta."
+  },
+  {
+    "estado": false,
+    "nombre": "Validaciones fiscales previas",
+    "descripcion": "Validar emisor, destinatario, tipo, líneas, descripción, bases, IVA, exenciones, inversión del sujeto pasivo y conversión a euros antes de expedir."
+  },
+  {
+    "estado": false,
+    "nombre": "Declaración responsable visible",
+    "descripcion": "Mantener una declaración responsable por versión y mostrar producto, versión, productor, instalación, modalidad y fecha en Ayuda > Información legal del sistema."
+  }
+]

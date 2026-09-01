@@ -1,4 +1,5 @@
 import { getPgPool } from "../../database/pgClient.js";
+import crypto from "node:crypto";
 
 function normalizeServicio(row) {
   return {
@@ -20,11 +21,27 @@ function normalizeServicio(row) {
     edicion_servicio_en: row.edicion_servicio_en ?? "",
     publicacion_servicio_en: row.publicacion_servicio_en ?? "",
     nombre_servicio_en: row.nombre_servicio_en ?? "",
+    nombre_espanol: row.nombre_espanol || row.nombre_servicio_es || row.id_servicio,
+    nombre_ingles: row.nombre_ingles || row.nombre_servicio_en || row.nombre_servicio_es || row.id_servicio,
+    nombre_italiano: row.nombre_italiano || row.nombre_servicio_es || row.id_servicio,
+    nombre_portugues: row.nombre_portugues || row.nombre_servicio_es || row.id_servicio,
+    medio_servicio_it: row.medio_servicio_it ?? "",
+    edicion_servicio_it: row.edicion_servicio_it ?? "",
+    publicacion_servicio_it: row.publicacion_servicio_it ?? "",
+    nombre_servicio_it: row.nombre_servicio_it ?? "",
+    medio_servicio_pt: row.medio_servicio_pt ?? "",
+    edicion_servicio_pt: row.edicion_servicio_pt ?? "",
+    publicacion_servicio_pt: row.publicacion_servicio_pt ?? "",
+    nombre_servicio_pt: row.nombre_servicio_pt ?? "",
+    disponibilidad: row.disponibilidad || "Ofrecible",
+    comentarios: row.comentarios ?? "",
   };
 }
 
 export async function getServicios(filters = {}) {
   const pool = getPgPool();
+  await pool.query(`ALTER TABLE servicios_db ADD COLUMN IF NOT EXISTS nombre_espanol TEXT NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS nombre_ingles TEXT NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS nombre_italiano TEXT NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS nombre_portugues TEXT NOT NULL DEFAULT ''`);
+  await pool.query(`UPDATE servicios_db SET nombre_espanol=COALESCE(NULLIF(nombre_espanol,''),NULLIF(nombre_servicio_es,''),id_servicio), nombre_ingles=COALESCE(NULLIF(nombre_ingles,''),NULLIF(nombre_servicio_en,''),NULLIF(nombre_servicio_es,''),id_servicio), nombre_italiano=COALESCE(NULLIF(nombre_italiano,''),NULLIF(nombre_servicio_es,''),id_servicio), nombre_portugues=COALESCE(NULLIF(nombre_portugues,''),NULLIF(nombre_servicio_es,''),id_servicio) WHERE nombre_espanol='' OR nombre_ingles='' OR nombre_italiano='' OR nombre_portugues=''`);
   const values = [];
   const where = [];
 
@@ -76,4 +93,37 @@ export async function getServicioById(idServicio) {
   );
 
   return rows[0] ? normalizeServicio(rows[0]) : null;
+}
+
+const editableColumns = ["id_medio", "ano_servicio", "soporte_servicio", "precio_servicio", "precio_tarifa", "concepto_factura", "fecha_deadline_servicio", "fecha_publicacion_servicio", "medio_servicio_es", "edicion_servicio_es", "publicacion_servicio_es", "nombre_servicio_es", "medio_servicio_en", "edicion_servicio_en", "publicacion_servicio_en", "nombre_servicio_en", "medio_servicio_it", "edicion_servicio_it", "publicacion_servicio_it", "nombre_servicio_it", "medio_servicio_pt", "edicion_servicio_pt", "publicacion_servicio_pt", "nombre_servicio_pt", "disponibilidad", "comentarios"];
+
+export async function saveServicio(idServicio, data = {}) {
+  const pool = getPgPool();
+  const columns = editableColumns.filter((column) => data[column] !== undefined);
+  if (!columns.length) return getServicioById(idServicio);
+  const values = columns.map((column) => data[column] ?? "");
+  values.push(idServicio);
+  await pool.query(`UPDATE servicios_db SET ${columns.map((column, index) => `${column}=$${index + 1}`).join(", ")}, updated_at=NOW() WHERE id_servicio=$${values.length}`, values);
+  return getServicioById(idServicio);
+}
+
+export async function createServicio(data = {}) {
+  const pool = getPgPool();
+  const id = String(data.id_servicio || "").trim();
+  if (!id) throw new Error("El código único del servicio es obligatorio");
+  const columns = ["id_servicio", ...editableColumns.filter((column) => data[column] !== undefined)];
+  const values = [id, ...columns.slice(1).map((column) => data[column] ?? "")];
+  await pool.query(`INSERT INTO servicios_db (${columns.join(", ")}) VALUES (${values.map((_, index) => `$${index + 1}`).join(", ")})`, values);
+  return getServicioById(id);
+}
+
+export async function createPublicationOption(data = {}) {
+  const pool = getPgPool();
+  const required = ["es", "en", "it", "pt"];
+  for (const language of required) {
+    if (!String(data.medio?.[language] || "").trim() || !String(data.edicion?.[language] || "").trim() || !String(data.publicacion?.[language] || "").trim()) throw new Error("Medio, edición y publicación son obligatorios en los cuatro idiomas");
+  }
+  const id = `publ_srv_${crypto.randomUUID()}`;
+  await pool.query(`INSERT INTO publicaciones_db (id_publicacion,nombre_publicacion,estado_publicacion,medio_publicacion,edicion_publicacion,detalle_publicacion,medio_publicacion_es,medio_publicacion_en,medio_publicacion_it,medio_publicacion_pt,edicion_publicacion_es,edicion_publicacion_en,edicion_publicacion_it,edicion_publicacion_pt,detalle_publicacion_es,detalle_publicacion_en,detalle_publicacion_it,detalle_publicacion_pt) VALUES ($1,$2,'Pendiente',$3,$4,$5,$3,$6,$7,$8,$4,$9,$10,$11,$5,$12,$13,$14)`, [id, `${data.medio.es} · ${data.edicion.es} · ${data.publicacion.es}`, data.medio.es, data.edicion.es, data.publicacion.es, data.medio.en, data.medio.it, data.medio.pt, data.edicion.en, data.edicion.it, data.edicion.pt, data.publicacion.en, data.publicacion.it, data.publicacion.pt]);
+  return { id_publicacion: id };
 }

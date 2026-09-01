@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import MiddleNav from "@/app/general_components/componentes_recurrentes/MiddleNav";
 import { PrevisionIngresosService } from "@/app/service/PrevisionIngresosService";
+import AdditionalIncomeWizard from "./AdditionalIncomeWizard";
 
 type TabKey = "recibos" | "transfers";
 
@@ -17,11 +19,14 @@ const formatMoney = (value?: number) => {
 };
 
 export default function PrevisionIngresosPage() {
+  const router = useRouter();
   const [tab, setTab] = useState<TabKey>("recibos");
   const [ordenes, setOrdenes] = useState<any[]>([]);
   const [filtro, setFiltro] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showAdditionalIncome, setShowAdditionalIncome] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     const fetchOrdenes = async () => {
@@ -39,7 +44,7 @@ export default function PrevisionIngresosPage() {
     };
 
     fetchOrdenes();
-  }, [tab]);
+  }, [reloadKey, tab]);
 
   const ordenesFiltradas = useMemo(() => {
     const query = filtro.trim().toLowerCase();
@@ -68,14 +73,14 @@ export default function PrevisionIngresosPage() {
     <div className="flex min-h-screen w-full flex-col bg-gray-200 text-gray-600">
       <MiddleNav tituloprincipal="Previsión ingresos" />
       <div className="min-h-screen w-full bg-gray-100 px-12 py-10 text-gray-600">
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex gap-2">
             {tabs.map((item) => (
               <button
                 key={item.key}
                 type="button"
                 onClick={() => setTab(item.key)}
-                className={`rounded px-4 py-2 text-sm transition ${
+                className={`cursor-pointer rounded px-4 py-2 text-sm transition ${
                   tab === item.key
                     ? "bg-blue-950 text-white"
                     : "bg-white text-gray-700 hover:bg-gray-200"
@@ -86,13 +91,10 @@ export default function PrevisionIngresosPage() {
             ))}
           </div>
 
-          <input
-            type="search"
-            value={filtro}
-            onChange={(event) => setFiltro(event.target.value)}
-            placeholder="Filtrar por orden, cliente, contrato, factura..."
-            className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-950 sm:w-96"
-          />
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <input type="search" value={filtro} onChange={(event) => setFiltro(event.target.value)} placeholder="Filtrar por orden, cliente, contrato, factura..." className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-blue-950 sm:w-96" />
+            <button type="button" onClick={() => setShowAdditionalIncome(true)} className="cursor-pointer rounded bg-blue-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-900 hover:shadow-md">Agregar ingreso sin contrato</button>
+          </div>
         </div>
 
         {error && (
@@ -137,7 +139,7 @@ export default function PrevisionIngresosPage() {
               )}
 
               {!loading && ordenesFiltradas.map((orden) => (
-                <tr key={orden.id_orden} className="hover:bg-gray-50">
+                <tr key={orden.id_orden} onClick={() => { if (!orden.es_adicional) router.push(`/dashboard/administracion/control-administrativo/${encodeURIComponent(orden.id_orden)}`); }} className={orden.es_adicional ? "bg-emerald-50/40" : "cursor-pointer transition hover:bg-blue-50"}>
                   <td className="border-b border-gray-200 p-2 pl-6 font-medium text-blue-950">{orden.id_orden || "-"}</td>
                   <td className="border-b border-gray-200 p-2">{orden.cliente || "-"}</td>
                   <td className="border-b border-gray-200 p-2">{orden.id_contrato || "-"}</td>
@@ -155,6 +157,7 @@ export default function PrevisionIngresosPage() {
             </tbody>
           </table>
         </div>
+        {showAdditionalIncome && <AdditionalIncomeWizard onClose={() => setShowAdditionalIncome(false)} onCreated={() => { setShowAdditionalIncome(false); setReloadKey((current) => current + 1); }} />}
       </div>
     </div>
   );

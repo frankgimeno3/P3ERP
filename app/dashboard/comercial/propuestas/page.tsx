@@ -15,7 +15,7 @@ const Propuestas: FC = () => {
   const [fechaFin, setFechaFin] = useState('');
   const [agenteFiltro, setAgenteFiltro] = useState('');
   const [estadoFiltro, setEstadoFiltro] = useState('');
-  const [agenteActual, setAgenteActual] = useState('ag_25_0004');
+  const [agenteActual] = useState('ag_25_0004');
   const [agentes, setAgentes] = useState<any[]>([]);
 
   useEffect(() => {
@@ -120,6 +120,7 @@ const Propuestas: FC = () => {
               fechaInicio={fechaInicio}
               fechaFin={fechaFin}
               estadoFiltro={estadoFiltro}
+              agentes={agentes}
             />
           )}
         </div>

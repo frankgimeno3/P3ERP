@@ -21,6 +21,7 @@ interface TablacuentasProps {
   codigoCrmFiltro: string;
   agenteFiltro: string;
   telFiltro: string;
+  paisFiltro: string;
 }
 
 interface Agente {
@@ -33,6 +34,7 @@ const Tablacuentas: FC<TablacuentasProps> = ({
   codigoCrmFiltro,
   agenteFiltro,
   telFiltro,
+  paisFiltro,
 }) => {
   const router = useRouter();
   const [currentPage, setCurrentPage] = useState(1);
@@ -70,6 +72,7 @@ const Tablacuentas: FC<TablacuentasProps> = ({
           codigoCrmFiltro: codigoCrmFiltro || '',
           agenteFiltro: agenteFiltro || '',
           telFiltro: telFiltro || '',
+          paisFiltro: paisFiltro || '',
         };
         const data = await CuentaService.getCuentas(filters);
         setResultados(Array.isArray(data) ? data : []);
@@ -88,7 +91,7 @@ const Tablacuentas: FC<TablacuentasProps> = ({
     };
 
     fetchCuentas();
-  }, [clienteFiltro, codigoCrmFiltro, agenteFiltro, telFiltro]);
+  }, [clienteFiltro, codigoCrmFiltro, agenteFiltro, telFiltro, paisFiltro]);
 
   const resultadosFiltrados = useMemo(() => {
     // Server-side filtering is already done, but we can do additional client-side filtering if needed
@@ -98,7 +101,7 @@ const Tablacuentas: FC<TablacuentasProps> = ({
   // Reset to page 1 when filters change
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [clienteFiltro, codigoCrmFiltro, agenteFiltro, telFiltro]);
+  }, [clienteFiltro, codigoCrmFiltro, agenteFiltro, telFiltro, paisFiltro]);
 
   const totalPages = Math.ceil(resultadosFiltrados.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;

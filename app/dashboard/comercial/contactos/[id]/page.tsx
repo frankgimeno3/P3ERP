@@ -3,6 +3,7 @@ import React, { FC, useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import ContenidoGeneralContacto from "../componentesFichaContacto/ContenidoGeneralContacto";
 import ContenidoComentariosContacto from "../componentesFichaContacto/ContenidoComentariosContacto";
+import RegistroEventosContacto from "../componentesFichaContacto/RegistroEventosContacto";
 import BotonFlotante from "@/app/general_components/componentes_recurrentes/BotonFlotante";
 import MiddleNav from "@/app/general_components/componentes_recurrentes/MiddleNav";
 import { InterfazContacto } from '@/app/interfaces/interfaces';
@@ -26,6 +27,7 @@ const FichaContacto: FC = () => {
     : params?.id ?? null;
 
   const [isContenidoEdited, setIsContenidoEdited] = useState(false);
+  const [saving, setSaving] = useState(false);
   
   // Estado de contacto editable
   const [contactoEditable, setContactoEditable] = useState<InterfazContacto | undefined>();
@@ -99,7 +101,7 @@ const FichaContacto: FC = () => {
     setComentarios(comentariosFormateados);
   }, [contactoId]);
 
-  const [pestana, setPestana] = useState<'general' | 'comentarios'>('general');
+  const [pestana, setPestana] = useState<'general' | 'comentarios' | 'registro_eventos'>('general');
 
   if (!contactoEditable) {
     return (
@@ -108,6 +110,28 @@ const FichaContacto: FC = () => {
       </div>
     );
   }
+
+  const handleSaveChanges = async () => {
+    if (!contactoEditable?.id_contacto) return;
+    try {
+      setSaving(true);
+      const saved = await ContactoService.updateContacto(contactoEditable.id_contacto, {
+        ...contactoEditable,
+        suscripciones,
+        otros_datos_interes: otrosDatos,
+        idiomas,
+        pais_contacto: pais,
+        conocido_en: conocidoEn,
+        contactado_en_feria: contactadoEnFeria,
+      });
+      setContactoEditable(saved);
+      setIsContenidoEdited(false);
+    } catch (error) {
+      console.error("Error saving contacto:", error);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="flex flex-col h-full min-h-screen text-gray-600">
@@ -118,6 +142,7 @@ const FichaContacto: FC = () => {
           {[
             { key: 'general', label: 'Datos Generales' },
             { key: 'comentarios', label: 'Comentarios' },
+            { key: 'registro_eventos', label: 'Registro de eventos' },
           ].map(({ key, label }, index) => (
             <div
               key={key}
@@ -168,9 +193,13 @@ const FichaContacto: FC = () => {
               setModal={setModal}
             />
           )}
+
+          {pestana === 'registro_eventos' && (
+            <RegistroEventosContacto id_contacto={contactoEditable.id_contacto} />
+          )}
         </div>
 
-        <BotonFlotante isContenidoEdited={isContenidoEdited} />
+        <BotonFlotante isContenidoEdited={isContenidoEdited} onSave={handleSaveChanges} disabled={saving} />
       </div>
     </div>
   );
