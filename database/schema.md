@@ -41,12 +41,18 @@ official hash metadata and XML record payloads. See
 | 5 | apellidos_agente | text | NO | ''::text |
 | 6 | nombre_completo_agente | text | NO | ''::text |
 | 7 | dni_agente | text | YES |  |
-| 8 | rol_agente | text | YES |  |
+| 8 | rol_agente | text | NO | 'base'::text |
 | 9 | estado_agente | text | YES |  |
 | 10 | email_agente | text | NO | ''::text |
+| 11 | accesos_personalizados | boolean | NO | false |
+| 12 | array_accesos_adicionales | jsonb | NO | '[]'::jsonb |
+| 13 | is_empleado_account | boolean | NO | true |
 
 Constraints:
-- PRIMARY KEY agentes_db_pkey: PRIMARY KEY (id_agente)
+- agentes_db_pkey: PRIMARY KEY (id_agente)
+
+Indexes:
+- agentes_db_pkey: CREATE UNIQUE INDEX agentes_db_pkey ON public.agentes_db USING btree (id_agente)
 
 ### comentarios_contactos_db
 
@@ -351,6 +357,13 @@ Indexes:
 | 9 | comentarios | text | NO | ''::text |
 | 10 | created_at | timestamp with time zone | NO | now() |
 | 11 | updated_at | timestamp with time zone | NO | now() |
+| 12 | id_proveedor | text | YES |  |
+| 13 | id_cuenta | text | YES |  |
+| 14 | id_orden | text | YES |  |
+| 15 | id_pago | text | YES |  |
+| 16 | id_cargo_recurrente | bigint | YES |  |
+| 17 | id_agente | text | YES |  |
+| 18 | duplicado_descartado | boolean | NO | false |
 
 Constraints:
 - PRIMARY KEY lineas_bancos_pkey: PRIMARY KEY (id_linea_banco)
@@ -361,6 +374,7 @@ Indexes:
 - lineas_bancos_banco_idx: CREATE INDEX lineas_bancos_banco_idx ON public.lineas_bancos USING btree (banco)
 - lineas_bancos_fecha_operativa_idx: CREATE INDEX lineas_bancos_fecha_operativa_idx ON public.lineas_bancos USING btree (fecha_operativa)
 - lineas_bancos_estado_revision_idx: CREATE INDEX lineas_bancos_estado_revision_idx ON public.lineas_bancos USING btree (estado_revision)
+- lineas_bancos_id_agente_idx: CREATE INDEX lineas_bancos_id_agente_idx ON public.lineas_bancos USING btree (id_agente)
 
 ### lineas_propuestas_db
 
@@ -746,3 +760,258 @@ Constraints:
 
 Indexes:
 - servicios_db_id_medio_idx: CREATE INDEX servicios_db_id_medio_idx ON public.servicios_db USING btree (id_medio)
+
+### registro_copias_seguridad
+
+| # | Column | Type | Nullable | Default |
+|---:|---|---|---|---|
+| 1 | id_copia_seguridad | bigint | NO | nextval('registro_copias_seguridad_id_copia_seguridad_seq'::regclass) |
+| 2 | nombre | character varying(255) | NO |  |
+| 3 | fecha | timestamp with time zone | NO | now() |
+| 4 | detalles | text | NO | ''::text |
+| 5 | estado | character varying(20) | NO | 'correcta'::character varying |
+| 6 | tablas | jsonb | NO | '[]'::jsonb |
+
+Constraints:
+- PRIMARY KEY registro_copias_seguridad_pkey: PRIMARY KEY (id_copia_seguridad)
+- CHECK registro_copias_seguridad_estado_check: CHECK (estado::text = ANY (ARRAY['correcta'::character varying, 'error'::character varying]::text[]))
+
+Indexes:
+- idx_registro_copias_seguridad_fecha: CREATE INDEX idx_registro_copias_seguridad_fecha ON public.registro_copias_seguridad USING btree (fecha DESC)
+
+### anticipos_empleados
+
+| # | Column | Type | Nullable | Default |
+|---:|---|---|---|---|
+| 1 | id | text | NO |  |
+| 2 | id_empleado | text | NO |  |
+| 3 | mes | smallint | NO |  |
+| 4 | anio | smallint | NO |  |
+| 5 | importe_neto | numeric(12,2) | NO |  |
+| 6 | estado | text | NO | 'pendiente'::text |
+| 7 | comentarios | text | NO | ''::text |
+| 8 | id_transferencia | text | YES |  |
+| 9 | created_at | timestamp with time zone | NO | now() |
+| 10 | updated_at | timestamp with time zone | NO | now() |
+
+Constraints:
+- anticipos_empleados_anio_check: CHECK (((anio >= 2000) AND (anio <= 2100)))
+- anticipos_empleados_estado_check: CHECK ((estado = ANY (ARRAY['pagado'::text, 'pendiente'::text])))
+- anticipos_empleados_id_empleado_fkey: FOREIGN KEY (id_empleado) REFERENCES agentes_db(id_agente)
+- anticipos_empleados_id_transferencia_fkey: FOREIGN KEY (id_transferencia) REFERENCES lineas_bancos(id_linea_banco)
+- anticipos_empleados_id_transferencia_key: UNIQUE (id_transferencia)
+- anticipos_empleados_importe_neto_check: CHECK ((importe_neto > (0)::numeric))
+- anticipos_empleados_mes_check: CHECK (((mes >= 1) AND (mes <= 12)))
+- anticipos_empleados_pkey: PRIMARY KEY (id)
+
+Indexes:
+- anticipos_empleados_id_transferencia_key: CREATE UNIQUE INDEX anticipos_empleados_id_transferencia_key ON public.anticipos_empleados USING btree (id_transferencia)
+- anticipos_empleados_periodo_idx: CREATE INDEX anticipos_empleados_periodo_idx ON public.anticipos_empleados USING btree (id_empleado, anio, mes)
+- anticipos_empleados_pkey: CREATE UNIQUE INDEX anticipos_empleados_pkey ON public.anticipos_empleados USING btree (id)
+
+### nominas
+
+| # | Column | Type | Nullable | Default |
+|---:|---|---|---|---|
+| 1 | id | text | NO |  |
+| 2 | id_empleado | text | NO |  |
+| 3 | mes | smallint | NO |  |
+| 4 | anio | smallint | NO |  |
+| 5 | estado | text | NO | 'pendiente'::text |
+| 6 | importe_neto | numeric(12,2) | NO | 0 |
+| 7 | anticipos | text[] | NO | '{}'::text[] |
+| 8 | id_transferencia | text | YES |  |
+| 9 | comentarios | text | NO | ''::text |
+| 10 | created_at | timestamp with time zone | NO | now() |
+| 11 | updated_at | timestamp with time zone | NO | now() |
+
+Constraints:
+- nominas_anio_check: CHECK (((anio >= 2000) AND (anio <= 2100)))
+- nominas_estado_check: CHECK ((estado = ANY (ARRAY['pagado'::text, 'pendiente'::text])))
+- nominas_id_empleado_anio_mes_key: UNIQUE (id_empleado, anio, mes)
+- nominas_id_empleado_fkey: FOREIGN KEY (id_empleado) REFERENCES agentes_db(id_agente)
+- nominas_id_transferencia_fkey: FOREIGN KEY (id_transferencia) REFERENCES lineas_bancos(id_linea_banco)
+- nominas_id_transferencia_key: UNIQUE (id_transferencia)
+- nominas_importe_neto_check: CHECK ((importe_neto >= (0)::numeric))
+- nominas_mes_check: CHECK (((mes >= 1) AND (mes <= 12)))
+- nominas_pkey: PRIMARY KEY (id)
+
+Indexes:
+- nominas_anticipos_idx: CREATE INDEX nominas_anticipos_idx ON public.nominas USING gin (anticipos)
+- nominas_id_empleado_anio_mes_key: CREATE UNIQUE INDEX nominas_id_empleado_anio_mes_key ON public.nominas USING btree (id_empleado, anio, mes)
+- nominas_id_transferencia_key: CREATE UNIQUE INDEX nominas_id_transferencia_key ON public.nominas USING btree (id_transferencia)
+- nominas_pkey: CREATE UNIQUE INDEX nominas_pkey ON public.nominas USING btree (id)
+
+### calendarios_laborales
+
+| # | Column | Type | Nullable | Default |
+|---:|---|---|---|---|
+| 1 | anio | smallint | NO |  |
+| 2 | created_at | timestamp with time zone | NO | now() |
+
+Constraints:
+- calendarios_laborales_anio_check: CHECK (((anio >= 2000) AND (anio <= 2100)))
+- calendarios_laborales_pkey: PRIMARY KEY (anio)
+
+Indexes:
+- calendarios_laborales_pkey: CREATE UNIQUE INDEX calendarios_laborales_pkey ON public.calendarios_laborales USING btree (anio)
+
+### eventos_calendario_laboral
+
+| # | Column | Type | Nullable | Default |
+|---:|---|---|---|---|
+| 1 | id | text | NO |  |
+| 2 | anio | smallint | NO |  |
+| 3 | tipo | text | NO |  |
+| 4 | titulo | text | NO |  |
+| 5 | inicio | date | NO |  |
+| 6 | fin | date | NO |  |
+| 7 | comentarios | text | NO | ''::text |
+| 8 | created_at | timestamp with time zone | NO | now() |
+
+Constraints:
+- eventos_calendario_laboral_anio_fkey: FOREIGN KEY (anio) REFERENCES calendarios_laborales(anio)
+- eventos_calendario_laboral_check: CHECK (((fin >= inicio) AND (EXTRACT(year FROM inicio) = (anio)::numeric) AND (EXTRACT(year FROM fin) = (anio)::numeric)))
+- eventos_calendario_laboral_pkey: PRIMARY KEY (id)
+- eventos_calendario_laboral_tipo_check: CHECK ((tipo = ANY (ARRAY['vacaciones'::text, 'festivo_nacional'::text, 'festivo_autonomico'::text, 'festivo_barcelona'::text, 'festivo_convenio'::text, 'deadline_revista'::text, 'publicacion_revista'::text, 'feria'::text])))
+- eventos_calendario_laboral_titulo_check: CHECK ((length(btrim(titulo)) > 0))
+
+Indexes:
+- eventos_calendario_laboral_anio_idx: CREATE INDEX eventos_calendario_laboral_anio_idx ON public.eventos_calendario_laboral USING btree (anio, inicio)
+- eventos_calendario_laboral_pkey: CREATE UNIQUE INDEX eventos_calendario_laboral_pkey ON public.eventos_calendario_laboral USING btree (id)
+
+### empleados_libre_disposicion
+
+| # | Column | Type | Nullable | Default |
+|---:|---|---|---|---|
+| 1 | id_empleado | text | NO |  |
+| 2 | anio | smallint | NO |  |
+| 3 | numero | smallint | NO |  |
+| 4 | fecha | date | NO |  |
+
+Constraints:
+- empleados_libre_disposicion_anio_check: CHECK (((anio >= 2000) AND (anio <= 2100)))
+- empleados_libre_disposicion_check: CHECK ((EXTRACT(year FROM fecha) = (anio)::numeric))
+- empleados_libre_disposicion_id_empleado_fecha_key: UNIQUE (id_empleado, fecha)
+- empleados_libre_disposicion_id_empleado_fkey: FOREIGN KEY (id_empleado) REFERENCES agentes_db(id_agente)
+- empleados_libre_disposicion_numero_check: CHECK (((numero >= 1) AND (numero <= 3)))
+- empleados_libre_disposicion_pkey: PRIMARY KEY (id_empleado, anio, numero)
+
+Indexes:
+- empleados_libre_disposicion_id_empleado_fecha_key: CREATE UNIQUE INDEX empleados_libre_disposicion_id_empleado_fecha_key ON public.empleados_libre_disposicion USING btree (id_empleado, fecha)
+- empleados_libre_disposicion_pkey: CREATE UNIQUE INDEX empleados_libre_disposicion_pkey ON public.empleados_libre_disposicion USING btree (id_empleado, anio, numero)
+
+### ausencias_empleados
+
+| # | Column | Type | Nullable | Default |
+|---:|---|---|---|---|
+| 1 | id | text | NO |  |
+| 2 | id_empleado | text | NO |  |
+| 3 | tipo | text | NO |  |
+| 4 | inicio | date | NO |  |
+| 5 | fin | date | NO |  |
+| 6 | comentarios | text | NO | ''::text |
+| 7 | created_at | timestamp with time zone | NO | now() |
+
+Constraints:
+- ausencias_empleados_check: CHECK ((fin >= inicio))
+- ausencias_empleados_id_empleado_fkey: FOREIGN KEY (id_empleado) REFERENCES agentes_db(id_agente)
+- ausencias_empleados_pkey: PRIMARY KEY (id)
+
+Indexes:
+- ausencias_empleados_empleado_idx: CREATE INDEX ausencias_empleados_empleado_idx ON public.ausencias_empleados USING btree (id_empleado, inicio)
+- ausencias_empleados_pkey: CREATE UNIQUE INDEX ausencias_empleados_pkey ON public.ausencias_empleados USING btree (id)
+
+### comentarios_empleados
+
+| # | Column | Type | Nullable | Default |
+|---:|---|---|---|---|
+| 1 | id | text | NO |  |
+| 2 | id_empleado | text | NO |  |
+| 3 | comentario | text | NO |  |
+| 4 | created_at | timestamp with time zone | NO | now() |
+
+Constraints:
+- comentarios_empleados_comentario_check: CHECK ((length(btrim(comentario)) > 0))
+- comentarios_empleados_id_empleado_fkey: FOREIGN KEY (id_empleado) REFERENCES agentes_db(id_agente)
+- comentarios_empleados_pkey: PRIMARY KEY (id)
+
+Indexes:
+- comentarios_empleados_empleado_idx: CREATE INDEX comentarios_empleados_empleado_idx ON public.comentarios_empleados USING btree (id_empleado, created_at)
+- comentarios_empleados_pkey: CREATE UNIQUE INDEX comentarios_empleados_pkey ON public.comentarios_empleados USING btree (id)
+
+### procesos_contratacion
+
+| # | Column | Type | Nullable | Default |
+|---:|---|---|---|---|
+| 1 | id | text | NO |  |
+| 2 | nombre | text | NO |  |
+| 3 | oferta_condiciones | text | NO | ''::text |
+| 4 | mensaje_pre_llamada | text | NO | ''::text |
+| 5 | mensaje_post_llamada | text | NO | ''::text |
+| 6 | mensaje_rechazo | text | NO | ''::text |
+| 7 | created_at | timestamp with time zone | NO | now() |
+| 8 | updated_at | timestamp with time zone | NO | now() |
+
+Constraints:
+- procesos_contratacion_nombre_check: CHECK ((length(btrim(nombre)) > 0))
+- procesos_contratacion_pkey: PRIMARY KEY (id)
+
+Indexes:
+- procesos_contratacion_pkey: CREATE UNIQUE INDEX procesos_contratacion_pkey ON public.procesos_contratacion USING btree (id)
+
+### candidatos_contratacion
+
+| # | Column | Type | Nullable | Default |
+|---:|---|---|---|---|
+| 1 | id | text | NO |  |
+| 2 | id_proceso | text | NO |  |
+| 3 | nombre | text | NO |  |
+| 4 | resumen_cv | text | NO | ''::text |
+| 5 | comentarios | text | NO | ''::text |
+| 6 | estado | text | NO | 'pendiente llamada'::text |
+| 7 | created_at | timestamp with time zone | NO | now() |
+| 8 | updated_at | timestamp with time zone | NO | now() |
+
+Constraints:
+- candidatos_contratacion_estado_check: CHECK ((estado = ANY (ARRAY['pendiente llamada'::text, 'rechazado en llamada'::text, 'pendiente reunión presencial'::text, 'rechazado en reunión presencial'::text, 'elegido'::text, 'reserva'::text])))
+- candidatos_contratacion_id_proceso_fkey: FOREIGN KEY (id_proceso) REFERENCES procesos_contratacion(id)
+- candidatos_contratacion_nombre_check: CHECK ((length(btrim(nombre)) > 0))
+- candidatos_contratacion_pkey: PRIMARY KEY (id)
+
+Indexes:
+- candidatos_contratacion_pkey: CREATE UNIQUE INDEX candidatos_contratacion_pkey ON public.candidatos_contratacion USING btree (id)
+- candidatos_contratacion_proceso_idx: CREATE INDEX candidatos_contratacion_proceso_idx ON public.candidatos_contratacion USING btree (id_proceso)
+
+### documentos_laborales
+
+| # | Column | Type | Nullable | Default |
+|---:|---|---|---|---|
+| 1 | id | text | NO |  |
+| 2 | id_empleado | text | YES |  |
+| 3 | id_nomina | text | YES |  |
+| 4 | id_anticipo | text | YES |  |
+| 5 | nombre | text | NO |  |
+| 6 | content_type | text | NO |  |
+| 7 | tamano | integer | NO |  |
+| 8 | s3_key | text | YES |  |
+| 9 | created_at | timestamp with time zone | NO | now() |
+| 10 | contenido | bytea | YES |  |
+
+Constraints:
+- documentos_laborales_almacenamiento_check: CHECK (((num_nonnulls(s3_key, contenido) = 1) AND ((contenido IS NULL) OR (octet_length(contenido) = tamano))))
+- documentos_laborales_check: CHECK ((num_nonnulls(id_empleado, id_nomina, id_anticipo) = 1))
+- documentos_laborales_id_anticipo_fkey: FOREIGN KEY (id_anticipo) REFERENCES anticipos_empleados(id)
+- documentos_laborales_id_empleado_fkey: FOREIGN KEY (id_empleado) REFERENCES agentes_db(id_agente)
+- documentos_laborales_id_nomina_fkey: FOREIGN KEY (id_nomina) REFERENCES nominas(id)
+- documentos_laborales_pkey: PRIMARY KEY (id)
+- documentos_laborales_s3_key_key: UNIQUE (s3_key)
+- documentos_laborales_tamano_check: CHECK (((tamano > 0) AND (tamano <= 15728640)))
+
+Indexes:
+- documentos_laborales_anticipo_idx: CREATE INDEX documentos_laborales_anticipo_idx ON public.documentos_laborales USING btree (id_anticipo)
+- documentos_laborales_empleado_idx: CREATE INDEX documentos_laborales_empleado_idx ON public.documentos_laborales USING btree (id_empleado)
+- documentos_laborales_nomina_idx: CREATE INDEX documentos_laborales_nomina_idx ON public.documentos_laborales USING btree (id_nomina)
+- documentos_laborales_pkey: CREATE UNIQUE INDEX documentos_laborales_pkey ON public.documentos_laborales USING btree (id)
+- documentos_laborales_s3_key_key: CREATE UNIQUE INDEX documentos_laborales_s3_key_key ON public.documentos_laborales USING btree (s3_key)
+

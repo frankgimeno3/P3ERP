@@ -1,14 +1,15 @@
-import { NextResponse } from "next/server";
-import { createTicket, getTickets } from "../../../../../server/features/proveedor/TicketRepository.js";
+import { createTicket, getTickets } from "@/server/features/proveedor/TicketRepository.js";
+import { adminError, ProveedorError } from "@/server/features/proveedor/SupplierAdminRepository.js";
 export const runtime = "nodejs";
 export async function GET(request) {
-  try { return NextResponse.json(await getTickets(new URL(request.url).searchParams.get("id_proveedor") || "")); }
-  catch (error) { return NextResponse.json({message:"Error al cargar tickets",detail:error.message},{status:500}); }
+  try { const query = new URL(request.url).searchParams; return Response.json(await getTickets(query.get("id_proveedor") || "",query.get("ambito") || "")); }
+  catch (error) { return adminError(error); }
 }
 export async function POST(request) {
   try {
-    const data = await request.json();
-    if (!data.fecha_ticket || (!data.id_proveedor && !data.nombre_personalizado_proveedor) || data.base_imponible === "" || data.importe_total === "" || !data.forma_pago || !data.documento_src) return NextResponse.json({message:"Completa todos los campos"},{status:400});
-    return NextResponse.json(await createTicket(data),{status:201});
-  } catch (error) { return NextResponse.json({message:"Error al crear ticket",detail:error.message},{status:400}); }
+    if (Number(request.headers.get('content-length')) > 15 * 1024 * 1024 + 65536) throw new ProveedorError('El archivo supera los 15 MB.',413);
+    const form = await request.formData();
+    const data = JSON.parse(String(form.get('data') || '{}'));
+    return Response.json(await createTicket(data,form.get('file')),{status:201});
+  } catch (error) { return adminError(error); }
 }

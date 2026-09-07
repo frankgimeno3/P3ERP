@@ -15,6 +15,16 @@ function normalizeLineaBanco(row) {
     saldo: numberOrZero(row.saldo),
     estado_revision: Boolean(row.estado_revision),
     comentarios: row.comentarios ?? "",
+    id_proveedor: row.id_proveedor ?? "",
+    nombre_proveedor: row.nombre_proveedor ?? "",
+    id_cuenta: row.id_cuenta ?? "",
+    nombre_cuenta: row.nombre_cuenta ?? "",
+    id_agente: row.id_agente ?? "",
+    nombre_agente: row.nombre_agente ?? "",
+    duplicado_descartado: Boolean(row.duplicado_descartado),
+    id_orden: row.id_orden ?? "",
+    id_pago: row.id_pago ?? "",
+    id_cargo_recurrente: row.id_cargo_recurrente === null || row.id_cargo_recurrente === undefined ? null : Number(row.id_cargo_recurrente),
     created_at: row.created_at,
     updated_at: row.updated_at,
   };
@@ -101,12 +111,28 @@ function ordinalId(banco, fechaOperativa, serial) {
 export async function getLineasBanco() {
   const pool = getPgPool();
   const { rows } = await pool.query(`
-    SELECT *
-    FROM lineas_bancos
-    ORDER BY id_linea_banco DESC
+    SELECT lb.*, p.nombre_proveedor, c.nombre_empresa AS nombre_cuenta, a.nombre_completo_agente AS nombre_agente
+    FROM lineas_bancos lb
+    LEFT JOIN proveedores_db p ON p.id_proveedor=lb.id_proveedor
+    LEFT JOIN cuentas_db c ON c.id_cuenta=lb.id_cuenta
+    LEFT JOIN agentes_db a ON a.id_agente=lb.id_agente
+    ORDER BY lb.id_linea_banco DESC
   `);
 
   return rows.map(normalizeLineaBanco);
+}
+
+export async function getLineaBancoById(idLineaBanco) {
+  const pool = getPgPool();
+  const { rows } = await pool.query(`
+    SELECT lb.*, p.nombre_proveedor, c.nombre_empresa AS nombre_cuenta, a.nombre_completo_agente AS nombre_agente
+    FROM lineas_bancos lb
+    LEFT JOIN proveedores_db p ON p.id_proveedor = lb.id_proveedor
+    LEFT JOIN cuentas_db c ON c.id_cuenta = lb.id_cuenta
+    LEFT JOIN agentes_db a ON a.id_agente = lb.id_agente
+    WHERE lb.id_linea_banco = $1
+  `, [idLineaBanco]);
+  return rows[0] ? normalizeLineaBanco(rows[0]) : null;
 }
 
 export async function createLineasBanco(lineas = []) {
@@ -181,10 +207,12 @@ export async function reconcileLineasBanco(banco, sourceLineas = []) {
     for (const linea of renumbered) {
       await client.query(
         `INSERT INTO lineas_bancos
-          (id_linea_banco, banco, fecha_operativa, fecha_valor, concepto, importe, saldo, estado_revision, comentarios, created_at, updated_at)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,COALESCE($10,NOW()),COALESCE($11,NOW()))`,
+          (id_linea_banco, banco, fecha_operativa, fecha_valor, concepto, importe, saldo, estado_revision, comentarios, id_proveedor, id_cuenta, id_orden, id_pago, id_cargo_recurrente, created_at, updated_at, id_agente, duplicado_descartado)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,COALESCE($15,NOW()),COALESCE($16,NOW()),$17,$18)`,
         [linea.id_linea_banco, banco, linea.fecha_operativa, linea.fecha_valor, linea.concepto, linea.importe, linea.saldo,
-          Boolean(linea.estado_revision), linea.comentarios || "", linea.created_at || null, linea.updated_at || null],
+          Boolean(linea.estado_revision), linea.comentarios || "", linea.id_proveedor || null, linea.id_cuenta || null,
+          linea.id_orden || null, linea.id_pago || null, linea.id_cargo_recurrente || null, linea.created_at || null, linea.updated_at || null,
+          linea.id_agente || null, Boolean(linea.duplicado_descartado)],
       );
     }
     await client.query("COMMIT");
@@ -204,11 +232,20 @@ export async function updateLineaBanco(idLineaBanco, data = {}) {
       UPDATE lineas_bancos
       SET estado_revision = $1,
           comentarios = $2,
+          id_proveedor = CASE WHEN $3 THEN $4 ELSE id_proveedor END,
+          id_cuenta = CASE WHEN $5 THEN $6 ELSE id_cuenta END,
+          id_agente = CASE WHEN $7 THEN $8 ELSE id_agente END,
+          id_orden = CASE WHEN $9 THEN $10 ELSE id_orden END,
+          id_pago = CASE WHEN $11 THEN $12 ELSE id_pago END,
+          id_cargo_recurrente = CASE WHEN $13 THEN $14 ELSE id_cargo_recurrente END,
           updated_at = NOW()
-      WHERE id_linea_banco = $3
+      WHERE id_linea_banco = $15
       RETURNING *
     `,
-    [Boolean(data.estado_revision), data.comentarios ?? "", idLineaBanco],
+    [Boolean(data.estado_revision), data.comentarios ?? "", data.id_proveedor !== undefined, data.id_proveedor || null,
+      data.id_cuenta !== undefined, data.id_cuenta || null, data.id_agente !== undefined, data.id_agente || null,
+      data.id_orden !== undefined, data.id_orden || null, data.id_pago !== undefined, data.id_pago || null,
+      data.id_cargo_recurrente !== undefined, data.id_cargo_recurrente || null, idLineaBanco],
   );
 
   return rows[0] ? normalizeLineaBanco(rows[0]) : null;

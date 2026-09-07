@@ -1,0 +1,3 @@
+ALTER TABLE horas_juan
+  ADD COLUMN IF NOT EXISTS motivo_ajuste VARCHAR(500);
+

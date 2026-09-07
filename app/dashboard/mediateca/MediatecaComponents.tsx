@@ -231,6 +231,109 @@ function MoveModal({ item, onClose, onDone }: { item: MediatecaMedia; onClose: (
   );
 }
 
+function EditFolderModal({ folder, onClose, onDone }: { folder: MediatecaFolder; onClose: () => void; onDone: () => void }) {
+  const [name, setName] = useState(folder.name);
+  const [roles, setRoles] = useState<string[]>([]);
+  const [roleInput, setRoleInput] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const commonRoles = ["admin", "editor", "viewer", "contributor"];
+
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
+    setSaving(true);
+    setError("");
+    try {
+      await MediatecaService.updateFolder(folder.id, { name, allowed_roles: roles });
+      onDone();
+    } catch (err: any) {
+      setError(err?.response?.data?.message || "No se ha podido actualizar la carpeta.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <ModalFrame title="Editar carpeta" onClose={onClose}>
+      <form onSubmit={submit} className="space-y-4">
+        <label className="block text-sm">
+          Nombre de la carpeta
+          <input autoFocus value={name} onChange={(event) => setName(event.target.value)} className="mt-1 w-full rounded-lg border p-2" />
+        </label>
+        
+        <div className="text-sm">
+          <label className="block mb-2 font-semibold">Roles permitidos</label>
+          <div className="space-y-2 mb-3">
+            {commonRoles.map((role) => (
+              <label key={role} className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={roles.includes(role)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setRoles([...roles, role]);
+                    } else {
+                      setRoles(roles.filter(r => r !== role));
+                    }
+                  }}
+                  className="cursor-pointer"
+                />
+                <span className="capitalize">{role}</span>
+              </label>
+            ))}
+          </div>
+          
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={roleInput}
+              onChange={(e) => setRoleInput(e.target.value)}
+              placeholder="Añadir rol personalizado"
+              className="flex-1 rounded-lg border p-2 text-sm"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                if (roleInput.trim() && !roles.includes(roleInput.trim())) {
+                  setRoles([...roles, roleInput.trim()]);
+                  setRoleInput("");
+                }
+              }}
+              className="rounded-lg bg-gray-100 px-3 py-2 text-sm hover:bg-gray-200"
+            >
+              +
+            </button>
+          </div>
+
+          {roles.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {roles.map((role) => (
+                <div key={role} className="flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
+                  {role}
+                  <button
+                    type="button"
+                    onClick={() => setRoles(roles.filter(r => r !== role))}
+                    className="ml-1 cursor-pointer hover:font-bold"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {error && <p className="text-sm text-red-700">{error}</p>}
+        <div className="flex justify-end gap-2">
+          <button type="button" onClick={onClose} className="rounded-lg bg-gray-100 px-4 py-2 text-sm">Cancelar</button>
+          <button disabled={!name.trim() || saving} className="rounded-lg bg-blue-950 px-4 py-2 text-sm text-white disabled:opacity-50">Guardar</button>
+        </div>
+      </form>
+    </ModalFrame>
+  );
+}
+
 export function MediatecaBrowser({
   initialPath = "",
   picker = false,
@@ -249,18 +352,26 @@ export function MediatecaBrowser({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
+  const [folderSearch, setFolderSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [renameTarget, setRenameTarget] = useState<MediatecaMedia | null>(null);
   const [moveTarget, setMoveTarget] = useState<MediatecaMedia | null>(null);
+  const [editingFolder, setEditingFolder] = useState<MediatecaFolder | null>(null);
 
   const currentPath = joinPath(segments);
   const currentFolderName = segments.length > 0 ? segments[segments.length - 1] : "raiz";
   const selected = media.find((item) => item.id === selectedId) || null;
+  
   const filteredMedia = useMemo(() => {
     const q = search.trim().toLowerCase();
     return q ? media.filter((item) => item.name.toLowerCase().includes(q) || item.id.toLowerCase().includes(q)) : media;
   }, [media, search]);
+
+  const filteredFolders = useMemo(() => {
+    const q = folderSearch.trim().toLowerCase();
+    return q ? folders.filter((folder) => folder.name.toLowerCase().includes(q) || folder.path.toLowerCase().includes(q)) : folders;
+  }, [folders, folderSearch]);
 
   async function load() {
     setLoading(true);
@@ -331,6 +442,14 @@ export function MediatecaBrowser({
 
       <section>
         <h2 className="mb-3 font-semibold">Sub-carpetas dentro de la carpeta actual ({currentFolderName})</h2>
+        <div className="mb-3">
+          <input
+            value={folderSearch}
+            onChange={(event) => setFolderSearch(event.target.value)}
+            placeholder="Buscar carpetas..."
+            className="w-full rounded-lg border p-2 text-sm"
+          />
+        </div>
         <div className="overflow-x-auto rounded-lg border">
           <table className="min-w-full text-sm">
             <thead className="bg-gray-50 text-left">
@@ -341,7 +460,7 @@ export function MediatecaBrowser({
               </tr>
             </thead>
             <tbody>
-              {folders.map((folder) => (
+              {filteredFolders.map((folder) => (
                 <tr key={folder.id} className="border-t hover:bg-blue-50">
                   <td className="p-3">
                     <button type="button" className="font-medium text-blue-800 hover:underline" onClick={() => setSegments(splitPath(folder.path))}>
@@ -351,12 +470,21 @@ export function MediatecaBrowser({
                   <td className="p-3 font-mono text-xs text-gray-500">{folder.path}</td>
                   {!picker && (
                     <td className="p-3 text-right">
-                      <button type="button" onClick={() => void deleteFolder(folder)} className="rounded bg-red-50 px-3 py-1 text-xs text-red-700">Eliminar</button>
+                      <div className="flex justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setEditingFolder(folder)}
+                          className="rounded bg-blue-100 px-3 py-1 text-xs text-blue-800 hover:bg-blue-200"
+                        >
+                          Editar
+                        </button>
+                        <button type="button" onClick={() => void deleteFolder(folder)} className="rounded bg-red-50 px-3 py-1 text-xs text-red-700 hover:bg-red-100">Eliminar</button>
+                      </div>
                     </td>
                   )}
                 </tr>
               ))}
-              {!loading && folders.length === 0 && <tr><td colSpan={picker ? 2 : 3} className="p-4 text-center text-gray-400">Sin carpetas.</td></tr>}
+              {!loading && filteredFolders.length === 0 && <tr><td colSpan={picker ? 2 : 3} className="p-4 text-center text-gray-400">Sin carpetas.</td></tr>}
             </tbody>
           </table>
         </div>
@@ -425,6 +553,7 @@ export function MediatecaBrowser({
       {addOpen && <AddFileModal folderPath={currentPath} onClose={() => setAddOpen(false)} onDone={() => { setAddOpen(false); void load(); }} />}
       {renameTarget && <RenameModal item={renameTarget} onClose={() => setRenameTarget(null)} onDone={() => { setRenameTarget(null); void load(); }} />}
       {moveTarget && <MoveModal item={moveTarget} onClose={() => setMoveTarget(null)} onDone={() => { setMoveTarget(null); void load(); }} />}
+      {editingFolder && <EditFolderModal folder={editingFolder} onClose={() => setEditingFolder(null)} onDone={() => { setEditingFolder(null); void load(); }} />}
     </div>
   );
 }

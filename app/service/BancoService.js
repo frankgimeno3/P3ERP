@@ -15,4 +15,9 @@ export class BancoService {
         const response = await apiClient.put(`/api/v1/direccion/bancos/${idLineaBanco}`, data);
         return response.data;
     }
+
+    static async getLineaBanco(idLineaBanco) {
+        const response = await apiClient.get(`/api/v1/direccion/bancos/${idLineaBanco}`);
+        return response.data;
+    }
 }

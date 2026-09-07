@@ -1,4 +1,39 @@
 {
+  "/dashboard/direccion/laboral/nominas": {
+    "summary": "Gestiona nóminas y anticipos de las cuentas de empleado, sus documentos y las transferencias de cada pago.",
+    "steps": [
+      "La pestaña Nóminas muestra solo empleado y mes (con el año). Agrega una nómina por empleado y periodo y pulsa la fila para abrir su ficha.",
+      "En Anticipos, pulsa Agregar anticipo y completa mes, año, empleado, importe neto, estado pagado o pendiente y comentarios. Puedes abrirlo después para editarlo, vincular su transferencia y subir documentos.",
+      "En la ficha de nómina indica el neto total, estado y comentarios y sube los documentos. Los anticipos del mismo empleado y periodo se vinculan automáticamente mediante su array de identificadores.",
+      "Consulta por separado la transferencia de nómina y las de anticipos. Solo los anticipos pagados reducen el importe pendiente de transferencia salarial. No se permite duplicar una nómina del mismo periodo ni reutilizar una transferencia."
+    ]
+  },
+  "/dashboard/direccion/laboral/asuntos-empleados": {
+    "summary": "Consulta los agentes marcados como empleados y administra sus asuntos laborales.",
+    "steps": [
+      "Abre un empleado para ver sus datos de agente. La condición de cuenta de empleado se modifica en Operaciones, Agentes.",
+      "Selecciona el año para consultar sus tres días de libre disposición. Marca cada día usado e introduce su fecha separada en dd, mm y yyyy; guarda los cambios.",
+      "Sube y descarga documentación del empleado. Registra, edita o elimina ausencias indicando motivo, fechas y comentarios.",
+      "Añade comentarios a la ficha; el historial permanece visible al cambiar de año."
+    ]
+  },
+  "/dashboard/direccion/laboral/calendario-laboral": {
+    "summary": "Configura un calendario por año con vacaciones, festivos y eventos editoriales.",
+    "steps": [
+      "Agrega un año y abre su fila para configurar el calendario.",
+      "Introduce vacaciones, festivos nacionales, autonómicos, de Barcelona y de convenio. Puedes registrar días sueltos o periodos dentro del año, con título y comentarios.",
+      "Los elementos se reflejan en los doce meses del calendario inferior. Pulsa cualquier día para agregar un deadline de revista, publicación de revista o feria.",
+      "Consulta la leyenda de colores, pasa sobre un día para ver sus eventos y usa la tabla para editarlos o eliminarlos."
+    ]
+  },
+  "/dashboard/direccion/laboral/contratacion": {
+    "summary": "Organiza procesos de contratación, textos de oferta y comunicaciones y seguimiento de candidatos.",
+    "steps": [
+      "Crea un proceso y abre su fila para completar la oferta y condiciones y los mensajes pre-llamada, post-llamada y de rechazo.",
+      "Agrega candidatos con nombre, resumen CV y comentarios.",
+      "Edita su estado: pendiente llamada, rechazado en llamada, pendiente reunión presencial, rechazado en reunión presencial, elegido o reserva. Puedes filtrar la tabla por estado."
+    ]
+  },
   "/dashboard/comercial/cuentas": {
     "summary": "Consulta y administra la cartera de cuentas de cliente.",
     "steps": [
@@ -88,7 +123,7 @@
     ]
   },
   "/dashboard/administracion/proveedores": {
-    "summary": "Mantiene las fichas de proveedores.",
+    "summary": "Muestra directamente el listado y las fichas de proveedores desde la carpeta Proveedores de Administración.",
     "steps": [
       "Busca un proveedor por sus datos.",
       "Abre su ficha para revisar información fiscal y de contacto.",
@@ -112,17 +147,19 @@
     ]
   },
   "/dashboard/operaciones/data": {
-    "summary": "Centraliza las operaciones de importación, exportación y mantenimiento de datos.",
+    "summary": "Centraliza los cambios con Excel y las actualizaciones de cuentas y contactos procedentes de Vtiger.",
     "steps": [
-      "Selecciona la operación necesaria.",
-      "Revisa el formato y alcance de los datos antes de ejecutarla.",
-      "Comprueba el resultado y corrige los registros rechazados."
+      "Usa Cambios con Excel para acceder a las importaciones y exportaciones habituales.",
+      "En Actualizaciones Vtiger, adjunta un CSV o Excel y valida que sus columnas coincidan exactamente con el formato esperado.",
+      "Selecciona el modo de importación, ejecuta el proceso y consulta después su resumen y detalle en el historial."
     ]
   },
   "/dashboard/operaciones/agentesyroles": {
     "summary": "Administra agentes, altas en Cognito y su asignación segura de roles.",
     "steps": [
       "Pulsa Crear agente para iniciar el alta guiada y asigna uno de los roles base, administración, operaciones o superadmin.",
+      "La columna Cuenta de empleado corresponde a is_empleado_account, activado por defecto. Modifica esta casilla en la ficha del agente para incluirlo o excluirlo de los listados y altas de Laboral; su histórico se conserva.",
+      "Los agentes con histórico laboral no se pueden borrar. Desactiva la cuenta de empleado para conservar nóminas, documentos y demás registros.",
       "El rol determina los módulos visibles y el servidor bloquea las rutas y APIs no autorizadas aunque se intente acceder directamente.",
       "Abre la ficha de un agente para modificarlo o borrarlo; el borrado exige escribir borrar y elimina su cuenta, sus listas y sus tareas, sin afectar las de otros agentes."
     ]
@@ -146,9 +183,75 @@
   "/dashboard/direccion/bancos": {
     "summary": "Importa, ordena y revisa los movimientos de las cuentas bancarias de la empresa.",
     "steps": [
-      "Pulsa Añadir extracto y selecciona el banco. Santander y Sabadell muestran las columnas exactas esperadas para sus respectivos formatos oficiales.",
+      "Pulsa Añadir extracto, selecciona Santander o Sabadell e indica expresamente si el archivo tiene cabezal. Sin cabezal exige la tabla en la primera fila; con cabezal localiza la tabla después de los datos informativos de la cuenta.",
       "La aplicación detecta el sentido cronológico y compara la secuencia completa para reconocer movimientos registrados e intercalar los ausentes con identificadores ordinales.",
-      "Usa Gestión de previsión de gastos o Gestión de previsión de ingresos para acceder directamente a la planificación financiera."
+      "Cambia entre las pestañas Sabadell y Santander y filtra, en este orden, por fecha, concepto, importe y estado. El interruptor de fecha permite usar una fecha concreta o un rango Desde/Hasta."
+    ]
+  },
+  "/dashboard/direccion/bancos/extractos": {
+    "summary": "Importa y consulta los extractos de Sabadell y Santander.",
+    "steps": [
+      "Cambia entre las pestañas Sabadell y Santander y abre, cuando lo necesites, el filtro inicialmente oculto de dos filas para buscar por fecha, tipo, concepto, importe, estado o asociación.",
+      "Pulsa Añadir extracto, elige banco y formato con o sin cabezal, y confirma las líneas nuevas detectadas.",
+      "Pulsa el concepto para abrir el asistente de revisión o usa Revisión de líneas para trabajar en bloque."
+    ]
+  },
+  "/dashboard/direccion/bancos/extractos/revision": {
+    "summary": "Revisa, asigna y concilia líneas bancarias individualmente o en bloque.",
+    "steps": [
+      "Selecciona varias líneas para asignarles un proveedor o cliente común, o marcarlas como revisadas.",
+      "En Asignación común, pulsa un proveedor o cliente para seleccionarlo: solo uno queda marcado en azul. Pulsa Continuar para comprobar las líneas. Si alguna ya tiene proveedor o cliente asignado, se muestra un error y no puedes confirmar. Si todo está correcto, pulsa Confirmar asignación; se comprueba de nuevo antes de guardar.",
+      "Abre una fila para comprobar previsiones, avisos detallados y asignarla a proveedor, cliente o nómina antes de revisar cargos recurrentes u órdenes.",
+      "Usa Detectar duplicados para comparar coincidencias por fecha e importe, eliminar una línea o confirmar de forma persistente que el grupo no es duplicado."
+    ]
+  },
+  "/dashboard/direccion/bancos/prevision-liquidez": {
+    "summary": "Proyecta la liquidez a partir de cobros y cargos previstos.",
+    "steps": [
+      "Indica la fecha con los campos separados de día, mes y año para calcular la liquidez de ambos bancos.",
+      "Usa las pestañas Previsión de ingresos y Previsión de cargos situadas debajo del resumen.",
+      "En ingresos alterna entre recibos, transferencias y remesas; cada remesa aparece en una línea.",
+      "En cargos consulta las columnas fecha, proveedor, base imponible, total con IVA y descripción, y crea cargos con proveedor o sin asignar."
+    ]
+  },
+  "/dashboard/direccion/bancos/prevision-ingresos": {
+    "summary": "Reúne órdenes de cobro e ingresos adicionales previstos.",
+    "steps": ["Filtra ingresos previstos.", "Consulta recibos y transferencias.", "Mantén actualizadas fechas, importes y bancos."]
+  },
+  "/dashboard/direccion/bancos/prevision-cargos": {
+    "summary": "Gestiona cargos recurrentes previstos y cargos bancarios pendientes de asociar.",
+    "steps": [
+      "Alterna entre Cargos previstos registrados y Cargos pendientes de asociar.",
+      "Filtra por base imponible, total con IVA, proveedor, fecha o descripción.",
+      "Agrega cargos por fechas concretas o por periodicidad, con una o varias reglas."
+    ]
+  },
+  "/dashboard/direccion/copias-seguridad": {
+    "summary": "Consulta el registro de copias de seguridad generadas y crea una nueva copia descargable.",
+    "steps": [
+      "Revisa en la tabla el identificador, nombre, fecha y detalles de cada intento; las copias anteriores no se pueden volver a descargar.",
+      "Pulsa Hacer nueva copia de seguridad para abrir el asistente de cinco fases.",
+      "Pon un nombre y selecciona las tablas, conserva las columnas necesarias, añade detalles y confirma el resumen.",
+      "Usa Hacer copia completa para incluir todas las tablas y columnas con el detalle COPIA COMPLETA."
+    ]
+  },
+  "/dashboard/direccion/copias-seguridad/nueva": {
+    "summary": "Genera y descarga una copia puntual de las tablas y columnas seleccionadas.",
+    "steps": [
+      "Indica un nombre, filtra las tablas RDS en tiempo real y selecciónalas individualmente o con Seleccionar todas.",
+      "Revisa sus columnas; las claves primarias permanecen siempre seleccionadas.",
+      "Añade detalles, comprueba el resumen y confirma la generación.",
+      "Sigue la barra de progreso de la fase 5 y guarda el archivo cuando comience la descarga; el servidor conserva únicamente el registro informativo."
+    ]
+  },
+  "/dashboard/direccion/horas-juan": {
+    "summary": "Crea y consulta informes mensuales de horas, anticipos y ajustes de Juan.",
+    "steps": [
+      "Pulsa Crear informe y elige mes, año y tipo: normal, anticipo o informativa.",
+      "En normal e informativa introduce horas y minutos; se convierten a horas decimales y se valoran a 15 € por hora.",
+      "Revisa o modifica el importe anterior a compensar e indica su motivo cuando no sea cero.",
+      "Alterna entre Informes y Adeudos para consultar quién debe el saldo pendiente y abrir su informe de origen.",
+      "Desde el informe puedes guardar únicamente el documento como PDF o eliminarlo; los anticipos avisan de los cierres vinculados que también se borrarán."
     ]
   },
   "/dashboard/direccion/previsiones/prevision-liquidez": {
@@ -175,11 +278,20 @@
       "Pulsa cualquier fila para abrir su ficha, asociar un proveedor o modificar los datos del pago."
     ]
   },
-  "/dashboard/produccion/control_redaccion": {
-    "summary": "Centraliza el futuro control del trabajo de redacción.",
+  "/dashboard/produccion/hoja_produccion": {
+    "summary": "Muestra la hoja de producción 2026 con la estructura completa de contenidos, anuncios, artículos y publicación.",
     "steps": [
-      "Accede desde Producción.",
-      "Consulta esta página para las próximas funciones de control de redacción."
+      "Despliega Filtros, cerrado inicialmente, para buscar por los campos de la hoja. La tabla no muestra Código CRM, Publicación / Nº web, Factura ni Comentarios.",
+      "Usa los controles para incluir publicados o contenidos fuera de contrato.",
+      "Pulsa una fila para abrir el detalle del contenido."
+    ]
+  },
+  "/dashboard/produccion/control_redaccion": {
+    "summary": "Centraliza y filtra los artículos del control de redacción, su estado, responsable y publicaciones previstas.",
+    "steps": [
+      "Despliega Filtros, cerrado inicialmente, para localizar artículos, empresas o números de revista. Prioridad y Dónde está siguen disponibles como filtros, pero no aparecen en la tabla.",
+      "Consulta el estado de corrección y la planificación editorial en la tabla.",
+      "Pulsa Limpiar filtros para volver a mostrar todos los registros."
     ]
   }
 }

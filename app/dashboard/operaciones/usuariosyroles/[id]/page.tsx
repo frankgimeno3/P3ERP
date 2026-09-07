@@ -13,6 +13,7 @@ interface Agente {
   email_agente: string;
   rol_agente: string;
   estado_agente: string;
+  is_empleado_account: boolean;
   accesos_personalizados: boolean;
   array_accesos_adicionales: string[];
 }
@@ -40,6 +41,7 @@ export default function AgenteDetallePage() {
   const [roles, setRoles] = useState<Role[]>([]);
   const [rolAgente, setRolAgente] = useState("");
   const [estadoAgente, setEstadoAgente] = useState("activo");
+  const [isEmpleado, setIsEmpleado] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -61,6 +63,7 @@ export default function AgenteDetallePage() {
         setRoles(normalizedRoles);
         setRolAgente(agente?.rol_agente || "base");
         setEstadoAgente(agente?.estado_agente || "activo");
+        setIsEmpleado(agente?.is_empleado_account ?? true);
       })
       .catch((error: any) => setError(error?.message || "No se ha podido cargar el agente."))
       .finally(() => mounted && setLoading(false));
@@ -91,6 +94,7 @@ export default function AgenteDetallePage() {
       const updated = await AgenteService.updateAgenteRoles(idAgente, {
         rol_agente: rolAgente,
         estado_agente: estadoAgente,
+        is_empleado_account: isEmpleado,
       });
       setAgentes((current) => current.map((item) => (item.id_agente === updated.id_agente ? updated : item)));
       setSaveMessage("Agente actualizado");
@@ -150,6 +154,11 @@ export default function AgenteDetallePage() {
                 </select>
               </label>
             </div>
+
+            <label className="mt-4 flex cursor-pointer items-center gap-2 rounded border border-gray-200 p-3 transition hover:bg-blue-50">
+              <input type="checkbox" checked={isEmpleado} onChange={event => setIsEmpleado(event.target.checked)} className="cursor-pointer" />
+              Cuenta de empleado (is_empleado_account)
+            </label>
 
             {selectedRole?.descripcion_rol && (
               <div className="mt-4 border-t border-gray-200 pt-4">

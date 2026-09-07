@@ -49,6 +49,12 @@ export default function LoggedLeftMenu() {
 
   return (
     <aside className="flex min-h-screen w-[220px] min-w-[220px] shrink-0 flex-col bg-gray-900 py-3 text-gray-300 md:w-[240px] md:min-w-[240px]">
+      {role === null && (
+        <div className="flex min-h-48 flex-1 items-start justify-center pt-16" role="status" aria-label="Cargando menú de navegación">
+          <span className="h-9 w-9 animate-spin rounded-full border-4 border-gray-700 border-t-blue-400 shadow-sm transition-opacity duration-300" />
+          <span className="sr-only">Cargando menú…</span>
+        </div>
+      )}
       {role !== null && dashboardMenu.filter((module) => canViewModule(role, module.id)).map((module) => (
         <div key={module.id} className="mb-2">
           <button type="button" onClick={() => toggle(module.id)} className="flex w-full cursor-pointer items-center justify-between rounded-r-lg border-l-2 border-transparent py-2 pl-3 pr-3 text-xs font-medium uppercase tracking-wide text-gray-300 transition-colors hover:bg-gray-800 hover:text-gray-100">

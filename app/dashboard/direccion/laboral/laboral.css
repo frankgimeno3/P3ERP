@@ -1,0 +1,17 @@
+.laboral button:enabled, .laboral a, .laboral select:enabled, .laboral input[type="checkbox"]:enabled { cursor: pointer; transition: background-color .15s, border-color .15s; }
+.laboral button:enabled:hover, .laboral a:hover { filter: brightness(.94); }
+.laboral select:enabled:hover { border-color: #172554; }
+.laboral button:disabled, .laboral select:disabled, .laboral input:disabled { cursor: not-allowed; opacity: .55; }
+.laboral input:not([type="checkbox"]):not([type="file"]), .laboral select, .laboral textarea { width: 100%; border: 1px solid #cbd5e1; background: white; color: #0f172a; padding: .5rem .75rem; border-radius: .375rem; }
+.laboral input:focus, .laboral select:focus, .laboral textarea:focus { outline: 2px solid #93c5fd; outline-offset: 1px; }
+.laboral button:focus-visible, .laboral a:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+.laboral textarea { min-height: 6rem; }
+.laboral table { width: 100%; text-align: left; }
+.laboral th { background: #e2e8f0; padding: .75rem; color: #334155; }
+.laboral td { border-bottom: 1px solid #e2e8f0; padding: .75rem; vertical-align: top; }
+.laboral tr[data-interactive] { cursor: pointer; }
+.laboral tr[data-interactive]:hover { background: #eff6ff; }
+.laboral .laboral-card { border: 1px solid #e2e8f0; border-radius: .5rem; background: white; padding: 1.25rem; }
+.laboral .laboral-button { border-radius: .375rem; background: #172554; padding: .5rem 1rem; color: white; }
+.laboral .laboral-secondary { border: 1px solid #cbd5e1; border-radius: .375rem; background: white; padding: .5rem 1rem; color: #172554; }
+.laboral .laboral-danger { border: 1px solid #fecaca; border-radius: .375rem; background: #fff1f2; padding: .5rem 1rem; color: #b91c1c; }

@@ -6,11 +6,12 @@ import MiddleNav from "@/app/general_components/componentes_recurrentes/MiddleNa
 import { PrevisionIngresosService } from "@/app/service/PrevisionIngresosService";
 import AdditionalIncomeWizard from "./AdditionalIncomeWizard";
 
-type TabKey = "recibos" | "transfers";
+type TabKey = "recibos" | "transfers" | "remesas";
 
 const tabs: { key: TabKey; label: string }[] = [
   { key: "recibos", label: "Recibos" },
   { key: "transfers", label: "Transfers" },
+  { key: "remesas", label: "Remesas" },
 ];
 
 const formatMoney = (value?: number) => {
@@ -19,6 +20,7 @@ const formatMoney = (value?: number) => {
 };
 
 export default function PrevisionIngresosPage() {
+  const embedded = false;
   const router = useRouter();
   const [tab, setTab] = useState<TabKey>("recibos");
   const [ordenes, setOrdenes] = useState<any[]>([]);
@@ -53,6 +55,7 @@ export default function PrevisionIngresosPage() {
     return ordenes.filter((orden) =>
       [
         orden.id_orden,
+        orden.id_remesa,
         orden.etiqueta_cobro,
         orden.fecha_teorica_cobro,
         orden.fecha_real_cobro,
@@ -70,9 +73,9 @@ export default function PrevisionIngresosPage() {
   }, [filtro, ordenes]);
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-gray-200 text-gray-600">
-      <MiddleNav tituloprincipal="Previsión ingresos" />
-      <div className="min-h-screen w-full bg-gray-100 px-12 py-10 text-gray-600">
+    <div className={`flex w-full flex-col text-slate-900 ${embedded ? "" : "min-h-screen bg-gray-200"}`}>
+      {!embedded && <MiddleNav tituloprincipal="Previsión ingresos" />}
+      <div className={`w-full text-slate-900 ${embedded ? "py-6" : "min-h-screen bg-gray-100 px-12 py-10"}`}>
         <div className="mb-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex gap-2">
             {tabs.map((item) => (
@@ -105,7 +108,7 @@ export default function PrevisionIngresosPage() {
 
         <div className="overflow-x-auto bg-white">
           <table className="min-w-full">
-            <thead className="bg-blue-950 text-white">
+            {tab === 'remesas' ? <><thead className="bg-blue-950 text-white"><tr><th className="p-3 text-left font-light">Remesa</th><th className="p-3 text-left font-light">Fecha de creación</th><th className="p-3 text-left font-light">Última actualización</th></tr></thead><tbody>{loading ? <tr><td colSpan={3} className="p-6 text-center text-gray-500">Cargando remesas…</td></tr> : ordenesFiltradas.length === 0 ? <tr><td colSpan={3} className="p-6 text-center text-gray-500">No hay remesas.</td></tr> : ordenesFiltradas.map(remesa => <tr key={remesa.id_remesa} className="border-b border-gray-200 transition hover:bg-blue-50"><td className="p-3 font-medium text-blue-950">{remesa.id_remesa}</td><td className="p-3">{new Intl.DateTimeFormat('es-ES', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(remesa.created_at))}</td><td className="p-3">{new Intl.DateTimeFormat('es-ES', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(remesa.updated_at))}</td></tr>)}</tbody></> : <><thead className="bg-blue-950 text-white">
               <tr>
                 <th className="p-2 pl-6 text-left font-light">Orden</th>
                 <th className="p-2 text-left font-light">Cliente</th>
@@ -154,7 +157,7 @@ export default function PrevisionIngresosPage() {
                   <td className="border-b border-gray-200 p-2">{formatMoney(orden.cobro_total)}</td>
                 </tr>
               ))}
-            </tbody>
+            </tbody></>}
           </table>
         </div>
         {showAdditionalIncome && <AdditionalIncomeWizard onClose={() => setShowAdditionalIncome(false)} onCreated={() => { setShowAdditionalIncome(false); setReloadKey((current) => current + 1); }} />}

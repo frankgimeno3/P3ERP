@@ -81,6 +81,41 @@ export async function middleware(request) {
     if ((pathname === "/" || pathname === "/admin")) return goToPanel();
     if (pathname.startsWith("/dashboard") && !canAccessDashboardPath(role, pathname)) return forbidden();
     if (isApi && !canAccessApiPath(role, pathname, request.method)) return forbidden();
+    const legacyDirectionRoutes = [
+      ["/dashboard/direccion/previsiones/prevision-liquidez", "/dashboard/direccion/bancos/prevision-liquidez"],
+      ["/dashboard/direccion/previsiones/prevision-ingresos", "/dashboard/direccion/bancos/prevision-ingresos"],
+      ["/dashboard/direccion/previsiones/prevision-gastos", "/dashboard/direccion/bancos/prevision-cargos"],
+    ];
+    for (const [legacy, current] of legacyDirectionRoutes) {
+      if (pathname === legacy || pathname.startsWith(`${legacy}/`)) {
+        const redirectUrl = request.nextUrl.clone();
+        redirectUrl.pathname = pathname.replace(legacy, current);
+        return NextResponse.redirect(redirectUrl, 308);
+      }
+    }
+    if (pathname === "/dashboard/direccion/bancos") {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = "/dashboard/direccion/bancos/extractos";
+      return NextResponse.redirect(redirectUrl, 308);
+    }
+    if (pathname === "/dashboard/direccion/bancos/prevision-ingresos" || pathname.startsWith("/dashboard/direccion/bancos/prevision-ingresos/")) {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = "/dashboard/direccion/bancos/prevision-liquidez";
+      redirectUrl.searchParams.set("vista", "ingresos");
+      return NextResponse.redirect(redirectUrl, 308);
+    }
+    if (pathname === "/dashboard/direccion/bancos/prevision-cargos" || pathname.startsWith("/dashboard/direccion/bancos/prevision-cargos/")) {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = "/dashboard/direccion/bancos/prevision-liquidez";
+      redirectUrl.searchParams.set("vista", "cargos");
+      return NextResponse.redirect(redirectUrl, 308);
+    }
+    const legacyBankDetail = pathname.match(/^\/dashboard\/direccion\/bancos\/(banc_[^/]+)$/);
+    if (legacyBankDetail) {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = `/dashboard/direccion/bancos/extractos/revision/${legacyBankDetail[1]}`;
+      return NextResponse.redirect(redirectUrl, 308);
+    }
     if (pathname.startsWith("/dashboard/operaciones/usuariosyroles")) {
       const redirectUrl = request.nextUrl.clone();
       redirectUrl.pathname = pathname.replace(

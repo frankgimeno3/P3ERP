@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getPrevisionIngresosOrdenes } from "../../../../../server/features/orden/OrdenRepository.js";
 import { createIngresoAdicional, getIngresosAdicionales } from "../../../../../server/features/prevision/PrevisionRepository.js";
+import { getPgPool } from "../../../../../server/database/pgClient.js";
 
 export const runtime = "nodejs";
 
@@ -8,6 +9,10 @@ export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const tipo = searchParams.get("tipo") || "";
+    if (tipo === "remesas") {
+      const { rows } = await getPgPool().query(`SELECT id_remesa, created_at, updated_at FROM remesas_db ORDER BY created_at DESC, id_remesa`);
+      return NextResponse.json(rows);
+    }
     const [ordenes, adicionales] = await Promise.all([getPrevisionIngresosOrdenes(tipo), getIngresosAdicionales(tipo)]);
     const dateKey = (value) => String(value || "").split("/").reverse().join("-") || "9999-99-99";
     return NextResponse.json([...ordenes, ...adicionales].sort((a, b) => dateKey(a.fecha_teorica_cobro).localeCompare(dateKey(b.fecha_teorica_cobro))));

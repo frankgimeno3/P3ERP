@@ -1,53 +1,17 @@
-'use client'
-import React, { FC, useState } from 'react';
- import MiddleNav from '../../../general_components/componentes_recurrentes/MiddleNav';
-import Importar from './datacomponents/Importar';
-import Exportar from './datacomponents/Exportar';
-  
-const Importexport: FC = () => {
-  const [pestana, setPestana] = useState("importar")
- 
- 
-  return (
-    <div className="flex flex-col bg-gray-200 h-full min-h-screen text-gray-600">
-
-      <MiddleNav tituloprincipal={` Importaciones y exportaciones  `} />
-
-      <div className="bg-gray-100 min-h-screen px-12 text-gray-600">
-     
- 
-
-        <div className='mt-5 p-12 rounded-lg shadow-xl bg-white'>
-          <div className="flex flex-row relative ">
-            <div
-              className={`p-3 rounded-tr-lg cursor-pointer w-60 text-center transition-all duration-300
-            ${pestana === 'importar' ? 'bg-blue-950 text-white z-30 rounded-tl-lg' : 'z-10 bg-white text-gray-700 hover:bg-gray-200'}`}
-              style={{ marginLeft: '0px' }}
-              onClick={() => setPestana('importar')}
-            >
-              Importar
-            </div>
-            <div
-              className={`p-3 rounded-tr-lg cursor-pointer w-60 text-center transition-all duration-300
-            ${pestana === 'exportar' ? 'bg-blue-950 text-white z-30 rounded-tl-lg' : 'z-10 bg-white text-gray-700 hover:bg-gray-200'}`}
-              style={{ marginLeft: '0px' }}
-              onClick={() => setPestana('exportar')}
-            >
-              Exportar
-            </div>
-             
-          </div>
-          <div className='border border-gray-100 shadow-xl'>
-            <p className='p-5 text-xl font-bold'>Qué deseas hacer?</p>
-          {pestana == "importar" && <Importar />}
-
-          {pestana == "exportar" && <Exportar/>}
-          </div>
-        </div>
-
-      </div>
-    </div>
-  );
-};
-
-export default Importexport;
+'use client';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import MiddleNav from '../../../general_components/componentes_recurrentes/MiddleNav';
+import TigerImportModal from './datacomponents/TigerImportModal';
+type History = {id:string;fecha_hora:string;tipo:'cuentas'|'contactos';detalles:string};
+export default function DataPage() {
+  const [tab,setTab]=useState<'excel'|'tiger'>('excel'); const [sub,setSub]=useState<'datos'|'comentarios'>('datos');
+  const [modal,setModal]=useState<'cuentas'|'contactos'|null>(null); const [history,setHistory]=useState<History[]>([]);
+  useEffect(()=>{ if(tab==='tiger') fetch('/api/v1/operaciones/tiger/historial').then(r=>r.ok?r.json():[]).then(setHistory).catch(()=>setHistory([])); },[tab,modal]);
+  const tabClass=(active:boolean)=>`cursor-pointer rounded-t-lg px-6 py-3 transition-colors ${active?'bg-blue-950 text-white':'bg-gray-100 hover:bg-gray-200'}`;
+  return <div className="min-h-screen bg-gray-200 text-gray-600"><MiddleNav tituloprincipal="Gestión de BBDD"/><main className="min-h-screen bg-gray-100 px-12 py-6"><section className="rounded-xl bg-white p-8 shadow-xl">
+    <div className="flex gap-2"><button className={tabClass(tab==='excel')} onClick={()=>setTab('excel')}>Cambios con Excel</button><button className={tabClass(tab==='tiger')} onClick={()=>setTab('tiger')}>Actualizaciones Vtiger</button></div>
+    {tab==='excel' ? <div className="grid gap-8 border-t p-6 md:grid-cols-2"><div><h2 className="mb-4 text-xl font-bold">Importar</h2><DataLink href="/dashboard/operaciones/data/importar/contactos" text="Importar contactos desde Excel"/><DataLink href="/dashboard/operaciones/data/importar/cuentas" text="Importar cuentas desde Excel"/></div><div><h2 className="mb-4 text-xl font-bold">Exportar</h2><DataLink href="/dashboard/operaciones/data/exportar/contactos" text="Exportar contactos a Excel"/><DataLink href="/dashboard/operaciones/data/exportar/cuentas" text="Exportar cuentas a Excel"/></div></div> : <div className="border-t p-6"><div className="mb-6 flex gap-2"><button className={tabClass(sub==='datos')} onClick={()=>setSub('datos')}>Actualizaciones cuentas y contactos</button><button className={tabClass(sub==='comentarios')} onClick={()=>setSub('comentarios')}>Actualizaciones de comentarios</button></div>{sub==='comentarios'?<p className="rounded bg-amber-50 p-6 text-amber-800">Funcionalidad no disponible temporalmente.</p>:<><div className="mb-6 flex gap-3"><button onClick={()=>setModal('cuentas')} className="cursor-pointer rounded bg-blue-950 px-4 py-3 text-white hover:bg-blue-900">Importar cuentas desde Tiger</button><button onClick={()=>setModal('contactos')} className="cursor-pointer rounded bg-blue-950 px-4 py-3 text-white hover:bg-blue-900">Importar contactos desde Tiger</button></div><table className="w-full overflow-hidden rounded-lg bg-white shadow"><thead className="bg-blue-950/80 text-white"><tr><th className="p-3 text-left">Fecha-hora</th><th className="p-3 text-left">Tipo</th><th className="p-3 text-left">Detalles</th></tr></thead><tbody>{history.map(h=><tr key={h.id} onClick={()=>location.assign(`/dashboard/operaciones/data/historial/${h.id}`)} className="cursor-pointer border-t hover:bg-gray-100"><td className="p-3">{new Date(h.fecha_hora).toLocaleString('es-ES')}</td><td className="p-3 capitalize">{h.tipo}</td><td className="p-3">{h.detalles}</td></tr>)}{!history.length&&<tr><td colSpan={3} className="p-6 text-center text-gray-500">Todavía no hay actualizaciones.</td></tr>}</tbody></table></>}</div>}
+  </section></main>{modal&&<TigerImportModal type={modal} onClose={()=>setModal(null)}/>}</div>;
+}
+function DataLink({href,text}:{href:string;text:string}) { return <Link href={href} className="mb-3 block cursor-pointer rounded-lg bg-blue-950 p-5 font-semibold text-white shadow hover:bg-blue-900">{text}</Link>; }

@@ -11,6 +11,7 @@ function normalizeAgente(row) {
     DNI_agente: row.dni_agente ?? "",
     rol_agente: row.rol_agente ?? "",
     estado_agente: row.estado_agente ?? "",
+    is_empleado_account: row.is_empleado_account ?? true,
     accesos_personalizados: Boolean(row.accesos_personalizados),
     array_accesos_adicionales: row.array_accesos_adicionales ?? [],
   };
@@ -54,11 +55,12 @@ export async function updateAgenteRoles(idAgente, data = {}) {
           estado_agente = COALESCE($2::text, estado_agente),
           accesos_personalizados = COALESCE($3::boolean, accesos_personalizados),
           array_accesos_adicionales = COALESCE($4::jsonb, array_accesos_adicionales),
+          is_empleado_account = COALESCE($6::boolean, is_empleado_account),
           updated_at = NOW()
       WHERE id_agente = $5
       RETURNING *
     `,
-    [rolAgente, estadoAgente, accesosPersonalizados, accesosAdicionales, idAgente],
+    [rolAgente, estadoAgente, accesosPersonalizados, accesosAdicionales, idAgente, data.is_empleado_account ?? null],
   );
 
   return rows[0] ? normalizeAgente(rows[0]) : null;
@@ -162,6 +164,17 @@ export async function deleteAgente(idAgente, beforeDelete) {
       return null;
     }
     const agente = normalizeAgente(rows[0]);
+    const history = await client.query(`SELECT 1 FROM nominas WHERE id_empleado=$1
+      UNION ALL SELECT 1 FROM anticipos_empleados WHERE id_empleado=$1
+      UNION ALL SELECT 1 FROM empleados_libre_disposicion WHERE id_empleado=$1
+      UNION ALL SELECT 1 FROM ausencias_empleados WHERE id_empleado=$1
+      UNION ALL SELECT 1 FROM comentarios_empleados WHERE id_empleado=$1
+      UNION ALL SELECT 1 FROM documentos_laborales WHERE id_empleado=$1 LIMIT 1`, [idAgente]);
+    if (history.rowCount) {
+      const error = new Error("El agente tiene histórico laboral. Desactiva su cuenta de empleado para conservarlo; no se ha borrado la cuenta.");
+      error.code = "EMPLOYEE_HISTORY";
+      throw error;
+    }
     await beforeDelete(agente);
     await client.query(`DELETE FROM agentes_db WHERE id_agente = $1`, [idAgente]);
     await client.query("COMMIT");

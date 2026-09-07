@@ -52,6 +52,21 @@ table {
   border-collapse: collapse;
 }
 
+.embedded-forecast > div > :first-child {
+  display: none;
+}
+
+.embedded-forecast > div {
+  min-height: 0 !important;
+  background: transparent !important;
+}
+
+.embedded-forecast > div > :nth-child(2) {
+  min-height: 0 !important;
+  padding: 1.5rem 0 !important;
+  background: transparent !important;
+}
+
 thead {
   letter-spacing: 0.02em;
 }

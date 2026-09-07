@@ -14,6 +14,7 @@ interface Agente {
   email_agente: string;
   rol_agente: string;
   estado_agente: string;
+  is_empleado_account: boolean;
   accesos_personalizados: boolean;
   array_accesos_adicionales: string[];
 }
@@ -103,13 +104,14 @@ export default function Agentes() {
                 <th className="px-4 py-2 text-left">Email</th>
                 <th className="px-4 py-2 text-left">Rol</th>
                 <th className="px-4 py-2 text-left">Estado</th>
+                <th className="px-4 py-2 text-left">Cuenta de empleado</th>
                 <th className="px-4 py-2 text-left">Accesos extra</th>
               </tr>
             </thead>
             <tbody>
               {loading && (
                 <tr className="border-t border-gray-200">
-                  <td className="px-4 py-3 text-gray-500" colSpan={6}>
+                  <td className="px-4 py-3 text-gray-500" colSpan={7}>
                     Cargando agentes...
                   </td>
                 </tr>
@@ -117,7 +119,7 @@ export default function Agentes() {
 
               {!loading && agentes.length === 0 && (
                 <tr className="border-t border-gray-200">
-                  <td className="px-4 py-3 text-gray-500" colSpan={6}>
+                  <td className="px-4 py-3 text-gray-500" colSpan={7}>
                     No hay agentes para mostrar.
                   </td>
                 </tr>
@@ -135,6 +137,7 @@ export default function Agentes() {
                     <td className="px-4 py-2">{agente.email_agente || '-'}</td>
                     <td className="px-4 py-2">{agente.rol_agente || '-'}</td>
                     <td className="px-4 py-2">{agente.estado_agente || '-'}</td>
+                    <td className="px-4 py-2">{agente.is_empleado_account ? 'Sí' : 'No'}</td>
                     <td className="px-4 py-2">
                       {agente.accesos_personalizados ? `${agente.array_accesos_adicionales?.length || 0} adicionales` : rolesByName.has(agente.rol_agente) ? 'rol base' : '-'}
                     </td>
@@ -152,6 +155,7 @@ export default function Agentes() {
             ...agent,
             nombre_agente: agent.nombre_completo_agente,
             apellidos_agente: '',
+            is_empleado_account: true,
             accesos_personalizados: false,
             array_accesos_adicionales: [],
           }].sort((a, b) => getNombreAgente(a).localeCompare(getNombreAgente(b))))}

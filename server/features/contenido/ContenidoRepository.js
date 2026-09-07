@@ -17,17 +17,20 @@ function normalizeHojaProd(row) {
 
   return {
     id_contenido: row.id_contenido,
+    codigo_crm: row.codigo_crm_hoja || row.id_cuenta || "",
     agente: row.nombre_completo_agente || row.id_agente || "",
-    cliente: row.nombre_empresa || row.id_cuenta || "",
+    cliente: row.cliente_hoja || row.nombre_empresa || row.id_cuenta || "",
     contrato: row.id_contrato || "",
-    factura: row.factura || "",
-    tipo: row.servicio_nombre || row.servicio || row.tipo || "",
+    factura: row.factura_hoja || row.factura || "",
+    publicacion_num_web: row.publicacion_num_web || row.nombre_publicacion || "",
+    tipo: row.tipo_revista_servicio || row.servicio_nombre || row.servicio || row.tipo || "",
     contenido: row.especificaciones_contenido || row.contenido_especifico_id || row.nombre_publicacion || "",
-    estado: estadoMaterial.toLowerCase().includes("publicado") || estadoMaterial.toLowerCase().includes("ya en revista")
-      ? "Publicado"
-      : "Pendiente de publicar",
-    pagina: paginaMatch?.[1] || "",
-    caducidad: row.deadline_contenido || row.deadline_publicacion || "",
+    anuncio: row.anuncio_hoja || "",
+    articulo: row.articulo_hoja || "",
+    estado: row.estado_contenido || (estadoMaterial.toLowerCase().includes("publicado") || estadoMaterial.toLowerCase().includes("ya en revista") ? "Publicado" : "Pendiente de publicar"),
+    pagina: row.pagina_hoja || paginaMatch?.[1] || "",
+    caducidad: row.caduca_web || row.deadline_contenido || row.deadline_publicacion || "",
+    comentarios: row.comentarios_hoja || "",
     fecha_publicacion: fechaPublicacion,
     ano_publicacion: row.ano_publicacion || getYearFromDate(fechaPublicacion),
   };

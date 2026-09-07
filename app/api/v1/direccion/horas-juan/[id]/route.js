@@ -1,0 +1,5 @@
+import { NextResponse } from 'next/server';
+import { deleteHorasJuan, getHorasJuanById, getHorasJuanDeleteImpact } from '../../../../../../server/features/horasJuan/HorasJuanRepository.js';
+export const runtime = 'nodejs';
+export async function GET(request, { params }) { const { id } = await params; const report = request.nextUrl.searchParams.get('accion') === 'impacto-eliminacion' ? await getHorasJuanDeleteImpact(id) : await getHorasJuanById(id); return report ? NextResponse.json(report) : NextResponse.json({ message: 'Informe no encontrado' }, { status: 404 }); }
+export async function DELETE(request, { params }) { try { const { id } = await params; const body = await request.json().catch(() => ({})); const result = await deleteHorasJuan(id, body.confirmar_dependencias === true); return result ? NextResponse.json(result) : NextResponse.json({ message: 'Informe no encontrado' }, { status: 404 }); } catch (error) { return NextResponse.json({ message: error.message || 'No se pudo eliminar el informe', code: error.code, impact: error.impact }, { status: error.code === 'DEPENDENCIES_CONFIRMATION' ? 409 : 500 }); } }

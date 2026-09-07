@@ -14,7 +14,11 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ message: "id_agente es obligatorio" }, { status: 400 });
     }
 
+    if (body?.is_empleado_account !== undefined && typeof body.is_empleado_account !== 'boolean') {
+      return NextResponse.json({ message: "La cuenta de empleado debe ser true o false" }, { status: 400 });
+    }
     const agente = await updateAgenteRoles(idAgente, {
+      is_empleado_account: body?.is_empleado_account,
       rol_agente: body?.rol_agente,
       estado_agente: body?.estado_agente,
       accesos_personalizados: body?.accesos_personalizados,
@@ -55,6 +59,9 @@ export const DELETE = createEndpoint(async (request, _body, { params }) => {
       deleted_task_lists: deleted.deleted_task_lists,
     });
   } catch (error) {
+    if (error?.code === "EMPLOYEE_HISTORY") {
+      return NextResponse.json({ message: error.message }, { status: 409 });
+    }
     if (error?.name === "AccessDeniedException") {
       return NextResponse.json({ message: "AWS no permite eliminar el usuario de Cognito. Falta el permiso cognito-idp:AdminDeleteUser; no se ha borrado el agente." }, { status: 503 });
     }

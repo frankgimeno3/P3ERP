@@ -48,16 +48,16 @@ export const dashboardMenu: DashboardMenuModule[] = [
     label: "Administración",
     children: [
       page("Ferias", "/dashboard/administracion/ferias"),
-      group("admin-clientes", "Clientes", [
+      group("clientes", "Clientes", [
         page("Control administrativo", "/dashboard/administracion/control-administrativo"),
         page("Facturas clientes", "/dashboard/administracion/facturas-clientes"),
         page("Pendiente de cobro", "/dashboard/administracion/pendiente-cobro"),
         page("Suscripciones", "/dashboard/administracion/suscripciones"),
       ]),
-      group("admin-proveedores", "Proveedores", [
-        page("Proveedores", "/dashboard/administracion/proveedores"),
+      group("proveedores", "Proveedores", [
         page("Facturas proveedores", "/dashboard/administracion/facturas-proveedores"),
         page("Tickets", "/dashboard/administracion/proveedores/tickets"),
+        page("Proveedores", "/dashboard/administracion/proveedores"),
       ]),
     ],
   },
@@ -68,21 +68,26 @@ export const dashboardMenu: DashboardMenuModule[] = [
       page("Gestión de BBDD", "/dashboard/operaciones/data"),
       page("Agentes", "/dashboard/operaciones/agentesyroles"),
       page("Roles", "/dashboard/operaciones/roles"),
-      group("operaciones-comerciales", "Operaciones comerciales", [
-        page("Gestión de cuentas", "/dashboard/operaciones/gestion_cuentas"),
-      ]),
+      page("Gestión de cuentas", "/dashboard/operaciones/gestion_cuentas"),
     ],
   },
   {
     id: "direccion",
     label: "Dirección",
     children: [
-      page("Bancos", "/dashboard/direccion/bancos"),
-      group("previsiones", "Previsiones", [
-        page("Previsión liquidez", "/dashboard/direccion/previsiones/prevision-liquidez"),
-        page("Previsión ingresos", "/dashboard/direccion/previsiones/prevision-ingresos"),
-        page("Previsión gastos", "/dashboard/direccion/previsiones/prevision-gastos"),
+      group("laboral", "LABORAL", [
+        page("Nóminas", "/dashboard/direccion/laboral/nominas"),
+        page("Asuntos empleados", "/dashboard/direccion/laboral/asuntos-empleados"),
+        page("Calendario laboral", "/dashboard/direccion/laboral/calendario-laboral"),
+        page("Contratación", "/dashboard/direccion/laboral/contratacion"),
       ]),
+      group("bancos", "Bancos", [
+        page("Extractos", "/dashboard/direccion/bancos/extractos"),
+        page("Revisión de líneas", "/dashboard/direccion/bancos/extractos/revision"),
+        page("Previsión liquidez", "/dashboard/direccion/bancos/prevision-liquidez"),
+      ]),
+      page("Horas Juan", "/dashboard/direccion/horas-juan"),
+      page("Copias de seguridad", "/dashboard/direccion/copias-seguridad"),
     ],
   },
 ];

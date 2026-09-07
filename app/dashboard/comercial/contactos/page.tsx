@@ -4,10 +4,10 @@ import React, { FC, useState, useEffect } from 'react';
 import FiltrosContactos from './componentesContactos/FiltrosContactos';
 import TablaContactos from './componentesContactos/TablaContactos';
 import MiddleNav from '../../../general_components/componentes_recurrentes/MiddleNav';
-import ButtonsRow from '@/app/general_components/componentes_recurrentes/ButtonsRow';
 import { InterfazContacto } from '@/app/interfaces/interfaces';
 import Link from 'next/link';
 import { ContactoService } from '@/app/service/ContactoService';
+import LastTigerUpdate from '../LastTigerUpdate';
 
 const Contactos: FC = () => {
   const [contactoFiltro, setContactoFiltro] = useState('');
@@ -73,6 +73,7 @@ const Contactos: FC = () => {
 
   const startIdx = (currentPage - 1) * itemsPerPage;
   const contactosFiltrados = filteredContactos.slice(startIdx, startIdx + itemsPerPage);
+  const totalPages = Math.max(1, Math.ceil(filteredContactos.length / itemsPerPage));
 
   return (
     <div className="flex flex-col bg-gray-200 h-full min-h-screen text-gray-600">
@@ -111,13 +112,14 @@ const Contactos: FC = () => {
           <TablaContactos contactosFiltrados={contactosFiltrados} />
         )}
 
-        <div className="mt-4">
-          <ButtonsRow
-            totalItems={filteredContactos.length}
-            currentNumber={currentPage}
-            onPageChange={(page) => setCurrentPage(page)}
-            itemsPerPage={itemsPerPage}
-          />
+        <div className="mt-4 grid grid-cols-3 items-center">
+          <div />
+          <div className="flex items-center justify-center gap-2">
+            <button onClick={()=>setCurrentPage((page)=>Math.max(1,page-1))} disabled={currentPage===1} className={`rounded-lg px-4 py-2 ${currentPage===1?'cursor-not-allowed bg-gray-300 text-gray-500':'cursor-pointer bg-blue-950 text-white hover:bg-blue-900'}`}>Anterior</button>
+            <span>Página {currentPage} de {totalPages}</span>
+            <button onClick={()=>setCurrentPage((page)=>Math.min(totalPages,page+1))} disabled={currentPage===totalPages} className={`rounded-lg px-4 py-2 ${currentPage===totalPages?'cursor-not-allowed bg-gray-300 text-gray-500':'cursor-pointer bg-blue-950 text-white hover:bg-blue-900'}`}>Siguiente</button>
+          </div>
+          <LastTigerUpdate type="contactos" />
         </div>
       </div>
     </div>

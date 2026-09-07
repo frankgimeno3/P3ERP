@@ -4,6 +4,7 @@ import React, { FC, useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {CuentaService} from '@/app/service/CuentaService';
 import { AgenteService } from '@/app/service/AgenteService';
+import LastTigerUpdate from '../LastTigerUpdate';
 
 interface Cuenta {
   id_cuenta: string;
@@ -178,7 +179,9 @@ const Tablacuentas: FC<TablacuentasProps> = ({
         </tbody>
       </table>
       {resultadosFiltrados.length > 0 && (
-        <div className="flex justify-center items-center gap-2 mt-4">
+        <div className="relative mt-4 grid grid-cols-3 items-center">
+          <div />
+          <div className="flex justify-center items-center gap-2">
           <button
             onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
             disabled={currentPage === 1}
@@ -204,6 +207,8 @@ const Tablacuentas: FC<TablacuentasProps> = ({
           >
             Siguiente
           </button>
+          </div>
+          <LastTigerUpdate type="cuentas" />
         </div>
       )}
     </div>
