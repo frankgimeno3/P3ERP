@@ -82,10 +82,18 @@ export async function middleware(request) {
     if (pathname.startsWith("/dashboard") && !canAccessDashboardPath(role, pathname)) return forbidden();
     if (isApi && !canAccessApiPath(role, pathname, request.method)) return forbidden();
     const legacyDirectionRoutes = [
+      ["/dashboard/operaciones/agentesyroles", "/dashboard/operaciones/agentes"],
+      ["/dashboard/operaciones/roles", "/dashboard/operaciones/agentes/roles"],
       ["/dashboard/direccion/previsiones/prevision-liquidez", "/dashboard/direccion/bancos/prevision-liquidez"],
       ["/dashboard/direccion/previsiones/prevision-ingresos", "/dashboard/direccion/bancos/prevision-ingresos"],
       ["/dashboard/direccion/previsiones/prevision-gastos", "/dashboard/direccion/bancos/prevision-cargos"],
     ];
+    const legacyAgentDetail = pathname.match(/^\/dashboard\/operaciones\/(ag_[^/]+)$/);
+    if (legacyAgentDetail) {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = `/dashboard/operaciones/agentes/${legacyAgentDetail[1]}`;
+      return NextResponse.redirect(redirectUrl,308);
+    }
     for (const [legacy, current] of legacyDirectionRoutes) {
       if (pathname === legacy || pathname.startsWith(`${legacy}/`)) {
         const redirectUrl = request.nextUrl.clone();
@@ -120,7 +128,7 @@ export async function middleware(request) {
       const redirectUrl = request.nextUrl.clone();
       redirectUrl.pathname = pathname.replace(
         "/dashboard/operaciones/usuariosyroles",
-        "/dashboard/operaciones/agentesyroles",
+        "/dashboard/operaciones/agentes",
       );
       return NextResponse.redirect(redirectUrl, 308);
     }

@@ -15,7 +15,8 @@ export function canonicalSupplierName(value) {
   if (key === 'moeve') return 'MOEVE';
   if (key === 'linkedin') return 'LINKEDIN';
   const prefixes = [
-    ['amazon business', 'AMAZON BUSINESS'], ['banco sabadell', 'BANCO SABADELL'],
+    ['adobe', 'ADOBE'], ['amazon', 'AMAZON BUSINESS'], ['banco sabadell', 'BANCO SABADELL'],
+    ['bitavis', 'BITAVIS SERVEIS INFORMATICS'], ['starressa', 'STARRESA'], ['starresa', 'STARRESA'],
     ['correos', 'CORREOS'], ['edisoft', 'SOFTLINE'], ['softline', 'SOFTLINE'],
     ['endesa', 'ENDESA'], ['luis f. pazos', 'LUIS F. PAZOS'],
     ['evaristo luque', 'EVARISTO LUQUE'], ['securitas direct', 'VERISURE'],

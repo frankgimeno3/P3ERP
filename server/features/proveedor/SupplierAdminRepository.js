@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { getPgPool } from '../../database/pgClient.js';
 import { canonicalSupplierName, supplierKey } from './supplierNames.js';
 import { supplierReferenceTables } from './SupplierMerge.js';
+import { isSupplierCountry } from '../../../app/data/supplierCountries.js';
 
 export class ProveedorError extends Error {
   constructor(message, status = 400) { super(message); this.status = status; }
@@ -48,6 +49,18 @@ export async function createOrFindSupplier(db, body) {
   if (rows[0]) return rows[0];
   const created = await db.query('INSERT INTO proveedores_db(id_proveedor,nombre_proveedor,nombre_fiscal_proveedor,vat_code,pais_proveedor,moneda_proveedor) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *', [`prov_${randomUUID().replaceAll('-','')}`,data.nombre_proveedor,data.nombre_fiscal_proveedor,data.vat_code,data.pais_proveedor,data.moneda_proveedor]);
   return created.rows[0];
+}
+export async function createSupplier(body) {
+  const data = supplierData(body);
+  if (!isSupplierCountry(data.pais_proveedor)) throw new ProveedorError('Selecciona un país del listado.');
+  if (!data.moneda_proveedor) throw new ProveedorError('Indica la moneda del proveedor.');
+  return supplierTransaction(async db => {
+    // Serialize creation with other supplier writers and recheck duplicates at save time.
+    await db.query('LOCK TABLE proveedores_db IN SHARE ROW EXCLUSIVE MODE');
+    const { rows } = await db.query("SELECT id_proveedor FROM proveedores_db WHERE lower(regexp_replace(btrim(nombre_proveedor),'[[:space:]]+',' ','g'))=$1 OR ($2<>'' AND upper(regexp_replace(vat_code,'[^a-zA-Z0-9]','','g'))=$2) LIMIT 1", [supplierKey(data.nombre_proveedor), data.vat_code.replace(/[^a-zA-Z0-9]/g, '').toUpperCase()]);
+    if (rows.length) throw new ProveedorError(`Ya existe un proveedor con ese nombre o código fiscal: ${rows[0].id_proveedor}.`, 409);
+    return (await db.query('INSERT INTO proveedores_db(id_proveedor,nombre_proveedor,nombre_fiscal_proveedor,vat_code,pais_proveedor,moneda_proveedor) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *', [`prov_${randomUUID().replaceAll('-','')}`,data.nombre_proveedor,data.nombre_fiscal_proveedor,data.vat_code,data.pais_proveedor,data.moneda_proveedor])).rows[0];
+  });
 }
 export async function updateSupplier(id, body) {
   const provider = await findSupplier(id), data = supplierData(body);

@@ -22,6 +22,7 @@ try {
   for (const table of ['agentes_db','lineas_bancos','roles_db']) await client.query(`CREATE TABLE ${table} (LIKE public.${table} INCLUDING ALL)`);
   await client.query(fs.readFileSync('database/migrations/20260905_0001_laboral.sql','utf8'));
   await client.query(fs.readFileSync('database/migrations/20260905_0002_laboral_documentos_rds.sql','utf8'));
+  await client.query('CREATE TABLE nominas_empleados (LIKE public.nominas_empleados INCLUDING ALL)');
   const savepoints = [];
   const adapter = { release() {}, async query(sql, values) {
     if (sql === 'BEGIN') { const name = `sp_${savepoints.length}`; savepoints.push(name); return client.query(`SAVEPOINT ${name}`); }
@@ -76,6 +77,29 @@ try {
   });
   await check('fechas imposibles, rangos invertidos y años distintos son rechazados', async () => {
     for (const data of [{inicio:'2027-02-29',fin:'2027-03-01'},{inicio:'2028-03-02',fin:'2028-03-01'},{inicio:'2029-01-01',fin:'2029-01-01'}]) assert.throws(() => validate('eventos',{ anio:2028,tipo:'feria',titulo:'Prueba',...data }));
+  });
+  await check('vacaciones excluyen fines de semana y guardan rangos con identificadores distintos', async () => {
+    await repo.createCalendar({ anio:2027 });
+    const event = { anio:2027,tipo:'vacaciones',titulo:'Vacaciones',inicio:'2027-08-02',fin:'2027-08-15' };
+    const first = await repo.saveEvent(null,event);
+    let saved = (await repo.getCalendar(2027)).eventos;
+    assert.deepEqual(saved.map(e => [e.inicio,e.fin]), [['2027-08-02','2027-08-06'],['2027-08-09','2027-08-13']]);
+    assert.equal(new Set(saved.map(e => e.id)).size,2);
+    await repo.saveEvent(first.id,{ ...event,inicio:'2027-08-16',fin:'2027-08-29' });
+    assert.equal((await repo.getCalendar(2027)).eventos.find(e => e.id === first.id).inicio,'2027-08-16');
+    await assert.rejects(repo.saveEvent(null,{ ...event,inicio:'2027-08-07',fin:'2027-08-08' }),/laborable/);
+    await assert.rejects(repo.saveEvent('missing-event',event), e => e.status === 404);
+    const { rows } = await client.query("SELECT COUNT(*)::int n FROM eventos_calendario_laboral e CROSS JOIN LATERAL generate_series(e.inicio,e.fin,interval '1 day') d WHERE e.tipo='vacaciones' AND EXTRACT(ISODOW FROM d) IN (6,7)");
+    assert.equal(rows[0].n,0);
+  });
+  await check('nombre y email editables con validación y conservación de apellidos', async () => {
+    await client.query("UPDATE agentes_db SET nombre_agente='Original',apellidos_agente='Apellido' WHERE id_agente='employee-a'");
+    const updated = await updateAgenteRoles('employee-a',{ nombre_completo_agente:'Nuevo Nombre',email_agente:'NEW@example.com' });
+    assert.equal(updated.nombre_completo_agente,'Nuevo Nombre'); assert.equal(updated.email_agente,'new@example.com');
+    assert.equal(updated.apellidos_agente,'Apellido');
+    await assert.rejects(updateAgenteRoles('employee-b',{ email_agente:'new@example.com' }), error => error.status === 409);
+    await assert.rejects(updateAgenteRoles('employee-a',{ email_agente:'invalid' }), error => error.status === 400);
+    await assert.rejects(updateAgenteRoles('employee-a',{ nombre_completo_agente:' ' }), error => error.status === 400);
   });
   await check('tres días por año, fechas únicas y conservación de otros años', async () => {
     await repo.saveFreeDays('employee-a',{ anio:2026,fechas:[{numero:1,fecha:'2026-09-05'},{numero:2,fecha:'2026-09-06'},{numero:3,fecha:'2026-09-07'}] });

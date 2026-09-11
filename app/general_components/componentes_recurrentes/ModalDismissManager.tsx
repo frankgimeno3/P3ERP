@@ -82,6 +82,8 @@ export default function ModalDismissManager() {
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
+      // Let an expanded selector close its options before dismissing its modal.
+      if (event.target instanceof Element && event.target.closest('[role="combobox"][aria-expanded="true"]')) return;
       const overlays = getModalOverlays();
       const topModal = overlays.at(-1);
       if (!topModal) return;

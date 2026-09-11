@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import { getProveedores } from "../../../../../server/features/proveedor/ProveedorRepository.js";
+import { createSupplier, adminError } from '../../../../../server/features/proveedor/SupplierAdminRepository.js';
 
 export const runtime = "nodejs";
+
+export async function POST(request) {
+  try { return NextResponse.json(await createSupplier(await request.json()), { status: 201 }); }
+  catch (error) { return adminError(error); }
+}
 
 export async function GET() {
   try {

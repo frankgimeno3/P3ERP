@@ -1,6 +1,7 @@
 "use client";
 import { use, useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import SupplierActions from "../SupplierActions";
 import MiddleNav from "@/app/general_components/componentes_recurrentes/MiddleNav";
 
 type TabType = "cargos-pendientes" | "tickets" | "facturas" | "precios" | "datos";
@@ -30,7 +31,7 @@ export default function ProveedorPage({
   const { id_proveedor } = use(params);
   const router = useRouter();
   
-  const [tab, setTab] = useState<TabType>("cargos-pendientes");
+  const [tab, setTab] = useState<TabType>("datos");
   const [filter, setFilter] = useState("");
   const [proveedor, setProveedor] = useState<Proveedor | null>(null);
   const [tickets, setTickets] = useState<any[]>([]);
@@ -45,28 +46,15 @@ export default function ProveedorPage({
   // Load data
   useEffect(() => {
     setLoading(true);
-    Promise.all([
-      fetch(`/api/v1/admin/proveedores/${encodeURIComponent(id_proveedor)}`).then(
-        (r) => r.json()
-      ),
-      fetch(
-        `/api/v1/admin/tickets?id_proveedor=${encodeURIComponent(id_proveedor)}`
-      ).then((r) => r.json()),
-      fetch("/api/v1/admin/facturas-proveedores").then((r) => r.json()),
-      fetch(
-        `/api/v1/admin/cargos-pendientes?id_proveedor=${encodeURIComponent(id_proveedor)}`
-      ).then((r) => r.json()),
-      fetch(
-        `/api/v1/admin/precios-proveedores?id_proveedor=${encodeURIComponent(id_proveedor)}`
-      ).then((r) => r.json()),
-    ])
-      .then(([p, t, f, c, pr]) => {
-        setProveedor(p);
-        setFormData(p);
-        setTickets(Array.isArray(t) ? t : []);
-        setInvoices((Array.isArray(f) ? f : []).filter((x) => x.id_proveedor === id_proveedor));
-        setCargos(Array.isArray(c) ? c : []);
-        setPrecios(Array.isArray(pr) ? pr : []);
+    fetch(`/api/v1/admin/proveedores/${encodeURIComponent(id_proveedor)}`)
+      .then(async response => { const data = await response.json(); if (!response.ok) throw new Error(data.message || 'Error al cargar el proveedor'); return data; })
+      .then(({ proveedor, tickets, facturas, cargos, precios }) => {
+        setProveedor(proveedor);
+        setFormData(proveedor);
+        setTickets(tickets || []);
+        setInvoices(facturas || []);
+        setCargos((cargos || []).map((row: any) => ({ ...row, id_cargo_pendiente: row.id_pago, concepto: row.nombre_planificacion || row.factura || row.id_pago, importe_cargo: row.pendiente, estado: 'pendiente', fecha_cargo: row.fecha_pago })));
+        setPrecios(precios || []);
         setLoading(false);
       })
       .catch((err) => {
@@ -104,7 +92,7 @@ export default function ProveedorPage({
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
+          body: JSON.stringify({ nombre_proveedor: formData.nombre_proveedor, nombre_fiscal_proveedor: formData.nombre_fiscal_proveedor, vat_code: formData.vat_code, pais_proveedor: formData.pais_proveedor, moneda_proveedor: formData.moneda_proveedor }),
         }
       );
       
@@ -137,11 +125,11 @@ export default function ProveedorPage({
   if (loading) return <div className="min-h-screen bg-gray-100"><MiddleNav tituloprincipal="Cargando..." /></div>;
 
   const tabs = [
+    { id: "datos", label: "Datos" },
     { id: "cargos-pendientes", label: "Cargos Pendientes" },
     { id: "tickets", label: "Tickets" },
     { id: "facturas", label: "Facturas" },
     { id: "precios", label: "Precios" },
-    { id: "datos", label: "Datos" },
   ] as const;
 
   return (
@@ -166,7 +154,7 @@ export default function ProveedorPage({
               }}
               className={`cursor-pointer rounded-t px-4 py-2 transition ${
                 tab === t.id
-                  ? "bg-blue-950 text-white"
+                  ? "bg-blue-950 text-white hover:bg-blue-900"
                   : "bg-white text-gray-500 hover:text-gray-700"
               }`}
             >
@@ -175,6 +163,7 @@ export default function ProveedorPage({
           ))}
         </div>
 
+        <SupplierActions supplier={proveedor} tab={tab} />
         {/* Content */}
         {tab !== "datos" ? (
           <>

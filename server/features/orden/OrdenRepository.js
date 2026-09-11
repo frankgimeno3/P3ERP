@@ -7,6 +7,7 @@ function numberOrZero(value) {
 function normalizeOrden(row) {
   return {
     id_orden: row.id_orden,
+    id_cuenta: row.id_cuenta || row.id_cuenta_contrato || '',
     numero_cobro: row.numero_cobro,
     etiqueta_cobro: row.etiqueta_cobro ?? "",
     fecha_teorica_cobro: row.fecha_teorica_cobro ?? "",
@@ -27,6 +28,7 @@ function normalizeOrden(row) {
 const ordenesSelect = `
   SELECT
     o.id_orden,
+    o.id_cuenta,
     o.numero_cobro,
     o.etiqueta_cobro,
     o.fecha_teorica_cobro,

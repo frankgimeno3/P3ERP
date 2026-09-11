@@ -69,11 +69,13 @@ export function Form({ children, onSave, label = 'Guardar cambios' }: { children
 }
 export function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
   const id = useId(), ref = useRef<HTMLElement>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
     ref.current?.focus();
     const keydown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') onCloseRef.current();
       if (e.key === 'Tab') {
         const nodes = ref.current?.querySelectorAll<HTMLElement>('button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),a[href]');
         if (!nodes?.length) return;
@@ -84,7 +86,7 @@ export function Modal({ title, onClose, children }: { title: string; onClose: ()
     };
     window.addEventListener('keydown', keydown);
     return () => { window.removeEventListener('keydown', keydown); previous?.focus(); };
-  }, [onClose]);
+  }, []);
   return <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4"><section ref={ref} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby={id} className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white p-6 shadow-xl"><header className="mb-5 flex items-start justify-between gap-4"><h2 id={id} className="text-xl font-semibold text-blue-950">{title}</h2><button type="button" aria-label="Cerrar" onClick={onClose} className="rounded px-3 text-2xl hover:bg-gray-100">×</button></header>{children}</section></div>;
 }
 export function DeleteButton({ path, onDeleted }: { path: string; onDeleted: () => void }) {

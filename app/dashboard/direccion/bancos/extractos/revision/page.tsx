@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import BankReviewWizard from "../../BankReviewWizard";
 
 type Banco = "Sabadell" | "Santander";
 type Linea = {
@@ -18,150 +19,20 @@ type Linea = {
   id_agente?: string;
   nombre_agente?: string;
 };
-type Entity = { id: string; name: string };
-const formatMoney = (v: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(
-    v,
-  );
-
+const formatMoney = (v: number) => Number(v).toLocaleString('es-ES', {style:'currency',currency:'EUR'});
 export default function RevisionLineasPage() {
   const router = useRouter();
-  const [rows, setRows] = useState<Linea[]>([]),
-    [bank, setBank] = useState<Banco>("Sabadell"),
-    [selected, setSelected] = useState<string[]>([]),
-    [query, setQuery] = useState(""),
-    [type, setType] = useState(""),
-    [modal, setModal] = useState(false),
-    [entityType, setEntityType] = useState<"proveedor" | "cliente">(
-      "proveedor",
-    ),
-    [entities, setEntities] = useState<Entity[]>([]),
-    [entityQuery, setEntityQuery] = useState(""),
-    [saving, setSaving] = useState(false),
-    [error, setError] = useState("");
-  const [chosenEntity, setChosenEntity] = useState<Entity | null>(null);
-  const [assignmentStep, setAssignmentStep] = useState<1 | 2>(1);
-  const [validation, setValidation] = useState<"idle" | "checking" | "ok" | "error">("idle");
-  const [assignmentError, setAssignmentError] = useState("");
-  const load = useCallback(
-    () =>
-      fetch("/api/v1/direccion/bancos")
-        .then((r) => r.json())
-        .then((d) => setRows(Array.isArray(d) ? d : []))
-        .catch(() => setError("No se pudieron cargar las líneas")),
-    [],
-  );
-  useEffect(() => {
-    load();
-  }, [load]);
-  useEffect(() => {
-    if (!modal) return;
-    const close = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setModal(false);
-    };
-    window.addEventListener("keydown", close);
-    return () => window.removeEventListener("keydown", close);
-  }, [modal]);
-  useEffect(() => {
-    if (!modal) return;
-    const url =
-      entityType === "proveedor"
-        ? "/api/v1/admin/proveedores"
-        : "/api/v1/comercial/cuentas";
-    const controller = new AbortController();
-    setEntities([]);
-    fetch(url, { signal: controller.signal })
-      .then((r) => { if (!r.ok) throw new Error("No se pudo cargar la lista"); return r.json(); })
-      .then((data) =>
-        setEntities(
-          (Array.isArray(data) ? data : []).map((x: any) =>
-            entityType === "proveedor"
-              ? {
-                  id: x.id_proveedor,
-                  name:
-                    x.nombre_proveedor ||
-                    x.nombre_fiscal_proveedor ||
-                    x.id_proveedor,
-                }
-              : {
-                  id: x.id_cuenta,
-                  name: x.nombre_empresa || x.nombre_fiscal || x.id_cuenta,
-                },
-          ),
-        ),
-      ).catch((e) => { if (e.name !== "AbortError") setAssignmentError(e.message); });
-    return () => controller.abort();
-  }, [entityType, modal]);
-  useEffect(() => {
-    if (!modal || assignmentStep !== 2 || !chosenEntity) return;
-    const controller = new AbortController();
-    setValidation("checking");
-    setAssignmentError("");
-    fetch("/api/v1/direccion/bancos/revision", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      signal: controller.signal,
-      body: JSON.stringify({ ids: selected, action: "validate-assignment", entityType, entityId: chosenEntity.id }),
-    }).then(async response => {
-      const data = await response.json();
-      if (!response.ok || data.ok !== true) throw new Error(data.message || "No se pudo validar la asignación");
-      setValidation("ok");
-    }).catch(e => {
-      if (e.name === "AbortError") return;
-      setValidation("error");
-      setAssignmentError(e.message || "No se pudo validar la asignación");
-    });
-    return () => controller.abort();
-  }, [modal, assignmentStep, chosenEntity, entityType, selected]);
-  const shown = useMemo(
-    () =>
-      rows
-        .filter((r) => r.banco === bank)
-        .filter(
-          (r) =>
-            !query.trim() ||
-            r.concepto.toLowerCase().includes(query.toLowerCase()),
-        )
-        .filter(
-          (r) => !type || (type === "ingreso" ? r.importe > 0 : r.importe < 0),
-        ),
-    [bank, query, rows, type],
-  );
-  const candidates = entities
-    .filter(
-      (e) =>
-        !entityQuery.trim() ||
-        `${e.id} ${e.name}`.toLowerCase().includes(entityQuery.toLowerCase()),
-    )
-    .slice(0, 15);
-  const toggle = (id: string) =>
-    setSelected((s) =>
-      s.includes(id) ? s.filter((x) => x !== id) : [...s, id],
-    );
-  const action = async (payload: any) => {
-    try {
-      setSaving(true);
-      setError("");
-      const response = await fetch("/api/v1/direccion/bancos/revision", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ids: selected, ...payload }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message);
-      setSelected([]);
-      setModal(false);
-      await load();
-    } catch (e: any) {
-      if (payload.action === "assign") {
-        setValidation("error");
-        setAssignmentError(e.message || "No se pudo actualizar la selección");
-      }
-      setError(e.message || "No se pudo actualizar la selección");
-    } finally {
-      setSaving(false);
-    }
-  };
+  const [rows,setRows] = useState<Linea[]>([]), [bank,setBank] = useState<Banco>('Sabadell'), [selected,setSelected] = useState<string[]>([]), [query,setQuery] = useState(''), [type,setType] = useState(''), [assigned,setAssigned] = useState(''), [error,setError] = useState('');
+  const [mode,setMode] = useState<'review'|'assign'|'charge'|null>(null), [unreview,setUnreview] = useState(false), [saving,setSaving] = useState(false);
+  const load = useCallback(async () => {try {const r=await fetch('/api/v1/direccion/bancos',{cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error(d.message);setRows(d);}catch(e:any){setError(e.message);}},[]);
+  useEffect(() => {void load();},[load]);
+  useEffect(() => {const close=(e:KeyboardEvent)=>{if(e.key==='Escape')setUnreview(false);};window.addEventListener('keydown',close);return()=>window.removeEventListener('keydown',close);},[]);
+  const selectedRows=rows.filter(r=>selected.includes(r.id_linea_banco));
+  const allReviewed=selectedRows.length>0&&selectedRows.every(r=>r.estado_revision);
+  const shown=useMemo(()=>rows.filter(r=>r.banco===bank&&(!query.trim()||r.concepto.toLowerCase().includes(query.toLowerCase()))&&(!type||(type==='ingreso'?r.importe>0:r.importe<0))&&(!assigned||(assigned==='yes'?!!r.id_proveedor:!r.id_proveedor))),[rows,bank,query,type,assigned]);
+  const toggle=(id:string)=>setSelected(s=>s.includes(id)?s.filter(x=>x!==id):[...s,id]);
+  const saved=()=>{setMode(null);setSelected([]);void load();};
+  const markUnreviewed=async()=>{setSaving(true);try{const r=await fetch('/api/v1/direccion/bancos/revision',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'unreview',ids:selected})});const d=await r.json();if(!r.ok)throw new Error(d.message);setUnreview(false);saved();}catch(e:any){setError(e.message);}finally{setSaving(false);}};
   return (
     <main className="min-h-screen bg-gray-100 px-6 py-8 text-slate-900 lg:px-12">
       <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
@@ -178,31 +49,11 @@ export default function RevisionLineasPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          {selected.length > 1 && (
-            <>
-              <button
-                type="button"
-                onClick={() => {
-                  setChosenEntity(null);
-                  setAssignmentStep(1);
-                  setValidation("idle");
-                  setAssignmentError("");
-                  setEntityQuery("");
-                  setModal(true);
-                }}
-                className="cursor-pointer rounded border border-blue-950 bg-white px-4 py-2 text-sm font-medium text-blue-950 transition hover:bg-blue-50"
-              >
-                Asignar a proveedor o cliente común
-              </button>
-              <button
-                type="button"
-                onClick={() => action({ action: "review" })}
-                className="cursor-pointer rounded bg-green-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-800"
-              >
-                Marcar selección como revisados
-              </button>
-            </>
-          )}
+          {selected.length > 0 && <>
+            <button type="button" onClick={()=>setMode('assign')} className="cursor-pointer rounded border bg-white px-4 py-2 text-blue-950 hover:bg-blue-50">Asignar a proveedor, cliente o nómina común</button>
+            <button type="button" onClick={()=>allReviewed?setUnreview(true):setMode('review')} className={'cursor-pointer rounded px-4 py-2 text-white '+(allReviewed?'bg-red-700 hover:bg-red-800':'bg-green-700 hover:bg-green-800')}>{allReviewed?'Marcar como NO revisado':'Marcar selección como revisados'}</button>
+            <button type="button" onClick={()=>setMode('charge')} className="cursor-pointer rounded border bg-white px-4 py-2 text-blue-950 hover:bg-blue-50">Asignar a un cargo previsto</button>
+          </>}
           <button
             type="button"
             onClick={() =>
@@ -253,6 +104,7 @@ export default function RevisionLineasPage() {
           <option value="cargo">Cargos</option>
         </select>
       </div>
+      <label className="block bg-white px-4 pb-4">Asignación a proveedor<select value={assigned} onChange={e=>setAssigned(e.target.value)} className="ml-3 cursor-pointer rounded border p-2 hover:bg-blue-50"><option value="">Todos</option><option value="yes">Con proveedor</option><option value="no">Sin proveedor</option></select></label>
       <div className="overflow-hidden rounded-b bg-white text-slate-900 shadow">
         <table className="w-full table-fixed text-sm">
           <thead className="bg-gray-200">
@@ -263,7 +115,7 @@ export default function RevisionLineasPage() {
               <th className="w-[14%] p-3 text-left">F. valor</th>
               <th className="p-3 text-left">Concepto</th>
               <th className="w-[13%] p-3 text-right">Importe</th>
-              <th className="w-[25%] p-3 text-left">Tipo</th>
+              <th className="w-[25%] p-3 text-left">Asignado a</th>
             </tr>
           </thead>
           <tbody>
@@ -312,94 +164,8 @@ export default function RevisionLineasPage() {
           </tbody>
         </table>
       </div>
-      {modal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 p-4">
-          <section
-            role="dialog"
-            aria-modal="true"
-            className="w-full max-w-2xl rounded-xl bg-white p-6 shadow-2xl"
-          >
-            <header className="mb-5 flex justify-between">
-              <div>
-                <h2 className="text-xl font-semibold">Asignación común</h2>
-                <p className="text-sm text-gray-500">
-                  Se aplicará a {selected.length} líneas.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setModal(false)}
-                aria-label="Cerrar"
-                className="cursor-pointer text-2xl text-gray-500 transition hover:text-gray-900"
-              >
-                ×
-              </button>
-            </header>
-            <p className="mb-4 text-sm font-semibold text-blue-950">{assignmentStep === 1 ? "1. Selecciona un proveedor o cliente" : "2. Comprueba y confirma la asignación"}</p>
-            {assignmentStep === 1 && <>
-            <label className="text-sm font-medium">
-              Asignar a
-              <select
-                value={entityType}
-                onChange={(e) => {
-                  setEntityType(e.target.value as any);
-                  setEntityQuery("");
-                  setChosenEntity(null);
-                  setEntities([]);
-                  setAssignmentError("");
-                }}
-                className="mt-1 w-full cursor-pointer rounded border bg-white px-3 py-2 hover:border-blue-950"
-              >
-                <option value="proveedor">Proveedor</option>
-                <option value="cliente">Cliente</option>
-              </select>
-            </label>
-            <label className="mt-4 block text-sm font-medium">
-              Buscar
-              <input
-                value={entityQuery}
-                onChange={(e) => setEntityQuery(e.target.value)}
-                className="mt-1 w-full rounded border px-3 py-2"
-                placeholder={`Buscar ${entityType}`}
-              />
-            </label>
-            <div className="mt-2 max-h-72 overflow-y-auto rounded border">
-              {candidates.map((entity) => (
-                <button
-                  key={entity.id}
-                  type="button"
-                  onClick={() => setChosenEntity(entity)}
-                  aria-pressed={chosenEntity?.id === entity.id}
-                  className={`flex w-full cursor-pointer justify-between border-b p-3 text-left text-sm transition ${chosenEntity?.id === entity.id ? "bg-blue-950 text-white hover:bg-blue-900" : "hover:bg-blue-50"}`}
-                >
-                  <span>{entity.name}</span>
-                  <span>{entity.id}</span>
-                </button>
-              ))}
-            </div>
-            </>}
-            {chosenEntity && <p className="mt-3 text-sm">Seleccionado: <strong>{chosenEntity.name}</strong> ({chosenEntity.id})</p>}
-            {assignmentStep === 2 && <div aria-live="polite" className="mt-4">
-              {validation === "checking" && <p>Comprobando las líneas seleccionadas…</p>}
-              {validation === "ok" && <p className="rounded border border-green-200 bg-green-50 p-3 text-green-800">Todo correcto. Las {selected.length} líneas están libres y puedes confirmar la asignación.</p>}
-            </div>}
-            {assignmentError && <p role="alert" className="mt-4 rounded border border-red-200 bg-red-50 p-3 text-red-700">{assignmentError}</p>}
-            <footer className="mt-5 flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setModal(false)}
-                className="cursor-pointer rounded border px-4 py-2 transition hover:bg-gray-50"
-              >
-                Cancelar
-              </button>
-              {assignmentStep === 1 ? <button type="button" disabled={!chosenEntity} onClick={() => { setValidation("checking"); setAssignmentStep(2); }} className="rounded bg-blue-950 px-4 py-2 text-white enabled:cursor-pointer enabled:hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-50">Continuar</button> : <>
-                <button type="button" disabled={saving} onClick={() => { setAssignmentStep(1); setValidation("idle"); setAssignmentError(""); }} className="rounded border px-4 py-2 enabled:cursor-pointer enabled:hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50">Volver</button>
-                <button type="button" disabled={validation !== "ok" || saving} onClick={() => { if (validation === "ok" && chosenEntity && !saving) action({ action: "assign", entityType, entityId: chosenEntity.id }); }} className="rounded bg-blue-950 px-4 py-2 text-white enabled:cursor-pointer enabled:hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-50">{saving ? "Asignando…" : "Confirmar asignación"}</button>
-              </>}
-            </footer>
-          </section>
-        </div>
-      )}
+      {mode && <BankReviewWizard lines={selectedRows} all={rows} mode={mode} modal onSaved={saved} onClose={()=>setMode(null)} />}
+      {unreview && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 p-4"><section role="dialog" aria-modal="true" aria-label="Marcar como no revisado" className="max-w-xl rounded bg-white p-6"><header className="flex justify-between"><h2 className="text-xl font-semibold">Marcar como NO revisado</h2><button type="button" aria-label="Cerrar" onClick={()=>setUnreview(false)} className="cursor-pointer rounded px-3 text-2xl hover:bg-gray-100">×</button></header><p className="my-4">Se marcarán {selectedRows.length} registros como pendientes de revisar. Sus asignaciones y pagos se conservarán.</p><button type="button" disabled={saving} onClick={markUnreviewed} className="rounded bg-red-700 px-4 py-2 text-white enabled:cursor-pointer enabled:hover:bg-red-800 disabled:opacity-50">{saving?'Guardando…':'Confirmar'}</button></section></div>}
     </main>
   );
 }

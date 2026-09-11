@@ -1,0 +1,42 @@
+// Requires jsdom in P3_SELECTOR_TEST_MODULES; no application server is started.
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const Module = require('node:module');
+const ts = require('typescript');
+const { JSDOM } = require(path.join(process.env.P3_SELECTOR_TEST_MODULES, 'jsdom'));
+const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>', { url:'http://localhost' });
+Object.assign(global, {window:dom.window,document:dom.window.document,navigator:dom.window.navigator,HTMLElement:dom.window.HTMLElement,IS_REACT_ACT_ENVIRONMENT:true});
+dom.window.HTMLElement.prototype.scrollIntoView = function() {};
+const React = require('react');
+const { createRoot } = require('react-dom/client');
+const filename = path.resolve('app/components/SearchableSelect.tsx');
+const compiled = ts.transpileModule(fs.readFileSync(filename,'utf8'),{compilerOptions:{jsx:ts.JsxEmit.ReactJSX,module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true}}).outputText;
+const mod = new Module(filename,module);mod.filename=filename;mod.paths=module.paths;mod._compile(compiled,filename);
+const Select=mod.exports.default;
+let selected='', setDisabled;
+function Harness() {
+  const [value,setValue]=React.useState('');const [disabled,updateDisabled]=React.useState(false);setDisabled=updateDisabled;
+  return React.createElement('form',{},React.createElement(Select,{label:'Empleado',required:true,name:'employee',value,disabled,onChange:v=>{selected=v;setValue(v);},options:[{value:'c1',label:'Cárlos Pérez'},{value:'c2',label:'Carla García'},{value:'j1',label:'Juan'}]}));
+}
+const root=createRoot(document.getElementById('root'));
+const act=React.act;
+const options=()=>[...document.querySelectorAll('[role="option"]')];
+const type=(input,value)=>act(()=>{Object.getOwnPropertyDescriptor(dom.window.HTMLInputElement.prototype,'value').set.call(input,value);input.dispatchEvent(new dom.window.Event('input',{bubbles:true}));});
+const key=(input,key)=>act(()=>input.dispatchEvent(new dom.window.KeyboardEvent('keydown',{key,bubbles:true})));
+act(()=>root.render(React.createElement(Harness)));
+const input=document.querySelector('[role="combobox"]');
+assert.equal(document.querySelectorAll('input:not([type="hidden"])').length,1);
+assert.equal(document.querySelectorAll('select').length,0);
+assert.equal(input.checkValidity(),false);
+act(()=>input.focus());assert.equal(options().length,3);
+type(input,'car');assert.equal(options().length,2);assert.equal(selected,'');assert.equal(input.checkValidity(),false);
+key(input,'ArrowDown');key(input,'Enter');assert.equal(selected,'c2');assert.equal(input.value,'Carla García');assert.equal(input.checkValidity(),true);
+act(()=>input.dispatchEvent(new dom.window.MouseEvent('click',{bubbles:true})));assert.equal(options().length,3);
+type(input,'carlos');assert.equal(selected,'');assert.equal(options().length,1);assert.equal(input.checkValidity(),false);
+act(()=>options()[0].click());assert.equal(selected,'c1');assert.equal(document.querySelector('input[type="hidden"]').value,'c1');
+act(()=>input.dispatchEvent(new dom.window.MouseEvent('click',{bubbles:true})));key(input,'Escape');assert.equal(options().length,0);assert.equal(selected,'c1');
+act(()=>input.dispatchEvent(new dom.window.MouseEvent('click',{bubbles:true})));type(input,'No existe');assert.equal(options().length,0);key(input,'Enter');assert.equal(selected,'');assert.equal(input.checkValidity(),false);
+act(()=>input.blur());assert.equal(input.value,'');
+act(()=>setDisabled(true));assert.equal(input.disabled,true);
+act(()=>root.unmount());dom.window.close();console.log('Selector: one field, filtering, accent search, explicit selection, stale selection invalidation, keyboard, Escape, missing option, blur and disabled state passed.');

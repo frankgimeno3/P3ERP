@@ -1,35 +1,27 @@
 {
   "/dashboard/direccion/laboral/nominas": {
-    "summary": "Gestiona nóminas y anticipos de las cuentas de empleado, sus documentos y las transferencias de cada pago.",
+    "summary": "Consulta una única ficha de nómina por empleado con cargo recurrente y gestiona sus anticipos.",
     "steps": [
-      "La pestaña Nóminas muestra solo empleado y mes (con el año). Agrega una nómina por empleado y periodo y pulsa la fila para abrir su ficha.",
-      "En Anticipos, pulsa Agregar anticipo y completa mes, año, empleado, importe neto, estado pagado o pendiente y comentarios. Puedes abrirlo después para editarlo, vincular su transferencia y subir documentos.",
-      "En la ficha de nómina indica el neto total, estado y comentarios y sube los documentos. Los anticipos del mismo empleado y periodo se vinculan automáticamente mediante su array de identificadores.",
-      "Consulta por separado la transferencia de nómina y las de anticipos. Solo los anticipos pagados reducen el importe pendiente de transferencia salarial. No se permite duplicar una nómina del mismo periodo ni reutilizar una transferencia."
-    ]
-  },
-  "/dashboard/direccion/laboral/asuntos-empleados": {
-    "summary": "Consulta los agentes marcados como empleados y administra sus asuntos laborales.",
-    "steps": [
-      "Abre un empleado para ver sus datos de agente. La condición de cuenta de empleado se modifica en Operaciones, Agentes.",
-      "Selecciona el año para consultar sus tres días de libre disposición. Marca cada día usado e introduce su fecha separada en dd, mm y yyyy; guarda los cambios.",
-      "Sube y descarga documentación del empleado. Registra, edita o elimina ausencias indicando motivo, fechas y comentarios.",
-      "Añade comentarios a la ficha; el historial permanece visible al cambiar de año."
+      "Nóminas muestra una ficha por empleado que tenga un cargo recurrente de tipo nómina. Establecer nómina recurrente crea la previsión y su ficha. Los cargos existentes también se incorporan; un concepto bancario sin asociación no crea una nómina.",
+      "Abre la ficha para ver sus cargos recurrentes, modificar su programación desde el enlace y consultar todos los registros bancarios asociados. Cada movimiento enlaza a su revisión bancaria.",
+      "Las liquidaciones mensuales se conservan dentro de la ficha, con sus anticipos y transferencias. Los anticipos confirmados en la revisión bancaria aparecen como Anticipo en los movimientos, en el apartado de anticipos del empleado y en la pestaña Anticipos del listado general. Volver a revisar no duplica el anticipo.",
+      "La pestaña Empleados muestra las cuentas de empleado. Los anticipos pagados se deducen al validar la nómina completa; los pendientes se muestran sin descontarse."
     ]
   },
   "/dashboard/direccion/laboral/calendario-laboral": {
     "summary": "Configura un calendario por año con vacaciones, festivos y eventos editoriales.",
     "steps": [
-      "Agrega un año y abre su fila para configurar el calendario.",
-      "Introduce vacaciones, festivos nacionales, autonómicos, de Barcelona y de convenio. Puedes registrar días sueltos o periodos dentro del año, con título y comentarios.",
+      "Agrega un año y abre su fila para configurar el calendario. El modal mantiene el foco mientras escribes y se cierra con × o Escape.",
+      "Introduce vacaciones, festivos nacionales, autonómicos, de Barcelona y de convenio. Puedes registrar días sueltos o periodos dentro del año, con título y comentarios. Las vacaciones se guardan como tramos de lunes a viernes: los sábados y domingos quedan excluidos, y un rango que solo contiene fin de semana se rechaza. Los otros tipos de evento conservan sus fechas.",
       "Los elementos se reflejan en los doce meses del calendario inferior. Pulsa cualquier día para agregar un deadline de revista, publicación de revista o feria.",
-      "Consulta la leyenda de colores, pasa sobre un día para ver sus eventos y usa la tabla para editarlos o eliminarlos."
+      "Consulta la leyenda de colores, pasa sobre un día para ver sus eventos y usa la tabla para editarlos o eliminarlos.",
+      "Cada día muestra el título y color de todos sus eventos, incluidos los coincidentes. Si el año no tiene eventos guardados, se indica expresamente; no se generan festivos automáticamente."
     ]
   },
   "/dashboard/direccion/laboral/contratacion": {
     "summary": "Organiza procesos de contratación, textos de oferta y comunicaciones y seguimiento de candidatos.",
     "steps": [
-      "Crea un proceso y abre su fila para completar la oferta y condiciones y los mensajes pre-llamada, post-llamada y de rechazo.",
+      "Crea un proceso y abre su fila para completar la oferta y condiciones y los mensajes pre-llamada, post-llamada y de rechazo. El modal de agregar mantiene el foco al escribir y se cierra con × o Escape.",
       "Agrega candidatos con nombre, resumen CV y comentarios.",
       "Edita su estado: pendiente llamada, rechazado en llamada, pendiente reunión presencial, rechazado en reunión presencial, elegido o reserva. Puedes filtrar la tabla por estado."
     ]
@@ -39,7 +31,8 @@
     "steps": [
       "Usa los filtros para localizar una cuenta.",
       "Abre una fila para consultar su ficha, contactos, propuestas, comentarios y actividad.",
-      "Pulsa Nueva cuenta para iniciar el alta guiada."
+      "Pulsa Nueva cuenta para iniciar el alta guiada.",
+      "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape."
     ]
   },
   "/dashboard/comercial/contactos": {
@@ -47,7 +40,8 @@
     "steps": [
       "Filtra la lista por los datos conocidos.",
       "Abre un contacto para revisar o modificar su ficha y eventos.",
-      "Usa el alta de contacto para registrar una nueva persona y vincularla a una cuenta."
+      "Usa el alta de contacto para registrar una nueva persona y vincularla a una cuenta.",
+      "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape."
     ]
   },
   "/dashboard/comercial/propuestas": {
@@ -55,7 +49,8 @@
     "steps": [
       "Cambia entre las vistas de propuestas pendientes y el listado completo.",
       "Abre una propuesta para consultar su contenido, estado y seguimiento.",
-      "Crea, edita, replica o actualiza la propuesta según el flujo comercial."
+      "Crea, edita, replica o actualiza la propuesta según el flujo comercial.",
+      "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape."
     ]
   },
   "/dashboard/comercial/contratos": {
@@ -75,11 +70,11 @@
     ]
   },
   "/dashboard/produccion/hoja_produccion": {
-    "summary": "Controla los contenidos que deben prepararse y producirse.",
+    "summary": "Muestra la hoja de producción 2026 con la estructura completa de contenidos, anuncios, artículos y publicación.",
     "steps": [
-      "Filtra por estado, cuenta o publicación.",
-      "Abre un contenido para consultar y completar sus datos de producción.",
-      "Mantén actualizados responsables, materiales y fechas."
+      "Despliega Filtros, cerrado inicialmente, para buscar por los campos de la hoja. La tabla no muestra Código CRM, Publicación / Nº web, Factura ni Comentarios.",
+      "Usa los controles para incluir publicados o contenidos fuera de contrato.",
+      "Pulsa una fila para abrir el detalle del contenido."
     ]
   },
   "/dashboard/administracion/ferias": {
@@ -87,7 +82,8 @@
     "steps": [
       "Busca y filtra las ferias disponibles.",
       "Abre una feria para modificar sus datos y relevancia.",
-      "Usa Crear para registrar un nuevo evento."
+      "Usa Crear para registrar un nuevo evento.",
+      "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape."
     ]
   },
   "/dashboard/administracion/control-administrativo": {
@@ -119,31 +115,37 @@
     "steps": [
       "Localiza la suscripción por cuenta o publicación.",
       "Revisa vigencia, servicio y último número.",
-      "Actualiza los datos cuando cambien las condiciones."
+      "Actualiza los datos cuando cambien las condiciones.",
+      "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape."
     ]
   },
   "/dashboard/administracion/proveedores": {
-    "summary": "Muestra directamente el listado y las fichas de proveedores desde la carpeta Proveedores de Administración.",
+    "summary": "Consulta proveedores unificados con filtros combinables dentro del desplegable Filtros. El botón Crear proveedor está arriba a la derecha y abre el alta en tres fases. Las fichas se abren en la pestaña Datos.",
     "steps": [
-      "Busca un proveedor por sus datos.",
-      "Abre su ficha para revisar información fiscal y de contacto.",
-      "Crea un proveedor antes de asociarle facturas o tickets."
+      "Despliega Filtros para buscar por proveedor, nombre fiscal y código fiscal; puedes combinarlos y se mantienen al cerrar el desplegable. No hay búsqueda general adicional.",
+      "Pulsa Crear proveedor: introduce un nombre obligatorio y revisa coincidencias; después comprueba el código fiscal o pulsa No lo sé, saltar. En la tercera fase completa el nombre fiscal, selecciona obligatoriamente un país del catálogo mundial y escribe la moneda. El país usa un único campo desplegable: al pulsarlo aparecen opciones y al escribir se filtran; selecciona una opción. El identificador y las fechas de registro son automáticos.",
+      "Al guardar se vuelven a comprobar duplicados y se abre la ficha en Datos. Desde las otras pestañas consulta cargos pendientes, tickets, facturas y precios.",
+      "Desde la ficha puedes Agregar cargo previsto con el mismo modal de Previsión de liquidez y el proveedor preseleccionado. En Tickets y Facturas, los botones de alta abren los formularios administrativos con ese proveedor seleccionado. En Precios, Agregar producto / servicio guarda servicio, descripción, unidad y precio por unidad en proveedores_benchmark.",
+      "Las variantes indicadas de ADOBE, AMAZON BUSINESS, BANCO SABADELL, BITAVIS SERVEIS INFORMATICS, CORREOS, ENDESA, LINKEDIN, MOEVE, PIXUP, VERISURE, THALASSA y STARRESA se muestran en una única ficha por proveedor, conservando sus referencias y el acceso desde los identificadores antiguos.",
+      "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape."
     ]
   },
   "/dashboard/administracion/facturas-proveedores": {
     "summary": "Registra y consulta facturas recibidas de proveedores.",
     "steps": [
       "Filtra el listado para localizar una factura.",
-      "Pulsa Agregar para registrar una nueva factura con sus importes y vencimientos.",
-      "Abre el detalle para revisar o completar la contabilización."
+      "Pulsa Agregar para registrar una nueva factura con sus importes y vencimientos. También puedes iniciar el alta desde Facturas en la ficha del proveedor, que aparece preseleccionado.",
+      "Abre el detalle para revisar o completar la contabilización.",
+      "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape."
     ]
   },
   "/dashboard/administracion/proveedores/tickets": {
     "summary": "Registra tickets y justificantes de gastos de proveedor.",
     "steps": [
       "Consulta los tickets ya registrados.",
-      "Pulsa Añadir para introducir un nuevo justificante.",
-      "Comprueba proveedor, concepto, importes y fecha antes de guardar."
+      "Pulsa Añadir para introducir un nuevo justificante. Desde Tickets en la ficha del proveedor puedes iniciar el mismo formulario con el proveedor preseleccionado.",
+      "Comprueba proveedor, concepto, importes y fecha antes de guardar.",
+      "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape."
     ]
   },
   "/dashboard/operaciones/data": {
@@ -154,18 +156,24 @@
       "Selecciona el modo de importación, ejecuta el proceso y consulta después su resumen y detalle en el historial."
     ]
   },
-  "/dashboard/operaciones/agentesyroles": {
-    "summary": "Administra agentes, altas en Cognito y su asignación segura de roles.",
+  "/dashboard/operaciones/agentes": {
+    "summary": "Desde Dirección, Laboral, Agentes, administra agentes, altas en Cognito y su asignación segura de roles.",
     "steps": [
       "Pulsa Crear agente para iniciar el alta guiada y asigna uno de los roles base, administración, operaciones o superadmin.",
+      "En la ficha puedes editar el nombre completo y el email del agente y guardar los cambios. El nombre es obligatorio y el email debe ser válido y no pertenecer a otro agente.",
+      "Desde el listado de Agentes, Administrar roles abre /dashboard/operaciones/agentes/roles. Roles pertenece a la gestión de agentes de Dirección, Laboral y no tiene entrada propia en la barra lateral. Las direcciones anteriores redirigen a las nuevas.",
       "La columna Cuenta de empleado corresponde a is_empleado_account, activado por defecto. Modifica esta casilla en la ficha del agente para incluirlo o excluirlo de los listados y altas de Laboral; su histórico se conserva.",
       "Los agentes con histórico laboral no se pueden borrar. Desactiva la cuenta de empleado para conservar nóminas, documentos y demás registros.",
       "El rol determina los módulos visibles y el servidor bloquea las rutas y APIs no autorizadas aunque se intente acceder directamente.",
-      "Abre la ficha de un agente para modificarlo o borrarlo; el borrado exige escribir borrar y elimina su cuenta, sus listas y sus tareas, sin afectar las de otros agentes."
+      "Abre la ficha de un agente para modificarlo o borrarlo; el borrado exige escribir borrar y elimina su cuenta, sus listas y sus tareas, sin afectar las de otros agentes.",
+      "La pestaña Asuntos muestra solo empleados activos, sin columna de estado. Abre una fila para gestionar libre disposición, documentos, ausencias y comentarios.",
+      "Dentro de Agentes, Activos es la pestaña inicial e Inactivos reúne las cuentas no activas, incluidas las bloqueadas. Cada tabla tiene filtros independientes por ID, nombre, email y rol (selector), sin columna Estado.",
+      "La ficha del agente contiene Detalles, Nóminas y Tareas. Nóminas muestra su ficha única con historial bancario y la nómina pactada con enlace para editar el cargo recurrente.",
+      "Tareas muestra ID, nombre, agente, estado y descripción. Filtra por ID, nombre, descripción o estado; Crear tarea abre un modal que se cierra con × o Escape. Abre cualquier fila para consultar y editar su tarea en una subpágina."
     ]
   },
-  "/dashboard/operaciones/roles": {
-    "summary": "Define roles y permisos de acceso a la aplicación.",
+  "/dashboard/operaciones/agentes/roles": {
+    "summary": "Define roles y permisos desde Dirección, Laboral, Agentes, mediante el botón Administrar roles; esta página no aparece por separado en el menú lateral.",
     "steps": [
       "Abre un rol existente o crea uno nuevo.",
       "Activa únicamente los accesos requeridos.",
@@ -185,7 +193,8 @@
     "steps": [
       "Pulsa Añadir extracto, selecciona Santander o Sabadell e indica expresamente si el archivo tiene cabezal. Sin cabezal exige la tabla en la primera fila; con cabezal localiza la tabla después de los datos informativos de la cuenta.",
       "La aplicación detecta el sentido cronológico y compara la secuencia completa para reconocer movimientos registrados e intercalar los ausentes con identificadores ordinales.",
-      "Cambia entre las pestañas Sabadell y Santander y filtra, en este orden, por fecha, concepto, importe y estado. El interruptor de fecha permite usar una fecha concreta o un rango Desde/Hasta."
+      "Cambia entre las pestañas Sabadell y Santander y filtra, en este orden, por fecha, concepto, importe y estado. El interruptor de fecha permite usar una fecha concreta o un rango Desde/Hasta.",
+      "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape."
     ]
   },
   "/dashboard/direccion/bancos/extractos": {
@@ -199,10 +208,18 @@
   "/dashboard/direccion/bancos/extractos/revision": {
     "summary": "Revisa, asigna y concilia líneas bancarias individualmente o en bloque.",
     "steps": [
-      "Selecciona varias líneas para asignarles un proveedor o cliente común, o marcarlas como revisadas.",
-      "En Asignación común, pulsa un proveedor o cliente para seleccionarlo: solo uno queda marcado en azul. Pulsa Continuar para comprobar las líneas. Si alguna ya tiene proveedor o cliente asignado, se muestra un error y no puedes confirmar. Si todo está correcto, pulsa Confirmar asignación; se comprueba de nuevo antes de guardar.",
-      "Abre una fila para comprobar previsiones, avisos detallados y asignarla a proveedor, cliente o nómina antes de revisar cargos recurrentes u órdenes.",
-      "Usa Detectar duplicados para comparar coincidencias por fecha e importe, eliminar una línea o confirmar de forma persistente que el grupo no es duplicado."
+      "La ficha y el modal de revisión utilizan las mismas cinco fases, con Volver atrás: avisos, destinatario, previsión, ajustes y revisión final. Solo se guarda al confirmar la fase 5, también para ingresos y nóminas.",
+      "La fase 1 lista por separado otros registros con el mismo importe y con el mismo concepto del mes del movimiento o del anterior. Cada coincidencia abre su ficha en otra pestaña. Debajo se muestra el estado de la selección y se bloquea la mezcla de revisados y sin revisar.",
+      "En fase 2 elige proveedor, cliente o empleado. Para nóminas selecciona primero nómina completa, anticipo o nómina con importe adicional. En fase 3 selecciona su cargo recurrente y la nómina mensual registrada, o prepara su alta para el periodo indicado.",
+      "En fase 4 los anticipos pagados se deducen del neto previsto. Los pendientes se muestran aparte, sin deducirlos. Un anticipo nuevo debe coincidir con el movimiento y se registra vinculado a la nómina del empleado y mes. El adicional puntual debe cuadrar con la diferencia y no modifica el cargo recurrente. La nómina completa debe coincidir con el pendiente; si no hay anticipos registrados y es mayor, puedes confirmar la subida de la previsión mensual.",
+      "Para proveedores selecciona o crea un cargo previsto con el mismo formulario de Previsión de liquidez. El interruptor Con IVA está activado inicialmente: la base es total dividido entre 1,21; Sin IVA usa el total. Si el cargo supera la previsión, puedes aumentar los importes previstos desde fase 4.",
+      "Asignación común permite continuar si ya está asignado al mismo destinatario, mostrando un aviso. Se comprueban también proveedores y empleados de los pagos y cargos vinculados aunque falte la asignación directa. Si cambia el destinatario, cada incidencia exige elegir omitir la línea o sobrescribir su asignación y sus vínculos incompatibles. El guardado es transaccional y comprueba que los datos no hayan cambiado.",
+      "La fase 5 detalla el movimiento, destinatario, programación del cargo, pago u orden, base e IVA, nómina prevista, anticipos, adicional y cualquier subida mensual antes de confirmar. Volver a revisar una nómina con adicional conserva el cálculo original y no duplica el adicional.",
+      "Filtra por Con proveedor o Sin proveedor y consulta la columna Asignado a. Con uno o varios revisados seleccionados, el botón cambia a Marcar como NO revisado, en rojo, con confirmación. Sus pagos se conservan. Asignar a un cargo previsto exige cargos previamente asignados a proveedor o nómina y no admite ingresos.",
+      "Usa Detectar duplicados para comparar coincidencias por fecha e importe, eliminar una línea o confirmar de forma persistente que el grupo no es duplicado.",
+      "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape.",
+      "En Asignación común, las fases 2 y 3 muestran una sola configuración y aplican automáticamente sus cambios a todos los registros. Solo las incidencias de reasignación requieren una decisión por línea: omitir o sobrescribir. La fase 4 conserva los ajustes individuales y la 5 resume cada movimiento.",
+      "Al confirmar un anticipo de nómina, se registra como anticipo del empleado y mes, vinculado al movimiento; aparece en Laboral > Nóminas > Anticipos y dentro de la ficha de nómina del empleado."
     ]
   },
   "/dashboard/direccion/bancos/prevision-liquidez": {
@@ -211,19 +228,26 @@
       "Indica la fecha con los campos separados de día, mes y año para calcular la liquidez de ambos bancos.",
       "Usa las pestañas Previsión de ingresos y Previsión de cargos situadas debajo del resumen.",
       "En ingresos alterna entre recibos, transferencias y remesas; cada remesa aparece en una línea.",
-      "En cargos consulta las columnas fecha, proveedor, base imponible, total con IVA y descripción, y crea cargos con proveedor o sin asignar."
+      "En Cargos previstos registrados consulta fecha, tipo Proveedor o Nómina, destinatario, base imponible, importe total o neto y descripción. Al agregar un cargo elige el tipo: Proveedor muestra su buscador y permite dejarlo sin asignar; Nómina muestra el selector de empleado y su importe neto sin IVA. Solo se admite un cargo previsto activo por empleado, con una o varias reglas. El formulario también se utiliza desde la ficha del proveedor y la revisión bancaria. Con IVA calcula automáticamente la base dividiendo el total entre 1,21; Sin IVA usa el total.",
+      "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape.",
+      "Cada cargo de tipo nómina genera o reutiliza automáticamente la ficha única del empleado en Laboral > Nóminas. Desde esa ficha puedes modificar la programación del cargo y consultar sus movimientos bancarios."
     ]
   },
   "/dashboard/direccion/bancos/prevision-ingresos": {
     "summary": "Reúne órdenes de cobro e ingresos adicionales previstos.",
-    "steps": ["Filtra ingresos previstos.", "Consulta recibos y transferencias.", "Mantén actualizadas fechas, importes y bancos."]
+    "steps": [
+      "Filtra ingresos previstos.",
+      "Consulta recibos y transferencias.",
+      "Mantén actualizadas fechas, importes y bancos."
+    ]
   },
   "/dashboard/direccion/bancos/prevision-cargos": {
     "summary": "Gestiona cargos recurrentes previstos y cargos bancarios pendientes de asociar.",
     "steps": [
       "Alterna entre Cargos previstos registrados y Cargos pendientes de asociar.",
-      "Filtra por base imponible, total con IVA, proveedor, fecha o descripción.",
-      "Agrega cargos por fechas concretas o por periodicidad, con una o varias reglas."
+      "Filtra por tipo Proveedor o Nómina, base imponible, importe total o neto, proveedor o empleado, fecha y descripción.",
+      "Al agregar un cargo elige Proveedor para buscar el proveedor o dejarlo sin asignar, o Nómina para seleccionar un empleado e indicar su importe neto. Programa fechas con dd, mm y yyyy separados o una periodicidad, con una o varias reglas. No se permite duplicar un cargo previsto activo del mismo empleado. El interruptor Con IVA calcula la base automáticamente como total / 1,21 y Sin IVA como el total. El mismo formulario se usa desde proveedores y revisión bancaria.",
+      "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape."
     ]
   },
   "/dashboard/direccion/copias-seguridad": {
@@ -267,7 +291,8 @@
     "steps": [
       "Filtra los ingresos y cambia entre Recibos y Transfers.",
       "Pulsa Agregar ingreso sin contrato y completa el asistente: cliente o texto manual, factura opcional, fecha teórica, forma de cobro, banco y base imponible.",
-      "Los ingresos adicionales aparecen junto a la previsión contractual, identificados como ingreso adicional sin contrato."
+      "Los ingresos adicionales aparecen junto a la previsión contractual, identificados como ingreso adicional sin contrato.",
+      "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape."
     ]
   },
   "/dashboard/direccion/previsiones/prevision-gastos": {
@@ -275,15 +300,8 @@
     "steps": [
       "Cambia entre Gastos previstos registrados y Gastos pendientes de asociar; estos últimos son pagos sin proveedor.",
       "Crea un registro por cada pago o vencimiento y selecciona proveedor, fecha, forma —recibo, transferencia o pagaré—, banco —Sabadell o Santander— e importes.",
-      "Pulsa cualquier fila para abrir su ficha, asociar un proveedor o modificar los datos del pago."
-    ]
-  },
-  "/dashboard/produccion/hoja_produccion": {
-    "summary": "Muestra la hoja de producción 2026 con la estructura completa de contenidos, anuncios, artículos y publicación.",
-    "steps": [
-      "Despliega Filtros, cerrado inicialmente, para buscar por los campos de la hoja. La tabla no muestra Código CRM, Publicación / Nº web, Factura ni Comentarios.",
-      "Usa los controles para incluir publicados o contenidos fuera de contrato.",
-      "Pulsa una fila para abrir el detalle del contenido."
+      "Pulsa cualquier fila para abrir su ficha, asociar un proveedor o modificar los datos del pago.",
+      "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape."
     ]
   },
   "/dashboard/produccion/control_redaccion": {
@@ -292,6 +310,16 @@
       "Despliega Filtros, cerrado inicialmente, para localizar artículos, empresas o números de revista. Prioridad y Dónde está siguen disponibles como filtros, pero no aparecen en la tabla.",
       "Consulta el estado de corrección y la planificación editorial en la tabla.",
       "Pulsa Limpiar filtros para volver a mostrar todos los registros."
+    ]
+  },
+  "/dashboard/operaciones/agentes/asuntos": {
+    "summary": "Asuntos laborales de los empleados activos, accesibles desde la pestaña Asuntos de Agentes.",
+    "steps": [
+      "En Agentes abre Asuntos. La tabla muestra solo empleados activos y no incluye columna de estado. Las rutas anteriores redirigen a esta sección.",
+      "Abre un empleado para ver sus datos de agente. La condición de cuenta de empleado se modifica en Dirección, Laboral, Agentes.",
+      "Selecciona el año para consultar sus tres días de libre disposición. Marca cada día usado e introduce su fecha separada en dd, mm y yyyy; guarda los cambios.",
+      "Sube y descarga documentación del empleado. Registra, edita o elimina ausencias indicando motivo, fechas y comentarios.",
+      "Añade comentarios a la ficha; el historial permanece visible al cambiar de año."
     ]
   }
 }

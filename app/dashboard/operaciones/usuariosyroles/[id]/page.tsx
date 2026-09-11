@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import type { FormEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
+import AgentTasks from '../../agentes/AgentTasks';
+import { EmployeePayrollList } from '../../../direccion/laboral/components/EmployeePayroll';
+import '../../../direccion/laboral/laboral.css';
 import { AgenteService } from "@/app/service/AgenteService";
 import { RoleService } from "@/app/service/RoleService";
 
@@ -24,6 +28,7 @@ interface Role {
   descripcion_rol: string;
   permisos_rol: string[];
 }
+
 
 const ESTADOS = ["activo", "inactivo", "bloqueado"];
 const ROLE_ORDER = ["base", "administracion", "operaciones", "superadmin"];
@@ -49,6 +54,21 @@ export default function AgenteDetallePage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
+  const [nombre, setNombre] = useState("");
+  const [email, setEmail] = useState("");
+  const [showRecurringModal, setShowRecurringModal] = useState(false);
+  const [tab, setTab] = useState('detalles');
+  useEffect(()=>{if(new URLSearchParams(window.location.search).get('tab')==='tareas')setTab('tareas');},[]);
+  const [payrollTab, setPayrollTab] = useState('historial');
+  const [agreement, setAgreement] = useState<any>(null);
+  const [agreementError, setAgreementError] = useState('');
+  const [agreementVersion, setAgreementVersion] = useState(0);
+  const [agreementLoading, setAgreementLoading] = useState(true);
+  useEffect(() => {
+    const controller = new AbortController(); setAgreementLoading(true); setAgreementError('');
+    fetch('/api/v1/direccion/cargos-recurrentes', { signal:controller.signal, cache:'no-store' }).then(async response => { if (!response.ok) throw new Error('No se pudo cargar la nómina pactada.'); return response.json(); }).then(rows => setAgreement(rows.find((r:any) => r.tipo_cargo === 'nomina' && r.id_agente === idAgente) || null)).catch(error => { if (error.name !== 'AbortError') setAgreementError(error.message); }).finally(() => { if (!controller.signal.aborted) setAgreementLoading(false); });
+    return () => controller.abort();
+  },[idAgente,agreementVersion]);
 
   useEffect(() => {
     let mounted = true;
@@ -64,6 +84,8 @@ export default function AgenteDetallePage() {
         setRolAgente(agente?.rol_agente || "base");
         setEstadoAgente(agente?.estado_agente || "activo");
         setIsEmpleado(agente?.is_empleado_account ?? true);
+        setNombre(agente?.nombre_completo_agente || `${agente?.nombre_agente || ""} ${agente?.apellidos_agente || ""}`.trim());
+        setEmail(agente?.email_agente || "");
       })
       .catch((error: any) => setError(error?.message || "No se ha podido cargar el agente."))
       .finally(() => mounted && setLoading(false));
@@ -72,6 +94,8 @@ export default function AgenteDetallePage() {
       mounted = false;
     };
   }, [idAgente]);
+
+
 
   const agente = useMemo(() => agentes.find((item) => item.id_agente === idAgente) || null, [agentes, idAgente]);
   const roleOptions = useMemo(() => {
@@ -87,11 +111,14 @@ export default function AgenteDetallePage() {
 
   const save = async () => {
     if (!agente) return;
+    if (!nombre.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError('Indica un nombre y un email válidos.'); return; }
     try {
       setSaving(true);
       setError("");
       setSaveMessage("");
       const updated = await AgenteService.updateAgenteRoles(idAgente, {
+        nombre_completo_agente: nombre,
+        email_agente: email,
         rol_agente: rolAgente,
         estado_agente: estadoAgente,
         is_empleado_account: isEmpleado,
@@ -99,7 +126,7 @@ export default function AgenteDetallePage() {
       setAgentes((current) => current.map((item) => (item.id_agente === updated.id_agente ? updated : item)));
       setSaveMessage("Agente actualizado");
     } catch (error: any) {
-      setError(error?.message || "No se ha podido guardar el agente.");
+      setError(error?.response?.data?.message || error?.message || "No se ha podido guardar el agente.");
     } finally {
       setSaving(false);
     }
@@ -110,7 +137,7 @@ export default function AgenteDetallePage() {
       setDeleting(true);
       setDeleteError("");
       await AgenteService.deleteAgente(idAgente);
-      router.replace("/dashboard/operaciones/agentesyroles");
+      router.replace("/dashboard/operaciones/agentes");
     } catch (error: any) {
       setDeleteError(error?.response?.data?.message || error?.message || "No se ha podido borrar el agente.");
       setDeleting(false);
@@ -119,7 +146,7 @@ export default function AgenteDetallePage() {
 
   return (
     <div className="min-h-screen bg-gray-100 p-6 px-12 text-gray-800">
-      <button type="button" onClick={() => router.push("/dashboard/operaciones/agentesyroles")} className="mb-4 cursor-pointer rounded bg-white px-4 py-2 text-sm text-blue-950 shadow-sm transition hover:bg-gray-50 hover:shadow-md">
+      <button type="button" onClick={() => router.push("/dashboard/operaciones/agentes")} className="mb-4 cursor-pointer rounded bg-white px-4 py-2 text-sm text-blue-950 shadow-sm transition hover:bg-gray-50 hover:shadow-md">
         Volver a agentes
       </button>
 
@@ -129,8 +156,10 @@ export default function AgenteDetallePage() {
       {!loading && !agente && <div className="bg-white p-5 text-sm text-gray-500 shadow-sm">Agente no encontrado.</div>}
 
       {!loading && agente && (
-        <div className="space-y-5">
-          <section className="bg-white p-5 shadow-sm">
+        <div className="space-y-5"><div className="flex justify-end">              <button type="button" onClick={() => { setDeleteError(""); setShowDeleteModal(true); }} className="cursor-pointer rounded border border-red-600 bg-white px-4 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-50 hover:shadow-md">
+                Borrar agente
+              </button></div><nav className="flex gap-2" aria-label="Ficha de agente">{[['detalles','Detalles'],['nominas','Nóminas'],['tareas','Tareas']].map(([value,label]) => <button key={value} onClick={() => setTab(value)} aria-pressed={tab === value} className={`cursor-pointer rounded px-4 py-2 hover:bg-blue-100 ${tab === value ? 'bg-blue-950 text-white hover:bg-blue-900' : 'bg-white'}`}>{label}</button>)}</nav>
+          {tab === 'detalles' && <section className="bg-white p-5 shadow-sm">
             <div className="mb-5 flex items-start justify-between gap-4">
               <div>
                 <p className="text-xs font-semibold uppercase text-gray-500">Agente</p>
@@ -142,8 +171,16 @@ export default function AgenteDetallePage() {
 
             <div className="grid gap-4 md:grid-cols-2">
               <label className="block">
+                <span className="text-sm font-medium text-gray-700">Nombre</span>
+                <input value={nombre} onChange={event => setNombre(event.target.value)} className="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm" />
+              </label>
+              <label className="block">
+                <span className="text-sm font-medium text-gray-700">Email</span>
+                <input type="email" value={email} onChange={event => setEmail(event.target.value)} className="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm" />
+              </label>
+              <label className="block">
                 <span className="text-sm font-medium text-gray-700">Rol</span>
-                <select value={rolAgente} onChange={(event) => setRolAgente(event.target.value)} className="mt-1 w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm">
+                <select value={rolAgente} onChange={(event) => setRolAgente(event.target.value)} className="mt-1 w-full cursor-pointer rounded border border-gray-300 bg-white px-3 py-2 text-sm hover:border-blue-950">
                   {roleOptions.map((role) => <option key={role} value={role}>{role}</option>)}
                 </select>
               </label>
@@ -168,30 +205,33 @@ export default function AgenteDetallePage() {
             )}
 
             {selectedRole?.permisos_rol?.length ? (
-              <div className="mt-4 border-t border-gray-200 pt-4">
-                <p className="text-xs font-semibold uppercase text-gray-500">Permisos</p>
+              <details className="mt-4 border-t border-gray-200 pt-4">
+                <summary className="cursor-pointer rounded p-2 text-xs font-semibold uppercase text-gray-500 hover:bg-blue-50">Permisos</summary>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {selectedRole.permisos_rol.map((permiso) => <span key={permiso} className="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700">{permiso}</span>)}
                 </div>
-              </div>
+              </details>
             ) : null}
 
             <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
               <button type="button" onClick={save} disabled={saving} className="cursor-pointer rounded bg-blue-950 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-900 hover:shadow-md disabled:cursor-not-allowed disabled:bg-gray-400">
                 {saving ? "Guardando..." : "Guardar cambios"}
               </button>
-              <button type="button" onClick={() => { setDeleteError(""); setShowDeleteModal(true); }} className="cursor-pointer rounded border border-red-600 bg-white px-4 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-50 hover:shadow-md">
-                Borrar agente
-              </button>
-            </div>
-          </section>
 
-          <section className="bg-white p-5 shadow-sm">
-            <div className="mb-4">
-              <h2 className="text-lg font-semibold text-blue-950">Listas y tareas</h2>
-              <p className="mt-1 text-sm text-gray-500">Gestión de listas, orden y tareas del agente.</p>
             </div>
-          </section>
+          </section>}
+
+          {tab === 'nominas' && <section className="bg-white p-5 shadow-sm">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <div><h2 className="text-lg font-semibold text-blue-950">Nóminas</h2><p className="mt-1 text-sm text-gray-500">Histórico de nóminas del empleado.</p></div>
+              <button type="button" disabled={!agente.is_empleado_account || agreementLoading || !!agreementError || !!agreement} onClick={() => setShowRecurringModal(true)} className="rounded bg-blue-950 px-4 py-2 text-sm font-medium text-white transition enabled:cursor-pointer enabled:hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-50">Establecer nómina recurrente</button>
+            </div>
+            <nav className="mb-4 flex gap-2" aria-label="Nóminas">{[['historial','Historial nóminas'],['pactada','Nómina pactada']].map(([value,label]) => <button key={value} onClick={() => setPayrollTab(value)} className={`cursor-pointer rounded border px-4 py-2 hover:bg-blue-50 ${payrollTab === value ? 'bg-blue-100' : ''}`}>{label}</button>)}</nav>
+            {payrollTab === 'pactada' ? <div>{agreementLoading ? <p>Cargando...</p> : agreementError ? <p role="alert" className="text-red-700">{agreementError}</p> : agreement ? <div><p className="mb-3 font-semibold">{getNombreAgente(agente)}</p><a className="block cursor-pointer p-2 text-blue-900 hover:bg-blue-50 hover:underline" href={`/dashboard/direccion/bancos/cargos-recurrentes/${agreement.id_cargo_recurrente}`}>Ver y modificar cargo previsto</a>{agreement.programacion.map((r:any,i:number) => <div key={i} className="rounded border p-4"><p>Importe neto: {Number(r.total_iva).toFixed(2)} EUR</p><p>Cada {r.cada} {r.unidad}</p><p>{r.descripcion}</p></div>)}</div> : <p>No hay nómina recurrente registrada.</p>}</div> : <>
+            <div className="laboral"><EmployeePayrollList employee={idAgente} version={agreementVersion} /></div>
+            </>}
+          </section>}
+          {tab === 'tareas' && <AgentTasks agent={idAgente} />}
         </div>
       )}
       {showDeleteModal && agente && (
@@ -203,8 +243,29 @@ export default function AgenteDetallePage() {
           onConfirm={deleteUser}
         />
       )}
+      {showRecurringModal && agente && <RecurringPayrollModal agent={agente} onSaved={() => { setAgreementVersion(v => v + 1); setPayrollTab('pactada'); }} onClose={() => setShowRecurringModal(false)} />}
     </div>
   );
+}
+
+function RecurringPayrollModal({ agent, onClose, onSaved }: { agent: Agente; onClose: () => void; onSaved: () => void }) {
+  const [amount, setAmount] = useState("");
+
+
+  const [description, setDescription] = useState("Nómina");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  useEffect(() => { const close = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); }; window.addEventListener("keydown", close); return () => window.removeEventListener("keydown", close); }, [onClose, saving]);
+  async function save(event: FormEvent) {
+    event.preventDefault(); setSaving(true); setError("");
+    try {
+      const response = await fetch("/api/v1/direccion/cargos-recurrentes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tipo_cargo: "nomina", id_agente: agent.id_agente, id_proveedor: null, tipo_programacion: "periodicidad", programacion: [{ cada: 1, unidad: "meses", base_imponible: 0, total_iva: Number(amount), descripcion: description }] }) });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message || "No se pudo guardar la nómina recurrente.");
+      onSaved(); onClose();
+    } catch (error: any) { setError(error.message); } finally { setSaving(false); }
+  }
+  return <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4"><section role="dialog" aria-modal="true" className="w-full max-w-lg rounded-xl bg-white p-6 shadow-2xl"><header className="mb-5 flex items-start justify-between"><div><h2 className="text-xl font-semibold text-blue-950">Establecer nómina recurrente</h2><p className="mt-1 text-sm text-gray-500">{getNombreAgente(agent)}</p></div><button type="button" aria-label="Cerrar" onClick={onClose} className="cursor-pointer text-3xl text-gray-600 hover:text-blue-900">×</button></header><form onSubmit={save} className="space-y-4"><label className="block text-sm font-medium">Importe neto<input required min="0.01" step="0.01" type="number" value={amount} onChange={event => setAmount(event.target.value)} className="mt-1 w-full rounded border p-2" /></label><p className="rounded bg-blue-50 p-3">Periodicidad: cada 1 mes</p><label className="block text-sm font-medium">Descripción<input required value={description} onChange={event => setDescription(event.target.value)} className="mt-1 w-full rounded border p-2" /></label>{error && <p className="rounded bg-red-50 p-3 text-sm text-red-700">{error}</p>}<div className="flex justify-end gap-2"><button type="button" onClick={onClose} className="cursor-pointer rounded border px-4 py-2 hover:bg-gray-100">Cancelar</button><button type="submit" disabled={saving} className="cursor-pointer rounded bg-blue-950 px-4 py-2 text-white hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-50">{saving ? "Guardando..." : "Guardar nómina recurrente"}</button></div></form></section></div>;
 }
 
 function DeleteUserModal({ userName, deleting, error, onClose, onConfirm }: { userName: string; deleting: boolean; error: string; onClose: () => void; onConfirm: () => Promise<void> }) {

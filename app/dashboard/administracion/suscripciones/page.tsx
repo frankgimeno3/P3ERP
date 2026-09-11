@@ -1,4 +1,5 @@
 "use client";
+import SearchableSelect from "@/app/components/SearchableSelect";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -204,20 +205,7 @@ export default function SuscripcionesAdministracionPage() {
               <p className="text-lg font-semibold text-blue-950">Agregar suscriptor</p>
               <button type="button" aria-label="Cerrar modal" onClick={() => setShowCreateModal(false)} className="cursor-pointer rounded px-2 py-1 text-2xl leading-none transition hover:bg-gray-100">×</button>
             </div>
-            <input value={cuentaQuery} onChange={(event) => setCuentaQuery(event.target.value)} placeholder="Buscar cuenta..." className="mb-3 w-full rounded border border-gray-300 px-3 py-2 text-sm" />
-            <div className="max-h-80 overflow-auto">
-              <table className="min-w-full text-sm">
-                <tbody>
-                  {cuentas.map((cuenta) => (
-                    <tr key={cuenta.id_cuenta} onClick={() => setSelectedCuenta(cuenta)} className={`cursor-pointer border-b hover:bg-gray-50 ${selectedCuenta?.id_cuenta === cuenta.id_cuenta ? "bg-blue-50" : ""}`}>
-                      <td className="p-2 font-medium text-blue-950">{cuenta.nombre_empresa || cuenta.id_cuenta}</td>
-                      <td className="p-2">{cuenta.pais_cuenta || "-"}</td>
-                      <td className="p-2">{cuenta.id_cuenta}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <SearchableSelect label="Cuenta" required value={selectedCuenta?.id_cuenta||''} onChange={id=>setSelectedCuenta(cuentas.find(c=>c.id_cuenta===id)||null)} options={cuentas.map(c=>({value:c.id_cuenta,label:[c.nombre_empresa,c.id_cuenta,c.pais_cuenta].filter(Boolean).join(' · ')}))} />
             <div className="mt-5 flex justify-end gap-2">
               <button type="button" onClick={() => setShowCreateModal(false)} className="rounded border border-gray-300 px-4 py-2 text-sm">Cancelar</button>
               <button type="button" onClick={createSuscripcion} disabled={!selectedCuenta} className="rounded bg-blue-950 px-4 py-2 text-sm font-medium text-white hover:bg-blue-900 disabled:bg-gray-400">Crear</button>

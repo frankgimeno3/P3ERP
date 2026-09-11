@@ -1,4 +1,5 @@
 "use client";
+import SearchableSelect from "@/app/components/SearchableSelect";
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -155,28 +156,7 @@ export default function CrearFeriaPage() {
               </div>
             ) : (
               <>
-                <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Filtrar..." className="mb-3 w-full rounded border px-3 py-2 text-sm" />
-                <div className="max-h-96 overflow-auto">
-                  <table className="min-w-full text-sm">
-                    <tbody>
-                      {(modal === "revista" ? filtered(revistas) : modal === "propuesta" ? filtered(propuestas) : filtered(contratos)).map((item: any) => {
-                        const id = item.id_revista || item.id_propuesta || item.id_contrato;
-                        return (
-                          <tr key={id} onClick={() => {
-                            if (modal === "revista") setForm({ ...form, hay_especial: true, id_revista_especial: id });
-                            if (modal === "propuesta") setForm({ ...form, hay_intercambio: true, id_propuesta_intercambio: id, estado_intercambio: "propuesta_no_firmada" });
-                            if (modal === "contrato") setForm({ ...form, hay_intercambio: true, id_contrato: id, estado_intercambio: "contrato" });
-                            setModal(null);
-                          }} className="cursor-pointer border-b hover:bg-gray-50">
-                            <td className="p-2 font-medium text-blue-950">{id}</td>
-                            <td className="p-2">{item.revista || item.nombre_propuesta || item.id_cuenta_contrato || "-"}</td>
-                            <td className="p-2">{item.edicion || item.estado_propuesta || item.fecha_firma_contrato || "-"}</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+                <SearchableSelect label="Seleccionar registro" value="" onChange={id=>{if(!id)return;if(modal==='revista')setForm({...form,hay_especial:true,id_revista_especial:id});if(modal==='propuesta')setForm({...form,hay_intercambio:true,id_propuesta_intercambio:id,estado_intercambio:'propuesta_no_firmada'});if(modal==='contrato')setForm({...form,hay_intercambio:true,id_contrato:id,estado_intercambio:'contrato'});setModal(null);}} options={(modal==='revista'?revistas:modal==='propuesta'?propuestas:contratos).map((item:any)=>({value:item.id_revista||item.id_propuesta||item.id_contrato,label:[item.id_revista||item.id_propuesta||item.id_contrato,item.revista||item.nombre_propuesta||item.id_cuenta_contrato,item.edicion||item.estado_propuesta||item.fecha_firma_contrato].filter(Boolean).join(' · ')}))} />
               </>
             )}
           </div>

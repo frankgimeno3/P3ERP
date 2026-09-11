@@ -1,4 +1,5 @@
 "use client";
+import SearchableSelect from "@/app/components/SearchableSelect";
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -335,45 +336,7 @@ function AccountModal({ cuentas, selectedId, onClose, onSelect }: { cuentas: Cue
         </div>
         <div className="p-6">
           <p className="mb-4 text-sm text-slate-600">Filtra y selecciona una cuenta.</p>
-          <div className="grid gap-3 md:grid-cols-4">
-            <ModalFilter label="ID" value={filters.id} onChange={(value) => setFilters((current) => ({ ...current, id: value }))} placeholder="Buscar por ID" />
-            <ModalFilter label="Nombre" value={filters.name} onChange={(value) => setFilters((current) => ({ ...current, name: value }))} placeholder="Buscar por nombre" />
-            <ModalFilter label="CIF / VAT" value={filters.cif} onChange={(value) => setFilters((current) => ({ ...current, cif: value }))} placeholder="Buscar por CIF" />
-            <ModalFilter label="Pais" value={filters.country} onChange={(value) => setFilters((current) => ({ ...current, country: value }))} placeholder="Buscar por pais" />
-          </div>
-          <div className="mt-5 overflow-x-auto rounded border border-slate-700">
-            <table className="min-w-full text-sm">
-              <thead className="bg-slate-700 text-left uppercase text-slate-200">
-                <tr>
-                  <th className="p-3">ID</th>
-                  <th className="p-3">Nombre</th>
-                  <th className="p-3">CIF / VAT</th>
-                  <th className="p-3">Pais</th>
-                  <th className="p-3">Contacto</th>
-                </tr>
-              </thead>
-              <tbody className="bg-slate-900 text-slate-100">
-                {visible.map((cuenta) => (
-                  <tr key={cuenta.id_cuenta} onClick={() => onSelect(cuenta)} className={`cursor-pointer border-t border-slate-700 hover:bg-slate-800 ${selectedId === cuenta.id_cuenta ? "bg-blue-950" : ""}`}>
-                    <td className="p-3 font-mono">{cuenta.id_cuenta}</td>
-                    <td className="p-3 font-semibold">{cuenta.nombre_empresa}</td>
-                    <td className="p-3">{cuenta.cif || cuenta.vat_code || "-"}</td>
-                    <td className="p-3">{cuenta.pais_cuenta || "-"}</td>
-                    <td className="p-3">{cuenta.correo_principal || "-"}</td>
-                  </tr>
-                ))}
-                {visible.length === 0 && <tr><td colSpan={5} className="p-5 text-slate-300">No hay resultados.</td></tr>}
-              </tbody>
-            </table>
-          </div>
-          <div className="mt-5 flex items-center justify-between border-t border-slate-200 pt-4">
-            <button type="button" onClick={onClose} className="rounded-lg border border-slate-300 px-5 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">Cancelar</button>
-            <div className="flex items-center gap-2">
-              <button type="button" disabled={page <= 1} onClick={() => setPage((current) => Math.max(1, current - 1))} className="rounded border px-3 py-2 text-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400">Anterior</button>
-              <span className="text-sm text-slate-600">Pagina {page} de {totalPages}</span>
-              <button type="button" disabled={page >= totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))} className="rounded border px-3 py-2 text-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400">Siguiente</button>
-            </div>
-          </div>
+          <SearchableSelect label="Cuenta" value={selectedId} onChange={id=>{const account=cuentas.find(c=>c.id_cuenta===id);if(account)onSelect(account);}} options={cuentas.map(c=>({value:c.id_cuenta,label:[c.nombre_empresa,c.id_cuenta,c.cif||c.vat_code,c.pais_cuenta,c.correo_principal].filter(Boolean).join(' · ')}))} />
         </div>
       </div>
     </div>

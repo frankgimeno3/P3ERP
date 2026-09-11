@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Suspense } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import MiddleNav from "@/app/general_components/componentes_recurrentes/MiddleNav";
@@ -54,7 +55,7 @@ function DateFilter({ value, onChange }: { value: any; onChange: (value: any) =>
   );
 }
 
-export default function ContenidosPage() {
+function ContenidosPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "pendiente");
@@ -206,4 +207,8 @@ export default function ContenidosPage() {
       </div>
     </div>
   );
+}
+
+export default function ContenidosPageWithSuspense() {
+  return <Suspense fallback={<div className="min-h-screen bg-gray-100" />}><ContenidosPage /></Suspense>;
 }

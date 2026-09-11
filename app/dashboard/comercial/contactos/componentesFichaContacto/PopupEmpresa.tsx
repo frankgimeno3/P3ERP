@@ -1,3 +1,4 @@
+import SearchableSelect from "@/app/components/SearchableSelect";
 import { InterfazCuenta } from "@/app/interfaces/interfaces";
 import React, { useEffect, useState } from "react";
 
@@ -52,70 +53,12 @@ const PopupEmpresa: React.FC<PopupEmpresaProps> = ({
           onClick={onClose}
           className="absolute top-3 right-3 text-gray-500 hover:text-gray-800"
         >
-          ✕
+          ×
         </button>
 
         <h2 className="text-xl font-bold mb-4">Buscar empresa</h2>
 
-        <div className="flex gap-2 mb-4">
-          <input
-            type="text"
-            placeholder="Buscar por nombre"
-            value={busquedaNombre}
-            onChange={(e) => setBusquedaNombre(e.target.value)}
-            className="flex-1 border p-2 rounded"
-          />
-          <input
-            type="text"
-            placeholder="Buscar por código"
-            value={busquedaCodigo}
-            onChange={(e) => setBusquedaCodigo(e.target.value)}
-            className="flex-1 border p-2 rounded"
-          />
-          <button
-            onClick={handleBuscar}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          >
-            Buscar
-          </button>
-        </div>
-
-        <div className="border rounded p-4 h-60 overflow-y-auto">
-          {!cargando && resultados === null && (
-            <p className="text-gray-500">Busque una empresa por código o nombre.</p>
-          )}
-          {cargando && <p className="text-gray-500">Cargando resultados...</p>}
-          {!cargando && resultados && resultados.length === 0 && (
-            <p className="text-gray-500">No se encontraron coincidencias.</p>
-          )}
-          {!cargando && resultados && resultados.length > 0 && (
-            <table className="min-w-full border">
-              <thead className="bg-gray-200">
-                <tr>
-                  <th className="p-2 text-left">Código Empresa</th>
-                  <th className="p-2 text-left">Nombre Empresa</th>
-                  <th className="p-2 text-left">País</th>
-                 </tr>
-              </thead>
-              <tbody>
-                {resultados.map((e, idx) => (
-                  <tr
-                    key={idx}
-                    className="hover:bg-gray-100 cursor-pointer"
-                    onClick={() => {
-                      onSelect(e);
-                      onClose();
-                    }}
-                  >
-                    <td className="p-2 border-t">{e.id_cuenta}</td>
-                    <td className="p-2 border-t">{e.nombre_empresa}</td>
-                    <td className="p-2 border-t">{e.pais_cuenta}</td>
-                   </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+        <SearchableSelect label="Empresa" value="" onChange={id=>{const item=empresas.find(r=>r.id_cuenta===id);if(item){onSelect(item);onClose();}}} options={empresas.map(r=>({value:r.id_cuenta,label:[r.nombre_empresa,r.id_cuenta,r.pais_cuenta].filter(Boolean).join(' · ')}))} />
       </div>
     </div>
   );

@@ -18,6 +18,7 @@ interface CardModalProps {
 
 type ModalPhase = "list" | "edit" | "add";
 type TabType = "p3" | "personal";
+type NewCard = Omit<Tarjeta, "id_tarjeta">;
 
 export default function CardModal({ isOpen, onClose, onSelectCard }: CardModalProps) {
   const [phase, setPhase] = useState<ModalPhase>("list");
@@ -26,7 +27,7 @@ export default function CardModal({ isOpen, onClose, onSelectCard }: CardModalPr
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [editingCard, setEditingCard] = useState<Tarjeta | null>(null);
-  const [newCard, setNewCard] = useState({
+  const [newCard, setNewCard] = useState<NewCard>({
     ultimos_digitos: "",
     nombre: "",
     banco: "",

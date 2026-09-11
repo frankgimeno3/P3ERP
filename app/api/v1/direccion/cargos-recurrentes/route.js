@@ -1,5 +1,12 @@
-import { NextResponse } from 'next/server';
-import { getPgPool } from '../../../../../server/database/pgClient.js';
+﻿import { NextResponse } from 'next/server';
+import { createRecurringCharge, listRecurringCharges } from '../../../../../server/features/prevision/RecurringChargeRepository.js';
 export const runtime = 'nodejs';
-export async function GET() { const { rows } = await getPgPool().query(`SELECT cr.*,p.nombre_proveedor FROM cargos_recurrentes cr LEFT JOIN proveedores_db p USING(id_proveedor) WHERE cr.activo=TRUE ORDER BY cr.created_at DESC`); return NextResponse.json(rows); }
-export async function POST(request) { try { const body = await request.json(); if (!['fechas','periodicidad'].includes(body.tipo_programacion) || !Array.isArray(body.programacion) || !body.programacion.length) return NextResponse.json({ message: 'Completa la programación' }, { status: 400 }); const valid = body.programacion.every(row => Number(row.base_imponible) >= 0 && Number(row.total_iva) > 0 && (body.tipo_programacion === 'fechas' ? (Number.isInteger(Number(row.dia)) && Number(row.dia) >= 1 && Number(row.dia) <= 31 && Number.isInteger(Number(row.mes)) && Number(row.mes) >= 1 && Number(row.mes) <= 12) : (Number.isInteger(Number(row.cada)) && Number(row.cada) > 0 && ['días','semanas','meses'].includes(row.unidad)))); if (!valid) return NextResponse.json({ message: 'Revisa fechas, periodicidad e importes de todas las filas' }, { status: 400 }); const { rows } = await getPgPool().query(`INSERT INTO cargos_recurrentes(id_proveedor,tipo_programacion,programacion) VALUES($1,$2,$3::jsonb) RETURNING *`, [body.id_proveedor || null, body.tipo_programacion, JSON.stringify(body.programacion)]); return NextResponse.json(rows[0], { status: 201 }); } catch (error) { return NextResponse.json({ message: error.message || 'No se pudo crear el cargo recurrente' }, { status: 500 }); } }
+const failure = error => NextResponse.json({ message: error.message || 'No se pudo guardar el cargo previsto.' }, { status: error.status || (['23505','23503'].includes(error.code) ? 409 : 500) });
+export async function GET() {
+  try { return NextResponse.json(await listRecurringCharges()); }
+  catch (error) { return failure(error); }
+}
+export async function POST(request) {
+  try { return NextResponse.json(await createRecurringCharge(await request.json()), { status: 201 }); }
+  catch (error) { return failure(error); }
+}

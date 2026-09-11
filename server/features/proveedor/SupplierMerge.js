@@ -21,11 +21,11 @@ export async function supplierReferenceTables(db) {
   const { rows } = await db.query(`SELECT table_name FROM information_schema.columns WHERE table_schema=current_schema() AND column_name='id_proveedor' AND table_name NOT IN ('proveedores_db','proveedores_unificados') ORDER BY table_name`);
   return rows.map(row => row.table_name);
 }
-export async function mergeSuppliers(db) {
+export async function mergeSuppliers(db, onlyNames = null) {
   const tables = await supplierReferenceTables(db);
   await db.query(`LOCK TABLE proveedores_db,proveedores_unificados${tables.length ? ',' + tables.map(quote).join(',') : ''} IN SHARE ROW EXCLUSIVE MODE`);
   const { rows } = await db.query('SELECT * FROM proveedores_db ORDER BY id_proveedor');
-  const plan = supplierMergePlan(rows), result = [];
+  const plan = supplierMergePlan(rows).filter(group => !onlyNames || onlyNames.includes(group.name)), result = [];
   for (const group of plan) {
     const target = { ...group.target }, references = {};
     for (const field of ['nombre_fiscal_proveedor','vat_code','pais_proveedor','moneda_proveedor']) {

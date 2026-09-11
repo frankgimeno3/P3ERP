@@ -1,3 +1,4 @@
+import { weekdayRanges } from './vacationRanges.js';
 import { randomUUID } from 'node:crypto';
 import { getPgPool } from '../../database/pgClient.js';
 import { LaboralError, validate } from './validation.js';
@@ -44,7 +45,8 @@ async function checkTransfer(db, transferId, employeeId, kind, id) {
   if (!transferId) return;
   const bank = await one(db, 'SELECT * FROM lineas_bancos WHERE id_linea_banco=$1 FOR UPDATE', [transferId]);
   if (Number(bank.importe) >= 0) throw new LaboralError('Selecciona un movimiento de salida para la transferencia.');
-  if (bank.id_proveedor || bank.id_cuenta || bank.id_pago || bank.id_orden || bank.id_cargo_recurrente || (bank.id_agente && bank.id_agente !== employeeId)) throw new LaboralError('El movimiento bancario ya está asignado a otro concepto o persona.');
+  const ownCharge = bank.id_cargo_recurrente && (await db.query("SELECT 1 FROM cargos_recurrentes WHERE id_cargo_recurrente=$1 AND tipo_cargo='nomina' AND id_agente=$2", [bank.id_cargo_recurrente,employeeId])).rowCount;
+  if (bank.id_proveedor || bank.id_cuenta || bank.id_pago || bank.id_orden || (bank.id_cargo_recurrente && !ownCharge) || (bank.id_agente && bank.id_agente !== employeeId)) throw new LaboralError('El movimiento bancario ya está asignado a otro concepto o persona.');
   const used = await db.query("SELECT id FROM nominas WHERE id_transferencia=$1 AND NOT ($2='nominas' AND id=$3) UNION ALL SELECT id FROM anticipos_empleados WHERE id_transferencia=$1 AND NOT ($2='anticipos' AND id=$3)", [transferId, kind, id]);
   if (used.rowCount) throw new LaboralError('Esta transferencia ya está vinculada a una nómina o anticipo.');
 }
@@ -75,7 +77,9 @@ export async function savePayment(kind, id, body) {
 }
 export async function listTransfers(employeeId) {
   return (await getPgPool().query(`SELECT b.id_linea_banco,b.banco,b.fecha_valor,b.concepto,b.importe FROM lineas_bancos b
-    WHERE b.importe<0 AND b.id_proveedor IS NULL AND b.id_cuenta IS NULL AND b.id_pago IS NULL AND b.id_orden IS NULL AND b.id_cargo_recurrente IS NULL AND (b.id_agente IS NULL OR b.id_agente=$1)
+    WHERE b.importe<0 AND b.id_proveedor IS NULL AND b.id_cuenta IS NULL AND b.id_pago IS NULL AND b.id_orden IS NULL
+      AND (b.id_cargo_recurrente IS NULL OR EXISTS (SELECT 1 FROM cargos_recurrentes cr WHERE cr.id_cargo_recurrente=b.id_cargo_recurrente AND cr.tipo_cargo='nomina' AND cr.id_agente=$1))
+      AND (b.id_agente IS NULL OR b.id_agente=$1)
     ORDER BY b.created_at DESC`, [employeeId || ''])).rows;
 }
 export async function listCalendars() {
@@ -91,10 +95,21 @@ export async function getCalendar(year) {
   return { anio, eventos: (await getPgPool().query('SELECT e.*,e.inicio::text,e.fin::text FROM eventos_calendario_laboral e WHERE anio=$1 ORDER BY e.inicio,e.titulo', [anio])).rows };
 }
 export async function saveEvent(id, body) {
-  const d = validate('eventos', body), db = getPgPool();
-  const values = [d.anio,d.tipo,d.titulo,d.inicio,d.fin,d.comentarios,id || randomUUID()];
-  return one(db, id ? 'UPDATE eventos_calendario_laboral SET anio=$1,tipo=$2,titulo=$3,inicio=$4,fin=$5,comentarios=$6 WHERE id=$7 RETURNING id' : 'INSERT INTO eventos_calendario_laboral(anio,tipo,titulo,inicio,fin,comentarios,id) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id', values);
+  const d = validate('eventos', body);
+  const ranges = d.tipo === 'vacaciones' ? weekdayRanges(d.inicio, d.fin) : [[d.inicio, d.fin]];
+  if (!ranges.length) throw new LaboralError('El periodo debe contener al menos un día laborable.');
+  return transaction(async client => {
+    if (id) await one(client, 'SELECT id FROM eventos_calendario_laboral WHERE id=$1 FOR UPDATE', [id]);
+    const firstId = id || randomUUID();
+    for (let i = 0; i < ranges.length; i++) {
+      const [inicio, fin] = ranges[i], eventId = i === 0 ? firstId : randomUUID();
+      const values = [d.anio,d.tipo,d.titulo,inicio,fin,d.comentarios,eventId];
+      await client.query(id && i === 0 ? 'UPDATE eventos_calendario_laboral SET anio=$1,tipo=$2,titulo=$3,inicio=$4,fin=$5,comentarios=$6 WHERE id=$7' : 'INSERT INTO eventos_calendario_laboral(anio,tipo,titulo,inicio,fin,comentarios,id) VALUES ($1,$2,$3,$4,$5,$6,$7)', values);
+    }
+    return { id: firstId };
+  });
 }
+
 export async function getEmployee(id, year) {
   const { anio } = validate('calendario', { anio: year });
   const db = getPgPool(), agente = await employee(db, id);

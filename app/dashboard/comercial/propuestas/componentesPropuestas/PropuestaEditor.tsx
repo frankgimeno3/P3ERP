@@ -1,4 +1,5 @@
 "use client";
+import SearchableSelect from "@/app/components/SearchableSelect";
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -882,19 +883,7 @@ export default function PropuestaEditor({
                 <section>
                   <h2 className="mb-3 text-lg font-semibold text-blue-950">Datos generales</h2>
                   <p className="mb-3 text-sm text-gray-500">Selecciona una cuenta para comenzar la propuesta.<RequiredBadge complete={Boolean(cuenta)} /></p>
-                  <div className="overflow-x-auto border border-gray-200">
-                    <table className="min-w-full text-sm">
-                      <thead className="bg-blue-950 text-white"><tr><th className="p-2 text-left">Código CRM</th><th className="p-2 text-left">Empresa</th><th className="p-2 text-left">País</th><th className="p-2 text-left">Correo</th></tr></thead>
-                      <tbody>
-                        <tr className="bg-gray-50">
-                          {(["codigo", "empresa", "pais", "correo"] as const).map((field) => <td key={field} className="p-2"><input aria-label={`Filtrar por ${field}`} value={accountFilters[field]} onChange={(event) => setAccountFilters((prev) => ({ ...prev, [field]: event.target.value }))} className="w-full rounded border px-2 py-1 text-gray-700" placeholder="Filtrar..." /></td>)}
-                        </tr>
-                        {visibleAccounts.map((item) => <tr key={item.id_cuenta} onClick={() => setForm((prev) => ({ ...prev, id_cuenta_propuesta: item.id_cuenta, id_contacto_propuesta: "", contacto_personalizado: null }))} className={`cursor-pointer border-t hover:bg-blue-50 ${form.id_cuenta_propuesta === item.id_cuenta ? "bg-green-50 ring-1 ring-inset ring-green-500" : ""}`}><td className="p-2 font-medium text-blue-950">{item.id_cuenta}</td><td className="p-2">{item.nombre_empresa || "-"}</td><td className="p-2">{item.pais_cuenta || "-"}</td><td className="p-2">{item.correo_principal || "-"}</td></tr>)}
-                        {visibleAccounts.length === 0 && <tr><td colSpan={4} className="p-5 text-center text-gray-500">No hay cuentas que coincidan con los filtros.</td></tr>}
-                      </tbody>
-                    </table>
-                  </div>
-                  <div className="mt-3 flex items-center justify-center gap-4"><button type="button" aria-label="Página anterior de cuentas" disabled={accountPage <= 1} onClick={() => setAccountPage((current) => Math.max(1, current - 1))} className="rounded border px-3 py-2 enabled:cursor-pointer enabled:hover:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-300">←</button><span className="text-sm">Página {accountPage} de {accountPageCount}</span><button type="button" aria-label="Página siguiente de cuentas" disabled={accountPage >= accountPageCount} onClick={() => setAccountPage((current) => Math.min(accountPageCount, current + 1))} className="rounded border px-3 py-2 enabled:cursor-pointer enabled:hover:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-300">→</button></div>
+                  <SearchableSelect label="Cuenta de la propuesta" required value={form.id_cuenta_propuesta} onChange={id=>setForm(prev=>({...prev,id_cuenta_propuesta:id,id_contacto_propuesta:'',contacto_personalizado:null}))} options={cuentas.map(item=>({value:item.id_cuenta,label:[item.nombre_empresa,item.id_cuenta,item.pais_cuenta,item.correo_principal].filter(Boolean).join(' · ')}))} />
                 </section>
 
                 {cuenta && <section>

@@ -1,4 +1,5 @@
 "use client";
+import SearchableSelect from "@/app/components/SearchableSelect";
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -156,20 +157,7 @@ export default function FacturaProveedorDetallePage() {
               <p className="text-lg font-semibold text-blue-950">Seleccionar proveedor</p>
               <button type="button" onClick={() => setShowProviderModal(false)} className="text-xl">x</button>
             </div>
-            <input value={providerQuery} onChange={(event) => setProviderQuery(event.target.value)} placeholder="Filtrar proveedores..." className="mb-3 w-full rounded border px-3 py-2 text-sm" />
-            <div className="max-h-80 overflow-auto">
-              <table className="min-w-full text-sm">
-                <tbody>
-                  {filteredProviders.map((proveedor) => (
-                    <tr key={proveedor.id_proveedor} onClick={() => setPendingProveedor(proveedor)} className={`cursor-pointer border-b hover:bg-gray-50 ${pendingProveedor?.id_proveedor === proveedor.id_proveedor ? "bg-blue-50" : ""}`}>
-                      <td className="p-2 font-medium text-blue-950">{proveedor.nombre_proveedor || proveedor.id_proveedor}</td>
-                      <td className="p-2">{proveedor.pais_proveedor || "-"}</td>
-                      <td className="p-2">{proveedor.vat_code || "-"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <SearchableSelect label="Proveedor" required value={pendingProveedor?.id_proveedor||''} onChange={id=>setPendingProveedor(proveedores.find(p=>p.id_proveedor===id)||null)} options={proveedores.map(p=>({value:p.id_proveedor,label:[p.nombre_proveedor,p.id_proveedor,p.vat_code,p.pais_proveedor].filter(Boolean).join(' · ')}))} />
             <div className="mt-5 flex justify-end gap-2">
               <button type="button" onClick={() => setShowProviderModal(false)} className="rounded border px-4 py-2 text-sm">Cancelar</button>
               <button

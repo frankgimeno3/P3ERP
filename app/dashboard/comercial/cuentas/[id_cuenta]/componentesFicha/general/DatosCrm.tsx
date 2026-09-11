@@ -1,4 +1,5 @@
 'use client';
+import SearchableSelect from "@/app/components/SearchableSelect";
 
 import React, { FC, ChangeEvent, useEffect, useMemo, useState } from "react";
 import { AgenteService } from "@/app/service/AgenteService";
@@ -130,27 +131,7 @@ function CuentaSearchModal({
           <h3 className="text-lg font-semibold text-blue-950">{title}</h3>
           <button type="button" onClick={onClose} className="rounded px-2 py-1 text-gray-500 hover:bg-gray-100">x</button>
         </div>
-        <input
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Buscar cuenta..."
-          className={fieldClass}
-        />
-        <div className="mt-4 max-h-72 overflow-y-auto border border-gray-200">
-          {cuentas.map((cuenta) => (
-            <button
-              key={cuenta.id_cuenta}
-              type="button"
-              onClick={() => setSelected(cuenta)}
-              className={`block w-full border-b border-gray-100 px-3 py-2 text-left text-sm hover:bg-gray-50 ${
-                selected?.id_cuenta === cuenta.id_cuenta ? "bg-blue-50 text-blue-950" : ""
-              }`}
-            >
-              <span className="font-medium">{cuenta.nombre_empresa || cuenta.id_cuenta}</span>
-              <span className="ml-2 text-xs text-gray-400">{cuenta.id_cuenta}</span>
-            </button>
-          ))}
-        </div>
+        <SearchableSelect label="Cuenta" required value={selected?.id_cuenta||''} onChange={id=>setSelected(cuentas.find(c=>c.id_cuenta===id)||null)} onSearchChange={setQuery} options={cuentas.map(c=>({value:c.id_cuenta,label:c.nombre_empresa+' · '+c.id_cuenta}))} />
         <div className="mt-5 flex justify-end gap-3">
           <button type="button" onClick={onClose} className="rounded border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50">
             Cancelar

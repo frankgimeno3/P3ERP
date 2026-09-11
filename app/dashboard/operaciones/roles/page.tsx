@@ -97,7 +97,7 @@ export default function RolesPage() {
                   <td className="px-4 py-2">
                     <button
                       type="button"
-                      onClick={() => router.push(`/dashboard/operaciones/roles/${role.id_rol}`)}
+                      onClick={() => router.push(`/dashboard/operaciones/agentes/roles/${role.id_rol}`)}
                       className="rounded bg-blue-950 px-3 py-1 text-xs text-white hover:bg-blue-900"
                     >
                       Accesos

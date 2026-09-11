@@ -1,0 +1,40 @@
+// Component interaction test; does not start an application server.
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),Module=require('node:module'),ts=require('typescript');
+const {JSDOM}=require(path.join(process.env.P3_SELECTOR_TEST_MODULES,'jsdom'));
+const dom=new JSDOM('<div id="root"></div>',{url:'http://localhost'});
+Object.assign(global,{window:dom.window,document:dom.window.document,navigator:dom.window.navigator,HTMLElement:dom.window.HTMLElement,IS_REACT_ACT_ENVIRONMENT:true});
+dom.window.HTMLElement.prototype.scrollIntoView=function(){};
+const React=require('react'),{createRoot}=require('react-dom/client'),{act}=React;
+function load(file){const filename=path.resolve(file),m=new Module(filename,module);m.filename=filename;m.paths=module.paths;const original=m.require.bind(m);m.require=id=>id==='@/app/components/SearchableSelect'?load('app/components/SearchableSelect.tsx'):id==='./RecurringChargeForm'?load('app/dashboard/direccion/bancos/RecurringChargeForm.tsx'):original(id);m._compile(ts.transpileModule(fs.readFileSync(filename,'utf8'),{compilerOptions:{jsx:ts.JsxEmit.ReactJSX,module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true}}).outputText,filename);return m.exports;}
+const Wizard=load('app/dashboard/direccion/bancos/BankReviewWizard.tsx').default;
+const schedule=[{cada:1,unidad:'meses',total_iva:1000,base_imponible:0,descripcion:'Sueldo'}];
+let saved;
+global.fetch=async(url,options)=>{if(options?.method==='PUT'){saved=JSON.parse(options.body);return {ok:true,json:async()=>({})};}const data=url.endsWith('/empleados')?[{id_agente:'employee',nombre:'Empleado'}]:url.endsWith('/cargos-recurrentes')?[{id_cargo_recurrente:1,tipo_cargo:'nomina',id_agente:'employee',programacion:schedule,tipo_programacion:'periodicidad'}]:[];return {ok:true,json:async()=>data};};
+const root=createRoot(document.getElementById('root'));
+const click=async text=>{const button=[...document.querySelectorAll('button')].find(b=>b.textContent===text);assert(button,text);await act(async()=>button.click());};
+const select=(node,value)=>act(()=>{node.value=value;node.dispatchEvent(new dom.window.Event('change',{bubbles:true}));});
+(async()=>{
+  const lines=Array.from({length:8},(_,i)=>({id_linea_banco:`line-${i}`,importe:-1000,fecha_valor:`01/0${i+1}/2026`,concepto:'Cargo',updated_at:'v'}));
+  await act(async()=>root.render(React.createElement(Wizard,{lines,all:lines,mode:'assign',onSaved(){},onClose(){},modal:true})));
+  await click('Continuar');
+  assert.equal(document.querySelectorAll('[role="combobox"]').length,1);
+  assert.equal(document.querySelectorAll('select').length,1);
+  assert(!document.body.textContent.includes('line-7'));
+  select(document.querySelector('select'),'nomina');
+  await act(async()=>document.querySelector('[role="combobox"]').focus());
+  await act(async()=>document.querySelector('[role="option"]').click());
+  await click('Continuar');
+  assert.equal(document.querySelectorAll('select').length,1);
+  assert(!document.body.textContent.includes('line-7'));
+  select(document.querySelector('select'),'1');
+  await click('Continuar');
+  assert(document.body.textContent.includes('line-7'));
+  await click('Volver atrás');
+  assert.equal(document.querySelector('select').value,'1');
+  await click('Continuar');await click('Continuar');await click('Confirmar');
+  assert.equal(saved.items.length,8);
+  assert(saved.items.every(i=>i.entityType==='nomina'&&i.entityId==='employee'&&i.chargeId==='1'));
+  assert.equal(new Set(saved.items.map(i=>i.month)).size,8);
+  act(()=>root.unmount());dom.window.close();
+  console.log('Common wizard: one destination and one charge selector, automatic propagation to eight rows, individual periods, phase 4 detail and back navigation passed.');
+})().catch(e=>{console.error(e);process.exitCode=1;dom.window.close();});

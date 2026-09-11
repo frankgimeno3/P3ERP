@@ -18,6 +18,8 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ message: "La cuenta de empleado debe ser true o false" }, { status: 400 });
     }
     const agente = await updateAgenteRoles(idAgente, {
+      nombre_completo_agente: body?.nombre_completo_agente,
+      email_agente: body?.email_agente,
       is_empleado_account: body?.is_empleado_account,
       rol_agente: body?.rol_agente,
       estado_agente: body?.estado_agente,
@@ -33,8 +35,8 @@ export async function PUT(request, { params }) {
   } catch (error) {
     console.error("Error in PUT /api/v1/admin/agentes/[id_agente]:", error);
     return NextResponse.json(
-      { message: "Error al actualizar el agente", detail: process.env.NODE_ENV === "development" ? error.message : undefined },
-      { status: 500 },
+      { message: error.status ? error.message : "Error al actualizar el agente", detail: process.env.NODE_ENV === "development" ? error.message : undefined },
+      { status: error.status || 500 },
     );
   }
 }

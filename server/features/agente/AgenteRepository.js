@@ -39,6 +39,11 @@ export async function getAgenteByEmail(email) {
 
 export async function updateAgenteRoles(idAgente, data = {}) {
   const pool = getPgPool();
+  const nombreCompleto = data.nombre_completo_agente === undefined ? null : String(data.nombre_completo_agente || '').trim();
+  const email = data.email_agente === undefined ? null : String(data.email_agente || '').trim().toLowerCase();
+  if (nombreCompleto !== null && (!nombreCompleto || nombreCompleto.length > 300)) throw Object.assign(new Error('Indica un nombre de hasta 300 caracteres.'), { status: 400 });
+  if (email !== null && (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254)) throw Object.assign(new Error('Indica un email válido.'), { status: 400 });
+  if (email !== null && await emailAgenteExists(email, idAgente)) throw Object.assign(new Error('Ese email ya pertenece a otro agente.'), { status: 409 });
   const rolAgente = data.rol_agente === undefined ? null : (String(data.rol_agente || "").trim() || "base");
   const estadoAgente = data.estado_agente === undefined ? null : data.estado_agente ?? "";
   const accesosPersonalizados =
@@ -51,16 +56,18 @@ export async function updateAgenteRoles(idAgente, data = {}) {
   const { rows } = await pool.query(
     `
       UPDATE agentes_db
-      SET rol_agente = COALESCE($1::text, rol_agente),
-          estado_agente = COALESCE($2::text, estado_agente),
-          accesos_personalizados = COALESCE($3::boolean, accesos_personalizados),
-          array_accesos_adicionales = COALESCE($4::jsonb, array_accesos_adicionales),
-          is_empleado_account = COALESCE($6::boolean, is_empleado_account),
+      SET nombre_completo_agente = COALESCE($1::text, nombre_completo_agente),
+          email_agente = COALESCE($2::text, email_agente),
+          rol_agente = COALESCE($3::text, rol_agente),
+          estado_agente = COALESCE($4::text, estado_agente),
+          accesos_personalizados = COALESCE($5::boolean, accesos_personalizados),
+          array_accesos_adicionales = COALESCE($6::jsonb, array_accesos_adicionales),
+          is_empleado_account = COALESCE($8::boolean, is_empleado_account),
           updated_at = NOW()
-      WHERE id_agente = $5
+      WHERE id_agente = $7
       RETURNING *
     `,
-    [rolAgente, estadoAgente, accesosPersonalizados, accesosAdicionales, idAgente, data.is_empleado_account ?? null],
+    [nombreCompleto, email, rolAgente, estadoAgente, accesosPersonalizados, accesosAdicionales, idAgente, data.is_empleado_account ?? null],
   );
 
   return rows[0] ? normalizeAgente(rows[0]) : null;
@@ -165,6 +172,7 @@ export async function deleteAgente(idAgente, beforeDelete) {
     }
     const agente = normalizeAgente(rows[0]);
     const history = await client.query(`SELECT 1 FROM nominas WHERE id_empleado=$1
+      UNION ALL SELECT 1 FROM nominas_empleados WHERE id_empleado=$1
       UNION ALL SELECT 1 FROM anticipos_empleados WHERE id_empleado=$1
       UNION ALL SELECT 1 FROM empleados_libre_disposicion WHERE id_empleado=$1
       UNION ALL SELECT 1 FROM ausencias_empleados WHERE id_empleado=$1

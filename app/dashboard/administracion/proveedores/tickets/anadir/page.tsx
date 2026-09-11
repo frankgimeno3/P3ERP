@@ -1,16 +1,17 @@
 "use client";
-import { useEffect, useState } from "react";
+import SearchableSelect from "@/app/components/SearchableSelect";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import MiddleNav from "@/app/general_components/componentes_recurrentes/MiddleNav";
 
 const dateValue = (d: string, m: string, y: string) =>
   `${d.padStart(2, "0")}/${m.padStart(2, "0")}/${y}`;
 
-export default function AnadirTicketPage() {
+function AnadirTicketPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialAmbito = (searchParams.get("ambito") as "P3" | "GM") || "P3";
-  
+
   const now = new Date();
   const [providers, setProviders] = useState<any[]>([]);
   const [modal, setModal] = useState(false);
@@ -38,7 +39,7 @@ export default function AnadirTicketPage() {
   useEffect(() => {
     fetch("/api/v1/admin/proveedores")
       .then((r) => r.json())
-      .then(setProviders)
+      .then(data => {setProviders(data);const id=new URLSearchParams(window.location.search).get('id_proveedor');if(id)setProvider(data.find((p:any)=>p.id_proveedor===id)||null);})
       .catch(console.error);
   }, []);
 
@@ -56,7 +57,7 @@ export default function AnadirTicketPage() {
     const baseValid = isP3 && form.base !== "";
     const importeValid = !isP3 && form.importe !== "";
     const totalValid = isP3 && form.total !== "";
-    const paymentValid = form.payment === "efectivo" || 
+    const paymentValid = form.payment === "efectivo" ||
       (form.payment === "tarjeta" && form.tarjeta_ultimos_digitos && form.tarjeta_banco);
 
     if (
@@ -216,15 +217,7 @@ export default function AnadirTicketPage() {
           </label>
 
           {withProvider ? (
-            <button
-              type="button"
-              onClick={() => setModal(true)}
-              className="w-full cursor-pointer rounded border p-3 text-left transition hover:bg-blue-50 text-gray-700"
-            >
-              {provider
-                ? `${provider.nombre_proveedor} (${provider.id_proveedor})`
-                : "Seleccionar proveedor"}
-            </button>
+            <SearchableSelect label="Proveedor" required value={provider?.id_proveedor||''} onChange={id=>setProvider(providers.find(p=>p.id_proveedor===id)||null)} options={providers.map(p=>({value:p.id_proveedor,label:p.nombre_proveedor+' · '+p.id_proveedor}))} />
           ) : (
             <label className="block">
               <span className="text-gray-700">Nombre personalizado</span>
@@ -247,7 +240,7 @@ export default function AnadirTicketPage() {
               ].map(([key, label, max]) => (
                 <input
                   key={key}
-                  aria-label={label}
+                  aria-label={String(label)}
                   maxLength={Number(max)}
                   value={(form as any)[key]}
                   onChange={(e) =>
@@ -256,7 +249,7 @@ export default function AnadirTicketPage() {
                       [key]: e.target.value.replace(/\D/g, ""),
                     })
                   }
-                  placeholder={label}
+                  placeholder={String(label)}
                   className="w-24 rounded border p-2 text-gray-700"
                 />
               ))}
@@ -384,54 +377,11 @@ export default function AnadirTicketPage() {
       </main>
 
       {/* Provider modal */}
-      {modal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-          onMouseDown={(e) => {
-            if (e.target === e.currentTarget) setModal(false);
-          }}
-        >
-          <div
-            role="dialog"
-            aria-modal="true"
-            className="relative max-h-[80vh] w-full max-w-xl overflow-auto rounded-xl bg-white p-6"
-          >
-            <button
-              aria-label="Cerrar"
-              type="button"
-              onClick={() => setModal(false)}
-              className="absolute right-3 top-2 cursor-pointer text-3xl hover:text-blue-700"
-            >
-              ×
-            </button>
-            <h2 className="mb-4 text-lg font-semibold text-blue-950">
-              Seleccionar proveedor
-            </h2>
-            <input
-              autoFocus
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Buscar..."
-              className="mb-3 w-full rounded border p-2 text-gray-700"
-            />
-            <div className="space-y-2">
-              {filtered.map((p) => (
-                <button
-                  key={p.id_proveedor}
-                  type="button"
-                  onClick={() => {
-                    setProvider(p);
-                    setModal(false);
-                  }}
-                  className="block w-full cursor-pointer rounded border p-3 text-left transition hover:bg-blue-50 text-gray-700"
-                >
-                  {p.nombre_proveedor} · {p.id_proveedor}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+
     </div>
   );
+}
+
+export default function AnadirTicketPageWithSuspense() {
+  return <Suspense fallback={<div className="min-h-screen bg-gray-100" />}><AnadirTicketPage /></Suspense>;
 }

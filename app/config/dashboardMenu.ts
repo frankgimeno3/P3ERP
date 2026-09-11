@@ -66,8 +66,7 @@ export const dashboardMenu: DashboardMenuModule[] = [
     label: "Operaciones",
     children: [
       page("Gestión de BBDD", "/dashboard/operaciones/data"),
-      page("Agentes", "/dashboard/operaciones/agentesyroles"),
-      page("Roles", "/dashboard/operaciones/roles"),
+
       page("Gestión de cuentas", "/dashboard/operaciones/gestion_cuentas"),
     ],
   },
@@ -76,8 +75,8 @@ export const dashboardMenu: DashboardMenuModule[] = [
     label: "Dirección",
     children: [
       group("laboral", "LABORAL", [
+        page("Agentes", "/dashboard/operaciones/agentes"),
         page("Nóminas", "/dashboard/direccion/laboral/nominas"),
-        page("Asuntos empleados", "/dashboard/direccion/laboral/asuntos-empleados"),
         page("Calendario laboral", "/dashboard/direccion/laboral/calendario-laboral"),
         page("Contratación", "/dashboard/direccion/laboral/contratacion"),
       ]),

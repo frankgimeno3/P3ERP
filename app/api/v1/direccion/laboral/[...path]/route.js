@@ -1,6 +1,7 @@
 import * as repo from '@/server/features/laboral/LaboralRepository.js';
 import { downloadDocument, uploadDocument } from '@/server/features/laboral/DocumentStorage.js';
 import { LaboralError } from '@/server/features/laboral/validation.js';
+import { employeePayrolls, agentTasks, saveAgentTask } from '@/server/features/laboral/EmployeePayrollRepository.js';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -16,6 +17,11 @@ async function handle(request, { params }) {
     if (child === 'documentos' && !childId) {
       if (method === 'GET') data = await repo.listDocuments(kind,id);
       else if (method === 'POST') data = await uploadDocument(request,kind,id);
+    } else if (kind === 'nominas-empleados' && !child && method === 'GET') {
+      data = await employeePayrolls(id,search.get('empleado'));
+    } else if (kind === 'tareas-agentes' && !child) {
+      if (method === 'GET') data = await agentTasks(id,search.get('empleado'));
+      else if ((method === 'POST' && !id) || (method === 'PUT' && id)) data = await saveAgentTask(id,await request.json());
     } else if (kind === 'empleados') {
       if (method === 'GET' && !child) data = id ? await repo.getEmployee(id,search.get('anio') || new Date().getFullYear()) : await repo.listEmployees();
       else if (id && child === 'libres' && !childId && method === 'PUT') data = await repo.saveFreeDays(id,await request.json());

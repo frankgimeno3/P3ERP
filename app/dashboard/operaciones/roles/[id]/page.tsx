@@ -42,8 +42,8 @@ const dashboardRoutes = [
   '/dashboard/operaciones/data/exportar/cuentas',
   '/dashboard/operaciones/data/importar/contactos',
   '/dashboard/operaciones/data/importar/cuentas',
-  '/dashboard/operaciones/roles',
-  '/dashboard/operaciones/agentesyroles',
+  '/dashboard/operaciones/agentes/roles',
+  '/dashboard/operaciones/agentes',
   '/dashboard/operaciones/gestion_cuentas',
   '/dashboard/produccion/hoja_produccion/contenidos',
   '/dashboard/produccion/hoja_produccion/contenidos/[id_contenido]',
@@ -65,6 +65,7 @@ function normalizeRoleId(value = "") {
 }
 
 function getRouteSection(route: string) {
+  if (route.startsWith('/dashboard/operaciones/agentes')) return 'direccion';
   return route.split("/")[2] || "dashboard";
 }
 
@@ -100,7 +101,7 @@ export default function RoleAccessPage() {
         setError("");
         const data = await RoleService.getRoleById(params.id);
         setRole(data);
-        setPermissions(Array.isArray(data.permisos_rol) ? data.permisos_rol : []);
+        setPermissions(Array.isArray(data.permisos_rol) ? data.permisos_rol.map((route: string) => route.replace('/dashboard/operaciones/agentesyroles','/dashboard/operaciones/agentes').replace('/dashboard/operaciones/roles','/dashboard/operaciones/agentes/roles')) : []);
       } catch (error: any) {
         setError(error?.message || "No se ha podido cargar el rol.");
       } finally {
@@ -189,7 +190,7 @@ export default function RoleAccessPage() {
 
   return (
     <div className="min-h-screen bg-gray-100 p-6 px-12 text-gray-800">
-      <button type="button" onClick={() => router.push('/dashboard/operaciones/roles')} className="mb-4 rounded bg-white px-4 py-2 text-sm text-blue-950 shadow-sm hover:bg-gray-50">
+      <button type="button" onClick={() => router.push('/dashboard/operaciones/agentes/roles')} className="mb-4 rounded bg-white px-4 py-2 text-sm text-blue-950 shadow-sm hover:bg-gray-50">
         Volver a roles
       </button>
 

@@ -30,6 +30,7 @@ export function canAccessDashboardPath(role: unknown, pathname: string) {
 
 export function canAccessApiPath(role: unknown, pathname: string, method: string) {
   const normalized = normalizeRole(role);
+  if (/^\/api\/v1\/direccion\/laboral\/tareas-agentes(?:\/[^/]+)?\/?$/.test(pathname)) return roleRank[normalized] >= roleRank.operaciones;
   if (pathname.startsWith("/api/v1/direccion")) return normalized === "superadmin";
   if (pathname.startsWith("/api/v1/operaciones")) return roleRank[normalized] >= roleRank.operaciones;
   const sharedAdminRead = method === "GET" && /^\/api\/v1\/admin\/(agentes|ferias|proveedores)(?:\/[^/]+)?\/?$/.test(pathname);
