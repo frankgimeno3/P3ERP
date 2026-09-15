@@ -22,8 +22,12 @@ function normalizeLineaBanco(row) {
     id_agente: row.id_agente ?? "",
     nomina_revision: row.nomina_revision ?? null,
     nombre_agente: row.nombre_agente ?? "",
+    descripcion_cargo_recurrente: [...new Set((row.programacion_cargo_recurrente || []).map(r => String(r.descripcion || '').trim()).filter(Boolean))].join(' · '),
     duplicado_descartado: Boolean(row.duplicado_descartado),
     id_orden: row.id_orden ?? "",
+    tipo_ingreso: row.tipo_ingreso ?? "",
+    remesa_ids: row.remesa_ids || [],
+    ordenes_cobro: row.ordenes_cobro || [],
     id_pago: row.id_pago ?? "",
     id_cargo_recurrente: row.id_cargo_recurrente === null || row.id_cargo_recurrente === undefined ? null : Number(row.id_cargo_recurrente),
     created_at: row.created_at,
@@ -57,50 +61,20 @@ function chronologicalRows(lineas) {
 }
 
 function mergeMovementSequences(existing, incoming) {
-  const existingKeys = existing.map(fingerprint);
-  const incomingKeys = incoming.map(fingerprint);
-  const dp = Array.from({ length: existing.length + 1 }, () => new Uint32Array(incoming.length + 1));
-
-  for (let i = existing.length - 1; i >= 0; i -= 1) {
-    for (let j = incoming.length - 1; j >= 0; j -= 1) {
-      dp[i][j] = existingKeys[i] === incomingKeys[j]
-        ? dp[i + 1][j + 1] + 1
-        : Math.max(dp[i + 1][j], dp[i][j + 1]);
-    }
-  }
-
-  const merged = [];
-  let existingIndex = 0;
-  let incomingIndex = 0;
-  while (existingIndex < existing.length && incomingIndex < incoming.length) {
-    if (existingKeys[existingIndex] === incomingKeys[incomingIndex]) {
-      merged.push(existing[existingIndex]);
-      existingIndex += 1;
-      incomingIndex += 1;
-      continue;
-    }
-
-    const existingDate = dateValue(existing[existingIndex].fecha_operativa);
-    const incomingDate = dateValue(incoming[incomingIndex].fecha_operativa);
-    const skipExistingScore = dp[existingIndex + 1][incomingIndex];
-    const skipIncomingScore = dp[existingIndex][incomingIndex + 1];
-    const existingThenIncoming = Math.abs((Number(existing[existingIndex].saldo) + Number(incoming[incomingIndex].importe)) - Number(incoming[incomingIndex].saldo)) < 0.005;
-    const incomingThenExisting = Math.abs((Number(incoming[incomingIndex].saldo) + Number(existing[existingIndex].importe)) - Number(existing[existingIndex].saldo)) < 0.005;
-    const keepExisting = skipExistingScore > skipIncomingScore
-      || (skipExistingScore === skipIncomingScore && existingDate < incomingDate)
-      || (skipExistingScore === skipIncomingScore && existingDate === incomingDate && existingThenIncoming && !incomingThenExisting);
-    if (keepExisting) {
-      merged.push(existing[existingIndex]);
-      existingIndex += 1;
-    } else {
-      merged.push({ ...incoming[incomingIndex], estado_revision: false, comentarios: "" });
-      incomingIndex += 1;
-    }
-  }
-
-  while (existingIndex < existing.length) merged.push(existing[existingIndex++]);
-  while (incomingIndex < incoming.length) merged.push({ ...incoming[incomingIndex++], estado_revision: false, comentarios: "" });
-  return merged;
+  // Match each occurrence once, independently of IDs or file order.
+  const available = new Map();
+  existing.forEach(line => {
+    const key = fingerprint(line);
+    available.set(key, (available.get(key) || 0) + 1);
+  });
+  const added = incoming.filter(line => {
+    const key = fingerprint(line);
+    const count = available.get(key) || 0;
+    if (!count) return true;
+    available.set(key, count - 1);
+    return false;
+  });
+  return [...existing, ...added];
 }
 
 function ordinalId(banco, fechaOperativa, serial) {
@@ -112,11 +86,15 @@ function ordinalId(banco, fechaOperativa, serial) {
 export async function getLineasBanco() {
   const pool = getPgPool();
   const { rows } = await pool.query(`
-    SELECT lb.*, p.nombre_proveedor, c.nombre_empresa AS nombre_cuenta, a.nombre_completo_agente AS nombre_agente
+    SELECT lb.*, p.nombre_proveedor, c.nombre_empresa AS nombre_cuenta, a.nombre_completo_agente AS nombre_agente,
+      cr.programacion AS programacion_cargo_recurrente,
+      ARRAY(SELECT DISTINCT co.id_remesa FROM banco_cobros_ordenes co WHERE co.id_linea_banco=lb.id_linea_banco AND co.id_remesa IS NOT NULL) remesa_ids,
+      ARRAY(SELECT co.id_orden FROM banco_cobros_ordenes co WHERE co.id_linea_banco=lb.id_linea_banco) ordenes_cobro
     FROM lineas_bancos lb
     LEFT JOIN proveedores_db p ON p.id_proveedor=lb.id_proveedor
     LEFT JOIN cuentas_db c ON c.id_cuenta=lb.id_cuenta
     LEFT JOIN agentes_db a ON a.id_agente=lb.id_agente
+    LEFT JOIN cargos_recurrentes cr ON cr.id_cargo_recurrente=lb.id_cargo_recurrente
     ORDER BY lb.id_linea_banco DESC
   `);
 
@@ -126,7 +104,9 @@ export async function getLineasBanco() {
 export async function getLineaBancoById(idLineaBanco) {
   const pool = getPgPool();
   const { rows } = await pool.query(`
-    SELECT lb.*, p.nombre_proveedor, c.nombre_empresa AS nombre_cuenta, a.nombre_completo_agente AS nombre_agente
+    SELECT lb.*, p.nombre_proveedor, c.nombre_empresa AS nombre_cuenta, a.nombre_completo_agente AS nombre_agente,
+      ARRAY(SELECT DISTINCT co.id_remesa FROM banco_cobros_ordenes co WHERE co.id_linea_banco=lb.id_linea_banco AND co.id_remesa IS NOT NULL) remesa_ids,
+      ARRAY(SELECT co.id_orden FROM banco_cobros_ordenes co WHERE co.id_linea_banco=lb.id_linea_banco) ordenes_cobro
     FROM lineas_bancos lb
     LEFT JOIN proveedores_db p ON p.id_proveedor = lb.id_proveedor
     LEFT JOIN cuentas_db c ON c.id_cuenta = lb.id_cuenta
@@ -197,15 +177,18 @@ export async function reconcileLineasBanco(banco, sourceLineas = []) {
     })));
     const merged = mergeMovementSequences(existing, incoming);
     const serialByYear = new Map();
-    const renumbered = merged.map((linea) => {
-      const year = String(linea.fecha_operativa || "").slice(-2);
+    existing.forEach(linea => {
+      const [, , year, ordinal = ''] = linea.id_linea_banco.split('_');
+      serialByYear.set(year, Math.max(serialByYear.get(year) || 0, Number(ordinal.replace(/\./g, '')) || 0));
+    });
+    const added = merged.filter(linea => !linea.id_linea_banco).map(linea => {
+      const year = String(linea.fecha_operativa || '').slice(-2);
       const serial = (serialByYear.get(year) || 0) + 1;
       serialByYear.set(year, serial);
       return { ...linea, id_linea_banco: ordinalId(banco, linea.fecha_operativa, serial), banco };
     });
 
-    await client.query("DELETE FROM lineas_bancos WHERE banco = $1", [banco]);
-    for (const linea of renumbered) {
+    for (const linea of added) {
       await client.query(
         `INSERT INTO lineas_bancos
           (id_linea_banco, banco, fecha_operativa, fecha_valor, concepto, importe, saldo, estado_revision, comentarios, id_proveedor, id_cuenta, id_orden, id_pago, id_cargo_recurrente, created_at, updated_at, id_agente, duplicado_descartado)
@@ -217,7 +200,7 @@ export async function reconcileLineasBanco(banco, sourceLineas = []) {
       );
     }
     await client.query("COMMIT");
-    return { lineas: renumbered.map(normalizeLineaBanco), creadas: renumbered.length - existing.length, existentes: existing.length };
+    return { lineas: [...existing, ...added].map(normalizeLineaBanco), creadas: added.length, existentes: existing.length };
   } catch (error) {
     await client.query("ROLLBACK");
     throw error;
@@ -228,6 +211,11 @@ export async function reconcileLineasBanco(banco, sourceLineas = []) {
 
 export async function updateLineaBanco(idLineaBanco, data = {}) {
   const pool = getPgPool();
+  const before = (await pool.query('SELECT * FROM lineas_bancos WHERE id_linea_banco=$1', [idLineaBanco])).rows[0];
+  if (!before) return null;
+  if (Number(before.importe) > 0 && ['estado_revision','id_orden','id_cuenta','id_proveedor','id_agente','id_pago','id_cargo_recurrente'].some(key=>data[key] !== undefined && String(data[key] ?? '') !== String(before[key] ?? ''))) {
+    throw new Error('Utiliza el asistente de revisión bancaria para modificar el estado o los vínculos de un ingreso.');
+  }
   const { rows } = await pool.query(
     `
       UPDATE lineas_bancos
@@ -244,7 +232,7 @@ export async function updateLineaBanco(idLineaBanco, data = {}) {
       WHERE id_linea_banco = $15
       RETURNING *
     `,
-    [Boolean(data.estado_revision), data.comentarios ?? "", data.id_proveedor !== undefined, data.id_proveedor || null,
+    [data.estado_revision ?? before.estado_revision, data.comentarios ?? before.comentarios ?? "", data.id_proveedor !== undefined, data.id_proveedor || null,
       data.id_cuenta !== undefined, data.id_cuenta || null, data.id_agente !== undefined, data.id_agente || null,
       data.id_orden !== undefined, data.id_orden || null, data.id_pago !== undefined, data.id_pago || null,
       data.id_cargo_recurrente !== undefined, data.id_cargo_recurrente || null, idLineaBanco],

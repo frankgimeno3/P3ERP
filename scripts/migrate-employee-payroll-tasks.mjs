@@ -8,6 +8,7 @@ try {
   await db.query("SET LOCAL lock_timeout='3s'");
   await db.query("SET LOCAL statement_timeout='30s'");
   await db.query(fs.readFileSync('database/migrations/20260911_0002_employee_payroll_tasks.sql','utf8'));
+  await db.query(fs.readFileSync('database/migrations/20260911_0003_payroll_history_identity.sql','utf8'));
   await db.query('COMMIT');
   const result=await db.query(`SELECT (SELECT count(*)::int FROM nominas_empleados) AS fichas_nomina,
     (SELECT count(*)::int FROM cargos_recurrentes WHERE tipo_cargo='nomina') AS cargos_nomina,

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import MiddleNav from "@/app/general_components/componentes_recurrentes/MiddleNav";
 import { OrdenService } from "@/app/service/OrdenService";
 import { AgenteService } from "@/app/service/AgenteService";
+import AdministrativeExcelModal from "./AdministrativeExcelModal";
 
 const formatMoney = (value?: number) => {
   const amount = Number(value ?? 0);
@@ -27,6 +28,7 @@ export default function ControlAdministrativoPage() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showExcel,setShowExcel]=useState(false),[reloadKey,setReloadKey]=useState(0),[notice,setNotice]=useState('');
 
   useEffect(() => {
     const fetchOrdenes = async () => {
@@ -45,7 +47,7 @@ export default function ControlAdministrativoPage() {
     };
 
     fetchOrdenes();
-  }, []);
+  }, [reloadKey]);
 
   const ordenesFiltradas = useMemo(() => {
     const matches = (value: unknown, query: string) => String(value ?? "").toLowerCase().includes(query.trim().toLowerCase());
@@ -69,7 +71,8 @@ export default function ControlAdministrativoPage() {
       <MiddleNav tituloprincipal="Control administrativo" />
       <div className="min-h-screen w-full bg-gray-100 px-12 py-10 text-gray-600">
         <div className="mb-4 flex flex-col gap-3">
-          <h2 className="text-lg font-semibold text-blue-950">Ordenes</h2>
+          <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-semibold text-blue-950">Ordenes</h2><button type="button" onClick={()=>setShowExcel(true)} className="cursor-pointer rounded bg-blue-950 px-4 py-2 text-sm text-white transition hover:bg-blue-900">Subir excel de control administrativo</button></div>
+          {notice && <p role="status" className="rounded bg-green-50 p-3 text-green-800">{notice}</p>}
           <div className="grid grid-cols-1 gap-3 md:grid-cols-3 xl:grid-cols-6">
             <input type="search" value={filtros.orden} onChange={(event) => handleFiltroChange("orden", event.target.value)} placeholder="Orden" className={inputClass} />
             <input type="search" value={filtros.cliente} onChange={(event) => handleFiltroChange("cliente", event.target.value)} placeholder="Cliente" className={inputClass} />
@@ -97,12 +100,15 @@ export default function ControlAdministrativoPage() {
                 <th className="p-2 text-left font-light">Factura</th>
                 <th className="p-2 text-left font-light">Base imponible</th>
                 <th className="p-2 text-left font-light">Forma de cobro</th>
+                <th className="p-2 text-left font-light">Importe total</th>
+                <th className="p-2 text-left font-light">Fecha de cobro</th>
+                <th className="p-2 text-left font-light">Estado de cobro</th>
               </tr>
             </thead>
             <tbody>
               {loading && (
                 <tr>
-                  <td colSpan={7} className="p-6 text-center text-gray-500">
+                  <td colSpan={10} className="p-6 text-center text-gray-500">
                     Cargando ordenes...
                   </td>
                 </tr>
@@ -110,7 +116,7 @@ export default function ControlAdministrativoPage() {
 
               {!loading && ordenesFiltradas.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="p-6 text-center text-gray-500">
+                  <td colSpan={10} className="p-6 text-center text-gray-500">
                     No hay ordenes que coincidan con los filtros.
                   </td>
                 </tr>
@@ -125,12 +131,16 @@ export default function ControlAdministrativoPage() {
                   <td className="border-b border-gray-200 p-2">{orden.id_factura || "-"}</td>
                   <td className="border-b border-gray-200 p-2">{formatMoney(orden.base_imponible)}</td>
                   <td className="border-b border-gray-200 p-2">{orden.forma_cobro || "-"}</td>
+                  <td className="border-b border-gray-200 p-2">{formatMoney(orden.cobro_total)}</td>
+                  <td className="border-b border-gray-200 p-2">{orden.fecha_real_cobro || '-'}</td>
+                  <td className="border-b border-gray-200 p-2">{orden.cobrada ? 'Cobrada' : 'Pendiente'}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       </div>
+      {showExcel && <AdministrativeExcelModal onClose={()=>setShowExcel(false)} onImported={result=>{setReloadKey(k=>k+1);setNotice(`${result.created} órdenes creadas, ${result.updated} actualizadas y ${result.unchanged} sin cambios.`);}} />}
     </div>
   );
 }

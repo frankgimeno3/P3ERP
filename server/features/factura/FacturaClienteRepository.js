@@ -1,4 +1,8 @@
+import { syncInvoiceOrders } from './InvoiceOrders.js';
 import crypto from "node:crypto";
+import { accountActivity, orderActivity } from "../comentario/AccountActivity.js";
+import { ensureOrderReceipt, lockIncome, syncOrderCollections, syncInvoiceCollection } from "../prevision/IncomeReconciliation.js";
+import { parseImportDate } from "../prevision/ReceiptExcel.js";
 import { getPgPool } from "../../database/pgClient.js";
 import { calculateVerifactuHash, formatSpainTimestamp, VERIFACTU_HASH_VERSION } from "./verifactuHash.mjs";
 import { buildVerifactuRegistroAltaXml } from "./verifactuXml.mjs";
@@ -47,7 +51,8 @@ export async function getEligibleContracts() {
   const { rows } = await pool.query(`
     SELECT c.*,cu.nombre_empresa
     FROM contratos_db c LEFT JOIN cuentas_db cu ON cu.id_cuenta=c.id_cuenta_contrato
-    WHERE COALESCE(c.id_factura,'')=''
+    LEFT JOIN facturas_clientes_db f ON f.id_factura_cliente=c.id_factura
+    WHERE COALESCE(c.id_factura,'')='' OR (f.estado='en proceso' AND NOT COALESCE(f.ya_contabilizada,false) AND COALESCE(f.verifactu_estado_envio,'')<>'factura emitida')
     ORDER BY c.created_at DESC
   `);
   return rows;
@@ -86,19 +91,26 @@ export async function getCustomerInvoice(idFactura) {
   return normalize({ ...rows[0], lineas: lines.rows, cobros: payments.rows, ordenes: orders.rows });
 }
 
-export async function createInvoiceDraft(idContrato) {
+export async function createInvoiceDraft(idContrato, actorId = "", transaction = null) {
   const pool = getPgPool();
-  const client = await pool.connect();
+  const client = transaction || await pool.connect();
   try {
-    await client.query("BEGIN");
+    if (!transaction) await client.query("BEGIN");
+    await lockIncome(client);
     await ensureSchema(client);
     const contract = await client.query(`
       SELECT c.*,cu.nombre_empresa,cu.vat_code,cu.nombre_fiscal,cu.pais_facturacion,cu.direccion_facturacion,
         cu.poblacion_facturacion,cu.cp_facturacion,cu.mail_contabilidad
       FROM contratos_db c LEFT JOIN cuentas_db cu ON cu.id_cuenta=c.id_cuenta_contrato
-      WHERE c.id_contrato=$1 AND COALESCE(c.id_factura,'')='' FOR UPDATE`, [idContrato]);
+      WHERE c.id_contrato=$1 FOR UPDATE OF c`, [idContrato]);
     if (!contract.rows[0]) throw new Error("El contrato no está disponible para facturar");
     const c = contract.rows[0];
+    if (c.id_factura) {
+      const draft=(await client.query('SELECT * FROM facturas_clientes_db WHERE id_factura_cliente=$1 FOR UPDATE',[c.id_factura])).rows[0];
+      if (!draft || draft.estado!=='en proceso' || draft.ya_contabilizada || draft.verifactu_estado_envio==='factura emitida') throw new Error('El contrato ya tiene una factura finalizada');
+      if (!transaction) await client.query('COMMIT');
+      return transaction ? {id_factura_cliente:c.id_factura} : getCustomerInvoice(c.id_factura);
+    }
     const idFactura = id("fac");
     const fiscal = {
       nombre_fiscal: c.nombre_fiscal || c.nombre_empresa || "", vat_code: c.vat_code || "",
@@ -123,12 +135,15 @@ export async function createInvoiceDraft(idContrato) {
         quantity,unit,number(line.descuento_producto),line.tipo_descuento_producto || "porcentaje",base,base*1.21]);
     }
     await client.query(`UPDATE contratos_db SET id_factura=$1,updated_at=NOW() WHERE id_contrato=$2`, [idFactura,idContrato]);
-    await client.query("COMMIT");
-    return getCustomerInvoice(idFactura);
+    const orders=(await client.query("UPDATE ordenes_db SET id_factura=$1,updated_at=now() WHERE id_contrato=$2 AND (id_factura IS NULL OR id_factura='') RETURNING id_orden",[idFactura,idContrato])).rows;
+    for (const order of orders) await ensureOrderReceipt(client,order.id_orden,actorId);
+    await accountActivity(client,c.id_cuenta_contrato,actorId,'ha creado la factura en proceso '+idFactura+' para el contrato '+idContrato+', con las órdenes '+orders.map(o=>o.id_orden).join(', ')+'.');
+    if (!transaction) await client.query("COMMIT");
+    return transaction ? {id_factura_cliente:idFactura} : getCustomerInvoice(idFactura);
   } catch (error) {
-    await client.query("ROLLBACK");
+    if (!transaction) await client.query("ROLLBACK");
     throw error;
-  } finally { client.release(); }
+  } finally { if (!transaction) client.release(); }
 }
 
 export async function createRectifyingInvoiceDraft(sourceInvoiceId, invoiceType) {
@@ -179,11 +194,12 @@ export async function getVerifactuInstallation() {
   return rows[0] || null;
 }
 
-export async function emitCustomerInvoice(idFactura, data = {}) {
+export async function emitCustomerInvoice(idFactura, data = {}, actorId = "") {
   const pool = getPgPool();
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
+    await lockIncome(client);
     const result = await client.query(`SELECT * FROM facturas_clientes_db WHERE id_factura_cliente=$1 FOR UPDATE`, [idFactura]);
     const invoice = result.rows[0];
     if (!invoice) throw new Error("Factura no encontrada");
@@ -374,6 +390,7 @@ export async function emitCustomerInvoice(idFactura, data = {}) {
       invoice.factura_tipo!=="ordinaria",installation.producer_nif,installation.producer_name,
       installation.software_name,installation.software_id,installation.exclusive_use,installation.multi_entity,
       JSON.stringify(recordPayload),exchangeRate]);
+    await syncInvoiceOrders(client,idFactura,actorId);
     await client.query(`INSERT INTO verifactu_outbox (id,record_id,status,request_xml) VALUES ($1,$2,'PENDING',$3)`,
       [id("vfout"),recordId,recordXml]);
     await client.query("COMMIT");
@@ -382,14 +399,15 @@ export async function emitCustomerInvoice(idFactura, data = {}) {
   finally { client.release(); }
 }
 
-export async function updateCustomerInvoice(idFactura, data = {}) {
+export async function updateCustomerInvoice(idFactura, data = {}, actorId = "") {
   const pool = getPgPool();
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
+    await lockIncome(client);
     await ensureSchema(client);
     const current = await client.query(`SELECT * FROM facturas_clientes_db WHERE id_factura_cliente=$1 FOR UPDATE`, [idFactura]);
-    if (!current.rows[0]) return null;
+    if (!current.rows[0]) { await client.query("ROLLBACK"); return null; }
     if (current.rows[0].verifactu_estado_envio === "factura emitida") {
       await client.query(`UPDATE facturas_clientes_db SET comentarios_internos=$1,updated_at=NOW() WHERE id_factura_cliente=$2`,
         [data.comentarios_internos ?? current.rows[0].comentarios_internos ?? "", idFactura]);
@@ -444,18 +462,8 @@ export async function updateCustomerInvoice(idFactura, data = {}) {
       JSON.stringify(patch.datos_fiscales || {}),JSON.stringify(patch.datos_verifactu || {}),patch.comentarios || "",
       patch.forma_cobro || "",lines.rows[0].base,lines.rows[0].total,Boolean(patch.ya_contabilizada),
       JSON.stringify(data),idFactura]);
-    if (data.estado === "enviada" && !locked) {
-      const cobros = await client.query(`SELECT * FROM cobros_contratos_db WHERE id_contrato=$1 ORDER BY numero_cobro`, [current.rows[0].id_contrato]);
-      await client.query(`DELETE FROM ordenes_db WHERE id_factura=$1`, [idFactura]);
-      for (const cobro of cobros.rows) {
-        await client.query(`INSERT INTO ordenes_db (
-          id_orden,id_contrato,id_factura,id_cuenta,numero_cobro,etiqueta_cobro,fecha_teorica_cobro,
-          forma_cobro,banco_cobro,base_imponible,cobro_total,cobrada
-        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,FALSE)`,
-        [id("ord"),current.rows[0].id_contrato,idFactura,current.rows[0].id_cuenta,cobro.numero_cobro,
-          `Cobro ${cobro.numero_cobro || ""}`,cobro.fecha_cobro,cobro.forma_cobro,cobro.banco_cobro,
-          number(cobro.importe_cobro)/1.21,number(cobro.importe_cobro)]);
-      }
+    if (!locked && (Array.isArray(data.cobros) || Array.isArray(data.lineas) || data.estado === "enviada")) {
+      await syncInvoiceOrders(client,idFactura,actorId);
     }
     await client.query("COMMIT");
     return getCustomerInvoice(idFactura);
@@ -463,21 +471,31 @@ export async function updateCustomerInvoice(idFactura, data = {}) {
   finally { client.release(); }
 }
 
-export async function updateAdministrativeOrder(idOrden, data = {}) {
-  const pool = getPgPool();
-  await ensureSchema(pool);
-  const current = await pool.query(`SELECT o.*,f.ya_contabilizada FROM ordenes_db o LEFT JOIN facturas_clientes_db f ON f.id_factura_cliente=o.id_factura WHERE o.id_orden=$1`, [idOrden]);
-  if (!current.rows[0]) return null;
-  const locked = Boolean(current.rows[0].ya_contabilizada);
-  const row = current.rows[0];
-  const { rows } = await pool.query(`UPDATE ordenes_db SET
-    fecha_teorica_cobro=$1,fecha_real_cobro=$2,cobrada=$3,
-    base_imponible=$4,cobro_total=$5,forma_cobro=$6,banco_cobro=$7,updated_at=NOW()
-    WHERE id_orden=$8 RETURNING *`,
-  [data.fecha_teorica_cobro ?? row.fecha_teorica_cobro,data.fecha_real_cobro ?? row.fecha_real_cobro,
-    data.cobrada ?? row.cobrada,locked ? row.base_imponible : number(data.base_imponible ?? row.base_imponible),
-    locked ? row.cobro_total : number(data.cobro_total ?? row.cobro_total),
-    locked ? row.forma_cobro : (data.forma_cobro ?? row.forma_cobro),
-    locked ? row.banco_cobro : (data.banco_cobro ?? row.banco_cobro),idOrden]);
-  return { ...rows[0], ya_contabilizada: locked };
+export async function updateAdministrativeOrder(idOrden, data = {}, actorId = "") {
+  data={...data};
+  for (const key of ['fecha_teorica_cobro','fecha_real_cobro']) if(data[key]) data[key]=parseImportDate(data[key]);
+  const db = await getPgPool().connect();
+  try {
+    await db.query('BEGIN');
+    await lockIncome(db);
+    const row = (await db.query('SELECT o.*,f.ya_contabilizada FROM ordenes_db o LEFT JOIN facturas_clientes_db f ON f.id_factura_cliente=o.id_factura WHERE o.id_orden=$1 FOR UPDATE OF o',[idOrden])).rows[0];
+    if (!row) { await db.query('COMMIT'); return null; }
+    const locked=Boolean(row.ya_contabilizada);
+    const fields=['fecha_teorica_cobro','fecha_real_cobro','cobrada',...(!locked?['base_imponible','cobro_total','forma_cobro','banco_cobro']:[])];
+    const changes=fields.filter(key=>data[key]!==undefined && String(data[key] ?? '')!==String(row[key] ?? ''));
+    if(row.cobro_revision_bancaria && changes.some(key=>['cobrada','fecha_real_cobro'].includes(key)))throw new Error('El estado y la fecha de este cobro se modifican desde su revisión bancaria.');
+    if(changes.includes('forma_cobro') && !/recibo/i.test(data.forma_cobro) && (await db.query('SELECT 1 FROM prevision_recibos_excel WHERE id_orden=$1 AND id_remesa IS NOT NULL',[idOrden])).rowCount)throw new Error('Retira primero el recibo de su remesa antes de cambiar la forma de cobro.');
+    if(changes.length){
+      await db.query('UPDATE ordenes_db SET '+changes.map((key,i)=>key+'=$'+(i+1)).join(',')+',updated_at=now() WHERE id_orden=$'+(changes.length+1),[...changes.map(key=>data[key]),idOrden]);
+      await orderActivity(db,idOrden,actorId,'ha modificado '+changes.map(key=>key+': '+String(row[key] ?? 'vacío')+' → '+String(data[key] ?? 'vacío')).join('; ')+'.');
+      if(data.cobrada===true && !row.cobrada)await orderActivity(db,idOrden,actorId,'ha marcado la orden como cobrada con fecha '+(data.fecha_real_cobro || row.fecha_real_cobro || 'sin indicar')+'.');
+    }
+    await ensureOrderReceipt(db,idOrden,actorId);
+    await syncOrderCollections(db,[idOrden],actorId);
+    await syncInvoiceCollection(db,[row.id_factura]);
+    const saved=(await db.query('SELECT * FROM ordenes_db WHERE id_orden=$1',[idOrden])).rows[0];
+    await db.query('COMMIT');
+    return {...saved,ya_contabilizada:locked};
+  }catch(error){await db.query('ROLLBACK');throw error;}
+  finally{db.release();}
 }

@@ -6,8 +6,10 @@ import { useParams, useRouter } from 'next/navigation';
 import { BancoService } from '@/app/service/BancoService';
 import { ProveedorService } from '@/app/service/ProveedorService';
 import PayrollBankReview from '../PayrollBankReview';
+import BankExpectedCharge from '../BankExpectedCharge';
 
 interface LineaBanco {
+  id_cargo_recurrente?: string | number | null; updated_at?: string;
   id_agente?: string; id_cuenta?: string; nombre_agente?: string; nombre_cuenta?: string; nomina_revision?: any;
   id_linea_banco: string; banco: string; fecha_operativa: string; fecha_valor: string; concepto: string;
   importe: number; saldo: number; estado_revision: boolean; comentarios: string; id_proveedor: string; nombre_proveedor: string;
@@ -69,6 +71,7 @@ export default function LineaBancoDetallePage() {
           <div className="md:col-span-2"><dt className="text-xs font-semibold uppercase text-gray-500">Nombre</dt><dd className="mt-1">{entities.find(e => e.id === selectedId)?.name || linea.nombre_agente || linea.nombre_cuenta || selectedProvider?.nombre_proveedor || 'Sin asociar'}</dd></div>
         </dl>
       </div>
+      <BankExpectedCharge line={linea} onSaved={() => setVersion(v => v + 1)} />
       <div className="mt-5 grid gap-5 rounded-lg bg-white p-6 shadow-sm md:grid-cols-2">
         <div><label className="block text-sm font-medium">Tipo<select value={entityType} onChange={e => { setEntityType(e.target.value); setProviderFilter(''); setLinea({...linea,id_proveedor:'',id_cuenta:'',id_agente:'',estado_revision:false,nomina_revision:null}); }} className="mt-1 w-full cursor-pointer rounded border bg-white px-3 py-2 hover:border-blue-950"><option value="proveedor">Proveedor</option><option value="cliente">Cliente</option><option value="nomina">Nómina</option></select></label><SearchableSelect label="Asociar a" value={selectedId||''} onChange={id=>setLinea({...linea,id_proveedor:entityType==='proveedor'?id:'',id_cuenta:entityType==='cliente'?id:'',id_agente:entityType==='nomina'?id:'',estado_revision:id===selectedId?linea.estado_revision:false,nomina_revision:id===selectedId?linea.nomina_revision:null})} options={entities.map(e=>({value:e.id,label:e.name||e.id,searchText:e.id}))} />{entityError&&<p className="text-red-700">{entityError}</p>}{entityType === 'nomina' && linea.id_agente && <PayrollBankReview line={linea} employeeId={linea.id_agente} onSaved={() => setVersion(v => v + 1)} />}</div>
         <div className="space-y-4"><label className="flex cursor-pointer items-center gap-3 rounded border border-gray-200 p-3 transition hover:bg-green-50"><input type="checkbox" disabled={entityType === 'nomina'} checked={linea.estado_revision} onChange={e => setLinea({ ...linea, estado_revision: e.target.checked })} className="cursor-pointer"/><span className="text-sm font-medium">Movimiento revisado</span></label><label className="block text-sm font-medium">Comentarios<textarea value={linea.comentarios} onChange={e => setLinea({ ...linea, comentarios: e.target.value })} rows={6} className="mt-1 w-full rounded border border-gray-300 p-3 outline-none transition hover:border-blue-900 focus:border-blue-950" /></label></div>

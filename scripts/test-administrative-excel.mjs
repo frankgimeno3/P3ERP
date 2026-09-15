@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import XLSX from 'xlsx';
+import {readAdministrativeExcel} from '../server/features/orden/AdministrativeExcel.js';
+const headers=['Orden','Factura','Cliente','Importe total','Fecha de cobro','Cobrada','Campo propio'];
+const build=rows=>{const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([headers,...rows]),'Control');return XLSX.write(wb,{type:'buffer',bookType:'xlsx'});};
+const data=build([['ORD-1','526058','Cliente','1.234,56','15/09/2026','Sí','Guardar'],['ORD-2','','','-','','No','']]);
+const inspected=readAdministrativeExcel(data);
+assert.equal(inspected.mapping.Orden,'id_orden');assert.equal(inspected.mapping['Campo propio'],'extra');
+const parsed=readAdministrativeExcel(data,inspected.mapping);
+assert.equal(parsed.rows[0].cobro_total,1234.56);assert.equal(parsed.rows[0].fecha_real_cobro,'15/09/2026');assert.equal(parsed.rows[0].cobrada,true);
+assert.equal(parsed.rows[0].datos_importacion['Campo propio'],'Guardar');
+assert.equal(parsed.rows[1].cobrada,false);assert.equal('cobro_total' in parsed.rows[1],false);assert.equal('id_factura' in parsed.rows[1],false);
+assert.throws(()=>readAdministrativeExcel(build([['ORD-1'],['ORD-1']]),inspected.mapping),/repetida/);
+assert.throws(()=>readAdministrativeExcel(build([['','','Cliente']]),inspected.mapping),/obligatoria/);
+assert.throws(()=>readAdministrativeExcel(data,{...inspected.mapping,Factura:'id_orden'}),/dos columnas/);
+console.log('PASS: column interpretation, additional fields, typed dates/amounts/states, omitted blank values and mandatory unique order IDs.');

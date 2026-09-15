@@ -27,13 +27,14 @@ export const realDate = () => Joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/).custom
   const date = new Date(`${value}T12:00:00Z`);
   return Number.isNaN(date.getTime()) || date.toISOString().slice(0,10) !== value ? helpers.error('any.invalid') : value;
 }).required();
-export function supplierData(body, creating = false) {
+export function supplierData(body, creating = false, canonicalize = true) {
   const field = () => creating ? Joi.string().trim().max(300).required() : Joi.string().trim().max(300).allow('').default('');
   const value = validateData(Joi.object({
     nombre_proveedor: Joi.string().trim().max(300).required(), nombre_fiscal_proveedor: field(),
+    Comentarios_proveedor: Joi.string().max(30000).allow(''),
     vat_code: field(), pais_proveedor: field(), moneda_proveedor: creating ? Joi.string().trim().uppercase().pattern(/^[A-Z]{3}$/).required() : Joi.string().trim().uppercase().pattern(/^[A-Z]{3}$/).allow('').default(''),
   }), body);
-  value.nombre_proveedor = canonicalSupplierName(value.nombre_proveedor);
+  if (canonicalize) value.nombre_proveedor = canonicalSupplierName(value.nombre_proveedor);
   return value;
 }
 export async function findSupplier(id, db = getPgPool()) {
@@ -63,21 +64,31 @@ export async function createSupplier(body) {
   });
 }
 export async function updateSupplier(id, body) {
-  const provider = await findSupplier(id), data = supplierData(body);
-  return (await getPgPool().query('UPDATE proveedores_db SET nombre_proveedor=$1,nombre_fiscal_proveedor=$2,vat_code=$3,pais_proveedor=$4,moneda_proveedor=$5,updated_at=NOW() WHERE id_proveedor=$6 RETURNING *', [data.nombre_proveedor,data.nombre_fiscal_proveedor,data.vat_code,data.pais_proveedor,data.moneda_proveedor,provider.id_proveedor])).rows[0];
+  const provider = await findSupplier(id), data = supplierData(body,false,false);
+  return (await getPgPool().query('UPDATE proveedores_db SET nombre_proveedor=$1,nombre_fiscal_proveedor=$2,vat_code=$3,pais_proveedor=$4,moneda_proveedor=$5,"Comentarios_proveedor"=COALESCE($7,"Comentarios_proveedor"),updated_at=NOW() WHERE id_proveedor=$6 RETURNING *', [data.nombre_proveedor,data.nombre_fiscal_proveedor,data.vat_code,data.pais_proveedor,data.moneda_proveedor,provider.id_proveedor,data.Comentarios_proveedor ?? null])).rows[0];
 }
 export async function deleteSupplier(id) {
   return supplierTransaction(async db => {
+    await db.query("SELECT pg_advisory_xact_lock(hashtext('laboral:pagos'))");
     const provider = await findSupplier(id,db);
     await db.query('SELECT id_proveedor FROM proveedores_db WHERE id_proveedor=$1 FOR UPDATE', [provider.id_proveedor]);
     const tables = await supplierReferenceTables(db);
     for (const table of tables) {
-      const count = await db.query(`SELECT 1 FROM "${table.replaceAll('"','""')}" WHERE id_proveedor=$1 LIMIT 1`, [provider.id_proveedor]);
-      if (count.rowCount) throw new ProveedorError('No se puede eliminar: el proveedor tiene tickets, facturas, precios, pagos u otros registros asociados.',409);
+      const quoted=`"${table.replaceAll('"','""')}"`;
+      if (['precios_proveedores','proveedores_benchmark'].includes(table)) await db.query(`DELETE FROM ${quoted} WHERE id_proveedor=$1`,[provider.id_proveedor]);
+      else await db.query(`UPDATE ${quoted} SET id_proveedor=NULL WHERE id_proveedor=$1`,[provider.id_proveedor]);
     }
+    await db.query('DELETE FROM proveedores_unificados WHERE id_proveedor=$1',[provider.id_proveedor]);
     await db.query('DELETE FROM proveedores_db WHERE id_proveedor=$1', [provider.id_proveedor]);
     return { ok:true };
   });
+}
+export async function supplierBankCharges(id) {
+  return (await getPgPool().query(`SELECT l.*,c.programacion AS programacion_cargo FROM lineas_bancos l
+    LEFT JOIN cargos_recurrentes c ON c.id_cargo_recurrente=l.id_cargo_recurrente
+    LEFT JOIN pagos_db pg ON pg.id_pago=l.id_pago
+    WHERE l.importe<0 AND (l.id_proveedor=$1 OR c.id_proveedor=$1 OR pg.id_proveedor=$1)
+    ORDER BY l.created_at DESC,l.id_linea_banco`,[id])).rows;
 }
 export async function supplierInvoices(id) {
   return (await getPgPool().query('SELECT * FROM facturas_proveedores_db WHERE id_proveedor=$1 ORDER BY created_at DESC',[id])).rows;

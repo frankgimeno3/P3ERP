@@ -51,7 +51,21 @@ export async function listRecurringCharges() {
 export async function getRecurringCharge(id) {
   const row=(await getPgPool().query('SELECT * FROM cargos_recurrentes WHERE id_cargo_recurrente=$1',[id])).rows[0];
   if(!row)throw new RecurringChargeError('Cargo previsto no encontrado.',404);
+  row.movimientos=(await getPgPool().query('SELECT * FROM lineas_bancos WHERE id_cargo_recurrente=$1 ORDER BY created_at DESC,id_linea_banco',[id])).rows;
   return row;
+}
+export async function deleteRecurringCharge(id,body) {
+  const db=await getPgPool().connect();
+  try {
+    await db.query('BEGIN');
+    await db.query("SELECT pg_advisory_xact_lock(hashtext('laboral:pagos'))");
+    const row=(await db.query('SELECT * FROM cargos_recurrentes WHERE id_cargo_recurrente=$1 FOR UPDATE',[id])).rows[0];
+    if(!row)throw new RecurringChargeError('Cargo previsto no encontrado.',404);
+    if(!body.confirm || new Date(body.version).getTime()!==new Date(row.updated_at).getTime())throw new RecurringChargeError('Confirma la eliminación con los datos actualizados.',409);
+    const detached=await db.query("UPDATE lineas_bancos SET id_cargo_recurrente=NULL,nomina_revision=CASE WHEN jsonb_typeof(nomina_revision)='object' THEN nomina_revision-'id_cargo_recurrente' ELSE nomina_revision END,updated_at=now() WHERE id_cargo_recurrente=$1 RETURNING id_linea_banco",[id]);
+    await db.query('DELETE FROM cargos_recurrentes WHERE id_cargo_recurrente=$1',[id]);
+    await db.query('COMMIT');return {ok:true,desasignados:detached.rowCount};
+  }catch(e){await db.query('ROLLBACK');throw e;}finally{db.release();}
 }
 export async function updateRecurringCharge(id,body) {
   const db=await getPgPool().connect();

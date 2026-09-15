@@ -1,10 +1,11 @@
 "use client";
 import { use, useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import SupplierBankCharges from '../SupplierBankCharges';
 import SupplierActions from "../SupplierActions";
 import MiddleNav from "@/app/general_components/componentes_recurrentes/MiddleNav";
 
-type TabType = "cargos-pendientes" | "tickets" | "facturas" | "precios" | "datos";
+type TabType = "movimientos" | "cargos-pendientes" | "tickets" | "facturas" | "precios" | "datos";
 
 interface Proveedor {
   id_proveedor: string;
@@ -13,6 +14,7 @@ interface Proveedor {
   vat_code: string;
   pais_proveedor: string;
   moneda_proveedor: string;
+  Comentarios_proveedor?: string;
 }
 
 interface CargoPendiente {
@@ -31,15 +33,20 @@ export default function ProveedorPage({
   const { id_proveedor } = use(params);
   const router = useRouter();
   
+  const [showDelete,setShowDelete]=useState(false),[deleting,setDeleting]=useState(false);
+  useEffect(()=>{const close=(e:KeyboardEvent)=>{if(e.key==='Escape')setShowDelete(false);};window.addEventListener('keydown',close);return()=>window.removeEventListener('keydown',close);},[]);
   const [tab, setTab] = useState<TabType>("datos");
   const [filter, setFilter] = useState("");
   const [proveedor, setProveedor] = useState<Proveedor | null>(null);
+  const [bankCharges,setBankCharges]=useState<any[]>([]);
   const [tickets, setTickets] = useState<any[]>([]);
   const [invoices, setInvoices] = useState<any[]>([]);
   const [cargos, setCargos] = useState<CargoPendiente[]>([]);
   const [precios, setPrecios] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [savingProveedor,setSavingProveedor]=useState(false);
+  const [saveMessage,setSaveMessage]=useState('');
   const [editingProveedor, setEditingProveedor] = useState(false);
   const [formData, setFormData] = useState<Proveedor | null>(null);
 
@@ -48,8 +55,8 @@ export default function ProveedorPage({
     setLoading(true);
     fetch(`/api/v1/admin/proveedores/${encodeURIComponent(id_proveedor)}`)
       .then(async response => { const data = await response.json(); if (!response.ok) throw new Error(data.message || 'Error al cargar el proveedor'); return data; })
-      .then(({ proveedor, tickets, facturas, cargos, precios }) => {
-        setProveedor(proveedor);
+      .then(({ proveedor, tickets, facturas, cargos, precios, cargosBancarios }) => {
+        setProveedor(proveedor);setBankCharges(cargosBancarios||[]);
         setFormData(proveedor);
         setTickets(tickets || []);
         setInvoices(facturas || []);
@@ -84,7 +91,8 @@ export default function ProveedorPage({
 
   // Save proveedor changes
   const handleSaveProveedor = async () => {
-    if (!formData) return;
+    if (!formData || savingProveedor) return;
+    setSavingProveedor(true);setSaveMessage('');
     
     try {
       const res = await fetch(
@@ -92,22 +100,23 @@ export default function ProveedorPage({
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ nombre_proveedor: formData.nombre_proveedor, nombre_fiscal_proveedor: formData.nombre_fiscal_proveedor, vat_code: formData.vat_code, pais_proveedor: formData.pais_proveedor, moneda_proveedor: formData.moneda_proveedor }),
+          body: JSON.stringify({ nombre_proveedor: formData.nombre_proveedor, nombre_fiscal_proveedor: formData.nombre_fiscal_proveedor || '', vat_code: formData.vat_code || '', pais_proveedor: formData.pais_proveedor || '', moneda_proveedor: formData.moneda_proveedor || '', Comentarios_proveedor: formData.Comentarios_proveedor || '' }),
         }
       );
       
-      if (!res.ok) throw new Error("Error al actualizar el proveedor");
-      setProveedor(formData);
+      const saved=await res.json();
+      if (!res.ok) throw new Error(saved.message || "Error al actualizar el proveedor");
+      setProveedor(saved);setFormData(saved);setSaveMessage('Cambios guardados.');
       setEditingProveedor(false);
       setError("");
     } catch (err: any) {
       setError(err.message || "Error al guardar");
-    }
+    } finally {setSavingProveedor(false);}
   };
 
   // Delete proveedor
   const handleDeleteProveedor = async () => {
-    if (!confirm("¿Estás seguro de que quieres eliminar este proveedor?")) return;
+    if(deleting)return;setDeleting(true);
     
     try {
       const res = await fetch(
@@ -115,17 +124,18 @@ export default function ProveedorPage({
         { method: "DELETE" }
       );
       
-      if (!res.ok) throw new Error("Error al eliminar el proveedor");
+      if (!res.ok) {const data=await res.json();throw new Error(data.message || "Error al eliminar el proveedor");}
       router.push("/dashboard/administracion/proveedores");
     } catch (err: any) {
       setError(err.message || "Error al eliminar");
-    }
+    } finally {setDeleting(false);}
   };
 
   if (loading) return <div className="min-h-screen bg-gray-100"><MiddleNav tituloprincipal="Cargando..." /></div>;
 
   const tabs = [
     { id: "datos", label: "Datos" },
+    {id:"movimientos",label:"Cargos bancarios"},
     { id: "cargos-pendientes", label: "Cargos Pendientes" },
     { id: "tickets", label: "Tickets" },
     { id: "facturas", label: "Facturas" },
@@ -163,9 +173,11 @@ export default function ProveedorPage({
           ))}
         </div>
 
+        {saveMessage&&<p role="status" className="mb-4 rounded bg-green-50 p-3 text-green-800">{saveMessage}</p>}
         <SupplierActions supplier={proveedor} tab={tab} />
         {/* Content */}
-        {tab !== "datos" ? (
+        {tab === 'datos' && <label className="mb-4 block rounded bg-white p-4 font-medium">Comentarios del proveedor<textarea rows={5} readOnly={!editingProveedor} value={formData?.Comentarios_proveedor || ''} onChange={e=>setFormData({...formData!,Comentarios_proveedor:e.target.value})} className="mt-2 block w-full rounded border p-3 font-normal read-only:bg-gray-50"/></label>}
+        {tab === "movimientos" ? <SupplierBankCharges rows={bankCharges}/> : tab !== "datos" ? (
           <>
             {/* Filter input */}
             <div className="mb-4">
@@ -368,7 +380,7 @@ export default function ProveedorPage({
                     Editar
                   </button>
                   <button
-                    onClick={handleDeleteProveedor}
+                    onClick={()=>setShowDelete(true)}
                     className="px-4 py-2 bg-red-600 text-white rounded cursor-pointer hover:bg-red-700"
                   >
                     Eliminar
@@ -461,8 +473,9 @@ export default function ProveedorPage({
                 </div>
                 <div className="mt-6 flex gap-3">
                   <button
+                    disabled={savingProveedor}
                     onClick={handleSaveProveedor}
-                    className="px-4 py-2 bg-green-600 text-white rounded cursor-pointer hover:bg-green-700"
+                    className="px-4 py-2 bg-green-600 text-white rounded enabled:cursor-pointer enabled:hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Guardar
                   </button>
@@ -480,6 +493,7 @@ export default function ProveedorPage({
             )}
           </div>
         )}
+        {showDelete&&<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"><section role="dialog" aria-modal="true" aria-label="Eliminar proveedor" className="max-w-xl space-y-4 rounded bg-white p-6"><header className="flex justify-between"><h2 className="text-xl font-semibold">Eliminar proveedor</h2><button aria-label="Cerrar" className="cursor-pointer rounded px-3 text-2xl hover:bg-blue-50" onClick={()=>setShowDelete(false)}>×</button></header><p>¿Confirmas eliminar {proveedor?.nombre_proveedor}?</p><p>Se conservarán sus facturas, tickets, pagos, cargos recurrentes y movimientos, que quedarán desvinculados. Se eliminarán sus precios y productos/servicios propios.</p>{error&&<p role="alert" className="text-red-700">{error}</p>}<button disabled={deleting} className="rounded bg-red-700 px-4 py-2 text-white enabled:cursor-pointer enabled:hover:bg-red-800 disabled:opacity-50" onClick={handleDeleteProveedor}>{deleting?'Eliminando…':'Confirmar eliminación'}</button></section></div>}
       </main>
     </div>
   );

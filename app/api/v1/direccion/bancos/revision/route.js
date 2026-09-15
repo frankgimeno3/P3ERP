@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { saveBankWorkflow } from '@/server/features/banco/BankReviewWorkflow.js';
+import { requestActor } from '@/server/features/comentario/AccountActivity.js';
 import { getPgPool } from '../../../../../../server/database/pgClient.js';
 import { findPayrollCharge, insertRecurringCharge } from '../../../../../../server/features/prevision/RecurringChargeRepository.js';
 
@@ -8,7 +9,7 @@ export const runtime = 'nodejs';
 export async function PUT(request) {
   try {
     const body = await request.json();
-    if (['workflow', 'unreview'].includes(body.action)) return NextResponse.json(await saveBankWorkflow(body));
+    if (['workflow', 'unreview', 'force-review'].includes(body.action)) return NextResponse.json(await saveBankWorkflow(body, requestActor(request)));
     const ids = Array.isArray(body.ids) ? body.ids.filter(Boolean) : [];
     if (!ids.length) return NextResponse.json({ message: 'Selecciona al menos una línea' }, { status: 400 });
     if (body.action === 'review') {

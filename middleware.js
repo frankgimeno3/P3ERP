@@ -46,7 +46,7 @@ async function verifyIdToken(idToken) {
 
 export async function middleware(request) {
   const { pathname } = request.nextUrl;
-  const response = NextResponse.next();
+  let response = NextResponse.next();
   const isApi = pathname.startsWith("/api/");
 
   const goToLogin = () => {
@@ -81,6 +81,9 @@ export async function middleware(request) {
     if ((pathname === "/" || pathname === "/admin")) return goToPanel();
     if (pathname.startsWith("/dashboard") && !canAccessDashboardPath(role, pathname)) return forbidden();
     if (isApi && !canAccessApiPath(role, pathname, request.method)) return forbidden();
+    const authenticatedHeaders = new Headers(request.headers);
+    authenticatedHeaders.set('x-p3-actor-id', rows[0]?.id_agente || '');
+    response = NextResponse.next({ request: { headers: authenticatedHeaders } });
     const legacyDirectionRoutes = [
       ["/dashboard/operaciones/agentesyroles", "/dashboard/operaciones/agentes"],
       ["/dashboard/operaciones/roles", "/dashboard/operaciones/agentes/roles"],

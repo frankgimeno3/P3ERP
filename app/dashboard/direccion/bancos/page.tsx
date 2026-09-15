@@ -177,6 +177,20 @@ export default function BancosPage() {
   const [importReadCount, setImportReadCount] = useState(0);
   const [newRows, setNewRows] = useState<ImportedLinea[]>([]);
   const [sourceRows, setSourceRows] = useState<ImportedLinea[]>([]);
+  const [omitEarlier, setOmitEarlier] = useState(false);
+  const latestBankDate = useMemo(() => lineas
+    .filter(row => row.banco === selectedBank)
+    .map(row => dateToComparable(row.fecha_operativa) || '')
+    .sort().at(-1) || '', [lineas, selectedBank]);
+  const importDates = sourceRows.map(row => dateToComparable(row.fecha_operativa) || '').filter(Boolean).sort();
+  const earlierCount = sourceRows.filter(row => {
+    const date = dateToComparable(row.fecha_operativa);
+    return date && latestBankDate && date < latestBankDate;
+  }).length;
+  const rowsForImport = (rows: ImportedLinea[], omit: boolean) => omit && latestBankDate
+    ? rows.filter(row => !dateToComparable(row.fecha_operativa) || dateToComparable(row.fecha_operativa)! >= latestBankDate)
+    : rows;
+  const displayDate = (date: string) => date.split('-').reverse().join('/');
   const [importErrors, setImportErrors] = useState<string[]>([]);
   const [importInfo, setImportInfo] = useState<string>('');
   const [importing, setImporting] = useState(false);
@@ -266,6 +280,7 @@ export default function BancosPage() {
     setImportReadCount(0);
     setNewRows([]);
     setSourceRows([]);
+    setOmitEarlier(false);
     setImportErrors([]);
     setImportInfo('');
     setImporting(false);
@@ -312,22 +327,26 @@ export default function BancosPage() {
     const descending = Boolean(firstDate && lastDate && dateToComparable(firstDate.fecha_operativa)! > dateToComparable(lastDate.fecha_operativa)!);
     const chronological = descending ? [...rows].reverse() : [...rows];
     const existing = lineas.filter((linea) => linea.banco === selectedBank).sort(sortByBankId);
-    const previous = new Uint32Array(chronological.length + 1);
-    existing.forEach((stored) => {
-      const current = new Uint32Array(chronological.length + 1);
-      chronological.forEach((incoming, index) => {
-        current[index + 1] = movementFingerprint(stored) === movementFingerprint(incoming)
-          ? previous[index] + 1
-          : Math.max(previous[index + 1], current[index]);
-      });
-      previous.set(current);
+    const available = new Map<string, number>();
+    existing.forEach(stored => {
+      const key = movementFingerprint(stored);
+      available.set(key, (available.get(key) || 0) + 1);
     });
-    const matchingSequenceLength = previous[chronological.length];
+    const missing = chronological.filter(incoming => {
+      const key = movementFingerprint(incoming);
+      const count = available.get(key) || 0;
+      if (!count) return true;
+      available.set(key, count - 1);
+      return false;
+    });
+    const matchingSequenceLength = chronological.length - missing.length;
     const newCount = chronological.length - matchingSequenceLength;
     setImportInfo(newCount
       ? `Orden detectado: ${descending ? 'más nuevo a más antiguo' : 'más antiguo a más nuevo'}. Se han encontrado ${matchingSequenceLength} movimientos ya registrados y ${newCount} movimientos para intercalar.`
-      : `Orden detectado: ${descending ? 'más nuevo a más antiguo' : 'más antiguo a más nuevo'}. La secuencia completa ya está registrada.`);
-    setNewRows(errors.length ? [] : chronological.slice(0, newCount));
+      : chronological.length
+        ? `Los ${chronological.length} movimientos comprobados ya están registrados. No hay movimientos nuevos para subir con las opciones actuales.`
+        : 'No quedan movimientos para comprobar con las opciones actuales.');
+    setNewRows(errors.length ? [] : missing);
     setImportErrors(errors);
   };
 
@@ -379,6 +398,7 @@ export default function BancosPage() {
     }));
 
     setSourceRows(parsedRows);
+    setOmitEarlier(false);
     validateRows(parsedRows);
     setPhase(3);
   };
@@ -388,7 +408,7 @@ export default function BancosPage() {
 
     try {
       setImporting(true);
-      await BancoService.importLineasBanco(selectedBank, sourceRows);
+      await BancoService.importLineasBanco(selectedBank, rowsForImport(sourceRows, omitEarlier));
       await loadLineas();
       closeModal();
     } catch (error: any) {
@@ -578,7 +598,7 @@ export default function BancosPage() {
                     <p className="font-semibold">Formato esperado del Excel de Banco Sabadell</p>
                     <p className="mt-1">{selectedFormat === 'sin-cabezal' ? 'La tabla debe comenzar en la primera fila' : 'Tras el cabezal informativo se localizará la tabla'}. Sus columnas deben aparecer, en este orden: {SABADELL_COLUMNS.join(', ')}.</p>
                     <p className="mt-2">La aplicación transformará automáticamente <strong>F. Operativa</strong> en fecha operativa, <strong>F. Valor</strong> en fecha valor y conservará <strong>Concepto</strong>, <strong>Importe</strong> y <strong>Saldo</strong>. Las referencias se validan como parte del formato del banco, pero no se almacenan.</p>
-                    <p className="mt-2">No debes añadir identificadores. El sistema detectará el sentido cronológico del Excel, comparará la secuencia completa con los movimientos existentes e intercalará únicamente los que falten usando identificadores como <strong>banc_sab_26_000.000.001</strong>.</p>
+                    <p className="mt-2">No debes añadir identificadores. El sistema detectará el sentido cronológico del Excel, comparará cada movimiento con los existentes e insertará únicamente los que falten, conservando los identificadores y vínculos anteriores usando identificadores como <strong>banc_sab_26_000.000.001</strong>.</p>
                   </div>
                 )}
                 <div className="flex justify-end">
@@ -599,6 +619,22 @@ export default function BancosPage() {
 
             {phase === 3 && (
               <div className="space-y-4">
+                {importDates.length > 0 && (
+                  <div className={`rounded border p-4 text-sm ${earlierCount ? 'border-amber-200 bg-amber-50 text-amber-950' : 'border-blue-200 bg-blue-50 text-blue-950'}`}>
+                    <p>El extracto de {selectedBank} contiene movimientos entre el <strong>{displayDate(importDates[0])}</strong> y el <strong>{displayDate(importDates[importDates.length - 1])}</strong> (fecha operativa).</p>
+                    <p className="mt-2">{latestBankDate ? <>Última fecha operativa registrada en {selectedBank}: <strong>{displayDate(latestBankDate)}</strong>.</> : 'Este banco todavía no tiene movimientos registrados.'}</p>
+                    {earlierCount > 0 && <>
+                      <p className="mt-2">Hay {earlierCount} movimientos anteriores a esa fecha que podrían solaparse con extractos ya subidos.</p>
+                      <label className={`mt-3 flex items-start gap-2 rounded p-2 ${importing ? 'opacity-60' : 'cursor-pointer hover:bg-amber-100'}`}>
+                        <input type="checkbox" checked={omitEarlier} disabled={importing} className="mt-1 enabled:cursor-pointer disabled:cursor-not-allowed" onChange={event => {
+                          setOmitEarlier(event.target.checked);
+                          validateRows(rowsForImport(sourceRows, event.target.checked));
+                        }} />
+                        <span>Omitir los {earlierCount} movimientos anteriores al {displayDate(latestBankDate)}. Se conservan los de ese mismo día y los posteriores.</span>
+                      </label>
+                    </>}
+                  </div>
+                )}
                 <div className={`rounded border px-4 py-3 text-sm ${importErrors.length ? 'border-red-200 bg-red-50 text-red-700' : 'border-green-200 bg-green-50 text-green-700'}`}>
                   {importErrors.length ? (
                     <ul className="list-inside list-disc space-y-1">
@@ -608,16 +644,19 @@ export default function BancosPage() {
                     <p>{importInfo}</p>
                   )}
                 </div>
-                <p className="text-sm text-gray-500">Filas leídas: {importReadCount}. Nuevas a subir: {newRows.length}.</p>
+                <p className="text-sm text-gray-500" aria-live="polite">Filas leídas: {importReadCount}. Omitidas por fecha: {omitEarlier ? earlierCount : 0}. Nuevas a subir: {newRows.length}.</p>
+                {!importErrors.length && !newRows.length && sourceRows.length > 0 && (
+                  <p className="text-sm text-gray-700">Puedes finalizar sin subir nada.{omitEarlier && earlierCount > 0 ? ` Para comprobar también los ${earlierCount} movimientos anteriores, desmarca «Omitir». Solo se subirán los que no estén ya registrados.` : ''}</p>
+                )}
                 <div className="flex justify-between">
                   <button type="button" onClick={() => setPhase(2)} className="cursor-pointer rounded border border-gray-300 px-4 py-2 text-sm transition hover:bg-gray-50 hover:shadow-sm">Volver</button>
                   <button
                     type="button"
-                    onClick={handleImport}
-                    disabled={Boolean(importErrors.length) || !newRows.length || importing}
-                    className="rounded bg-blue-950 px-4 py-2 text-sm font-medium text-white hover:bg-blue-900 disabled:cursor-not-allowed disabled:bg-gray-400"
+                    onClick={newRows.length ? handleImport : closeModal}
+                    disabled={Boolean(importErrors.length) || !sourceRows.length || importing}
+                    className="rounded bg-blue-950 px-4 py-2 text-sm font-medium text-white enabled:cursor-pointer enabled:hover:bg-blue-900 disabled:cursor-not-allowed disabled:bg-gray-400"
                   >
-                    {importing ? 'Subiendo...' : 'Confirmar subida'}
+                    {importing ? 'Subiendo...' : newRows.length ? 'Confirmar subida' : 'Finalizar sin subir'}
                   </button>
                 </div>
               </div>

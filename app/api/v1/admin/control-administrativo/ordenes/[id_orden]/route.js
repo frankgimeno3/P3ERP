@@ -1,3 +1,4 @@
+import { requestActor } from "../../../../../../../server/features/comentario/AccountActivity.js";
 import { NextResponse } from "next/server";
 import { updateAdministrativeOrder } from "../../../../../../../server/features/factura/FacturaClienteRepository.js";
 import { getOrdenesAdministrativas } from "../../../../../../../server/features/orden/OrdenRepository.js";
@@ -12,7 +13,7 @@ export async function GET(_request, { params }) {
 }
 export async function PUT(request, { params }) {
   try {
-    const row = await updateAdministrativeOrder(await getId(params), await request.json());
+    const row = await updateAdministrativeOrder(await getId(params), await request.json(), requestActor(request));
     return row ? NextResponse.json(row) : NextResponse.json({ message: "Orden no encontrada" }, { status: 404 });
   } catch (error) { return NextResponse.json({ message: "Error al guardar la orden", detail: error.message }, { status: 400 }); }
 }

@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { getPgPool } from '../../database/pgClient.js';
 import { insertRecurringCharge, RecurringChargeError, validateRecurringCharge } from '../prevision/RecurringChargeRepository.js';
+import { lockIncome, reconcileBankIncome, syncOrderCollections } from '../prevision/IncomeReconciliation.js';
 
 const fail = message => { throw new RecurringChargeError(message, 409); };
 export const cents = value => Math.round(Number(value) * 100);
@@ -21,20 +22,26 @@ export function payrollCalculation(expected, advances, movement, kind, adjustmen
 }
 
 async function payroll(db, line, item, charge) {
-  if (!charge || charge.tipo_cargo !== 'nomina' || charge.id_agente !== item.entityId) fail('Selecciona la nómina recurrente del empleado.');
+  if (!item.formerEmployee && (!charge || charge.tipo_cargo !== 'nomina' || charge.id_agente !== item.entityId)) fail('Selecciona la nómina recurrente del empleado.');
   const period = [Number(item.year), Number(item.month)];
   const linkedPayroll = (await db.query('SELECT * FROM nominas WHERE id_transferencia=$1', [line.id_linea_banco])).rows[0];
   const linkedAdvance = (await db.query('SELECT * FROM anticipos_empleados WHERE id_transferencia=$1', [line.id_linea_banco])).rows[0];
   const linked = linkedPayroll || linkedAdvance;
   if (linked && (linked.id_empleado !== item.entityId || Number(linked.anio) !== period[0] || Number(linked.mes) !== period[1] || (item.payrollKind === 'anticipo') !== Boolean(linkedAdvance))) fail('La transferencia ya está vinculada a otro pago o periodo laboral. Conserva su tipo y periodo.');
   if (!Number.isInteger(period[0]) || period[0] < 2000 || period[0] > 2100 || !Number.isInteger(period[1]) || period[1] < 1 || period[1] > 12) fail('Selecciona un periodo válido.');
+  if (item.payrollKind === 'otros') {
+    if (linked) fail('Este movimiento ya está registrado como nómina o anticipo; conserva su clasificación.');
+    if (item.increase) fail('Otros no modifica la previsión de nómina.');
+    await db.query("INSERT INTO nominas_empleados(id,id_empleado) VALUES('nomina_emp_' || md5($1),$1) ON CONFLICT(id_empleado) DO NOTHING",[item.entityId]);
+    return {id_agente:item.entityId,id_cargo_recurrente:charge?.id_cargo_recurrente || null,ex_empleado:item.formerEmployee === true,anio:period[0],mes:period[1],decision:'otros',importe_movimiento:Math.abs(Number(line.importe)),fecha_revision:new Date().toISOString()};
+  }
   let record = (await db.query('SELECT * FROM nominas WHERE id_empleado=$1 AND anio=$2 AND mes=$3 FOR UPDATE', [item.entityId, ...period])).rows[0];
   if (item.payrollId && record?.id !== item.payrollId) fail('La nómina seleccionada ha cambiado.');
   if (record?.id_transferencia && record.id_transferencia !== line.id_linea_banco && !linkedAdvance) fail('Esta nómina ya tiene una transferencia.');
   if (record?.estado === 'pagado' && record.id_transferencia !== line.id_linea_banco && !linkedAdvance) fail('La nómina ya está pagada.');
   const advances = (await db.query('SELECT * FROM anticipos_empleados WHERE id_empleado=$1 AND anio=$2 AND mes=$3 FOR UPDATE', [item.entityId, ...period])).rows;
   const paid = advances.filter(a => a.estado === 'pagado' && a.id_transferencia !== line.id_linea_banco).reduce((n, a) => n + cents(a.importe_neto), 0) / 100;
-  const rule = charge.programacion[Number(item.ruleIndex || 0)];
+  const rule = item.formerEmployee ? {total_iva:item.expectedPayroll} : charge.programacion[Number(item.ruleIndex || 0)];
   if (!rule) fail('Selecciona una regla de la nómina recurrente.');
   const priorAdditional = linkedPayroll && item.payrollKind === 'adicional' && line.nomina_revision?.decision === 'adicional';
   const expected = priorAdditional ? Number(line.nomina_revision.importe_previsto) : record ? Number(record.importe_neto) : Number(rule.total_iva);
@@ -59,21 +66,35 @@ async function payroll(db, line, item, charge) {
       await db.query('UPDATE cargos_recurrentes SET programacion=$1::jsonb,updated_at=NOW() WHERE id_cargo_recurrente=$2', [JSON.stringify(schedule), charge.id_cargo_recurrente]);
     }
   }
-  return { id_nomina: record.id, id_agente: item.entityId, id_cargo_recurrente: charge.id_cargo_recurrente, anio: period[0], mes: period[1], decision: item.payrollKind, importe_previsto: expected, anticipos: paid, importe_movimiento: calc.amount / 100, importe_adicional: calc.additional / 100, fecha_revision: new Date().toISOString() };
+  return { id_nomina: record.id, id_agente: item.entityId, id_cargo_recurrente: charge?.id_cargo_recurrente || null, ex_empleado: item.formerEmployee === true, anio: period[0], mes: period[1], decision: item.payrollKind, importe_previsto: expected, anticipos: paid, importe_movimiento: calc.amount / 100, importe_adicional: calc.additional / 100, fecha_revision: new Date().toISOString() };
 }
 
-export async function saveBankWorkflow(body) {
+export async function saveBankWorkflow(body, actorId = '') {
   const ids = Array.isArray(body.ids) ? [...new Set(body.ids)] : [];
   if (!ids.length) fail('Selecciona movimientos.');
   const db = await getPgPool().connect();
   try {
     await db.query('BEGIN');
     await db.query("SELECT pg_advisory_xact_lock(hashtext('laboral:pagos'))");
+    await lockIncome(db);
     const lines = (await db.query('SELECT * FROM lineas_bancos WHERE id_linea_banco=ANY($1::text[]) ORDER BY id_linea_banco FOR UPDATE', [ids])).rows;
     if (lines.length !== ids.length) fail('Algún movimiento ya no existe.');
+    if (body.action === 'force-review') {
+      if(typeof body.forcedComment !== 'string' || !body.forcedComment.trim() || body.forcedComment.length>30000)fail('El comentario de revisión forzada es obligatorio y no puede superar 30000 caracteres.');
+      if(lines.some(l=>l.estado_revision))fail('Selecciona solamente movimientos sin revisar.');
+      for(const line of lines){const item=body.items?.find(i=>i.id===line.id_linea_banco);if(!item||new Date(item.version).getTime()!==new Date(line.updated_at).getTime())fail('Un movimiento ha cambiado. Recarga la selección.');}
+      const result=await db.query("UPDATE lineas_bancos SET estado_revision=TRUE,comentarios=concat_ws(E'\\n',NULLIF(comentarios,''),$2::text),updated_at=NOW() WHERE id_linea_banco=ANY($1::text[]) RETURNING *",[ids,body.forcedComment.trim()]);
+      const incomeIds=lines.filter(l=>Number(l.importe)>0).map(l=>l.id_linea_banco);
+      const linked = incomeIds.length ? (await db.query('SELECT id_orden FROM banco_cobros_ordenes WHERE id_linea_banco=ANY($1::text[])', [incomeIds])).rows : [];
+      await syncOrderCollections(db,linked.map(row=>row.id_orden),actorId);
+      await db.query('COMMIT');return result.rows;
+    }
     if (body.action === 'unreview') {
       if (lines.some(l => !l.estado_revision)) fail('Selecciona únicamente registros revisados.');
       const result = await db.query('UPDATE lineas_bancos SET estado_revision=FALSE,updated_at=NOW() WHERE id_linea_banco=ANY($1::text[]) RETURNING *', [ids]);
+      const incomeIds=lines.filter(l=>Number(l.importe)>0).map(l=>l.id_linea_banco);
+      const linked = incomeIds.length ? (await db.query('SELECT id_orden FROM banco_cobros_ordenes WHERE id_linea_banco=ANY($1::text[])', [incomeIds])).rows : [];
+      await syncOrderCollections(db,linked.map(row=>row.id_orden),actorId);
       await db.query('COMMIT'); return result.rows;
     }
     if (!['review','assign','charge'].includes(body.mode)) fail('Modo de revisión no válido.');
@@ -97,6 +118,12 @@ export async function saveBankWorkflow(body) {
       if (!item) fail('Falta la decisión de un movimiento.');
       if (new Date(line.updated_at).getTime() !== new Date(item.version).getTime()) fail(`El registro ${line.id_linea_banco} ha cambiado. Recarga la revisión.`);
       if (item.resolution === 'skip') continue;
+      if (Number(line.importe) > 0 && body.mode === 'review') {
+        if ((line.id_proveedor || line.id_agente || line.id_cuenta && item.incomeType !== 'remesa' && line.id_cuenta !== item.entityId) && item.resolution !== 'overwrite') fail('Confirma la sustitución del destinatario anterior.');
+        saved.push(await reconcileBankIncome(db,line,item,actorId));
+        continue;
+      }
+      if (Number(line.importe) > 0 && line.estado_revision) fail('Desmarca la revisión del ingreso antes de cambiar su asociación.');
       if (!['proveedor','cliente','nomina'].includes(item.entityType) || !item.entityId) fail('Selecciona un destinatario.');
       const field = { proveedor: 'id_proveedor', cliente: 'id_cuenta', nomina: 'id_agente' }[item.entityType];
       const linked = (await db.query("SELECT id_empleado FROM nominas WHERE id_transferencia=$1 UNION ALL SELECT id_empleado FROM anticipos_empleados WHERE id_transferencia=$1", [line.id_linea_banco])).rows;
@@ -115,6 +142,7 @@ export async function saveBankWorkflow(body) {
         await db.query("UPDATE nominas SET id_transferencia=NULL,estado='pendiente',updated_at=NOW() WHERE id_transferencia=$1", [line.id_linea_banco]);
         await db.query("UPDATE anticipos_empleados SET id_transferencia=NULL,estado='pendiente',updated_at=NOW() WHERE id_transferencia=$1", [line.id_linea_banco]);
       }
+      if (item.formerEmployee && (item.entityType !== 'nomina' || item.chargeId || item.newCharge || item.increase)) fail('Un ex-empleado no admite cargo recurrente ni subida de previsión.');
       let charge = null;
       if (item.newCharge) {
         const key = JSON.stringify([item.entityType,item.entityId,item.newCharge]);
@@ -127,9 +155,10 @@ export async function saveBankWorkflow(body) {
         if (JSON.stringify(original) !== JSON.stringify(item.expectedSchedule)) fail('El cargo previsto ha cambiado. Vuelve a comprobarlo.');
         created.set(`original:${charge.id_cargo_recurrente}`,original);
       }
-      if (body.mode === 'charge' && !charge) fail('Selecciona o crea un cargo previsto.');
+      if (body.mode === 'charge' && !charge && !item.formerEmployee) fail('Selecciona o crea un cargo previsto.');
       if (charge && Number(line.importe) >= 0) fail('Los ingresos no admiten cargos previstos.');
       let snapshot = other ? null : line.nomina_revision;
+      if (body.mode !== 'review' && item.entityType === 'nomina') snapshot = {...snapshot,ex_empleado:item.formerEmployee === true};
       if (body.mode === 'review' && item.entityType === 'nomina') snapshot = await payroll(db, line, item, charge);
       if (charge && item.entityType === 'proveedor' && item.increase) {
         const amount = Math.abs(Number(line.importe));
@@ -151,7 +180,9 @@ export async function saveBankWorkflow(body) {
         if (!order || item.entityType !== 'cliente' || order.id_cuenta !== item.entityId) fail('La orden no corresponde al cliente.');
         orderId = item.orderId;
       }
-      saved.push((await db.query('UPDATE lineas_bancos SET id_proveedor=$1,id_cuenta=$2,id_agente=$3,id_cargo_recurrente=$4,id_pago=$5,id_orden=$6,estado_revision=$7,nomina_revision=$8::jsonb,updated_at=NOW() WHERE id_linea_banco=$9 RETURNING *', [item.entityType === 'proveedor' ? item.entityId : null,item.entityType === 'cliente' ? item.entityId : null,item.entityType === 'nomina' ? item.entityId : null,charge?.id_cargo_recurrente || null,paymentId,orderId,body.mode === 'review' ? true : other ? false : line.estado_revision,JSON.stringify(snapshot),line.id_linea_banco])).rows[0]);
+      const comments = body.mode === 'review' && item.entityType === 'proveedor' && item.commentsEdited === true ? item.comments : null;
+      if(comments !== null && (typeof comments !== 'string' || comments.length>30000))fail('Revisa los comentarios del movimiento.');
+      saved.push((await db.query('UPDATE lineas_bancos SET id_proveedor=$1,id_cuenta=$2,id_agente=$3,id_cargo_recurrente=$4,id_pago=$5,id_orden=$6,estado_revision=$7,nomina_revision=$8::jsonb,comentarios=COALESCE($10,comentarios),updated_at=NOW() WHERE id_linea_banco=$9 RETURNING *', [item.entityType === 'proveedor' ? item.entityId : null,item.entityType === 'cliente' ? item.entityId : null,item.entityType === 'nomina' ? item.entityId : null,charge?.id_cargo_recurrente || null,paymentId,orderId,body.mode === 'review' ? true : other ? false : line.estado_revision,JSON.stringify(snapshot),line.id_linea_banco,comments])).rows[0]);
     }
     if (!saved.length) fail('No quedan movimientos para guardar.');
     await db.query('COMMIT'); return saved;

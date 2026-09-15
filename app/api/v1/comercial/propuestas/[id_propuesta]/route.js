@@ -1,3 +1,4 @@
+import { requestActor } from "../../../../../../server/features/comentario/AccountActivity.js";
 import { NextResponse } from "next/server";
 import {
   deletePropuesta,
@@ -31,7 +32,7 @@ export async function PUT(request, { params }) {
   try {
     const idPropuesta = await getId(params);
     const body = await request.json();
-    const propuesta = await updatePropuesta(idPropuesta, body ?? {});
+    const propuesta = await updatePropuesta(idPropuesta, body ?? {}, requestActor(request));
     if (!propuesta) return NextResponse.json({ message: "Propuesta no encontrada" }, { status: 404 });
     return NextResponse.json(propuesta);
   } catch (error) {
@@ -50,7 +51,7 @@ export async function PATCH(request, { params }) {
 export async function DELETE(_request, { params }) {
   try {
     const idPropuesta = await getId(params);
-    const propuesta = await deletePropuesta(idPropuesta);
+    const propuesta = await deletePropuesta(idPropuesta, requestActor(_request));
     if (!propuesta) return NextResponse.json({ message: "Propuesta no encontrada" }, { status: 404 });
     return NextResponse.json(propuesta);
   } catch (error) {

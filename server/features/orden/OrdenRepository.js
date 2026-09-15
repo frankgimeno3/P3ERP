@@ -7,7 +7,11 @@ function numberOrZero(value) {
 function normalizeOrden(row) {
   return {
     id_orden: row.id_orden,
-    id_cuenta: row.id_cuenta || row.id_cuenta_contrato || '',
+    id_cuenta: row.id_cuenta || row.id_cuenta_contrato || row.id_cuenta_factura || '',
+    numero_factura: row.numero_factura || row.id_factura || '',
+    numero_recibo: row.numero_recibo || '',
+    id_remesa: row.id_remesa || '',
+    datos_importacion: row.datos_importacion || {},
     numero_cobro: row.numero_cobro,
     etiqueta_cobro: row.etiqueta_cobro ?? "",
     fecha_teorica_cobro: row.fecha_teorica_cobro ?? "",
@@ -15,13 +19,14 @@ function normalizeOrden(row) {
     forma_cobro: row.forma_cobro ?? "",
     banco_cobro: row.banco_cobro ?? "",
     cobrada: Boolean(row.cobrada),
+    cobro_revision_bancaria: Boolean(row.cobro_revision_bancaria),
     ya_contabilizada: Boolean(row.ya_contabilizada),
     base_imponible: numberOrZero(row.base_imponible),
     cobro_total: numberOrZero(row.cobro_total),
     id_contrato: row.id_contrato ?? "",
     id_factura: row.id_factura ?? "",
-    cliente: row.nombre_empresa || row.id_cuenta_contrato || "",
-    agente: row.nombre_completo_agente || row.id_agente_contrato || "",
+    cliente: row.nombre_empresa || row.cliente_recibo || row.datos_importacion?.cliente || row.id_cuenta || row.id_cuenta_contrato || "",
+    agente: row.nombre_completo_agente || row.datos_importacion?.agente || row.id_agente_contrato || "",
   };
 }
 
@@ -29,6 +34,7 @@ const ordenesSelect = `
   SELECT
     o.id_orden,
     o.id_cuenta,
+    o.datos_importacion,
     o.numero_cobro,
     o.etiqueta_cobro,
     o.fecha_teorica_cobro,
@@ -36,6 +42,7 @@ const ordenesSelect = `
     o.forma_cobro,
     o.banco_cobro,
     o.cobrada,
+    o.cobro_revision_bancaria,
     COALESCE(o.base_imponible, c.importe_total_bi_contrato) AS base_imponible,
     COALESCE(o.cobro_total, c.importe_contrato_con_iva) AS cobro_total,
     o.id_contrato,
@@ -45,11 +52,13 @@ const ordenesSelect = `
     cu.nombre_empresa,
     a.nombre_completo_agente,
     f.ya_contabilizada
+    ,f.id_cuenta AS id_cuenta_factura,f.numero_factura,r.numero_recibo,r.id_remesa,r.cliente AS cliente_recibo
   FROM ordenes_db o
   LEFT JOIN contratos_db c ON c.id_contrato = o.id_contrato
-  LEFT JOIN cuentas_db cu ON cu.id_cuenta = c.id_cuenta_contrato
-  LEFT JOIN agentes_db a ON a.id_agente = c.id_agente_contrato
   LEFT JOIN facturas_clientes_db f ON f.id_factura_cliente = o.id_factura
+  LEFT JOIN cuentas_db cu ON cu.id_cuenta = COALESCE(NULLIF(o.id_cuenta,''),c.id_cuenta_contrato,f.id_cuenta)
+  LEFT JOIN agentes_db a ON a.id_agente = c.id_agente_contrato
+  LEFT JOIN prevision_recibos_excel r ON r.id_orden=o.id_orden
 `;
 
 export async function getOrdenesAdministrativas(filters = {}) {
@@ -97,11 +106,15 @@ export async function getPrevisionIngresosOrdenes(tipo) {
   const where = [];
 
   if (normalizedTipo === "recibos") {
-    where.push("o.forma_cobro ILIKE '%recibo%'");
+    where.push("(o.forma_cobro ILIKE '%recibo%' OR o.datos_importacion->>'tipo_ingreso'='recibo')");
   }
 
   if (normalizedTipo === "transfers") {
-    where.push("(o.forma_cobro ILIKE '%transfer%' OR o.forma_cobro ILIKE '%transf%')");
+    where.push("(o.forma_cobro ILIKE '%transfer%' OR o.forma_cobro ILIKE '%transf%' OR o.datos_importacion->>'tipo_ingreso'='transferencia')");
+  }
+
+  if (normalizedTipo === "todos") {
+    where.push("(o.forma_cobro ILIKE '%recibo%' OR o.forma_cobro ILIKE '%transfer%' OR o.forma_cobro ILIKE '%transf%' OR o.datos_importacion->>'tipo_ingreso' IN ('recibo','transferencia'))");
   }
 
   const { rows } = await pool.query(
@@ -109,7 +122,7 @@ export async function getPrevisionIngresosOrdenes(tipo) {
       ${ordenesSelect}
       ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
       ORDER BY
-        to_date(NULLIF(o.fecha_teorica_cobro, ''), 'DD/MM/YYYY') ASC NULLS LAST,
+        p3_income_date(o.fecha_teorica_cobro) ASC NULLS LAST,
         o.id_orden ASC
     `,
     values,

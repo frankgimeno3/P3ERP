@@ -1,3 +1,4 @@
+import { requestActor } from "../../../../../server/features/comentario/AccountActivity.js";
 import { NextResponse } from "next/server";
 import { createPropuesta, getPropuestas } from "../../../../../server/features/propuesta/PropuestaRepository.js";
 
@@ -27,7 +28,7 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const propuesta = await createPropuesta(body ?? {});
+    const propuesta = await createPropuesta(body ?? {}, requestActor(request));
     return NextResponse.json(propuesta, { status: 201 });
   } catch (error) {
     console.error("Error in POST /api/v1/comercial/propuestas:", error);

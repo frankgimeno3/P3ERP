@@ -1,9 +1,13 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import {useRouter} from 'next/navigation';
+import RecurringChargeManageModal from '../RecurringChargeManageModal';
 import Modal from "../RecurringChargeModal";
 import MiddleNav from "@/app/general_components/componentes_recurrentes/MiddleNav";
 type Tab = "registrados" | "pendientes";
 export default function Page() {
+  const router=useRouter();
+  const [manage,setManage]=useState<{id:string;action:'edit'|'delete'}|null>(null);
   const embedded = false;
   const [tab, setTab] = useState<Tab>("registrados"),
     [rec, setRec] = useState<any[]>([]),
@@ -43,7 +47,7 @@ export default function Page() {
       tab === "registrados"
         ? rec.flatMap((r) =>
             (r.programacion || []).map((p: any, i: number) => ({
-              id: `${r.id_cargo_recurrente}-${i}`,
+              id: `${r.id_cargo_recurrente}-${i}`, chargeId:String(r.id_cargo_recurrente),
               bi: +p.base_imponible || 0,
               total: +p.total_iva || 0,
               kind: r.tipo_cargo === 'nomina' ? 'nomina' : 'proveedor',
@@ -61,7 +65,7 @@ export default function Page() {
               (l) => +l.importe < 0 && !l.id_pago && !l.id_cargo_recurrente,
             )
             .map((l) => ({
-              id: l.id_linea_banco,
+              id: l.id_linea_banco, chargeId:'',
               bi: 0,
               total: Math.abs(+l.importe),
               kind: l.id_agente ? 'nomina' : 'proveedor',
@@ -121,12 +125,13 @@ export default function Page() {
             <thead className="bg-blue-950 text-white">
               <tr>
                 {[
-                  "Fecha",
+                  "Descripción",
                   "Tipo",
-                  "Proveedor / empleado",
+                  "Asignado a",
+                  "Fecha",
                   "Base imponible",
                   "Importe total / neto nómina",
-                  "Descripción",
+                  "Acciones",
                 ].map((x) => (
                   <th key={x} className="p-3 text-left">
                     {x}
@@ -136,18 +141,20 @@ export default function Page() {
             </thead>
             <tbody>
               {shown.map((r) => (
-                <tr key={r.id} className="border-b hover:bg-blue-50">
-                  <td className="p-3">{r.date}</td>
+                <tr key={r.id} tabIndex={0} onKeyDown={e=>{if(e.key==='Enter' && e.target===e.currentTarget)router.push(r.chargeId?`/dashboard/direccion/bancos/prevision-liquidez/${r.chargeId}`:`/dashboard/direccion/bancos/extractos/${r.id}`);}} onClick={()=>router.push(r.chargeId?`/dashboard/direccion/bancos/prevision-liquidez/${r.chargeId}`:`/dashboard/direccion/bancos/extractos/${r.id}`)} className="cursor-pointer border-b hover:bg-blue-50">
+                  <td className="p-3">{r.description || "—"}</td>
                   <td className="p-3">{r.kind === 'nomina' ? 'Nómina' : 'Proveedor'}</td>
                   <td className="p-3">{r.provider}</td>
+                  <td className="p-3">{r.date}</td>
                   <td className="p-3">{r.bi ? r.bi.toFixed(2) + " €" : "—"}</td>
                   <td className="p-3">{r.total.toFixed(2)} €</td>
-                  <td className="p-3">{r.description || "—"}</td>
+                  
+                  <td className="p-3" onClick={e=>e.stopPropagation()}>{r.chargeId&&<div className="flex gap-2"><button className="cursor-pointer rounded border p-2 hover:bg-blue-100" onClick={()=>setManage({id:r.chargeId,action:'edit'})}>Editar</button><button className="cursor-pointer rounded border p-2 text-red-700 hover:bg-red-50" onClick={()=>setManage({id:r.chargeId,action:'delete'})}>Eliminar</button></div>}</td>
                 </tr>
               ))}
               {!shown.length && (
                 <tr>
-                  <td colSpan={6} className="p-10 text-center text-gray-500">
+                  <td colSpan={7} className="p-10 text-center text-gray-500">
                     No hay cargos.
                   </td>
                 </tr>
@@ -155,6 +162,7 @@ export default function Page() {
             </tbody>
           </table>
         </div>
+        {manage&&<RecurringChargeManageModal id={manage.id} action={manage.action} onClose={()=>setManage(null)} onSaved={()=>{setManage(null);load();}}/>}
         {open && (
           <Modal
             providers={providers}

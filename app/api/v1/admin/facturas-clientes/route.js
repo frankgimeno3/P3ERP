@@ -1,3 +1,4 @@
+import { requestActor } from "../../../../../server/features/comentario/AccountActivity.js";
 import { NextResponse } from "next/server";
 import { createInvoiceDraft, getCustomerInvoices } from "../../../../../server/features/factura/FacturaClienteRepository.js";
 
@@ -21,7 +22,7 @@ export async function POST(request) {
   try {
     const body = await request.json();
     if (!body?.id_contrato) return NextResponse.json({ message: "id_contrato es obligatorio" }, { status: 400 });
-    return NextResponse.json(await createInvoiceDraft(body.id_contrato), { status: 201 });
+    return NextResponse.json(await createInvoiceDraft(body.id_contrato, requestActor(request)), { status: 201 });
   } catch (error) {
     return NextResponse.json({ message: "Error al iniciar la factura", detail: error.message }, { status: 400 });
   }

@@ -1,6 +1,9 @@
 import crypto from "node:crypto";
 import { getPgPool } from "../../database/pgClient.js";
 import { addCuentaEntityEvent, formatChangeDetail } from "../registroEventos/RegistroEventosRepository.js";
+import { accountActivity } from "../comentario/AccountActivity.js";
+import { createInvoiceDraft } from "../factura/FacturaClienteRepository.js";
+import { lockIncome, ensureOrderReceipt, syncOrderCollections } from "../prevision/IncomeReconciliation.js";
 
 const propuestaColumns = [
   "id_propuesta",
@@ -222,11 +225,11 @@ async function addCuentaProposalComment(client, { idCuenta, idAgente, contenido 
   );
 }
 
-async function addProposalSummaryComment(client, propuesta, action = "creada") {
+async function addProposalSummaryComment(client, propuesta, action = "creada", actorId = "") {
   const idCuenta = propuesta?.id_cuenta_propuesta;
   if (!idCuenta) return;
   const [agentResult, linesResult, paymentsResult] = await Promise.all([
-    client.query(`SELECT nombre_completo_agente FROM agentes_db WHERE id_agente = $1 LIMIT 1`, [propuesta.id_agente_propuesta || ""]),
+    client.query(`SELECT nombre_completo_agente FROM agentes_db WHERE id_agente = $1 LIMIT 1`, [actorId || propuesta.id_agente_propuesta || ""]),
     client.query(`SELECT producto, medio, publicacion, descripcion_linea, especificaciones_linea, unidades FROM lineas_propuestas_db WHERE id_propuesta = $1 ORDER BY numero_linea_propuesta`, [propuesta.id_propuesta]),
     client.query(`SELECT fecha_cobro, importe_cobro, forma_cobro, banco_cobro FROM cobros_propuestas_db WHERE id_propuesta = $1 ORDER BY numero_cobro`, [propuesta.id_propuesta]),
   ]);
@@ -243,7 +246,7 @@ async function addProposalSummaryComment(client, propuesta, action = "creada") {
   const contenido = `Propuesta ${action} por ${autor}: ${propuesta.nombre_propuesta || propuesta.id_propuesta}. `
     + `Contenido: ${lineas.length ? lineas.join("; ") : "todavía sin líneas de servicio"}. `
     + `Importe: ${importe} ${propuesta.moneda || "€"}, con ${pagos.length} pago${pagos.length === 1 ? "" : "s"} que se desglosan así: ${pagos.length ? pagos.join("; ") : "todavía sin desglose"}.`;
-  await addCuentaProposalComment(client, { idCuenta, idAgente: propuesta.id_agente_propuesta, contenido });
+  await addCuentaProposalComment(client, { idCuenta, idAgente: actorId || propuesta.id_agente_propuesta, contenido: `${contenido} Identificador: ${propuesta.id_propuesta}.` });
 }
 
 function todaySpanishWords() {
@@ -275,7 +278,8 @@ async function assertProposalReadyForAcceptance(client, propuesta) {
   }
 }
 
-async function finalizeProposal(client, propuesta, status) {
+async function finalizeProposal(client, propuesta, status, actorId = "") {
+  await lockIncome(client);
   const accepted = status === "aceptada";
   const label = accepted ? "aceptada" : "rechazada";
   const note = `Propuesta ${label} en día ${todaySpanishWords()}`;
@@ -286,7 +290,7 @@ async function finalizeProposal(client, propuesta, status) {
     idAgente: propuesta.id_agente_propuesta,
     contenido: `${note}: ${propuesta.nombre_propuesta || propuesta.id_propuesta}.`,
   });
-  if (!accepted) return;
+  if (!accepted) { await accountActivity(client,propuesta.id_cuenta_propuesta,actorId,`ha rechazado la propuesta ${propuesta.id_propuesta}.`); return; }
   await assertProposalReadyForAcceptance(client, propuesta);
 
   const idContrato = `con_${propuesta.id_propuesta}`;
@@ -435,6 +439,11 @@ async function finalizeProposal(client, propuesta, status) {
     `UPDATE contratos_db SET array_id_ordenes=$1::jsonb,updated_at=NOW() WHERE id_contrato=$2`,
     [JSON.stringify(orderIds),idContrato],
   );
+  const contract = (await client.query('SELECT id_factura FROM contratos_db WHERE id_contrato=$1', [idContrato])).rows[0];
+  const invoiceId = contract.id_factura || (await createInvoiceDraft(idContrato,actorId,client)).id_factura_cliente;
+  for (const orderId of orderIds) await ensureOrderReceipt(client,orderId,actorId);
+  await syncOrderCollections(client,orderIds,actorId);
+  await accountActivity(client,propuesta.id_cuenta_propuesta,actorId,`ha confirmado la propuesta ${propuesta.id_propuesta}; factura en proceso ${invoiceId}, con las órdenes ${orderIds.join(', ')}.`);
 }
 
 async function loadProposalExtras(client, proposalIds) {
@@ -657,7 +666,7 @@ async function replaceCobros(client, idPropuesta, cobros = []) {
   }
 }
 
-export async function createPropuesta(payload) {
+export async function createPropuesta(payload, actorId = "") {
   const pool = getPgPool();
   const client = await pool.connect();
   const idPropuesta = payload.id_propuesta || generateId("prop");
@@ -688,7 +697,8 @@ export async function createPropuesta(payload) {
     );
     await replaceLineas(client, idPropuesta, payload.lineas ?? []);
     await replaceCobros(client, idPropuesta, payload.cobros ?? []);
-    await addProposalSummaryComment(client, data, "creada");
+    await addProposalSummaryComment(client, data, "creada", actorId);
+    if (["aceptada", "rechazada"].includes(String(data.estado_propuesta).toLowerCase())) await finalizeProposal(client,data,String(data.estado_propuesta).toLowerCase(),actorId);
     await addCuentaEntityEvent({
       idCuenta: data.id_cuenta_propuesta,
       idAgente: data.id_agente_propuesta || payload.id_agente || "",
@@ -706,7 +716,7 @@ export async function createPropuesta(payload) {
   }
 }
 
-export async function updatePropuesta(idPropuesta, payload) {
+export async function updatePropuesta(idPropuesta, payload, actorId = "") {
   const pool = getPgPool();
   const client = await pool.connect();
 
@@ -740,7 +750,7 @@ export async function updatePropuesta(idPropuesta, payload) {
     const { rows: afterRows } = await client.query("SELECT * FROM propuestas_db WHERE id_propuesta = $1 LIMIT 1", [idPropuesta]);
     const after = afterRows[0] || before;
     const idCuenta = after?.id_cuenta_propuesta || before?.id_cuenta_propuesta;
-    const idAgente = payload.id_agente || payload.id_agente_propuesta || after?.id_agente_propuesta || before?.id_agente_propuesta || "";
+    const idAgente = actorId || after?.id_agente_propuesta || before?.id_agente_propuesta || "";
     const changedColumns = columns.filter((column) => JSON.stringify(before?.[column] ?? "") !== JSON.stringify(after?.[column] ?? ""));
     const followUpLabels = {
       fecha_proxima_gestion: "fecha de próxima gestión",
@@ -774,7 +784,7 @@ export async function updatePropuesta(idPropuesta, payload) {
     const previousStatus = String(before?.estado_propuesta || "").toLowerCase();
     const finalizedStatus = String(after?.estado_propuesta || "").toLowerCase();
     if (["aceptada", "rechazada"].includes(finalizedStatus) && previousStatus !== finalizedStatus) {
-      await finalizeProposal(client, after, finalizedStatus);
+      await finalizeProposal(client, after, finalizedStatus, actorId);
     }
     if (finalizedStatus === "aceptada" && payload.rechazar_otras_pendientes === true) {
       const otherPending = await client.query(
@@ -788,7 +798,7 @@ export async function updatePropuesta(idPropuesta, payload) {
         [idPropuesta,after.id_agente_propuesta,after.id_cuenta_propuesta],
       );
       for (const rejectedProposal of otherPending.rows) {
-        await finalizeProposal(client, rejectedProposal, "rechazada");
+        await finalizeProposal(client, rejectedProposal, "rechazada", actorId);
         await addCuentaEntityEvent({
           idCuenta: rejectedProposal.id_cuenta_propuesta,
           idAgente: rejectedProposal.id_agente_propuesta,
@@ -801,7 +811,8 @@ export async function updatePropuesta(idPropuesta, payload) {
     }
     const wasFinal = String(before?.estado_propuesta || "").toLowerCase() === "pendiente";
     const isFinal = String(after?.estado_propuesta || "").toLowerCase() === "pendiente";
-    if (!wasFinal && isFinal) await addProposalSummaryComment(client, after, "finalizada");
+    if (!wasFinal && isFinal) await addProposalSummaryComment(client, after, "finalizada", actorId);
+    if (changedColumns.length || Array.isArray(payload.lineas) || Array.isArray(payload.cobros)) await accountActivity(client,idCuenta,actorId,`ha modificado la propuesta ${idPropuesta} (${[...changedColumns,...(Array.isArray(payload.lineas)?['líneas']:[]),...(Array.isArray(payload.cobros)?['cobros']:[])].join(', ')}).`);
     await client.query("COMMIT");
     return getPropuestaById(idPropuesta);
   } catch (error) {
@@ -812,7 +823,7 @@ export async function updatePropuesta(idPropuesta, payload) {
   }
 }
 
-export async function deletePropuesta(idPropuesta) {
+export async function deletePropuesta(idPropuesta, actorId = "") {
   const pool = getPgPool();
   const client = await pool.connect();
 
@@ -823,6 +834,7 @@ export async function deletePropuesta(idPropuesta) {
     await client.query("DELETE FROM lineas_propuestas_db WHERE id_propuesta = $1", [idPropuesta]);
     const { rows } = await client.query("DELETE FROM propuestas_db WHERE id_propuesta = $1 RETURNING *", [idPropuesta]);
     const before = rows[0] || beforeRows[0];
+    if (before) await accountActivity(client,before.id_cuenta_propuesta,actorId,`ha eliminado la propuesta ${idPropuesta} (${before.nombre_propuesta || ''}).`);
     await addCuentaEntityEvent({
       idCuenta: before?.id_cuenta_propuesta,
       idAgente: before?.id_agente_propuesta || "",

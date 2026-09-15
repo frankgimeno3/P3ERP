@@ -1,11 +1,12 @@
 {
   "/dashboard/direccion/laboral/nominas": {
-    "summary": "Consulta una única ficha de nómina por empleado con cargo recurrente y gestiona sus anticipos.",
+    "summary": "Consulta la ficha única de nómina de cada empleado o ex-empleado, sus pagos mensuales, anticipos y cargos recurrentes cuando existan.",
     "steps": [
-      "Nóminas muestra una ficha por empleado que tenga un cargo recurrente de tipo nómina. Establecer nómina recurrente crea la previsión y su ficha. Los cargos existentes también se incorporan; un concepto bancario sin asociación no crea una nómina.",
+      "Nóminas muestra una ficha por empleado con nóminas, anticipos registrados o cargos recurrentes. Los ex-empleados conservan su histórico sin necesidad de recurrencia. Establecer nómina recurrente crea una previsión futura; un concepto bancario sin asociación no crea una nómina.",
       "Abre la ficha para ver sus cargos recurrentes, modificar su programación desde el enlace y consultar todos los registros bancarios asociados. Cada movimiento enlaza a su revisión bancaria.",
       "Las liquidaciones mensuales se conservan dentro de la ficha, con sus anticipos y transferencias. Los anticipos confirmados en la revisión bancaria aparecen como Anticipo en los movimientos, en el apartado de anticipos del empleado y en la pestaña Anticipos del listado general. Volver a revisar no duplica el anticipo.",
-      "La pestaña Empleados muestra las cuentas de empleado. Los anticipos pagados se deducen al validar la nómina completa; los pendientes se muestran sin descontarse."
+      "La pestaña Empleados muestra las cuentas de empleado. Los anticipos pagados se deducen al validar la nómina completa; los pendientes se muestran sin descontarse.",
+      "Las nóminas y anticipos de ex-empleados también generan su ficha única de histórico, aunque no tengan cargo recurrente. En ella aparecen todos sus pagos mensuales y anticipos con enlace bancario, sin previsiones futuras."
     ]
   },
   "/dashboard/direccion/laboral/calendario-laboral": {
@@ -50,7 +51,8 @@
       "Cambia entre las vistas de propuestas pendientes y el listado completo.",
       "Abre una propuesta para consultar su contenido, estado y seguimiento.",
       "Crea, edita, replica o actualiza la propuesta según el flujo comercial.",
-      "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape."
+      "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape.",
+      "Crear, modificar o eliminar una propuesta registra un comentario con el usuario en la cuenta. Al aceptarla se genera o reutiliza una factura en proceso con sus órdenes y recibos; el comentario identifica la propuesta, la factura y las órdenes."
     ]
   },
   "/dashboard/comercial/contratos": {
@@ -91,7 +93,11 @@
     "steps": [
       "Utiliza los filtros para encontrar una orden.",
       "Abre el detalle para revisar datos comerciales y administrativos.",
-      "Completa las acciones necesarias antes de facturar o cerrar la orden."
+      "Completa las acciones necesarias antes de facturar o cerrar la orden.",
+      "Subir excel de control administrativo permite cargar .xlsx o .xls, revisar la correspondencia de columnas y previsualizar las órdenes antes de confirmar. Identificador de orden es obligatorio; las columnas no reconocidas se conservan como campos adicionales visibles en el detalle.",
+      "Se crean órdenes nuevas y se actualizan únicamente los campos diferentes con valor. Las celdas vacías o \"-\" conservan los datos anteriores y las órdenes ausentes del archivo no se eliminan.",
+      "La tabla muestra importe, fecha real y estado de cobro. Cuando proceden de la revisión bancaria, el estado y la fecha se modifican desde esa revisión. Las modificaciones generan comentarios en la cuenta asociada.",
+      "Las órdenes aparecen desde que se acepta la propuesta. Al preparar su factura, los datos de pago actualizan esas mismas órdenes; no se crean duplicados al terminar el asistente."
     ]
   },
   "/dashboard/administracion/facturas-clientes": {
@@ -99,7 +105,11 @@
     "steps": [
       "Consulta o filtra las facturas existentes.",
       "Crea una factura desde contratos y revisa impuestos, importes y destinatario.",
-      "Abre registros Verifactu o crea una rectificativa cuando corresponda."
+      "Abre registros Verifactu o crea una rectificativa cuando corresponda.",
+      "La factura muestra el total cobrado, estado y fecha de cobro calculados a partir de sus órdenes. La revisión bancaria actualiza esta información conservando los vínculos existentes. La factura en proceso generada al confirmar la propuesta todavía no supone un envío a Verifactu.",
+      "Al aceptar una propuesta se crean el contrato, la factura en proceso y las órdenes de Control administrativo. El asistente permite seleccionar contratos pendientes, incluidos los que ya tienen esa factura previa, y reutiliza el mismo borrador.",
+      "Guardar los datos de pago actualiza las órdenes existentes con importe, vencimiento, forma de cobro y banco, conservando sus identificadores. La base se reparte según los impuestos de la factura. Recibo genera o actualiza su recibo; al cambiar a transferencia se retira el recibo que no tenga remesa. Los cobros confirmados o remesados requieren resolver antes sus asociaciones.",
+      "Recibos y transferencias son ingresos previstos de las órdenes, no ingresos recurrentes. Afectan a la liquidez una sola vez según banco y fecha, mientras sigan pendientes. Terminar el asistente prepara la factura; la emisión fiscal mantiene su confirmación específica."
     ]
   },
   "/dashboard/administracion/pendiente-cobro": {
@@ -127,7 +137,11 @@
       "Al guardar se vuelven a comprobar duplicados y se abre la ficha en Datos. Desde las otras pestañas consulta cargos pendientes, tickets, facturas y precios.",
       "Desde la ficha puedes Agregar cargo previsto con el mismo modal de Previsión de liquidez y el proveedor preseleccionado. En Tickets y Facturas, los botones de alta abren los formularios administrativos con ese proveedor seleccionado. En Precios, Agregar producto / servicio guarda servicio, descripción, unidad y precio por unidad en proveedores_benchmark.",
       "Las variantes indicadas de ADOBE, AMAZON BUSINESS, BANCO SABADELL, BITAVIS SERVEIS INFORMATICS, CORREOS, ENDESA, LINKEDIN, MOEVE, PIXUP, VERISURE, THALASSA y STARRESA se muestran en una única ficha por proveedor, conservando sus referencias y el acceso desde los identificadores antiguos.",
-      "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape."
+      "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape.",
+      "La ficha contiene Cargos bancarios, con todos los gastos relacionados con el proveedor, tengan o no pago previsto o cargo recurrente, y un filtro por columna.",
+      "En Datos, Comentarios del proveedor se guarda en RDS en Comentarios_proveedor al pulsar Editar y Guardar.",
+      "Eliminar proveedor pide confirmación: desvincula y conserva facturas, tickets, pagos, cargos recurrentes y movimientos; elimina los precios y productos/servicios propios. Tener registros asociados ya no bloquea el borrado con un 409.",
+      "Al editar un proveedor se conserva el nombre introducido, sin aplicar equivalencias de importación. La ficha muestra la respuesta guardada en RDS y confirma el guardado; los errores de validación se muestran con su detalle."
     ]
   },
   "/dashboard/administracion/facturas-proveedores": {
@@ -192,7 +206,7 @@
     "summary": "Importa, ordena y revisa los movimientos de las cuentas bancarias de la empresa.",
     "steps": [
       "Pulsa Añadir extracto, selecciona Santander o Sabadell e indica expresamente si el archivo tiene cabezal. Sin cabezal exige la tabla en la primera fila; con cabezal localiza la tabla después de los datos informativos de la cuenta.",
-      "La aplicación detecta el sentido cronológico y compara la secuencia completa para reconocer movimientos registrados e intercalar los ausentes con identificadores ordinales.",
+      "La aplicación detecta el sentido cronológico y compara las coincidencias exactas de cada movimiento para reconocer movimientos registrados e intercalar los ausentes con identificadores ordinales. En la fase de confirmación se muestra el rango de fechas operativas del archivo y la última fecha registrada para ese banco. Si hay movimientos anteriores, puedes marcar Omitir anteriores: se excluyen de la subida y se recalcula el total; los del mismo día se conservan y siguen pasando por la comparación de movimientos. La importación conserva los identificadores y todos los vínculos existentes con nóminas, anticipos y pagos. Solo inserta movimientos nuevos, con el siguiente identificador disponible por banco y año, aunque su fecha sea anterior. Cada coincidencia exacta consume una sola aparición, independientemente del orden del archivo. Si quedan cero movimientos nuevos, Finalizar sin subir cierra el asistente sin importar nada. El aviso distingue los movimientos comprobados de los omitidos; desmarca Omitir para comprobar los anteriores.",
       "Cambia entre las pestañas Sabadell y Santander y filtra, en este orden, por fecha, concepto, importe y estado. El interruptor de fecha permite usar una fecha concreta o un rango Desde/Hasta.",
       "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape."
     ]
@@ -201,8 +215,9 @@
     "summary": "Importa y consulta los extractos de Sabadell y Santander.",
     "steps": [
       "Cambia entre las pestañas Sabadell y Santander y abre, cuando lo necesites, el filtro inicialmente oculto de dos filas para buscar por fecha, tipo, concepto, importe, estado o asociación.",
-      "Pulsa Añadir extracto, elige banco y formato con o sin cabezal, y confirma las líneas nuevas detectadas.",
-      "Pulsa el concepto para abrir el asistente de revisión o usa Revisión de líneas para trabajar en bloque."
+      "Pulsa Añadir extracto, elige banco y formato con o sin cabezal, y confirma las líneas nuevas detectadas. En la fase de confirmación se muestra el rango de fechas operativas del archivo y la última fecha registrada para ese banco. Si hay movimientos anteriores, puedes marcar Omitir anteriores: se excluyen de la subida y se recalcula el total; los del mismo día se conservan y siguen pasando por la comparación de movimientos. La importación conserva los identificadores y todos los vínculos existentes con nóminas, anticipos y pagos. Solo inserta movimientos nuevos, con el siguiente identificador disponible por banco y año, aunque su fecha sea anterior. Cada coincidencia exacta consume una sola aparición, independientemente del orden del archivo. Si quedan cero movimientos nuevos, Finalizar sin subir cierra el asistente sin importar nada. El aviso distingue los movimientos comprobados de los omitidos; desmarca Omitir para comprobar los anteriores.",
+      "Pulsa el concepto para abrir el asistente de revisión o usa Revisión de líneas para trabajar en bloque.",
+      "La ficha de cada extracto muestra el apartado Cargo previsto: indica si existe una asociación, su programación e importe y un enlace para consultarla o modificarla. Si no existe, Asociar o crear cargo previsto abre el asistente compartido; si falta destinatario, permite elegir primero proveedor o empleado. Los ingresos no admiten cargos previstos. La asociación se guarda al confirmar el asistente."
     ]
   },
   "/dashboard/direccion/bancos/extractos/revision": {
@@ -216,10 +231,26 @@
       "Asignación común permite continuar si ya está asignado al mismo destinatario, mostrando un aviso. Se comprueban también proveedores y empleados de los pagos y cargos vinculados aunque falte la asignación directa. Si cambia el destinatario, cada incidencia exige elegir omitir la línea o sobrescribir su asignación y sus vínculos incompatibles. El guardado es transaccional y comprueba que los datos no hayan cambiado.",
       "La fase 5 detalla el movimiento, destinatario, programación del cargo, pago u orden, base e IVA, nómina prevista, anticipos, adicional y cualquier subida mensual antes de confirmar. Volver a revisar una nómina con adicional conserva el cálculo original y no duplica el adicional.",
       "Filtra por Con proveedor o Sin proveedor y consulta la columna Asignado a. Con uno o varios revisados seleccionados, el botón cambia a Marcar como NO revisado, en rojo, con confirmación. Sus pagos se conservan. Asignar a un cargo previsto exige cargos previamente asignados a proveedor o nómina y no admite ingresos.",
-      "Usa Detectar duplicados para comparar coincidencias por fecha e importe, eliminar una línea o confirmar de forma persistente que el grupo no es duplicado.",
+      "Usa Detectar duplicados para comparar coincidencias por fecha e importe, eliminar una línea o confirmar de forma persistente que el grupo no es duplicado. El listado resalta en rosa casi blanco y con la etiqueta Posible duplicado los grupos con la misma fecha operativa e importe, incluyendo coincidencias entre bancos y con movimientos revisados. Los grupos confirmados íntegramente como no duplicados dejan de resaltarse.",
       "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape.",
-      "En Asignación común, las fases 2 y 3 muestran una sola configuración y aplican automáticamente sus cambios a todos los registros. Solo las incidencias de reasignación requieren una decisión por línea: omitir o sobrescribir. La fase 4 conserva los ajustes individuales y la 5 resume cada movimiento.",
-      "Al confirmar un anticipo de nómina, se registra como anticipo del empleado y mes, vinculado al movimiento; aparece en Laboral > Nóminas > Anticipos y dentro de la ficha de nómina del empleado."
+      "Al confirmar un anticipo de nómina, se registra como anticipo del empleado y mes, vinculado al movimiento; aparece en Laboral > Nóminas > Anticipos y dentro de la ficha de nómina del empleado.",
+      "La columna Cargo recurrente muestra la descripción del cargo asociado y enlaza a su ficha. El filtro Cargo recurrente permite ver todos los movimientos, solo gastos con cargo recurrente o solo gastos sin cargo recurrente; estas dos opciones excluyen ingresos. Si el cargo no tiene descripción, se muestra su identificador.",
+      "Los filtros se organizan en dos filas: la primera contiene solo Concepto a todo el ancho; la segunda contiene Ingresos y cargos, Asignado a (Todos, Ninguno, Proveedor, Cliente o Nómina) y Cargo recurrente (Todos, Con cargo recurrente o Sin cargo recurrente). Ninguno muestra movimientos sin proveedor, cliente ni empleado asignados.",
+      "Este listado muestra exclusivamente movimientos pendientes de revisar. Al confirmar la revisión, desaparecen del listado y de la selección. Los movimientos revisados se consultan en Extractos.",
+      "En la fase 1, los avisos por mismo importe o concepto excluyen todos los movimientos incluidos en la selección actual. Solo se muestran coincidencias con otros registros externos a esa selección.",
+      "La fase 3 elimina Pago previsto: para proveedores solo se selecciona o crea un cargo recurrente. Para nóminas, el interruptor comienza en Empleado actual. Ex-Empleado impide crear o asociar cargos recurrentes y permite continuar sin ellos. En fase 4 se comprueba el importe mensual y los anticipos; si no hay nómina mensual registrada, se puede ajustar su neto total. La fase 5 confirma el pago sin crear recurrencia.",
+      "En revisión masiva de nóminas, cada movimiento conserva el mes y año de su fecha bancaria. La fase 3 configura únicamente la recurrencia común; la fase 4 permite ajustar el periodo y clasificar cada movimiento como nómina completa, anticipo o adicional. Los anticipos se registran antes del pago final del mismo mes. Si dos movimientos se han marcado como nómina completa para el mismo mes, se pide corregir su clasificación antes de confirmar.",
+      "Tipo de este movimiento incluye Otros para nóminas. Se registra con ese tipo en el histórico del empleado y conserva el movimiento bancario, sin descontarlo como anticipo ni modificar el neto mensual o la previsión. Se permite para empleados actuales y ex-empleados.",
+      "Asignar a proveedor abre un modal directo con un único selector con búsqueda y Confirmar, sin fases adicionales. Las incidencias de reasignación se resuelven por registro. Para nóminas, clientes o cargos recurrentes utiliza la revisión normal o la acción específica de cargo previsto.",
+      "En fase 1, Revisión normal es la opción predeterminada. Revisión forzada permite confirmar inmediatamente: marca como revisados los movimientos seleccionados sin modificar sus destinatarios, pagos o cargos recurrentes.",
+      "En nóminas, Tipo de este movimiento incluye Otros: se guarda como pago independiente en el histórico del empleado, sin consumir anticipos ni modificar la liquidación mensual.",
+      "Solo el concepto es un enlace para abrir el movimiento. El resto de la fila no navega; la casilla sirve exclusivamente para seleccionar el registro. La descripción del cargo recurrente se muestra como texto.",
+      "Para proveedores, la fase 3 permite introducir comentarios del movimiento aunque no se seleccione ni cree cargo previsto. En fase 5 pueden editarse antes de confirmar y se guardan en el extracto bancario. En una selección múltiple, editar el comentario común en fase 3 lo aplica a todos; la fase 5 permite ajustarlo por registro.",
+      "La revisión forzada exige un comentario en fase 1. Confirmar permanece deshabilitado si está vacío o contiene solo espacios. El comentario se añade a los comentarios existentes de cada movimiento y se guarda junto al estado revisado.",
+      "La revisión forzada requiere un comentario obligatorio en la fase 1. Confirmar queda deshabilitado si está vacío; el comentario se añade a los comentarios existentes de cada movimiento y también se valida en el servidor.",
+      "Para ingresos, la fase 1 exige elegir Transferencia, Remesa u Otro. Transferencia selecciona una orden pendiente; Remesa permite buscar una o varias remesas registradas, sin seleccionar recibos individuales. Cada movimiento de una revisión múltiple conserva su selección.",
+      "Cuadrar por fecha e importe filtra las remesas pendientes cuyo total coincide con el movimiento y cuya fecha es la más cercana dentro de siete días. Revisa y selecciona la coincidencia antes de continuar.",
+      "Al confirmar, la suma debe coincidir exactamente con el ingreso. Se actualizan estados y fechas de cobro de las órdenes y recibos vinculados, las remesas y la factura, con comentario del usuario en la cuenta. Desmarcar la revisión recalcula esos estados; un cobro ya conciliado no puede duplicarse."
     ]
   },
   "/dashboard/direccion/bancos/prevision-liquidez": {
@@ -227,18 +258,39 @@
     "steps": [
       "Indica la fecha con los campos separados de día, mes y año para calcular la liquidez de ambos bancos.",
       "Usa las pestañas Previsión de ingresos y Previsión de cargos situadas debajo del resumen.",
-      "En ingresos alterna entre recibos, transferencias y remesas; cada remesa aparece en una línea.",
       "En Cargos previstos registrados consulta fecha, tipo Proveedor o Nómina, destinatario, base imponible, importe total o neto y descripción. Al agregar un cargo elige el tipo: Proveedor muestra su buscador y permite dejarlo sin asignar; Nómina muestra el selector de empleado y su importe neto sin IVA. Solo se admite un cargo previsto activo por empleado, con una o varias reglas. El formulario también se utiliza desde la ficha del proveedor y la revisión bancaria. Con IVA calcula automáticamente la base dividiendo el total entre 1,21; Sin IVA usa el total.",
       "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape.",
-      "Cada cargo de tipo nómina genera o reutiliza automáticamente la ficha única del empleado en Laboral > Nóminas. Desde esa ficha puedes modificar la programación del cargo y consultar sus movimientos bancarios."
+      "Cada cargo de tipo nómina genera o reutiliza automáticamente la ficha única del empleado en Laboral > Nóminas. Desde esa ficha puedes modificar la programación del cargo y consultar sus movimientos bancarios.",
+      "Cada cargo recurrente tiene acciones Editar y Eliminar con modal de confirmación. Editar permite modificar los datos de su programación; Eliminar desasigna todos los extractos vinculados y conserva los movimientos y nóminas registrados.",
+      "Pulsa una fila para abrir /dashboard/direccion/bancos/prevision-liquidez/[id], con los datos del cargo previsto y una tabla de todos sus registros bancarios asociados.",
+      "La tabla de cargos previstos presenta Descripción, Tipo y Asignado a como primeras columnas, seguidas de Fecha, Base imponible, Importe y Acciones.",
+      "Todos es la pestaña inicial y reúne recibos y transferencias. Puedes cambiar a Recibos, Transfers o Remesas; cada remesa aparece una sola vez.",
+      "Debajo de las pestañas hay un filtro por cada campo visible, distribuido en dos filas. Los filtros se combinan; las fechas tienen dd, mm y yyyy separados. Limpiar filtros restablece la tabla y cambiar de pestaña reinicia los filtros.",
+      "Agregar ingreso sin contrato solo aparece en Todos y abre el asistente de ingresos adicionales.",
+      "Agregar excel de recibos abre un modal con cierre × y Escape. La primera hoja debe tener en su primera fila: Número de recibo, Número de remesa, Remesa en carpeta, Cliente, Importe recibo, Importe remesa, Fecha creación y Fecha cobro teórica.",
+      "Número de recibo es obligatorio: 526058-004 se interpreta como factura 526058 y recibo 4. Se quitan espacios exteriores. Revisar Excel valida todas las filas y muestra una vista previa antes de Confirmar importación.",
+      "Se aceptan .xlsx y .xls de hasta 10 MB y 5.000 recibos. Los errores indican la fila. Las fechas pueden ser fechas de Excel o dd/mm/yyyy y los importes, numéricos o con coma decimal. Las celdas vacías o con \"-\" conservan los valores anteriores al reimportar.",
+      "Reimportar un recibo actualiza sus datos sin duplicarlo. No se permiten recibos repetidos dentro del mismo archivo. La importación se guarda completa o no se guarda ninguna fila.",
+      "Cada recibo se vincula a una orden por factura y número de cobro; si no existe, se crea. Las coincidencias ambiguas deben resolverse antes de importar. Los importes y fechas se actualizan en la orden sin duplicarla.",
+      "Número de remesa, Remesa en carpeta e Importe remesa solo sustituyen datos anteriores cuando llega un nuevo valor. Las remesas se registran y agrupan sus recibos; su total visible se calcula dinámicamente sumando los importes de sus órdenes.",
+      "La revisión bancaria confirma el cobro y la fecha real de órdenes, recibos y remesas, y actualiza el total cobrado de la factura. Los cambios quedan en los comentarios de la cuenta asociada.",
+      "Los ingresos previstos proceden de las órdenes pendientes: recibos y transferencias, sin recurrencia. Los cambios de importe, fecha y banco realizados al preparar la factura se reflejan en esas órdenes y en liquidez. Agrupar recibos en una remesa no suma un ingreso adicional."
     ]
   },
   "/dashboard/direccion/bancos/prevision-ingresos": {
     "summary": "Reúne órdenes de cobro e ingresos adicionales previstos.",
     "steps": [
-      "Filtra ingresos previstos.",
-      "Consulta recibos y transferencias.",
-      "Mantén actualizadas fechas, importes y bancos."
+      "Todos es la pestaña inicial y reúne recibos y transferencias. Puedes cambiar a Recibos, Transfers o Remesas; cada remesa aparece una sola vez.",
+      "Debajo de las pestañas hay un filtro por cada campo visible, distribuido en dos filas. Los filtros se combinan; las fechas tienen dd, mm y yyyy separados. Limpiar filtros restablece la tabla y cambiar de pestaña reinicia los filtros.",
+      "Agregar ingreso sin contrato solo aparece en Todos y abre el asistente de ingresos adicionales.",
+      "Agregar excel de recibos abre un modal con cierre × y Escape. La primera hoja debe tener en su primera fila: Número de recibo, Número de remesa, Remesa en carpeta, Cliente, Importe recibo, Importe remesa, Fecha creación y Fecha cobro teórica.",
+      "Número de recibo es obligatorio: 526058-004 se interpreta como factura 526058 y recibo 4. Se quitan espacios exteriores. Revisar Excel valida todas las filas y muestra una vista previa antes de Confirmar importación.",
+      "Se aceptan .xlsx y .xls de hasta 10 MB y 5.000 recibos. Los errores indican la fila. Las fechas pueden ser fechas de Excel o dd/mm/yyyy y los importes, numéricos o con coma decimal. Las celdas vacías o con \"-\" conservan los valores anteriores al reimportar.",
+      "Reimportar un recibo actualiza sus datos sin duplicarlo. No se permiten recibos repetidos dentro del mismo archivo. La importación se guarda completa o no se guarda ninguna fila.",
+      "Cada recibo se vincula a una orden por factura y número de cobro; si no existe, se crea. Las coincidencias ambiguas deben resolverse antes de importar. Los importes y fechas se actualizan en la orden sin duplicarla.",
+      "Número de remesa, Remesa en carpeta e Importe remesa solo sustituyen datos anteriores cuando llega un nuevo valor. Las remesas se registran y agrupan sus recibos; su total visible se calcula dinámicamente sumando los importes de sus órdenes.",
+      "La revisión bancaria confirma el cobro y la fecha real de órdenes, recibos y remesas, y actualiza el total cobrado de la factura. Los cambios quedan en los comentarios de la cuenta asociada.",
+      "Los ingresos previstos proceden de las órdenes pendientes: recibos y transferencias, sin recurrencia. Los cambios de importe, fecha y banco realizados al preparar la factura se reflejan en esas órdenes y en liquidez. Agrupar recibos en una remesa no suma un ingreso adicional."
     ]
   },
   "/dashboard/direccion/bancos/prevision-cargos": {
@@ -283,16 +335,35 @@
     "steps": [
       "Selecciona el periodo de análisis.",
       "Revisa entradas, salidas y saldo acumulado.",
-      "Actualiza previsiones cuando cambien vencimientos o importes."
+      "Actualiza previsiones cuando cambien vencimientos o importes.",
+      "Todos es la pestaña inicial y reúne recibos y transferencias. Puedes cambiar a Recibos, Transfers o Remesas; cada remesa aparece una sola vez.",
+      "Debajo de las pestañas hay un filtro por cada campo visible, distribuido en dos filas. Los filtros se combinan; las fechas tienen dd, mm y yyyy separados. Limpiar filtros restablece la tabla y cambiar de pestaña reinicia los filtros.",
+      "Agregar ingreso sin contrato solo aparece en Todos y abre el asistente de ingresos adicionales.",
+      "Agregar excel de recibos abre un modal con cierre × y Escape. La primera hoja debe tener en su primera fila: Número de recibo, Número de remesa, Remesa en carpeta, Cliente, Importe recibo, Importe remesa, Fecha creación y Fecha cobro teórica.",
+      "Número de recibo es obligatorio: 526058-004 se interpreta como factura 526058 y recibo 4. Se quitan espacios exteriores. Revisar Excel valida todas las filas y muestra una vista previa antes de Confirmar importación.",
+      "Se aceptan .xlsx y .xls de hasta 10 MB y 5.000 recibos. Los errores indican la fila. Las fechas pueden ser fechas de Excel o dd/mm/yyyy y los importes, numéricos o con coma decimal. Las celdas vacías o con \"-\" conservan los valores anteriores al reimportar.",
+      "Reimportar un recibo actualiza sus datos sin duplicarlo. No se permiten recibos repetidos dentro del mismo archivo. La importación se guarda completa o no se guarda ninguna fila.",
+      "Cada recibo se vincula a una orden por factura y número de cobro; si no existe, se crea. Las coincidencias ambiguas deben resolverse antes de importar. Los importes y fechas se actualizan en la orden sin duplicarla.",
+      "Número de remesa, Remesa en carpeta e Importe remesa solo sustituyen datos anteriores cuando llega un nuevo valor. Las remesas se registran y agrupan sus recibos; su total visible se calcula dinámicamente sumando los importes de sus órdenes.",
+      "La revisión bancaria confirma el cobro y la fecha real de órdenes, recibos y remesas, y actualiza el total cobrado de la factura. Los cambios quedan en los comentarios de la cuenta asociada.",
+      "Los ingresos previstos proceden de las órdenes pendientes: recibos y transferencias, sin recurrencia. Los cambios de importe, fecha y banco realizados al preparar la factura se reflejan en esas órdenes y en liquidez. Agrupar recibos en una remesa no suma un ingreso adicional."
     ]
   },
   "/dashboard/direccion/previsiones/prevision-ingresos": {
     "summary": "Reúne cobros contractuales e ingresos adicionales previstos.",
     "steps": [
-      "Filtra los ingresos y cambia entre Recibos y Transfers.",
-      "Pulsa Agregar ingreso sin contrato y completa el asistente: cliente o texto manual, factura opcional, fecha teórica, forma de cobro, banco y base imponible.",
-      "Los ingresos adicionales aparecen junto a la previsión contractual, identificados como ingreso adicional sin contrato.",
-      "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape."
+      "Todos es la pestaña inicial y reúne recibos y transferencias. Puedes cambiar a Recibos, Transfers o Remesas; cada remesa aparece una sola vez.",
+      "Debajo de las pestañas hay un filtro por cada campo visible, distribuido en dos filas. Los filtros se combinan; las fechas tienen dd, mm y yyyy separados. Limpiar filtros restablece la tabla y cambiar de pestaña reinicia los filtros.",
+      "Agregar ingreso sin contrato solo aparece en Todos y abre el asistente de ingresos adicionales.",
+      "Agregar excel de recibos abre un modal con cierre × y Escape. La primera hoja debe tener en su primera fila: Número de recibo, Número de remesa, Remesa en carpeta, Cliente, Importe recibo, Importe remesa, Fecha creación y Fecha cobro teórica.",
+      "Número de recibo es obligatorio: 526058-004 se interpreta como factura 526058 y recibo 4. Se quitan espacios exteriores. Revisar Excel valida todas las filas y muestra una vista previa antes de Confirmar importación.",
+      "Se aceptan .xlsx y .xls de hasta 10 MB y 5.000 recibos. Los errores indican la fila. Las fechas pueden ser fechas de Excel o dd/mm/yyyy y los importes, numéricos o con coma decimal. Las celdas vacías o con \"-\" conservan los valores anteriores al reimportar.",
+      "Reimportar un recibo actualiza sus datos sin duplicarlo. No se permiten recibos repetidos dentro del mismo archivo. La importación se guarda completa o no se guarda ninguna fila.",
+      "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape.",
+      "Cada recibo se vincula a una orden por factura y número de cobro; si no existe, se crea. Las coincidencias ambiguas deben resolverse antes de importar. Los importes y fechas se actualizan en la orden sin duplicarla.",
+      "Número de remesa, Remesa en carpeta e Importe remesa solo sustituyen datos anteriores cuando llega un nuevo valor. Las remesas se registran y agrupan sus recibos; su total visible se calcula dinámicamente sumando los importes de sus órdenes.",
+      "La revisión bancaria confirma el cobro y la fecha real de órdenes, recibos y remesas, y actualiza el total cobrado de la factura. Los cambios quedan en los comentarios de la cuenta asociada.",
+      "Los ingresos previstos proceden de las órdenes pendientes: recibos y transferencias, sin recurrencia. Los cambios de importe, fecha y banco realizados al preparar la factura se reflejan en esas órdenes y en liquidez. Agrupar recibos en una remesa no suma un ingreso adicional."
     ]
   },
   "/dashboard/direccion/previsiones/prevision-gastos": {
@@ -320,6 +391,14 @@
       "Selecciona el año para consultar sus tres días de libre disposición. Marca cada día usado e introduce su fecha separada en dd, mm y yyyy; guarda los cambios.",
       "Sube y descarga documentación del empleado. Registra, edita o elimina ausencias indicando motivo, fechas y comentarios.",
       "Añade comentarios a la ficha; el historial permanece visible al cambiar de año."
+    ]
+  },
+  "/dashboard/administracion/facturas-clientes/crear": {
+    "summary": "Prepara una factura a partir del contrato y sus órdenes de cobro.",
+    "steps": [
+      "Al aceptar una propuesta se crean el contrato, la factura en proceso y las órdenes de Control administrativo. El asistente permite seleccionar contratos pendientes, incluidos los que ya tienen esa factura previa, y reutiliza el mismo borrador.",
+      "Guardar los datos de pago actualiza las órdenes existentes con importe, vencimiento, forma de cobro y banco, conservando sus identificadores. La base se reparte según los impuestos de la factura. Recibo genera o actualiza su recibo; al cambiar a transferencia se retira el recibo que no tenga remesa. Los cobros confirmados o remesados requieren resolver antes sus asociaciones.",
+      "Recibos y transferencias son ingresos previstos de las órdenes, no ingresos recurrentes. Afectan a la liquidez una sola vez según banco y fecha, mientras sigan pendientes. Terminar el asistente prepara la factura; la emisión fiscal mantiene su confirmación específica."
     ]
   }
 }
