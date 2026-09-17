@@ -12,6 +12,13 @@ Update this file whenever tables, columns, primary keys, indexes, or constraints
 
 ## Tables
 
+The 2026-09-17 event consolidation moved account and contact activity into
+`registro_eventos`. `cuentas_registro_eventos`, `contactos_registro_eventos`,
+and the historical `comentarios_registro_eventos` name are compatibility views.
+See `database/migrations/20260917_0001_contactos_registro_eventos_nombre.sql`
+through `20260917_0004_eventos_vistas_defaults.sql`. The table sections below
+predate this consolidation and are not a current inventory of the live RDS.
+
 The 2026-07-23 proposal-to-invoice workflow extends `contratos_db`,
 `lineas_contratos_db`, `contenidos_db`, `gestiones_produccion_db`, `tareas_db`,
 `facturas_clientes_db`, and `ordenes_db`; it also introduces
@@ -1014,4 +1021,3 @@ Indexes:
 - documentos_laborales_nomina_idx: CREATE INDEX documentos_laborales_nomina_idx ON public.documentos_laborales USING btree (id_nomina)
 - documentos_laborales_pkey: CREATE UNIQUE INDEX documentos_laborales_pkey ON public.documentos_laborales USING btree (id)
 - documentos_laborales_s3_key_key: CREATE UNIQUE INDEX documentos_laborales_s3_key_key ON public.documentos_laborales USING btree (s3_key)
-

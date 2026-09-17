@@ -11,9 +11,9 @@ export async function addCuentaEvento({ idCuenta, idAgente = "", eventType = "Ac
   if (!idCuenta || !detalles) return null;
   const { rows } = await client.query(
     `
-      INSERT INTO cuentas_registro_eventos (id, event_type, id_agente, id_cuenta, detalles)
-      VALUES ($1, $2, $3, $4, $5)
-      RETURNING *
+      INSERT INTO registro_eventos (id, event_type, id_agente, tipo_entidad, id_entidad, detalles)
+      VALUES ($1, $2, $3, 'cuenta', $4, $5)
+      RETURNING id, created_at, event_type, id_agente, id_entidad AS id_cuenta, detalles
     `,
     [`evt_cuenta_${randomUUID().slice(0, 12)}`, eventType, idAgente || "", idCuenta, detalles],
   );
@@ -43,9 +43,9 @@ export async function addContactoEvento({ idContacto, idAgente = "", eventType =
   if (!idContacto || !detalles) return null;
   const { rows } = await client.query(
     `
-      INSERT INTO comentarios_registro_eventos (id, event_type, id_agente, id_contacto, detalles)
-      VALUES ($1, $2, $3, $4, $5)
-      RETURNING *
+      INSERT INTO registro_eventos (id, event_type, id_agente, tipo_entidad, id_entidad, detalles)
+      VALUES ($1, $2, $3, 'contacto', $4, $5)
+      RETURNING id, created_at, event_type, id_agente, id_entidad AS id_contacto, detalles
     `,
     [`evt_contacto_${randomUUID().slice(0, 12)}`, eventType, idAgente || "", idContacto, detalles],
   );
@@ -56,9 +56,9 @@ export async function getCuentaEventos(idCuenta) {
   const pool = getPgPool();
   const { rows } = await pool.query(
     `
-      SELECT *
-      FROM cuentas_registro_eventos
-      WHERE id_cuenta = $1
+      SELECT id, created_at, event_type, id_agente, id_entidad AS id_cuenta, detalles
+      FROM registro_eventos
+      WHERE tipo_entidad = 'cuenta' AND id_entidad = $1
       ORDER BY created_at DESC
     `,
     [idCuenta],
@@ -70,9 +70,9 @@ export async function getContactoEventos(idContacto) {
   const pool = getPgPool();
   const { rows } = await pool.query(
     `
-      SELECT *
-      FROM comentarios_registro_eventos
-      WHERE id_contacto = $1
+      SELECT id, created_at, event_type, id_agente, id_entidad AS id_contacto, detalles
+      FROM registro_eventos
+      WHERE tipo_entidad = 'contacto' AND id_entidad = $1
       ORDER BY created_at DESC
     `,
     [idContacto],
