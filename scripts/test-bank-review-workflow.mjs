@@ -32,7 +32,7 @@ try {
     INSERT INTO ordenes_db VALUES('order','client',NULL);INSERT INTO pagos_db VALUES('payment','supplier');
     INSERT INTO lineas_bancos(id_linea_banco,importe) VALUES('advance',-200),('salary',-800),('extra',-1050),('raise',-1100),('supplier',-121),('supplier2',-121),('income',50),('bad',-800);`);
   // Income tables are isolated alongside the payroll fixtures.
-  for (const table of ['facturas_clientes_db','prevision_recibos_excel','remesas_db','comentarios_db','cuentas_registro_eventos']) await db.query(`CREATE TABLE ${table} (LIKE public.${table} INCLUDING ALL)`);
+  for (const table of ['facturas_clientes_db','prevision_recibos_excel','remesas_db','comentarios_db','registro_eventos','cuentas_registro_eventos']) await db.query(`CREATE TABLE ${table} (LIKE public.${table} INCLUDING ALL)`);
   await db.query(`ALTER TABLE ordenes_db ADD id_factura text,ADD numero_cobro integer,ADD forma_cobro text,
     ADD cobro_total numeric,ADD cobrada boolean DEFAULT false,ADD fecha_real_cobro text,ADD fecha_teorica_cobro text,ADD banco_cobro text,ADD updated_at timestamptz DEFAULT now();
     ALTER TABLE cuentas_db ADD nombre_empresa text;

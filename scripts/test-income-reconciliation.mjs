@@ -17,7 +17,7 @@ const pool=getPgPool(),db=await pool.connect(),schema='test_income_'+randomUUID(
 const connect=pool.connect.bind(pool),query=pool.query.bind(pool);
 try{
   await db.query('CREATE SCHEMA '+schema);await db.query('SET search_path TO '+schema+',public');
-  const tables=['pagos_db','ingresos_adicionales_db','ordenes_db','prevision_recibos_excel','remesas_db','lineas_bancos','facturas_clientes_db','cuentas_db','agentes_db','comentarios_db','cuentas_registro_eventos','contratos_db',
+  const tables=['pagos_db','ingresos_adicionales_db','ordenes_db','prevision_recibos_excel','remesas_db','lineas_bancos','facturas_clientes_db','cuentas_db','agentes_db','comentarios_db','registro_eventos','cuentas_registro_eventos','contratos_db',
     'propuestas_db','lineas_propuestas_db','cobros_propuestas_db','lineas_contratos_db','contenidos_db','cobros_contratos_db','contactos_db','lineas_facturas_db'];
   for(const table of tables)await db.query('CREATE TABLE '+schema+'.'+table+' (LIKE public.'+table+' INCLUDING ALL)');
   await db.query(fs.readFileSync('database/migrations/20260914_0002_income_reconciliation.sql','utf8'));
