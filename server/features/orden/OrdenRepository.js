@@ -53,12 +53,12 @@ const ordenesSelect = `
     a.nombre_completo_agente,
     f.ya_contabilizada
     ,f.id_cuenta AS id_cuenta_factura,f.numero_factura,r.numero_recibo,r.id_remesa,r.cliente AS cliente_recibo
-  FROM ordenes_db o
-  LEFT JOIN contratos_db c ON c.id_contrato = o.id_contrato
-  LEFT JOIN facturas_clientes_db f ON f.id_factura_cliente = o.id_factura
-  LEFT JOIN cuentas_db cu ON cu.id_cuenta = COALESCE(NULLIF(o.id_cuenta,''),c.id_cuenta_contrato,f.id_cuenta)
+  FROM tesoreria_ordenes o
+  LEFT JOIN comercial_contratos c ON c.id_contrato = o.id_contrato
+  LEFT JOIN administracion_facturas_clientes f ON f.id_factura_cliente = o.id_factura
+  LEFT JOIN comercial_cuentas cu ON cu.id_cuenta = COALESCE(NULLIF(o.id_cuenta,''),c.id_cuenta_contrato,f.id_cuenta)
   LEFT JOIN agentes_db a ON a.id_agente = c.id_agente_contrato
-  LEFT JOIN prevision_recibos_excel r ON r.id_orden=o.id_orden
+  LEFT JOIN tesoreria_recibos_importados r ON r.id_orden=o.id_orden
 `;
 
 export async function getOrdenesAdministrativas(filters = {}) {

@@ -20,7 +20,7 @@ async function tarifasHasEstado(pool) {
     SELECT 1
     FROM information_schema.columns
     WHERE table_schema = 'public'
-      AND table_name = 'tarifas_db'
+      AND table_name = 'servicios_tarifas'
       AND column_name = 'estado_tarifa'
     LIMIT 1
   `);
@@ -77,8 +77,8 @@ export async function getTarifas(filters = {}) {
         ) FILTER (WHERE p.id_pagina_tarifa IS NOT NULL),
         '[]'::jsonb
       ) AS paginas
-    FROM tarifas_db t
-    LEFT JOIN paginas_tarifas p ON p.id_tarifa = t.id_tarifa
+    FROM servicios_tarifas t
+    LEFT JOIN servicios_paginas_tarifa p ON p.id_tarifa = t.id_tarifa
     ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
     GROUP BY t.id_tarifa
     ORDER BY t.ano DESC, t.idioma ASC, t.version DESC
@@ -107,15 +107,15 @@ export async function getTarifaById(idTarifa) {
           ) FILTER (WHERE p.id_pagina_tarifa IS NOT NULL),
           '[]'::jsonb
         ) AS paginas
-      FROM tarifas_db t
-      LEFT JOIN paginas_tarifas p ON p.id_tarifa = t.id_tarifa
+      FROM servicios_tarifas t
+      LEFT JOIN servicios_paginas_tarifa p ON p.id_tarifa = t.id_tarifa
       LEFT JOIN LATERAL (
         SELECT jsonb_agg(to_jsonb(sv) ORDER BY servicio_ord.ordinality) AS servicios
         FROM unnest(p.array_id_servicios) WITH ORDINALITY AS servicio_ord(id_servicio, ordinality)
         JOIN (
           SELECT s.*, g.nombre_medio
           FROM servicios_db s
-          LEFT JOIN grupos_servicios g ON g.id_medio = s.id_medio
+          LEFT JOIN servicios_grupos_servicios g ON g.id_medio = s.id_medio
         ) sv ON sv.id_servicio = servicio_ord.id_servicio
       ) ps ON true
       WHERE t.id_tarifa = $1

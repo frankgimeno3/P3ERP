@@ -87,9 +87,9 @@ export async function middleware(request) {
     const legacyDirectionRoutes = [
       ["/dashboard/operaciones/agentesyroles", "/dashboard/operaciones/agentes"],
       ["/dashboard/operaciones/roles", "/dashboard/operaciones/agentes/roles"],
-      ["/dashboard/direccion/previsiones/prevision-liquidez", "/dashboard/direccion/bancos/prevision-liquidez"],
-      ["/dashboard/direccion/previsiones/prevision-ingresos", "/dashboard/direccion/bancos/prevision-ingresos"],
-      ["/dashboard/direccion/previsiones/prevision-gastos", "/dashboard/direccion/bancos/prevision-cargos"],
+      ["/dashboard/direccion/previsiones/prevision-liquidez", "/dashboard/direccion/tesoreria/prevision-liquidez"],
+      ["/dashboard/direccion/previsiones/prevision-ingresos", "/dashboard/direccion/tesoreria/prevision-ingresos"],
+      ["/dashboard/direccion/previsiones/prevision-gastos", "/dashboard/direccion/tesoreria/prevision-cargos"],
     ];
     const legacyAgentDetail = pathname.match(/^\/dashboard\/operaciones\/(ag_[^/]+)$/);
     if (legacyAgentDetail) {
@@ -104,27 +104,32 @@ export async function middleware(request) {
         return NextResponse.redirect(redirectUrl, 308);
       }
     }
-    if (pathname === "/dashboard/direccion/bancos") {
+    if (pathname === "/dashboard/direccion/tesoreria") {
       const redirectUrl = request.nextUrl.clone();
-      redirectUrl.pathname = "/dashboard/direccion/bancos/extractos";
+      redirectUrl.pathname = "/dashboard/direccion/tesoreria/extractos";
       return NextResponse.redirect(redirectUrl, 308);
     }
-    if (pathname === "/dashboard/direccion/bancos/prevision-ingresos" || pathname.startsWith("/dashboard/direccion/bancos/prevision-ingresos/")) {
+    if (pathname === "/dashboard/direccion/tesoreria/prevision-ingresos" || pathname.startsWith("/dashboard/direccion/tesoreria/prevision-ingresos/")) {
       const redirectUrl = request.nextUrl.clone();
-      redirectUrl.pathname = "/dashboard/direccion/bancos/prevision-liquidez";
+      redirectUrl.pathname = "/dashboard/direccion/tesoreria/prevision-liquidez";
       redirectUrl.searchParams.set("vista", "ingresos");
       return NextResponse.redirect(redirectUrl, 308);
     }
-    if (pathname === "/dashboard/direccion/bancos/prevision-cargos" || pathname.startsWith("/dashboard/direccion/bancos/prevision-cargos/")) {
+    if (pathname === "/dashboard/direccion/tesoreria/prevision-cargos" || pathname.startsWith("/dashboard/direccion/tesoreria/prevision-cargos/")) {
       const redirectUrl = request.nextUrl.clone();
-      redirectUrl.pathname = "/dashboard/direccion/bancos/prevision-liquidez";
+      redirectUrl.pathname = "/dashboard/direccion/tesoreria/prevision-liquidez";
       redirectUrl.searchParams.set("vista", "cargos");
       return NextResponse.redirect(redirectUrl, 308);
     }
     const legacyBankDetail = pathname.match(/^\/dashboard\/direccion\/bancos\/(banc_[^/]+)$/);
     if (legacyBankDetail) {
       const redirectUrl = request.nextUrl.clone();
-      redirectUrl.pathname = `/dashboard/direccion/bancos/extractos/revision/${legacyBankDetail[1]}`;
+      redirectUrl.pathname = `/dashboard/direccion/tesoreria/extractos/revision/${legacyBankDetail[1]}`;
+      return NextResponse.redirect(redirectUrl, 308);
+    }
+    if (pathname === "/dashboard/direccion/bancos" || pathname.startsWith("/dashboard/direccion/bancos/")) {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = pathname.replace("/dashboard/direccion/bancos", "/dashboard/direccion/tesoreria");
       return NextResponse.redirect(redirectUrl, 308);
     }
     if (pathname.startsWith("/dashboard/operaciones/usuariosyroles")) {

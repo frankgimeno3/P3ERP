@@ -39,7 +39,7 @@ function mapRow(type, source) {
 export async function importTiger(type, sourceRows, mode) {
   const pool = getPgPool();
   const client = await pool.connect();
-  const table = type === 'cuentas' ? 'cuentas_db' : 'contactos_db';
+  const table = type === 'cuentas' ? 'comercial_cuentas' : 'comercial_contactos';
   const key = type === 'cuentas' ? 'id_cuenta' : 'id_contacto';
   const changes = [];
   let created = 0, updated = 0, skipped = 0;
@@ -77,7 +77,7 @@ export async function importTiger(type, sourceRows, mode) {
       }
     }
     const detalles = `${created} creados, ${updated} actualizados y ${skipped} omitidos`;
-    const { rows: history } = await client.query(`INSERT INTO historial_actualizaciones_tiger (tipo, detalles, descripcion) VALUES ($1,$2,$3::jsonb) RETURNING *`, [type, detalles, JSON.stringify(changes)]);
+    const { rows: history } = await client.query(`INSERT INTO general_tiger_actualizaciones (tipo, detalles, descripcion) VALUES ($1,$2,$3::jsonb) RETURNING *`, [type, detalles, JSON.stringify(changes)]);
     await client.query('COMMIT');
     return { history: history[0], created, updated, skipped };
   } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
@@ -85,10 +85,10 @@ export async function importTiger(type, sourceRows, mode) {
 
 export async function getTigerHistory(type = '') {
   const values = type ? [type] : [];
-  const { rows } = await getPgPool().query(`SELECT id, fecha_hora, tipo, detalles FROM historial_actualizaciones_tiger ${type ? 'WHERE tipo=$1' : ''} ORDER BY fecha_hora DESC`, values);
+  const { rows } = await getPgPool().query(`SELECT id, fecha_hora, tipo, detalles FROM general_tiger_actualizaciones ${type ? 'WHERE tipo=$1' : ''} ORDER BY fecha_hora DESC`, values);
   return rows;
 }
 export async function getTigerHistoryItem(id) {
-  const { rows } = await getPgPool().query('SELECT * FROM historial_actualizaciones_tiger WHERE id=$1 LIMIT 1', [id]);
+  const { rows } = await getPgPool().query('SELECT * FROM general_tiger_actualizaciones WHERE id=$1 LIMIT 1', [id]);
   return rows[0] || null;
 }

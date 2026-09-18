@@ -65,7 +65,7 @@ export default function DuplicadosPage() {
           <button
             type="button"
             onClick={() =>
-              router.push("/dashboard/direccion/bancos/extractos/revision")
+              router.push("/dashboard/direccion/tesoreria/extractos/revision")
             }
             className="cursor-pointer rounded border bg-white px-4 py-2 transition hover:bg-gray-50"
           >

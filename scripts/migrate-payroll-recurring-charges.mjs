@@ -1,3 +1,4 @@
+import { readLegacyMigrationSql } from './readLegacyMigrationSql.mjs';
 import fs from 'node:fs';
 import nextEnv from '@next/env';
 import { getPgPool } from '../server/database/pgClient.js';
@@ -8,7 +9,7 @@ try {
   await client.query('BEGIN');
   await client.query("SET LOCAL lock_timeout = '5s'");
   await client.query("SET LOCAL statement_timeout = '30s'");
-  await client.query(fs.readFileSync('database/migrations/20260907_0001_payroll_recurring_charges.sql', 'utf8'));
+  await client.query(readLegacyMigrationSql('database/migrations/20260907_0001_payroll_recurring_charges.sql'));
   await client.query('COMMIT');
   console.log('Payroll recurring charges migration applied.');
 } catch (error) {

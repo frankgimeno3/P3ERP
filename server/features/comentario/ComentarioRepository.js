@@ -16,7 +16,7 @@ function normalize(row) {
 }
 
 async function getCuentaForContacto(idContacto, client) {
-  const { rows } = await client.query(`SELECT id_cuenta FROM contactos_db WHERE id_contacto = $1 LIMIT 1`, [idContacto]);
+  const { rows } = await client.query(`SELECT id_cuenta FROM comercial_contactos WHERE id_contacto = $1 LIMIT 1`, [idContacto]);
   return rows[0]?.id_cuenta || "";
 }
 
@@ -39,7 +39,7 @@ export async function getComentarios({ tipoEntidad, idEntidad }) {
   const { rows } = await pool.query(
     `
       SELECT *
-      FROM comentarios_db
+      FROM general_comentarios
       WHERE tipo_entidad = $1 AND id_entidad = $2
       ORDER BY created_at DESC
     `,
@@ -56,7 +56,7 @@ export async function createComentario(data = {}) {
     const idComentario = data.id_comentario || `com_${randomUUID().slice(0, 12)}`;
     const { rows } = await client.query(
       `
-        INSERT INTO comentarios_db (
+        INSERT INTO general_comentarios (
           id_comentario,
           id_original_autor,
           id_last_editor,
@@ -93,7 +93,7 @@ export async function updateComentario(idComentario, data = {}) {
     await client.query("BEGIN");
     const { rows } = await client.query(
       `
-        UPDATE comentarios_db
+        UPDATE general_comentarios
         SET contenido_comentario = $2,
             id_last_editor = $3,
             updated_at = now()
@@ -126,7 +126,7 @@ export async function deleteComentario(idComentario, data = {}) {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
-    const { rows } = await client.query(`DELETE FROM comentarios_db WHERE id_comentario = $1 RETURNING *`, [idComentario]);
+    const { rows } = await client.query(`DELETE FROM general_comentarios WHERE id_comentario = $1 RETURNING *`, [idComentario]);
     if (rows[0]) {
       await logComentarioEvent({
         tipoEntidad: rows[0].tipo_entidad,

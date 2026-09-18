@@ -55,7 +55,7 @@ export default function LineaBancoDetallePage() {
 
   return <div className="min-h-screen bg-gray-100 px-12 py-8 text-gray-800">
     <div className="mx-auto max-w-5xl">
-      <div className="mb-6 flex items-center justify-between"><div><h1 className="text-2xl font-semibold">Detalle del movimiento</h1><p className="mt-1 text-sm text-gray-500">{linea.concepto}</p></div><button type="button" onClick={() => router.push('/dashboard/direccion/bancos')} className="cursor-pointer rounded border border-gray-300 bg-white px-4 py-2 text-sm transition hover:bg-gray-50 hover:shadow-sm">← Volver a bancos</button></div>
+      <div className="mb-6 flex items-center justify-between"><div><h1 className="text-2xl font-semibold">Detalle del movimiento</h1><p className="mt-1 text-sm text-gray-500">{linea.concepto}</p></div><button type="button" onClick={() => router.push('/dashboard/direccion/tesoreria')} className="cursor-pointer rounded border border-gray-300 bg-white px-4 py-2 text-sm transition hover:bg-gray-50 hover:shadow-sm">← Volver a tesorería</button></div>
       {error && <p className="mb-4 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</p>}{message && <p className="mb-4 rounded border border-green-200 bg-green-50 p-3 text-sm text-green-700">{message}</p>}
       <div className={`rounded-lg border p-6 shadow-sm ${linea.estado_revision ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-white'}`}>
         <dl className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2 lg:grid-cols-3">

@@ -16,7 +16,7 @@ export async function getRoles() {
   const pool = getPgPool();
   const { rows } = await pool.query(`
     SELECT *
-    FROM roles_db
+    FROM agentes_roles
     ORDER BY CASE id_rol
       WHEN 'base' THEN 1
       WHEN 'administracion' THEN 2
@@ -34,7 +34,7 @@ export async function getRoleById(idRol) {
   const { rows } = await pool.query(
     `
       SELECT *
-      FROM roles_db
+      FROM agentes_roles
       WHERE id_rol = $1
       LIMIT 1
     `,
@@ -50,7 +50,7 @@ export async function updateRolePermissions(idRol, permisos = [], accesosAdicion
   const normalizedAdicionales = Array.isArray(accesosAdicionales) ? accesosAdicionales : [];
   const { rows } = await pool.query(
     `
-      UPDATE roles_db
+      UPDATE agentes_roles
       SET permisos_rol = $1::jsonb,
           accesos_personalizados = $2,
           array_accesos_adicionales = $3::jsonb,

@@ -136,7 +136,7 @@ async function getContactos(pool, idCuenta) {
   const { rows } = await pool.query(
     `
       SELECT *
-      FROM contactos_db
+      FROM comercial_contactos
       WHERE id_cuenta = $1
       ORDER BY nombre_completo_contacto ASC
     `,
@@ -158,7 +158,7 @@ export async function getGmCuentas() {
   const pool = getPgPool();
   const { rows } = await pool.query(`
     SELECT c.*, a.nombre_completo_agente
-    FROM cuentas_db c
+    FROM comercial_cuentas c
     LEFT JOIN agentes_db a ON a.id_agente = c.id_agente
     ORDER BY c.created_at DESC
   `);
@@ -171,7 +171,7 @@ export async function getGmCuentaByCodigo(codigo) {
   const { rows } = await pool.query(
     `
       SELECT c.*, a.nombre_completo_agente
-      FROM cuentas_db c
+      FROM comercial_cuentas c
       LEFT JOIN agentes_db a ON a.id_agente = c.id_agente
       WHERE c.id_cuenta = $1
       LIMIT 1
@@ -195,7 +195,7 @@ export async function getNextGmCodigo() {
   const pool = getPgPool();
   const { rows } = await pool.query(`
     SELECT id_cuenta
-    FROM cuentas_db
+    FROM comercial_cuentas
     WHERE id_cuenta ~ '^[0-9]+$'
     ORDER BY id_cuenta::bigint DESC
     LIMIT 1
@@ -221,7 +221,7 @@ export async function upsertGmCuenta(account, contactos = []) {
 
   await pool.query(
     `
-      INSERT INTO cuentas_db (${columns.join(", ")})
+      INSERT INTO comercial_cuentas (${columns.join(", ")})
       VALUES (${placeholders.join(", ")})
       ON CONFLICT (id_cuenta) DO UPDATE
       SET ${updates.join(", ")}, updated_at = NOW()
@@ -237,7 +237,7 @@ export async function upsertGmCuenta(account, contactos = []) {
 
     await pool.query(
       `
-        INSERT INTO contactos_db (
+        INSERT INTO comercial_contactos (
           id_contacto,
           id_cuenta,
           nombre_contacto,
@@ -281,7 +281,7 @@ export async function deleteGmContacto(idContacto, idCuenta) {
   const pool = getPgPool();
   await pool.query(
     `
-      DELETE FROM contactos_db
+      DELETE FROM comercial_contactos
       WHERE id_contacto = $1
         AND id_cuenta = $2
     `,

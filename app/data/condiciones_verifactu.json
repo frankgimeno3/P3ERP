@@ -32,7 +32,7 @@
   {
     "estado": false,
     "nombre": "Registro fiscal independiente",
-    "descripcion": "Crear verifactu_records con todos los datos fiscales, huellas, respuestas AEAT y metadatos del software."
+    "descripcion": "Crear fiscal_verifactu_registros con todos los datos fiscales, huellas, respuestas AEAT y metadatos del software."
   },
   {
     "estado": false,
@@ -92,7 +92,7 @@
   {
     "estado": false,
     "nombre": "Outbox de remisión AEAT",
-    "descripcion": "Separar la expedición local de la remisión mediante verifactu_outbox, bloqueo SKIP LOCKED, reintentos y estados estructurados de respuesta."
+    "descripcion": "Separar la expedición local de la remisión mediante fiscal_verifactu_envios, bloqueo SKIP LOCKED, reintentos y estados estructurados de respuesta."
   },
   {
     "estado": false,

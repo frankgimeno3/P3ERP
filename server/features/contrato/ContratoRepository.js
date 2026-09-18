@@ -73,10 +73,10 @@ const baseSelect = `
     a.nombre_completo_agente AS nombre_agente_contrato,
     cu.nombre_empresa,
     co.nombre_completo_contacto AS nombre_contacto
-  FROM contratos_db c
+  FROM comercial_contratos c
   LEFT JOIN agentes_db a ON a.id_agente = c.id_agente_contrato
-  LEFT JOIN cuentas_db cu ON cu.id_cuenta = c.id_cuenta_contrato
-  LEFT JOIN contactos_db co ON co.id_contacto = c.id_contacto_contrato
+  LEFT JOIN comercial_cuentas cu ON cu.id_cuenta = c.id_cuenta_contrato
+  LEFT JOIN comercial_contactos co ON co.id_contacto = c.id_contacto_contrato
 `;
 
 export async function getContratos() {
@@ -106,7 +106,7 @@ export async function getContratoById(idContrato) {
     pool.query(
       `
         SELECT *
-        FROM lineas_contratos_db
+        FROM comercial_contratos_lineas
         WHERE id_contrato = $1
         ORDER BY numero_linea_contrato ASC NULLS LAST, id_linea_contrato ASC
       `,
@@ -115,7 +115,7 @@ export async function getContratoById(idContrato) {
     pool.query(
       `
         SELECT *
-        FROM ordenes_db
+        FROM tesoreria_ordenes
         WHERE id_contrato = $1
         ORDER BY id_orden ASC
       `,
@@ -143,7 +143,7 @@ export async function updateContrato(idContrato, data = {}) {
   }
 
   const { rowCount } = await pool.query(
-    `UPDATE contratos_db
+    `UPDATE comercial_contratos
      SET id_agente_contrato=$1,
          updated_at=NOW()
      WHERE id_contrato=$2`,
@@ -152,7 +152,7 @@ export async function updateContrato(idContrato, data = {}) {
   if (!rowCount) return null;
 
   await pool.query(
-    `UPDATE contenidos_db
+    `UPDATE produccion_contenidos
      SET id_agente=$1,updated_at=NOW()
      WHERE id_contrato=$2`,
     [agentId || null, idContrato],

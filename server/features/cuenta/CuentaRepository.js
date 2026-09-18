@@ -1,7 +1,7 @@
 import { getPgPool } from "../../database/pgClient.js";
 import { addCuentaEvento, formatChangeDetail } from "../registroEventos/RegistroEventosRepository.js";
 
-const tableName = "cuentas_db";
+const tableName = "comercial_cuentas";
 
 const writableColumns = [
   "id_cuenta",

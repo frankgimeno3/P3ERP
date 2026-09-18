@@ -31,7 +31,7 @@ const dashboardRoutes = [
   '/dashboard/comercial/propuestas/plantillas',
   '/dashboard/comercial/propuestas/[id_propuesta]',
   '/dashboard/comercial/propuestas/[id_propuesta]/editar',
-  '/dashboard/direccion/bancos',
+  '/dashboard/direccion/tesoreria',
   '/dashboard/direccion/previsiones/prevision-gastos',
   '/dashboard/direccion/previsiones/prevision-ingresos',
   '/dashboard/direccion/previsiones/prevision-ingresos/prevision-recibos',

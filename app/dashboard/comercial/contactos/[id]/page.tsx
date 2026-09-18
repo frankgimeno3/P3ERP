@@ -101,7 +101,7 @@ const FichaContacto: FC = () => {
     setComentarios(comentariosFormateados);
   }, [contactoId]);
 
-  const [pestana, setPestana] = useState<'general' | 'comentarios' | 'registro_eventos'>('general');
+  const [pestana, setPestana] = useState<'general' | 'comentarios' | 'general_eventos'>('general');
 
   if (!contactoEditable) {
     return (
@@ -142,7 +142,7 @@ const FichaContacto: FC = () => {
           {[
             { key: 'general', label: 'Datos Generales' },
             { key: 'comentarios', label: 'Comentarios' },
-            { key: 'registro_eventos', label: 'Registro de eventos' },
+            { key: 'general_eventos', label: 'Registro de eventos' },
           ].map(({ key, label }, index) => (
             <div
               key={key}
@@ -194,7 +194,7 @@ const FichaContacto: FC = () => {
             />
           )}
 
-          {pestana === 'registro_eventos' && (
+          {pestana === 'general_eventos' && (
             <RegistroEventosContacto id_contacto={contactoEditable.id_contacto} />
           )}
         </div>

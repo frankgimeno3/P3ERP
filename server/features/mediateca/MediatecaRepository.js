@@ -65,7 +65,7 @@ function normalizeMedia(row, folderPath = "") {
 async function getFolderRowById(client, folderId) {
   if (!folderId) return null;
   const { rows } = await client.query(
-    "SELECT * FROM mediateca_folders WHERE mediateca_folder_id = $1 LIMIT 1",
+    "SELECT * FROM mediateca_carpetas WHERE mediateca_folder_id = $1 LIMIT 1",
     [folderId],
   );
   return rows[0] || null;
@@ -97,7 +97,7 @@ export async function getFolderIdByPath(path) {
     const { rows } = await pool.query(
       `
         SELECT mediateca_folder_id
-        FROM mediateca_folders
+        FROM mediateca_carpetas
         WHERE lower(regexp_replace(mediateca_folder_name, '\\s+', ' ', 'g')) = $1
           AND ${parentSql}
         ORDER BY mediateca_folder_created_at ASC
@@ -124,7 +124,7 @@ export async function getFolders({ path = "" } = {}) {
   const { rows } = await pool.query(
     `
       SELECT *
-      FROM mediateca_folders
+      FROM mediateca_carpetas
       WHERE ${where}
       ORDER BY mediateca_folder_name ASC
     `,
@@ -158,7 +158,7 @@ export async function createFolder(data) {
   const existing = await pool.query(
     `
       SELECT mediateca_folder_id
-      FROM mediateca_folders
+      FROM mediateca_carpetas
       WHERE lower(regexp_replace(mediateca_folder_name, '\\s+', ' ', 'g')) = $1
         AND ${parentSql}
       LIMIT 1
@@ -170,7 +170,7 @@ export async function createFolder(data) {
   const id = crypto.randomUUID();
   const { rows } = await pool.query(
     `
-      INSERT INTO mediateca_folders (mediateca_folder_id, mediateca_folder_name, mediateca_parent_folder_id)
+      INSERT INTO mediateca_carpetas (mediateca_folder_id, mediateca_folder_name, mediateca_parent_folder_id)
       VALUES ($1, $2, $3)
       RETURNING *
     `,
@@ -187,7 +187,7 @@ export async function updateFolder(folderId, data) {
   if (!current) throw new Error("Folder not found");
   const { rows } = await pool.query(
     `
-      UPDATE mediateca_folders
+      UPDATE mediateca_carpetas
       SET mediateca_folder_name = $2,
           mediateca_folder_updated_at = NOW()
       WHERE mediateca_folder_id = $1
@@ -203,7 +203,7 @@ async function descendantFolderIds(client, folderId) {
   let frontier = [folderId];
   while (frontier.length) {
     const { rows } = await client.query(
-      "SELECT mediateca_folder_id FROM mediateca_folders WHERE mediateca_parent_folder_id = ANY($1::uuid[])",
+      "SELECT mediateca_folder_id FROM mediateca_carpetas WHERE mediateca_parent_folder_id = ANY($1::uuid[])",
       [frontier],
     );
     frontier = rows.map((row) => row.mediateca_folder_id);
@@ -221,7 +221,7 @@ export async function deleteFolder(folderId) {
     if (!current) throw new Error("Folder not found");
     const folderIds = await descendantFolderIds(client, folderId);
     const media = await client.query(
-      "SELECT mediateca_content_id, mediateca_s3_key FROM mediateca_contents WHERE mediateca_folder_id = ANY($1::uuid[])",
+      "SELECT mediateca_content_id, mediateca_s3_key FROM mediateca_archivos WHERE mediateca_folder_id = ANY($1::uuid[])",
       [folderIds],
     );
     for (const row of media.rows) {
@@ -233,8 +233,8 @@ export async function deleteFolder(folderId) {
         }
       }
     }
-    await client.query("DELETE FROM mediateca_contents WHERE mediateca_folder_id = ANY($1::uuid[])", [folderIds]);
-    await client.query("DELETE FROM mediateca_folders WHERE mediateca_folder_id = ANY($1::uuid[])", [folderIds]);
+    await client.query("DELETE FROM mediateca_archivos WHERE mediateca_folder_id = ANY($1::uuid[])", [folderIds]);
+    await client.query("DELETE FROM mediateca_carpetas WHERE mediateca_folder_id = ANY($1::uuid[])", [folderIds]);
     await client.query("COMMIT");
     return { deleted: true };
   } catch (error) {
@@ -265,7 +265,7 @@ export async function getMedia(params = {}) {
   const { rows } = await pool.query(
     `
       SELECT m.*
-      FROM mediateca_contents m
+      FROM mediateca_archivos m
       WHERE ${where}
       ORDER BY m.mediateca_content_created_at DESC
     `,
@@ -296,7 +296,7 @@ export async function createMedia(data) {
   const cdnUrl = String(data?.cdnUrl || "").trim();
   const { rows } = await pool.query(
     `
-      INSERT INTO mediateca_contents (
+      INSERT INTO mediateca_archivos (
         mediateca_content_id,
         mediateca_folder_id,
         mediateca_content_name,
@@ -316,7 +316,7 @@ export async function createMedia(data) {
 export async function getMediaById(mediaId) {
   const pool = getPgPool();
   const { rows } = await pool.query(
-    "SELECT * FROM mediateca_contents WHERE mediateca_content_id = $1 LIMIT 1",
+    "SELECT * FROM mediateca_archivos WHERE mediateca_content_id = $1 LIMIT 1",
     [mediaId],
   );
   if (!rows[0]) return null;
@@ -345,7 +345,7 @@ export async function updateMedia(mediaId, data) {
   values.push(mediaId);
   await pool.query(
     `
-      UPDATE mediateca_contents
+      UPDATE mediateca_archivos
       SET ${updates.join(", ")},
           mediateca_content_updated_at = NOW()
       WHERE mediateca_content_id = $${values.length}
@@ -366,6 +366,6 @@ export async function deleteMedia(mediaId) {
       console.warn("Mediateca delete media S3 warning:", error?.message || error);
     }
   }
-  await pool.query("DELETE FROM mediateca_contents WHERE mediateca_content_id = $1", [mediaId]);
+  await pool.query("DELETE FROM mediateca_archivos WHERE mediateca_content_id = $1", [mediaId]);
   return { deleted: true };
 }

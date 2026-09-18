@@ -45,7 +45,7 @@ export async function markFeriasRelevant(ids = []) {
   const uniqueIds = [...new Set((Array.isArray(ids) ? ids : []).map((id) => String(id || "").trim()).filter(Boolean))];
   if (!uniqueIds.length) return [];
   const { rows } = await getPgPool().query(
-    `UPDATE ferias_db
+    `UPDATE administracion_ferias
      SET es_relevante = true, updated_at = NOW()
      WHERE id_feria = ANY($1::text[])
      RETURNING *`,
@@ -63,7 +63,7 @@ export async function getFerias() {
   const pool = getPgPool();
   const { rows } = await pool.query(`
     SELECT *
-    FROM ferias_db
+    FROM administracion_ferias
     ORDER BY COALESCE(fecha_inicio, to_date(NULLIF(fecha_incio, ''), 'DD/MM/YYYY')) ASC NULLS LAST, nombre_feria ASC, id_feria ASC
   `);
 
@@ -75,7 +75,7 @@ export async function getFeriaById(idFeria) {
   const { rows } = await pool.query(
     `
       SELECT *
-      FROM ferias_db
+      FROM administracion_ferias
       WHERE id_feria = $1
       LIMIT 1
     `,
@@ -90,7 +90,7 @@ export async function createFeria(data = {}) {
   const idFeria = data.id_feria?.trim() || `feria_${Date.now()}`;
   const { rows } = await pool.query(
     `
-      INSERT INTO ferias_db (
+      INSERT INTO administracion_ferias (
         id_feria,
         titulo_especifico_edicion,
         nombre_feria,

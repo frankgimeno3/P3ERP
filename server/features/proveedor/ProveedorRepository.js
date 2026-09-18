@@ -45,8 +45,8 @@ export async function getProveedores() {
       COUNT(pg.id_pago) AS numero_pagos,
       COALESCE(SUM(pg.total_pago), 0) AS total_pagos,
       MAX(pg.fecha_pago) AS ultimo_pago
-    FROM proveedores_db p
-    LEFT JOIN pagos_db pg ON pg.id_proveedor = p.id_proveedor
+    FROM administracion_proveedores p
+    LEFT JOIN tesoreria_pagos_previstos pg ON pg.id_proveedor = p.id_proveedor
     GROUP BY p.id_proveedor
     ORDER BY p.nombre_proveedor ASC, p.id_proveedor ASC
   `);
@@ -58,8 +58,8 @@ export async function getPagosProveedores() {
   const pool = getPgPool();
   const { rows } = await pool.query(`
     SELECT pg.*, p.nombre_proveedor
-    FROM pagos_db pg
-    LEFT JOIN proveedores_db p ON p.id_proveedor = pg.id_proveedor
+    FROM tesoreria_pagos_previstos pg
+    LEFT JOIN administracion_proveedores p ON p.id_proveedor = pg.id_proveedor
     ORDER BY to_date(NULLIF(pg.fecha_pago, ''), 'DD/MM/YYYY') DESC NULLS LAST, pg.id_pago ASC
   `);
 

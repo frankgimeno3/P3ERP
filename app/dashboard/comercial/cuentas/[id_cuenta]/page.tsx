@@ -22,7 +22,7 @@ interface Comentario {
   contenido: string;
 }
 
-type PestanaCuenta = 'general' | 'comentarios' | 'contactos' | 'propuestas' | 'contratos' | 'contenidos' | 'datos_administrativos' | 'registro_eventos';
+type PestanaCuenta = 'general' | 'comentarios' | 'contactos' | 'propuestas' | 'contratos' | 'contenidos' | 'datos_administrativos' | 'general_eventos';
 
 const datosComercialesDefault = {
   ciudad_principal_cuenta: '',
@@ -249,7 +249,7 @@ const FichaCliente = () => {
               { key: 'contratos', label: 'Contratos' },
               { key: 'contenidos', label: 'Contenidos' },
               { key: 'datos_administrativos', label: 'Datos administrativos' },
-              { key: 'registro_eventos', label: 'Registro de eventos' },
+              { key: 'general_eventos', label: 'Registro de eventos' },
             ].map(({ key, label }, index) => (
               <div
                 key={key}
@@ -329,7 +329,7 @@ const FichaCliente = () => {
             />
           )}
 
-          {pestana === 'registro_eventos' && (
+          {pestana === 'general_eventos' && (
             <RegistroEventosCuenta id_cuenta={id_cuenta} />
           )}
         </div>

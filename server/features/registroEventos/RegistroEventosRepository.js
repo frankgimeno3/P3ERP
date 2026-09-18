@@ -11,7 +11,7 @@ export async function addCuentaEvento({ idCuenta, idAgente = "", eventType = "Ac
   if (!idCuenta || !detalles) return null;
   const { rows } = await client.query(
     `
-      INSERT INTO registro_eventos (id, event_type, id_agente, tipo_entidad, id_entidad, detalles)
+      INSERT INTO general_eventos (id, event_type, id_agente, tipo_entidad, id_entidad, detalles)
       VALUES ($1, $2, $3, 'cuenta', $4, $5)
       RETURNING id, created_at, event_type, id_agente, id_entidad AS id_cuenta, detalles
     `,
@@ -43,7 +43,7 @@ export async function addContactoEvento({ idContacto, idAgente = "", eventType =
   if (!idContacto || !detalles) return null;
   const { rows } = await client.query(
     `
-      INSERT INTO registro_eventos (id, event_type, id_agente, tipo_entidad, id_entidad, detalles)
+      INSERT INTO general_eventos (id, event_type, id_agente, tipo_entidad, id_entidad, detalles)
       VALUES ($1, $2, $3, 'contacto', $4, $5)
       RETURNING id, created_at, event_type, id_agente, id_entidad AS id_contacto, detalles
     `,
@@ -57,7 +57,7 @@ export async function getCuentaEventos(idCuenta) {
   const { rows } = await pool.query(
     `
       SELECT id, created_at, event_type, id_agente, id_entidad AS id_cuenta, detalles
-      FROM registro_eventos
+      FROM general_eventos
       WHERE tipo_entidad = 'cuenta' AND id_entidad = $1
       ORDER BY created_at DESC
     `,
@@ -71,7 +71,7 @@ export async function getContactoEventos(idContacto) {
   const { rows } = await pool.query(
     `
       SELECT id, created_at, event_type, id_agente, id_entidad AS id_contacto, detalles
-      FROM registro_eventos
+      FROM general_eventos
       WHERE tipo_entidad = 'contacto' AND id_entidad = $1
       ORDER BY created_at DESC
     `,

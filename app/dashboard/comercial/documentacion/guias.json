@@ -135,7 +135,7 @@
       "Despliega Filtros para buscar por proveedor, nombre fiscal y código fiscal; puedes combinarlos y se mantienen al cerrar el desplegable. No hay búsqueda general adicional.",
       "Pulsa Crear proveedor: introduce un nombre obligatorio y revisa coincidencias; después comprueba el código fiscal o pulsa No lo sé, saltar. En la tercera fase completa el nombre fiscal, selecciona obligatoriamente un país del catálogo mundial y escribe la moneda. El país usa un único campo desplegable: al pulsarlo aparecen opciones y al escribir se filtran; selecciona una opción. El identificador y las fechas de registro son automáticos.",
       "Al guardar se vuelven a comprobar duplicados y se abre la ficha en Datos. Desde las otras pestañas consulta cargos pendientes, tickets, facturas y precios.",
-      "Desde la ficha puedes Agregar cargo previsto con el mismo modal de Previsión de liquidez y el proveedor preseleccionado. En Tickets y Facturas, los botones de alta abren los formularios administrativos con ese proveedor seleccionado. En Precios, Agregar producto / servicio guarda servicio, descripción, unidad y precio por unidad en proveedores_benchmark.",
+      "Desde la ficha puedes Agregar cargo previsto con el mismo modal de Previsión de liquidez y el proveedor preseleccionado. En Tickets y Facturas, los botones de alta abren los formularios administrativos con ese proveedor seleccionado. En Precios, Agregar producto / servicio guarda servicio, descripción, unidad y precio por unidad en administracion_benchmark_proveedores.",
       "Las variantes indicadas de ADOBE, AMAZON BUSINESS, BANCO SABADELL, BITAVIS SERVEIS INFORMATICS, CORREOS, ENDESA, LINKEDIN, MOEVE, PIXUP, VERISURE, THALASSA y STARRESA se muestran en una única ficha por proveedor, conservando sus referencias y el acceso desde los identificadores antiguos.",
       "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape.",
       "La ficha contiene Cargos bancarios, con todos los gastos relacionados con el proveedor, tengan o no pago previsto o cargo recurrente, y un filtro por columna.",
@@ -202,7 +202,7 @@
       "Actualiza los datos operativos y guarda."
     ]
   },
-  "/dashboard/direccion/bancos": {
+  "/dashboard/direccion/tesoreria": {
     "summary": "Importa, ordena y revisa los movimientos de las cuentas bancarias de la empresa.",
     "steps": [
       "Pulsa Añadir extracto, selecciona Santander o Sabadell e indica expresamente si el archivo tiene cabezal. Sin cabezal exige la tabla en la primera fila; con cabezal localiza la tabla después de los datos informativos de la cuenta.",
@@ -211,7 +211,7 @@
       "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape."
     ]
   },
-  "/dashboard/direccion/bancos/extractos": {
+  "/dashboard/direccion/tesoreria/extractos": {
     "summary": "Importa y consulta los extractos de Sabadell y Santander.",
     "steps": [
       "Cambia entre las pestañas Sabadell y Santander y abre, cuando lo necesites, el filtro inicialmente oculto de dos filas para buscar por fecha, tipo, concepto, importe, estado o asociación.",
@@ -220,7 +220,7 @@
       "La ficha de cada extracto muestra el apartado Cargo previsto: indica si existe una asociación, su programación e importe y un enlace para consultarla o modificarla. Si no existe, Asociar o crear cargo previsto abre el asistente compartido; si falta destinatario, permite elegir primero proveedor o empleado. Los ingresos no admiten cargos previstos. La asociación se guarda al confirmar el asistente."
     ]
   },
-  "/dashboard/direccion/bancos/extractos/revision": {
+  "/dashboard/direccion/tesoreria/extractos/revision": {
     "summary": "Revisa, asigna y concilia líneas bancarias individualmente o en bloque.",
     "steps": [
       "La ficha y el modal de revisión utilizan las mismas cinco fases, con Volver atrás: avisos, destinatario, previsión, ajustes y revisión final. Solo se guarda al confirmar la fase 5, también para ingresos y nóminas.",
@@ -253,7 +253,7 @@
       "Al confirmar, la suma debe coincidir exactamente con el ingreso. Se actualizan estados y fechas de cobro de las órdenes y recibos vinculados, las remesas y la factura, con comentario del usuario en la cuenta. Desmarcar la revisión recalcula esos estados; un cobro ya conciliado no puede duplicarse."
     ]
   },
-  "/dashboard/direccion/bancos/prevision-liquidez": {
+  "/dashboard/direccion/tesoreria/prevision-liquidez": {
     "summary": "Proyecta la liquidez a partir de cobros y cargos previstos.",
     "steps": [
       "Indica la fecha con los campos separados de día, mes y año para calcular la liquidez de ambos bancos.",
@@ -262,7 +262,7 @@
       "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape.",
       "Cada cargo de tipo nómina genera o reutiliza automáticamente la ficha única del empleado en Laboral > Nóminas. Desde esa ficha puedes modificar la programación del cargo y consultar sus movimientos bancarios.",
       "Cada cargo recurrente tiene acciones Editar y Eliminar con modal de confirmación. Editar permite modificar los datos de su programación; Eliminar desasigna todos los extractos vinculados y conserva los movimientos y nóminas registrados.",
-      "Pulsa una fila para abrir /dashboard/direccion/bancos/prevision-liquidez/[id], con los datos del cargo previsto y una tabla de todos sus registros bancarios asociados.",
+      "Pulsa una fila para abrir /dashboard/direccion/tesoreria/prevision-liquidez/[id], con los datos del cargo previsto y una tabla de todos sus registros bancarios asociados.",
       "La tabla de cargos previstos presenta Descripción, Tipo y Asignado a como primeras columnas, seguidas de Fecha, Base imponible, Importe y Acciones.",
       "Todos es la pestaña inicial y reúne recibos y transferencias. Puedes cambiar a Recibos, Transfers o Remesas; cada remesa aparece una sola vez.",
       "Debajo de las pestañas hay un filtro por cada campo visible, distribuido en dos filas. Los filtros se combinan; las fechas tienen dd, mm y yyyy separados. Limpiar filtros restablece la tabla y cambiar de pestaña reinicia los filtros.",
@@ -277,7 +277,7 @@
       "Los ingresos previstos proceden de las órdenes pendientes: recibos y transferencias, sin recurrencia. Los cambios de importe, fecha y banco realizados al preparar la factura se reflejan en esas órdenes y en liquidez. Agrupar recibos en una remesa no suma un ingreso adicional."
     ]
   },
-  "/dashboard/direccion/bancos/prevision-ingresos": {
+  "/dashboard/direccion/tesoreria/prevision-ingresos": {
     "summary": "Reúne órdenes de cobro e ingresos adicionales previstos.",
     "steps": [
       "Todos es la pestaña inicial y reúne recibos y transferencias. Puedes cambiar a Recibos, Transfers o Remesas; cada remesa aparece una sola vez.",
@@ -293,13 +293,20 @@
       "Los ingresos previstos proceden de las órdenes pendientes: recibos y transferencias, sin recurrencia. Los cambios de importe, fecha y banco realizados al preparar la factura se reflejan en esas órdenes y en liquidez. Agrupar recibos en una remesa no suma un ingreso adicional."
     ]
   },
-  "/dashboard/direccion/bancos/prevision-cargos": {
+  "/dashboard/direccion/tesoreria/prevision-cargos": {
     "summary": "Gestiona cargos recurrentes previstos y cargos bancarios pendientes de asociar.",
     "steps": [
       "Alterna entre Cargos previstos registrados y Cargos pendientes de asociar.",
       "Filtra por tipo Proveedor o Nómina, base imponible, importe total o neto, proveedor o empleado, fecha y descripción.",
       "Al agregar un cargo elige Proveedor para buscar el proveedor o dejarlo sin asignar, o Nómina para seleccionar un empleado e indicar su importe neto. Programa fechas con dd, mm y yyyy separados o una periodicidad, con una o varias reglas. No se permite duplicar un cargo previsto activo del mismo empleado. El interruptor Con IVA calcula la base automáticamente como total / 1,21 y Sin IVA como el total. El mismo formulario se usa desde proveedores y revisión bancaria.",
       "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape."
+    ]
+  },
+  "/dashboard/direccion/rds": {
+    "summary": "Consulta la finalidad y la estructura actual de cada tabla RDS.",
+    "steps": [
+      "Abre una tabla para ver sus columnas, tipos, claves, valores por defecto y descripciones.",
+      "La estructura se consulta en PostgreSQL al abrir la p?gina; los cambios de esquema aparecen autom?ticamente. Las descripciones funcionales se mantienen como comentarios de tabla en RDS."
     ]
   },
   "/dashboard/direccion/copias-seguridad": {

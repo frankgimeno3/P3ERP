@@ -1,3 +1,4 @@
+import { readLegacyMigrationSql } from './readLegacyMigrationSql.mjs';
 import fs from 'node:fs';
 import env from '@next/env';
 import { getPgPool } from '../server/database/pgClient.js';
@@ -8,7 +9,7 @@ const db = await pool.connect();
 try {
   await db.query('BEGIN');
   await db.query("SET LOCAL lock_timeout='3s'");
-  await db.query(fs.readFileSync('database/migrations/20260914_0001_forecast_receipt_import.sql', 'utf8'));
+  await db.query(readLegacyMigrationSql('database/migrations/20260914_0001_forecast_receipt_import.sql'));
   await db.query('COMMIT');
   console.log('Forecast receipt import migration applied.');
 } catch (error) {

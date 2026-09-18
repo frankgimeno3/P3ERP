@@ -88,13 +88,13 @@ export async function getLineasBanco() {
   const { rows } = await pool.query(`
     SELECT lb.*, p.nombre_proveedor, c.nombre_empresa AS nombre_cuenta, a.nombre_completo_agente AS nombre_agente,
       cr.programacion AS programacion_cargo_recurrente,
-      ARRAY(SELECT DISTINCT co.id_remesa FROM banco_cobros_ordenes co WHERE co.id_linea_banco=lb.id_linea_banco AND co.id_remesa IS NOT NULL) remesa_ids,
-      ARRAY(SELECT co.id_orden FROM banco_cobros_ordenes co WHERE co.id_linea_banco=lb.id_linea_banco) ordenes_cobro
-    FROM lineas_bancos lb
-    LEFT JOIN proveedores_db p ON p.id_proveedor=lb.id_proveedor
-    LEFT JOIN cuentas_db c ON c.id_cuenta=lb.id_cuenta
+      ARRAY(SELECT DISTINCT co.id_remesa FROM tesoreria_aplicaciones_cobro co WHERE co.id_linea_banco=lb.id_linea_banco AND co.id_remesa IS NOT NULL) remesa_ids,
+      ARRAY(SELECT co.id_orden FROM tesoreria_aplicaciones_cobro co WHERE co.id_linea_banco=lb.id_linea_banco) ordenes_cobro
+    FROM tesoreria_movimientos_bancarios lb
+    LEFT JOIN administracion_proveedores p ON p.id_proveedor=lb.id_proveedor
+    LEFT JOIN comercial_cuentas c ON c.id_cuenta=lb.id_cuenta
     LEFT JOIN agentes_db a ON a.id_agente=lb.id_agente
-    LEFT JOIN cargos_recurrentes cr ON cr.id_cargo_recurrente=lb.id_cargo_recurrente
+    LEFT JOIN tesoreria_cargos_recurrentes cr ON cr.id_cargo_recurrente=lb.id_cargo_recurrente
     ORDER BY lb.id_linea_banco DESC
   `);
 
@@ -105,11 +105,11 @@ export async function getLineaBancoById(idLineaBanco) {
   const pool = getPgPool();
   const { rows } = await pool.query(`
     SELECT lb.*, p.nombre_proveedor, c.nombre_empresa AS nombre_cuenta, a.nombre_completo_agente AS nombre_agente,
-      ARRAY(SELECT DISTINCT co.id_remesa FROM banco_cobros_ordenes co WHERE co.id_linea_banco=lb.id_linea_banco AND co.id_remesa IS NOT NULL) remesa_ids,
-      ARRAY(SELECT co.id_orden FROM banco_cobros_ordenes co WHERE co.id_linea_banco=lb.id_linea_banco) ordenes_cobro
-    FROM lineas_bancos lb
-    LEFT JOIN proveedores_db p ON p.id_proveedor = lb.id_proveedor
-    LEFT JOIN cuentas_db c ON c.id_cuenta = lb.id_cuenta
+      ARRAY(SELECT DISTINCT co.id_remesa FROM tesoreria_aplicaciones_cobro co WHERE co.id_linea_banco=lb.id_linea_banco AND co.id_remesa IS NOT NULL) remesa_ids,
+      ARRAY(SELECT co.id_orden FROM tesoreria_aplicaciones_cobro co WHERE co.id_linea_banco=lb.id_linea_banco) ordenes_cobro
+    FROM tesoreria_movimientos_bancarios lb
+    LEFT JOIN administracion_proveedores p ON p.id_proveedor = lb.id_proveedor
+    LEFT JOIN comercial_cuentas c ON c.id_cuenta = lb.id_cuenta
     LEFT JOIN agentes_db a ON a.id_agente = lb.id_agente
     WHERE lb.id_linea_banco = $1
   `, [idLineaBanco]);
@@ -137,7 +137,7 @@ export async function createLineasBanco(lineas = []) {
 
   const { rows } = await pool.query(
     `
-      INSERT INTO lineas_bancos (
+      INSERT INTO tesoreria_movimientos_bancarios (
         id_linea_banco,
         banco,
         fecha_operativa,
@@ -164,8 +164,8 @@ export async function reconcileLineasBanco(banco, sourceLineas = []) {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
-    await client.query("LOCK TABLE lineas_bancos IN EXCLUSIVE MODE");
-    const { rows: storedRows } = await client.query("SELECT * FROM lineas_bancos WHERE banco = $1 ORDER BY id_linea_banco ASC", [banco]);
+    await client.query("LOCK TABLE tesoreria_movimientos_bancarios IN EXCLUSIVE MODE");
+    const { rows: storedRows } = await client.query("SELECT * FROM tesoreria_movimientos_bancarios WHERE banco = $1 ORDER BY id_linea_banco ASC", [banco]);
     const existing = storedRows.map(normalizeLineaBanco);
     const incoming = chronologicalRows(sourceLineas.map((linea) => ({
       banco,
@@ -190,7 +190,7 @@ export async function reconcileLineasBanco(banco, sourceLineas = []) {
 
     for (const linea of added) {
       await client.query(
-        `INSERT INTO lineas_bancos
+        `INSERT INTO tesoreria_movimientos_bancarios
           (id_linea_banco, banco, fecha_operativa, fecha_valor, concepto, importe, saldo, estado_revision, comentarios, id_proveedor, id_cuenta, id_orden, id_pago, id_cargo_recurrente, created_at, updated_at, id_agente, duplicado_descartado)
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,COALESCE($15,NOW()),COALESCE($16,NOW()),$17,$18)`,
         [linea.id_linea_banco, banco, linea.fecha_operativa, linea.fecha_valor, linea.concepto, linea.importe, linea.saldo,
@@ -211,14 +211,14 @@ export async function reconcileLineasBanco(banco, sourceLineas = []) {
 
 export async function updateLineaBanco(idLineaBanco, data = {}) {
   const pool = getPgPool();
-  const before = (await pool.query('SELECT * FROM lineas_bancos WHERE id_linea_banco=$1', [idLineaBanco])).rows[0];
+  const before = (await pool.query('SELECT * FROM tesoreria_movimientos_bancarios WHERE id_linea_banco=$1', [idLineaBanco])).rows[0];
   if (!before) return null;
   if (Number(before.importe) > 0 && ['estado_revision','id_orden','id_cuenta','id_proveedor','id_agente','id_pago','id_cargo_recurrente'].some(key=>data[key] !== undefined && String(data[key] ?? '') !== String(before[key] ?? ''))) {
     throw new Error('Utiliza el asistente de revisión bancaria para modificar el estado o los vínculos de un ingreso.');
   }
   const { rows } = await pool.query(
     `
-      UPDATE lineas_bancos
+      UPDATE tesoreria_movimientos_bancarios
       SET estado_revision = $1,
           comentarios = $2,
           id_proveedor = CASE WHEN $3 THEN $4 ELSE id_proveedor END,

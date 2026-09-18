@@ -23,7 +23,7 @@ export default function IncomeReviewFields({ line, draft, remesas, orders, onCha
       {selected.map(id=><div key={id} className="flex items-center justify-between rounded border bg-white p-2"><span>{id} · {money(remesas.find(r=>r.id_remesa===id)?.importe_total)}</span><button type="button" aria-label={'Quitar remesa '+id} onClick={()=>onChange({remesaIds:selected.filter(value=>value!==id)})} className="cursor-pointer rounded px-2 text-xl hover:bg-red-50">×</button></div>)}
       <p className="text-sm">Total seleccionado: {money(selected.reduce((sum,id)=>sum+Number(remesas.find(r=>r.id_remesa===id)?.importe_total || 0),0))}. Puedes asociar una o varias remesas al movimiento.</p>
     </>}
-    {draft.incomeType==='transferencia' && <SearchableSelect required label="Orden de transferencia" value={draft.orderId || ''} onChange={id=>onChange({orderId:id,entityId:orders.find(o=>o.id_orden===id)?.id_cuenta || '',entityType:'cliente'})} options={orders.filter(o=>/transf/i.test(o.forma_cobro || '') && !o.cobrada).map(o=>({value:o.id_orden,label:`${o.id_orden} · ${o.cliente || ''} · ${money(o.cobro_total)} · ${o.fecha_teorica_cobro}`}))} />}
+    {draft.incomeType==='transferencia' && <SearchableSelect required label="Orden de transferencia" value={draft.orderId || ''} onChange={id=>onChange({orderId:id,entityId:orders.find(o=>o.id_orden===id)?.id_cuenta || '',entityType:'cliente'})} options={orders.filter(o=>/transf/i.test(o.forma_cobro || '') && !o.cobrada && !o.cancelada).map(o=>({value:o.id_orden,label:`${o.id_orden} · ${o.cliente || ''} · ${money(o.cobro_total)} · ${o.fecha_teorica_cobro}`}))} />}
     {draft.incomeType==='otro' && <p className="text-sm">Este ingreso se registrará sin marcar una orden como cobrada.</p>}
   </div>;
 }

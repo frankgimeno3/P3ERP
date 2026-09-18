@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
-import RecurringChargeModal from '../../direccion/bancos/RecurringChargeModal';
-import { reviewButton as button } from '../../direccion/bancos/RecurringChargeForm';
+import RecurringChargeModal from '../../direccion/tesoreria/RecurringChargeModal';
+import { reviewButton as button } from '../../direccion/tesoreria/RecurringChargeForm';
 export default function SupplierActions({ supplier, tab }: { supplier:any; tab:string }) {
   const [modal,setModal]=useState(''),[rows,setRows]=useState<any[]>([]),[charges,setCharges]=useState<any[]>([]),[version,setVersion]=useState(0),[error,setError]=useState(''),[saving,setSaving]=useState(false);
   const [form,setForm]=useState({servicio:'',descripcion:'',unidad:'',precio_por_unidad:''});

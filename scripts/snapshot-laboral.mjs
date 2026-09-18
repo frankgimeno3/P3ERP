@@ -5,7 +5,7 @@ import { getPgPool } from '../server/database/pgClient.js';
 
 nextEnv.loadEnvConfig(process.cwd());
 const pool = getPgPool();
-const tables = ['agentes_db','anticipos_empleados','nominas','calendarios_laborales','eventos_calendario_laboral','empleados_libre_disposicion','ausencias_empleados','comentarios_empleados','procesos_contratacion','candidatos_contratacion','documentos_laborales'];
+const tables = ['agentes_db','laboral_anticipos','laboral_nominas','laboral_calendarios','laboral_eventos_calendario','laboral_dias_libre_disposicion','laboral_ausencias','laboral_comentarios_empleados','laboral_procesos_seleccion','laboral_candidatos','laboral_documentos'];
 let snapshot = fs.readFileSync('database/schema.md','utf8');
 const cell = value => String(value ?? '').replaceAll('|','\\|');
 try {

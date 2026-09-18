@@ -47,7 +47,7 @@ export async function getBackupCatalog() {
 export async function getBackupRegistry() {
   const { rows } = await getPgPool().query(`
     SELECT id_copia_seguridad, nombre, fecha, detalles, estado, tablas
-    FROM registro_copias_seguridad
+    FROM general_copias_seguridad
     ORDER BY fecha DESC, id_copia_seguridad DESC
   `);
   return rows;
@@ -55,7 +55,7 @@ export async function getBackupRegistry() {
 
 async function saveRegistry({ nombre, detalles, estado, tablas }) {
   await getPgPool().query(
-    `INSERT INTO registro_copias_seguridad (nombre, detalles, estado, tablas)
+    `INSERT INTO general_copias_seguridad (nombre, detalles, estado, tablas)
      VALUES ($1, $2, $3, $4::jsonb)`,
     [nombre, detalles, estado, JSON.stringify(tablas || [])],
   );

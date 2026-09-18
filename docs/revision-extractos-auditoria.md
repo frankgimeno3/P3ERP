@@ -11,7 +11,7 @@ Revisión del código y pruebas de integración. No se ha realizado validación 
 | Elegir completa, anticipo o adicional en fase 2 | Selector obligatorio antes de avanzar |
 | Nómina recurrente en fase 3 | Selector de cargo, regla y nómina mensual/periodo |
 | Adicional puntual | Diferencia en fase 4, resumen explícito en fase 5 y validación transaccional; conserva recurrente |
-| Anticipo asociado a nómina mensual en RDS | Registro en `anticipos_empleados` y relación en `nominas.anticipos` por empleado y periodo |
+| Anticipo asociado a nómina mensual en RDS | Registro en `laboral_anticipos` y relación en `laboral_nominas.anticipos` por empleado y periodo |
 | Completa: neto menos anticipos igual a transferencia | Cálculo y comprobación en cliente y servidor |
 | Sin anticipos ni compensaciones | Mensaje en fase 4 cuando no hay anticipos; los pendientes se muestran aparte sin descontarlos |
 | Subir nómina recurrente si completa mayor y sin anticipos | Opción explícita en fase 4 y resumen en fase 5 |
@@ -25,7 +25,7 @@ Revisión del código y pruebas de integración. No se ha realizado validación 
 | País en un único campo desplegable y filtrable | `SupplierCountrySelect` en Crear proveedor |
 | Crear cargo desde proveedor | `SupplierActions` usa `RecurringChargeModal`, compartido con liquidez |
 | Crear ticket y factura desde proveedor | Accesos a formularios existentes con proveedor preseleccionado |
-| Agregar producto/servicio en precios | Modal y API para `proveedores_benchmark`: servicio, descripción, unidad y precio por unidad |
+| Agregar producto/servicio en precios | Modal y API para `administracion_benchmark_proveedores`: servicio, descripción, unidad y precio por unidad |
 | Filtro con/sin proveedor | Selector en listado de revisión |
 | Mismo proveedor: aviso y continuar | Conserva asignación común y permite avanzar |
 | Otro proveedor: omitir o sobrescribir cada incidencia | Decisión individual obligatoria; incluye propietarios de pagos/cargos vinculados |

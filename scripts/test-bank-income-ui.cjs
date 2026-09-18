@@ -6,7 +6,7 @@ Object.assign(global,{window:dom.window,document:dom.window.document,navigator:d
 dom.window.HTMLElement.prototype.scrollIntoView=function(){};
 const React=require('react'),{createRoot}=require('react-dom/client'),{act}=React;
 function load(file){const filename=path.resolve(file),m=new Module(filename,module);m.filename=filename;m.paths=module.paths;const original=m.require.bind(m);m.require=id=>id==='@/app/components/SearchableSelect'?load('app/components/SearchableSelect.tsx'):id.startsWith('./')?load(path.join(path.dirname(file),id+'.tsx')):original(id);m._compile(ts.transpileModule(fs.readFileSync(filename,'utf8'),{compilerOptions:{jsx:ts.JsxEmit.ReactJSX,module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true}}).outputText,filename);return m.exports;}
-const Wizard=load('app/dashboard/direccion/bancos/BankReviewWizard.tsx').default;
+const Wizard=load('app/dashboard/direccion/tesoreria/BankReviewWizard.tsx').default;
 const remesas=[{id_remesa:'REM-1',importe_total:300,numero_recibos:2,recibos_sin_orden:0,fecha_teorica:'15/09/2026',cobrada:false},{id_remesa:'REM-OTHER',importe_total:600,numero_recibos:1,recibos_sin_orden:0,cobrada:false,fecha_teorica:'15/09/2026'},{id_remesa:'REM-PAID',importe_total:300,numero_recibos:1,cobrada:true}];
 const orders=[{id_orden:'TRANSFER',forma_cobro:'transferencia',cobro_total:50,id_cuenta:'client',cliente:'Cliente'},{id_orden:'RECEIPT',forma_cobro:'recibo',cobro_total:50,id_cuenta:'client'}];
 let saved;

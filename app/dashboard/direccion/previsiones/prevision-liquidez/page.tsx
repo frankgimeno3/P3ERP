@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import MiddleNav from "@/app/general_components/componentes_recurrentes/MiddleNav";
 import PrevisionIngresosPage from "../prevision-ingresos/page";
-import PrevisionCargosPage from "../../bancos/prevision-cargos/page";
+import PrevisionCargosPage from "../../tesoreria/prevision-cargos/page";
 
 export default function PrevisionLiquidezPage() {
   const now = new Date();

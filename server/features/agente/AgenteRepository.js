@@ -156,7 +156,7 @@ export async function discardAgenteDraft(idAgente) {
 
 export async function activeRoleExists(roleId) {
   const pool = getPgPool();
-  const { rowCount } = await pool.query(`SELECT 1 FROM roles_db WHERE id_rol = $1 AND lower(COALESCE(estado_rol, 'activo')) = 'activo' LIMIT 1`, [roleId]);
+  const { rowCount } = await pool.query(`SELECT 1 FROM agentes_roles WHERE id_rol = $1 AND lower(COALESCE(estado_rol, 'activo')) = 'activo' LIMIT 1`, [roleId]);
   return rowCount > 0;
 }
 
@@ -171,13 +171,13 @@ export async function deleteAgente(idAgente, beforeDelete) {
       return null;
     }
     const agente = normalizeAgente(rows[0]);
-    const history = await client.query(`SELECT 1 FROM nominas WHERE id_empleado=$1
-      UNION ALL SELECT 1 FROM nominas_empleados WHERE id_empleado=$1
-      UNION ALL SELECT 1 FROM anticipos_empleados WHERE id_empleado=$1
-      UNION ALL SELECT 1 FROM empleados_libre_disposicion WHERE id_empleado=$1
-      UNION ALL SELECT 1 FROM ausencias_empleados WHERE id_empleado=$1
-      UNION ALL SELECT 1 FROM comentarios_empleados WHERE id_empleado=$1
-      UNION ALL SELECT 1 FROM documentos_laborales WHERE id_empleado=$1 LIMIT 1`, [idAgente]);
+    const history = await client.query(`SELECT 1 FROM laboral_nominas WHERE id_empleado=$1
+      UNION ALL SELECT 1 FROM laboral_empleados_en_nomina WHERE id_empleado=$1
+      UNION ALL SELECT 1 FROM laboral_anticipos WHERE id_empleado=$1
+      UNION ALL SELECT 1 FROM laboral_dias_libre_disposicion WHERE id_empleado=$1
+      UNION ALL SELECT 1 FROM laboral_ausencias WHERE id_empleado=$1
+      UNION ALL SELECT 1 FROM laboral_comentarios_empleados WHERE id_empleado=$1
+      UNION ALL SELECT 1 FROM laboral_documentos WHERE id_empleado=$1 LIMIT 1`, [idAgente]);
     if (history.rowCount) {
       const error = new Error("El agente tiene histórico laboral. Desactiva su cuenta de empleado para conservarlo; no se ha borrado la cuenta.");
       error.code = "EMPLOYEE_HISTORY";

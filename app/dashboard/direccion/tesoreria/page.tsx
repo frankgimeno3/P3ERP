@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { ChangeEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -155,7 +155,7 @@ function sortByBankId(a: ImportedLinea, b: ImportedLinea) {
   return getIdSerial(a.id_linea_banco) - getIdSerial(b.id_linea_banco);
 }
 
-export default function BancosPage() {
+export default function TesoreriaPage() {
   const router = useRouter();
   const [lineas, setLineas] = useState<LineaBanco[]>([]);
   const [loading, setLoading] = useState(true);
@@ -445,7 +445,7 @@ export default function BancosPage() {
           <p className="text-sm text-gray-500">Lineas bancarias importadas y revision de movimientos</p>
         </div>
         <div className="flex gap-2">
-          <button type="button" onClick={() => router.push('/dashboard/direccion/bancos/extractos/revision')} className="cursor-pointer rounded border border-blue-950 px-4 py-2 text-sm font-medium text-blue-950 transition hover:bg-blue-50 hover:shadow-sm">Revisión de líneas</button>
+          <button type="button" onClick={() => router.push('/dashboard/direccion/tesoreria/extractos/revision')} className="cursor-pointer rounded border border-blue-950 px-4 py-2 text-sm font-medium text-blue-950 transition hover:bg-blue-50 hover:shadow-sm">Revisión de líneas</button>
           <button
             type="button"
             onClick={() => setIsInformeModalOpen(true)}
@@ -527,7 +527,7 @@ export default function BancosPage() {
             {!loading && filteredLineas.map((linea) => (
               <tr key={linea.id_linea_banco} className={`border-t border-gray-200 transition-colors ${linea.estado_revision ? 'bg-green-50' : 'bg-white'}`}>
                 <td className="px-3 py-2">{linea.fecha_valor}</td>
-                <td className="px-3 py-2"><button type="button" onClick={() => router.push(`/dashboard/direccion/bancos/extractos/revision/${encodeURIComponent(linea.id_linea_banco)}`)} className="cursor-pointer text-left transition-colors hover:text-blue-700 hover:underline">{linea.concepto}</button></td>
+                <td className="px-3 py-2"><button type="button" onClick={() => router.push(`/dashboard/direccion/tesoreria/extractos/revision/${encodeURIComponent(linea.id_linea_banco)}`)} className="cursor-pointer text-left transition-colors hover:text-blue-700 hover:underline">{linea.concepto}</button></td>
                 <td className="px-3 py-2 text-right">{formatCurrency(linea.importe)}</td>
                 <td className="px-3 py-2 text-right">{formatCurrency(linea.saldo)}</td>
                 <td className="px-3 py-2">

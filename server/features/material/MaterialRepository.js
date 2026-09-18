@@ -2,17 +2,17 @@ import { randomUUID } from "node:crypto";
 import { getPgPool } from "../../database/pgClient.js";
 
 export async function getMateriales() {
-  return (await getPgPool().query("SELECT * FROM materiales_db ORDER BY created_at DESC")).rows;
+  return (await getPgPool().query("SELECT * FROM produccion_materiales ORDER BY created_at DESC")).rows;
 }
 
 export async function getMaterial(idMaterial) {
-  return (await getPgPool().query("SELECT * FROM materiales_db WHERE id_material=$1", [idMaterial])).rows[0] || null;
+  return (await getPgPool().query("SELECT * FROM produccion_materiales WHERE id_material=$1", [idMaterial])).rows[0] || null;
 }
 
 export async function saveMaterial(idMaterial, data = {}) {
   const materialId = idMaterial || data.id_material || `material_${randomUUID().slice(0, 12)}`;
   const { rows } = await getPgPool().query(
-    `INSERT INTO materiales_db
+    `INSERT INTO produccion_materiales
       (id_material,nombre_material,validacion_produccion,comentarios,mediateca_id,archivo_url)
      VALUES ($1,$2,$3,$4,$5,$6)
      ON CONFLICT (id_material) DO UPDATE SET

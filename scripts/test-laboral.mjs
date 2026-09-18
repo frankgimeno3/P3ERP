@@ -1,3 +1,4 @@
+import { readLegacyMigrationSql } from './readLegacyMigrationSql.mjs';
 // Run: node --experimental-default-type=module scripts/test-laboral.mjs
 // Uses an isolated schema inside a transaction; all fixtures and DDL are rolled back.
 import assert from 'node:assert/strict';
@@ -19,10 +20,10 @@ try {
   await client.query('BEGIN');
   await client.query(`CREATE SCHEMA ${schema}`);
   await client.query(`SET LOCAL search_path TO ${schema}`);
-  for (const table of ['agentes_db','lineas_bancos','roles_db']) await client.query(`CREATE TABLE ${table} (LIKE public.${table} INCLUDING ALL)`);
-  await client.query(fs.readFileSync('database/migrations/20260905_0001_laboral.sql','utf8'));
-  await client.query(fs.readFileSync('database/migrations/20260905_0002_laboral_documentos_rds.sql','utf8'));
-  await client.query('CREATE TABLE nominas_empleados (LIKE public.nominas_empleados INCLUDING ALL)');
+  for (const table of ['agentes_db','tesoreria_movimientos_bancarios','agentes_roles']) await client.query(`CREATE TABLE ${table} (LIKE public.${table} INCLUDING ALL)`);
+  await client.query(readLegacyMigrationSql('database/migrations/20260905_0001_laboral.sql'));
+  await client.query(readLegacyMigrationSql('database/migrations/20260905_0002_laboral_documentos_rds.sql'));
+  await client.query('CREATE TABLE laboral_empleados_en_nomina (LIKE public.laboral_empleados_en_nomina INCLUDING ALL)');
   const savepoints = [];
   const adapter = { release() {}, async query(sql, values) {
     if (sql === 'BEGIN') { const name = `sp_${savepoints.length}`; savepoints.push(name); return client.query(`SAVEPOINT ${name}`); }
@@ -62,7 +63,7 @@ try {
     await assert.rejects(repo.savePayment('nominas',payroll.id,{ ...draft,mes:10 }),/no se pueden cambiar/);
   });
   await check('separación de transferencias y bloqueo de una transferencia reutilizada', async () => {
-    await client.query("INSERT INTO lineas_bancos(id_linea_banco,banco,importe) VALUES ('banc_sab_26_000.000.001','Sabadell',-1650),('banc_sab_26_000.000.002','Sabadell',-250),('banc_sab_26_000.000.003','Sabadell',20)");
+    await client.query("INSERT INTO tesoreria_movimientos_bancarios(id_linea_banco,banco,importe) VALUES ('banc_sab_26_000.000.001','Sabadell',-1650),('banc_sab_26_000.000.002','Sabadell',-250),('banc_sab_26_000.000.003','Sabadell',20)");
     await repo.savePayment('nominas',payroll.id,{ ...draft,id_transferencia:'banc_sab_26_000.000.001' });
     await assert.rejects(repo.savePayment('anticipos',advance.id,{ ...draft,importe_neto:250,estado:'pagado',id_transferencia:'banc_sab_26_000.000.001' }),/ya está vinculada/);
     await assert.rejects(repo.savePayment('anticipos',advance.id,{ ...draft,importe_neto:250,estado:'pagado',id_transferencia:'banc_sab_26_000.000.003' }),/salida/);
@@ -89,7 +90,7 @@ try {
     assert.equal((await repo.getCalendar(2027)).eventos.find(e => e.id === first.id).inicio,'2027-08-16');
     await assert.rejects(repo.saveEvent(null,{ ...event,inicio:'2027-08-07',fin:'2027-08-08' }),/laborable/);
     await assert.rejects(repo.saveEvent('missing-event',event), e => e.status === 404);
-    const { rows } = await client.query("SELECT COUNT(*)::int n FROM eventos_calendario_laboral e CROSS JOIN LATERAL generate_series(e.inicio,e.fin,interval '1 day') d WHERE e.tipo='vacaciones' AND EXTRACT(ISODOW FROM d) IN (6,7)");
+    const { rows } = await client.query("SELECT COUNT(*)::int n FROM laboral_eventos_calendario e CROSS JOIN LATERAL generate_series(e.inicio,e.fin,interval '1 day') d WHERE e.tipo='vacaciones' AND EXTRACT(ISODOW FROM d) IN (6,7)");
     assert.equal(rows[0].n,0);
   });
   await check('nombre y email editables con validación y conservación de apellidos', async () => {

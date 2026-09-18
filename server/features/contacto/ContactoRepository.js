@@ -41,7 +41,7 @@ export async function getContactos(filters = {}) {
   const { rows } = await pool.query(
     `
       SELECT *
-      FROM contactos_db
+      FROM comercial_contactos
       ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
       ORDER BY nombre_completo_contacto ASC
     `,
@@ -63,20 +63,20 @@ export async function createContacto(data = {}) {
   try {
     await client.query("BEGIN");
     await client.query(`
-      ALTER TABLE contactos_db
+      ALTER TABLE comercial_contactos
         ADD COLUMN IF NOT EXISTS linkedin_cuenta TEXT NOT NULL DEFAULT '',
         ADD COLUMN IF NOT EXISTS url_contacto TEXT NOT NULL DEFAULT '';
     `);
 
     let nombreEmpresa = data.nombre_empresa || "";
     if (idCuenta && !nombreEmpresa) {
-      const { rows } = await client.query(`SELECT nombre_empresa FROM cuentas_db WHERE id_cuenta = $1 LIMIT 1`, [idCuenta]);
+      const { rows } = await client.query(`SELECT nombre_empresa FROM comercial_cuentas WHERE id_cuenta = $1 LIMIT 1`, [idCuenta]);
       nombreEmpresa = rows[0]?.nombre_empresa || "";
     }
 
     const { rows } = await client.query(
       `
-        INSERT INTO contactos_db (
+        INSERT INTO comercial_contactos (
           id_contacto,
           id_cuenta,
           nombre_contacto,
@@ -117,7 +117,7 @@ export async function createContacto(data = {}) {
     if (idCuenta) {
       await client.query(
         `
-          UPDATE cuentas_db
+          UPDATE comercial_cuentas
           SET array_contactos_cuenta = (
                 SELECT COALESCE(jsonb_agg(item), '[]'::jsonb)
                 FROM (
@@ -160,7 +160,7 @@ export async function unlinkContactoFromCuenta(idContacto, idCuenta) {
   const pool = getPgPool();
   const { rows } = await pool.query(
     `
-      UPDATE contactos_db
+      UPDATE comercial_contactos
       SET id_cuenta = NULL,
           nombre_empresa = COALESCE(NULLIF(nombre_empresa, ''), nombre_empresa),
           updated_at = NOW()
@@ -213,7 +213,7 @@ export async function updateContacto(idContacto, data = {}) {
 
   try {
     await client.query("BEGIN");
-    const { rows: beforeRows } = await client.query("SELECT * FROM contactos_db WHERE id_contacto=$1 LIMIT 1", [idContacto]);
+    const { rows: beforeRows } = await client.query("SELECT * FROM comercial_contactos WHERE id_contacto=$1 LIMIT 1", [idContacto]);
     const before = beforeRows[0];
     if (!before) {
       await client.query("ROLLBACK");
@@ -236,7 +236,7 @@ export async function updateContacto(idContacto, data = {}) {
     const assignments = columns.map((column, index) => `${column} = ${column === "suscripciones" ? `$${index + 1}::jsonb` : `$${index + 1}`}`);
     const { rows } = await client.query(
       `
-        UPDATE contactos_db
+        UPDATE comercial_contactos
         SET ${assignments.join(", ")}, updated_at=NOW()
         WHERE id_contacto=$${values.length}
         RETURNING *
@@ -279,7 +279,7 @@ export async function deleteContacto(idContacto) {
   const pool = getPgPool();
   const { rows } = await pool.query(
     `
-      DELETE FROM contactos_db
+      DELETE FROM comercial_contactos
       WHERE id_contacto = $1
       RETURNING *
     `,

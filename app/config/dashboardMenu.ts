@@ -80,13 +80,14 @@ export const dashboardMenu: DashboardMenuModule[] = [
         page("Calendario laboral", "/dashboard/direccion/laboral/calendario-laboral"),
         page("Contratación", "/dashboard/direccion/laboral/contratacion"),
       ]),
-      group("bancos", "Bancos", [
-        page("Extractos", "/dashboard/direccion/bancos/extractos"),
-        page("Revisión de líneas", "/dashboard/direccion/bancos/extractos/revision"),
-        page("Previsión liquidez", "/dashboard/direccion/bancos/prevision-liquidez"),
+      group("tesoreria", "Tesorer?a", [
+        page("Extractos", "/dashboard/direccion/tesoreria/extractos"),
+        page("Revisión de líneas", "/dashboard/direccion/tesoreria/extractos/revision"),
+        page("Previsión liquidez", "/dashboard/direccion/tesoreria/prevision-liquidez"),
       ]),
       page("Horas Juan", "/dashboard/direccion/horas-juan"),
       page("Copias de seguridad", "/dashboard/direccion/copias-seguridad"),
+      page("Tablas RDS", "/dashboard/direccion/rds"),
     ],
   },
 ];

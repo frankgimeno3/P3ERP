@@ -27,7 +27,7 @@ function normalizeNewsletter(row) {
 async function ensureSchema(pool = getPgPool()) {
   if (schemaReady) return;
   await pool.query(`
-    CREATE TABLE IF NOT EXISTS newsleters_db (
+    CREATE TABLE IF NOT EXISTS servicios_newsletters (
       id_newsletter TEXT PRIMARY KEY,
       nombre_newsletter TEXT NOT NULL DEFAULT '',
       edicion TEXT NOT NULL DEFAULT '',
@@ -39,12 +39,12 @@ async function ensureSchema(pool = getPgPool()) {
     );
   `);
   await pool.query(`
-    ALTER TABLE newsleters_db
+    ALTER TABLE servicios_newsletters
       ADD COLUMN IF NOT EXISTS nombre_newsletter TEXT NOT NULL DEFAULT '',
       ADD COLUMN IF NOT EXISTS edicion TEXT NOT NULL DEFAULT '';
   `);
   await pool.query(`
-    ALTER TABLE publicaciones_db
+    ALTER TABLE servicios_publicaciones
       ADD COLUMN IF NOT EXISTS tipo_publicacion TEXT NOT NULL DEFAULT '',
       ADD COLUMN IF NOT EXISTS revista_id TEXT,
       ADD COLUMN IF NOT EXISTS newsletter_id TEXT,
@@ -54,15 +54,15 @@ async function ensureSchema(pool = getPgPool()) {
       ADD COLUMN IF NOT EXISTS cuenta_id TEXT,
       ADD COLUMN IF NOT EXISTS contenido_id TEXT;
   `);
-  await pool.query(`CREATE INDEX IF NOT EXISTS publicaciones_db_newsletter_id_idx ON publicaciones_db (newsletter_id);`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS publicaciones_db_newsletter_id_idx ON servicios_publicaciones (newsletter_id);`);
   await pool.query(`
-    INSERT INTO newsleters_db (id_newsletter, nombre_newsletter, edicion, titulo, estado, created_at, updated_at)
+    INSERT INTO servicios_newsletters (id_newsletter, nombre_newsletter, edicion, titulo, estado, created_at, updated_at)
     SELECT id_newsletter, COALESCE(titulo, ''), COALESCE(estado, ''), COALESCE(titulo, ''), COALESCE(estado, 'activo'), created_at, updated_at
     FROM newsletters_db
     ON CONFLICT (id_newsletter) DO NOTHING
   `).catch(() => {});
   await pool.query(`
-    INSERT INTO publicaciones_db (
+    INSERT INTO servicios_publicaciones (
       id_publicacion,
       nombre_publicacion,
       fecha_publicacion,
@@ -112,10 +112,10 @@ export async function getNewsletters(filters = {}) {
   const { rows } = await pool.query(
     `
       SELECT p.*, n.id_newsletter, n.nombre_newsletter, n.edicion, n.titulo, n.descripcion, n.estado, c.nombre_empresa, co.especificaciones_contenido
-      FROM publicaciones_db p
-      LEFT JOIN newsleters_db n ON n.id_newsletter = p.newsletter_id
-      LEFT JOIN cuentas_db c ON c.id_cuenta = p.cuenta_id
-      LEFT JOIN contenidos_db co ON co.id_contenido = p.contenido_id
+      FROM servicios_publicaciones p
+      LEFT JOIN servicios_newsletters n ON n.id_newsletter = p.newsletter_id
+      LEFT JOIN comercial_cuentas c ON c.id_cuenta = p.cuenta_id
+      LEFT JOIN produccion_contenidos co ON co.id_contenido = p.contenido_id
       WHERE ${where.join(" AND ")}
       ORDER BY to_date(NULLIF(p.fecha_publicacion, ''), 'DD/MM/YYYY') DESC NULLS LAST, p.id_publicacion ASC
     `,
@@ -131,10 +131,10 @@ export async function getNewsletterById(idNewsletter) {
   const { rows } = await pool.query(
     `
       SELECT p.*, n.id_newsletter, n.nombre_newsletter, n.edicion, n.titulo, n.descripcion, n.estado, c.nombre_empresa, co.especificaciones_contenido
-      FROM publicaciones_db p
-      LEFT JOIN newsleters_db n ON n.id_newsletter = p.newsletter_id
-      LEFT JOIN cuentas_db c ON c.id_cuenta = p.cuenta_id
-      LEFT JOIN contenidos_db co ON co.id_contenido = p.contenido_id
+      FROM servicios_publicaciones p
+      LEFT JOIN servicios_newsletters n ON n.id_newsletter = p.newsletter_id
+      LEFT JOIN comercial_cuentas c ON c.id_cuenta = p.cuenta_id
+      LEFT JOIN produccion_contenidos co ON co.id_contenido = p.contenido_id
       WHERE n.id_newsletter = $1 OR p.id_publicacion = $1
       LIMIT 1
     `,
@@ -154,7 +154,7 @@ export async function updateNewsletter(idNewsletter, data = {}) {
   if (Object.prototype.hasOwnProperty.call(data, "nombre_newsletter") || Object.prototype.hasOwnProperty.call(data, "titulo") || Object.prototype.hasOwnProperty.call(data, "edicion")) {
     await pool.query(
       `
-        UPDATE newsleters_db
+        UPDATE servicios_newsletters
         SET nombre_newsletter = COALESCE($1, nombre_newsletter),
             titulo = COALESCE($1, titulo),
             edicion = COALESCE($2, edicion),
@@ -195,7 +195,7 @@ export async function updateNewsletter(idNewsletter, data = {}) {
     values.push(publicationId);
     await pool.query(
       `
-        UPDATE publicaciones_db
+        UPDATE servicios_publicaciones
         SET ${sets.join(", ")}, updated_at = NOW()
         WHERE newsletter_id = $${values.length} OR id_publicacion = $${values.length}
       `,
@@ -214,7 +214,7 @@ export async function createNewsletter(data = {}) {
 
   await pool.query(
     `
-      INSERT INTO newsleters_db (id_newsletter, nombre_newsletter, edicion, titulo, descripcion, estado)
+      INSERT INTO servicios_newsletters (id_newsletter, nombre_newsletter, edicion, titulo, descripcion, estado)
       VALUES ($1, $2, $3, $2, $4, $3)
       ON CONFLICT (id_newsletter) DO UPDATE
       SET nombre_newsletter = EXCLUDED.nombre_newsletter,
@@ -229,7 +229,7 @@ export async function createNewsletter(data = {}) {
 
   await pool.query(
     `
-      INSERT INTO publicaciones_db (
+      INSERT INTO servicios_publicaciones (
         id_publicacion,
         nombre_publicacion,
         fecha_publicacion,

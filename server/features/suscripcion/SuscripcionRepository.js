@@ -57,7 +57,7 @@ async function getUltimoNumeroPublicado(pool) {
       SELECT
         (regexp_match(concat_ws(' ', nombre_publicacion, edicion_publicacion), '\\d+'))[1]::int AS numero,
         lower(coalesce(estado_publicacion, '')) AS estado
-      FROM publicaciones_db
+      FROM servicios_publicaciones
       WHERE lower(coalesce(medio_publicacion, '')) LIKE '%revista%'
         AND regexp_match(concat_ws(' ', nombre_publicacion, edicion_publicacion), '\\d+') IS NOT NULL
     )
@@ -90,12 +90,12 @@ export async function getSuscripciones(filters = {}) {
         c.nombre_empresa,
         p.nombre_propuesta,
         o.id_factura
-      FROM suscripciones_db s
-      LEFT JOIN cuentas_db c ON c.id_cuenta = s.id_cuenta
-      LEFT JOIN propuestas_db p ON p.id_propuesta = s.id_propuesta
+      FROM comercial_suscripciones s
+      LEFT JOIN comercial_cuentas c ON c.id_cuenta = s.id_cuenta
+      LEFT JOIN comercial_propuestas_db p ON p.id_propuesta = s.id_propuesta
       LEFT JOIN LATERAL (
         SELECT id_factura
-        FROM ordenes_db
+        FROM tesoreria_ordenes
         WHERE id_contrato = s.id_contrato
         ORDER BY id_orden ASC
         LIMIT 1
@@ -120,7 +120,7 @@ export async function createSuscripcion(data = {}) {
   const idSuscripcion = data.id_suscripcion?.trim() || `sus_${Date.now()}`;
   const { rows } = await pool.query(
     `
-      INSERT INTO suscripciones_db (
+      INSERT INTO comercial_suscripciones (
         id_suscripcion,
         id_cuenta,
         id_propuesta,
@@ -145,9 +145,9 @@ export async function createSuscripcion(data = {}) {
   const { rows: joinedRows } = await pool.query(
     `
       SELECT s.*, c.nombre_empresa, p.nombre_propuesta, '' AS id_factura
-      FROM suscripciones_db s
-      LEFT JOIN cuentas_db c ON c.id_cuenta = s.id_cuenta
-      LEFT JOIN propuestas_db p ON p.id_propuesta = s.id_propuesta
+      FROM comercial_suscripciones s
+      LEFT JOIN comercial_cuentas c ON c.id_cuenta = s.id_cuenta
+      LEFT JOIN comercial_propuestas_db p ON p.id_propuesta = s.id_propuesta
       WHERE s.id_suscripcion = $1
     `,
     [rows[0].id_suscripcion],

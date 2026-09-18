@@ -3,7 +3,7 @@ import SearchableSelect from "@/app/components/SearchableSelect";
 
 import Link from 'next/link';
 import { EmployeePayrollList } from './EmployeePayroll';
-import RecurringChargeModal from '../../bancos/RecurringChargeModal';
+import RecurringChargeModal from '../../tesoreria/RecurringChargeModal';
 import { EmployeeList } from './Employees';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -44,7 +44,7 @@ export function PayrollDetail({ id, kind }: { id: string; kind: Kind }) {
   if (error || !data) return <><Header title="Ficha de pago" back={`${root}/nominas`} /><Notice error={error || 'Registro no encontrado.'} /></>;
   const transfer = (transferId: string | null) => {
     const row = data.transferencias.find(t => t.id_linea_banco === transferId);
-    return row ? <Link className="rounded text-blue-900 hover:underline" href={`/dashboard/direccion/bancos/extractos/${row.id_linea_banco}`}>{row.banco} · {row.fecha_valor} · {money(row.importe)} · {row.concepto}</Link> : 'Sin transferencia vinculada';
+    return row ? <Link className="rounded text-blue-900 hover:underline" href={`/dashboard/direccion/tesoreria/extractos/${row.id_linea_banco}`}>{row.banco} · {row.fecha_valor} · {money(row.importe)} · {row.concepto}</Link> : 'Sin transferencia vinculada';
   };
   return <><Header title={`${kind === 'nominas' ? 'Nómina' : 'Anticipo'} · ${data.empleado} · ${periodLabel(data.mes,data.anio)}`} back={`${root}/nominas`} /><div className="space-y-5"><section className="laboral-card"><PaymentForm kind={kind} initial={data} onSaved={reload} /></section>{kind === 'nominas' && <section className="laboral-card"><h2 className="mb-4 text-lg font-semibold text-blue-950">Desglose del pago</h2><div className="mb-4 grid gap-3 sm:grid-cols-3"><p className="rounded bg-slate-50 p-3">Neto total<br /><strong>{money(data.importe_neto)}</strong></p><p className="rounded bg-slate-50 p-3">Anticipos pagados<br /><strong>{money(data.total_anticipos_pagados)}</strong></p><p className="rounded bg-blue-50 p-3">Transferencia de nómina<br /><strong>{money(data.importe_transferencia_nomina)}</strong></p></div><p className="mb-4">Pago de nómina: {transfer(data.id_transferencia)}</p><div className="overflow-x-auto"><table><thead><tr><th>Anticipo</th><th>Importe</th><th>Estado</th><th>Transferencia del anticipo</th></tr></thead><tbody>{data.detalle_anticipos.map(a => <tr key={a.id}><td><Link className="rounded text-blue-900 hover:underline" href={`${root}/anticipos/${a.id}`}>{periodLabel(a.mes,a.anio)}</Link></td><td>{money(a.importe_neto)}</td><td>{a.estado}</td><td>{transfer(a.id_transferencia)}</td></tr>)}</tbody></table></div>{!data.detalle_anticipos.length && <p className="mt-3 text-slate-500">Esta nómina no tiene anticipos.</p>}<p className="mt-3 text-xs text-slate-500">Los anticipos pendientes aparecen en el desglose y se descuentan del pago de nómina cuando pasan a pagados.</p></section>}{kind === 'anticipos' && <section className="laboral-card"><h2 className="mb-3 text-lg font-semibold">Transferencia del anticipo</h2><p>{transfer(data.id_transferencia)}</p></section>}<Documents kind={kind} id={id} /></div></>;
 }

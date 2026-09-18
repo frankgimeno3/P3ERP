@@ -22,17 +22,17 @@ export async function PUT(request) {
       try {
         await client.query('BEGIN');
         await client.query("SELECT pg_advisory_xact_lock(hashtext('laboral:pagos'))");
-        const entitySql = payroll ? 'SELECT id_agente FROM agentes_db WHERE id_agente=$1 AND is_empleado_account=TRUE FOR SHARE' : supplier ? 'SELECT id_proveedor FROM proveedores_db WHERE id_proveedor=$1 FOR SHARE' : 'SELECT id_cuenta FROM cuentas_db WHERE id_cuenta=$1 FOR SHARE';
+        const entitySql = payroll ? 'SELECT id_agente FROM agentes_db WHERE id_agente=$1 AND is_empleado_account=TRUE FOR SHARE' : supplier ? 'SELECT id_proveedor FROM administracion_proveedores WHERE id_proveedor=$1 FOR SHARE' : 'SELECT id_cuenta FROM comercial_cuentas WHERE id_cuenta=$1 FOR SHARE';
         if (!(await client.query(entitySql, [body.entityId])).rowCount) {
           await client.query('ROLLBACK');
           return NextResponse.json({ message: 'El destinatario no existe o no es una cuenta de empleado.' }, { status: 400 });
         }
-        const { rows: lines } = await client.query('SELECT * FROM lineas_bancos WHERE id_linea_banco=ANY($1::text[]) FOR UPDATE', [ids]);
+        const { rows: lines } = await client.query('SELECT * FROM tesoreria_movimientos_bancarios WHERE id_linea_banco=ANY($1::text[]) FOR UPDATE', [ids]);
         if (lines.length !== new Set(ids).size) {
           await client.query('ROLLBACK');
           return NextResponse.json({ message: 'Alguna línea ya no existe. Actualiza la selección.' }, { status: 409 });
         }
-        const linked = await client.query('SELECT id_transferencia FROM nominas WHERE id_transferencia=ANY($1::text[]) UNION ALL SELECT id_transferencia FROM anticipos_empleados WHERE id_transferencia=ANY($1::text[])', [ids]);
+        const linked = await client.query('SELECT id_transferencia FROM laboral_nominas WHERE id_transferencia=ANY($1::text[]) UNION ALL SELECT id_transferencia FROM laboral_anticipos WHERE id_transferencia=ANY($1::text[])', [ids]);
         const assigned = lines.filter(line => line.id_proveedor || line.id_cuenta || line.id_agente || line.id_pago || line.id_orden || line.id_cargo_recurrente || linked.rows.some(payment => payment.id_transferencia === line.id_linea_banco));
         if (assigned.length) {
           await client.query('ROLLBACK');
@@ -55,7 +55,7 @@ export async function PUT(request) {
             return NextResponse.json({ message: 'Comprueba la fase Cargos previstos registrados antes de confirmar.' }, { status: 409 });
           }
         }
-        const { rows } = await client.query(`UPDATE lineas_bancos SET id_proveedor=$1,id_cuenta=$2,id_agente=$3,updated_at=NOW() WHERE id_linea_banco=ANY($4::text[]) RETURNING *`, [supplier ? body.entityId : null, !supplier && !payroll ? body.entityId : null, payroll ? body.entityId : null, ids]);
+        const { rows } = await client.query(`UPDATE tesoreria_movimientos_bancarios SET id_proveedor=$1,id_cuenta=$2,id_agente=$3,updated_at=NOW() WHERE id_linea_banco=ANY($4::text[]) RETURNING *`, [supplier ? body.entityId : null, !supplier && !payroll ? body.entityId : null, payroll ? body.entityId : null, ids]);
         await client.query('COMMIT');
         return NextResponse.json(rows);
       } catch (error) {

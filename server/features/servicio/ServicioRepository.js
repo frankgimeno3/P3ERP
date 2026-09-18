@@ -69,7 +69,7 @@ export async function getServicios(filters = {}) {
     `
       SELECT s.*, g.nombre_medio
       FROM servicios_db s
-      LEFT JOIN grupos_servicios g ON g.id_medio = s.id_medio
+      LEFT JOIN servicios_grupos_servicios g ON g.id_medio = s.id_medio
       ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
       ORDER BY s.id_medio ASC, s.medio_servicio_es ASC, s.publicacion_servicio_es ASC, s.nombre_servicio_es ASC
     `,
@@ -85,7 +85,7 @@ export async function getServicioById(idServicio) {
     `
       SELECT s.*, g.nombre_medio
       FROM servicios_db s
-      LEFT JOIN grupos_servicios g ON g.id_medio = s.id_medio
+      LEFT JOIN servicios_grupos_servicios g ON g.id_medio = s.id_medio
       WHERE s.id_servicio = $1
       LIMIT 1
     `,
@@ -124,6 +124,6 @@ export async function createPublicationOption(data = {}) {
     if (!String(data.medio?.[language] || "").trim() || !String(data.edicion?.[language] || "").trim() || !String(data.publicacion?.[language] || "").trim()) throw new Error("Medio, edición y publicación son obligatorios en los cuatro idiomas");
   }
   const id = `publ_srv_${crypto.randomUUID()}`;
-  await pool.query(`INSERT INTO publicaciones_db (id_publicacion,nombre_publicacion,estado_publicacion,medio_publicacion,edicion_publicacion,detalle_publicacion,medio_publicacion_es,medio_publicacion_en,medio_publicacion_it,medio_publicacion_pt,edicion_publicacion_es,edicion_publicacion_en,edicion_publicacion_it,edicion_publicacion_pt,detalle_publicacion_es,detalle_publicacion_en,detalle_publicacion_it,detalle_publicacion_pt) VALUES ($1,$2,'Pendiente',$3,$4,$5,$3,$6,$7,$8,$4,$9,$10,$11,$5,$12,$13,$14)`, [id, `${data.medio.es} · ${data.edicion.es} · ${data.publicacion.es}`, data.medio.es, data.edicion.es, data.publicacion.es, data.medio.en, data.medio.it, data.medio.pt, data.edicion.en, data.edicion.it, data.edicion.pt, data.publicacion.en, data.publicacion.it, data.publicacion.pt]);
+  await pool.query(`INSERT INTO servicios_publicaciones (id_publicacion,nombre_publicacion,estado_publicacion,medio_publicacion,edicion_publicacion,detalle_publicacion,medio_publicacion_es,medio_publicacion_en,medio_publicacion_it,medio_publicacion_pt,edicion_publicacion_es,edicion_publicacion_en,edicion_publicacion_it,edicion_publicacion_pt,detalle_publicacion_es,detalle_publicacion_en,detalle_publicacion_it,detalle_publicacion_pt) VALUES ($1,$2,'Pendiente',$3,$4,$5,$3,$6,$7,$8,$4,$9,$10,$11,$5,$12,$13,$14)`, [id, `${data.medio.es} · ${data.edicion.es} · ${data.publicacion.es}`, data.medio.es, data.edicion.es, data.publicacion.es, data.medio.en, data.medio.it, data.medio.pt, data.edicion.en, data.edicion.it, data.edicion.pt, data.publicacion.en, data.publicacion.it, data.publicacion.pt]);
   return { id_publicacion: id };
 }

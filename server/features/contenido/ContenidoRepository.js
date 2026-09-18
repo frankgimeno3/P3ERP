@@ -76,7 +76,7 @@ async function getContenidosColumns(pool) {
       SELECT column_name
       FROM information_schema.columns
       WHERE table_schema = 'public'
-        AND table_name = 'contenidos_db'
+        AND table_name = 'produccion_contenidos'
         AND column_name IN ('contenido_especifico_id', 'servicio', 'producto', 'publicacion', 'fecha_publicacion_publicacion')
     `,
   );
@@ -99,7 +99,7 @@ async function hasContenidosRevistasTable(pool) {
 
 async function ensureContenidoMateriales(pool) {
   await pool.query(`
-    ALTER TABLE contenidos_db
+    ALTER TABLE produccion_contenidos
       ADD COLUMN IF NOT EXISTS array_ids_materiales JSONB NOT NULL DEFAULT '[]'::jsonb
   `);
 }
@@ -140,14 +140,14 @@ export async function getHojaProduccionContenidos(filters = {}) {
         SELECT
           con.id_contrato,
           contenido_item->>'id_contenido' AS id_contenido
-        FROM contratos_db con
+        FROM comercial_contratos con
         CROSS JOIN LATERAL jsonb_array_elements(con.array_contenidos) AS contenido_item
       ),
       facturas_contrato AS (
         SELECT
           id_contrato,
           string_agg(id_factura, ', ' ORDER BY id_factura) AS factura
-        FROM ordenes_db
+        FROM tesoreria_ordenes
         GROUP BY id_contrato
       )
       SELECT
@@ -161,11 +161,11 @@ export async function getHojaProduccionContenidos(filters = {}) {
         cu.nombre_empresa,
         COALESCE(NULLIF(c.id_contrato, ''), cc.id_contrato) AS id_contrato,
         fc.factura
-      FROM contenidos_db c
-      LEFT JOIN publicaciones_db p ON p.id_publicacion = ${contenidoEspecificoExpr}
+      FROM produccion_contenidos c
+      LEFT JOIN servicios_publicaciones p ON p.id_publicacion = ${contenidoEspecificoExpr}
       LEFT JOIN servicios_db s ON s.id_servicio = ${servicioExpr}
       LEFT JOIN agentes_db a ON a.id_agente = c.id_agente
-      LEFT JOIN cuentas_db cu ON cu.id_cuenta = c.id_cuenta
+      LEFT JOIN comercial_cuentas cu ON cu.id_cuenta = c.id_cuenta
       LEFT JOIN contratos_contenido cc ON cc.id_contenido = c.id_contenido
       LEFT JOIN facturas_contrato fc ON fc.id_contrato = cc.id_contrato
       WHERE ${where.join(" AND ")}
@@ -188,13 +188,13 @@ export async function createHojaProduccionContenido(data = {}) {
   try {
     await client.query("BEGIN");
     await client.query(`
-      ALTER TABLE contenidos_db
+      ALTER TABLE produccion_contenidos
         ADD COLUMN IF NOT EXISTS destinos_publicacion JSONB NOT NULL DEFAULT '[]'::jsonb,
         ADD COLUMN IF NOT EXISTS array_ids_materiales JSONB NOT NULL DEFAULT '[]'::jsonb
     `);
     const { rows } = await client.query(
       `
-      INSERT INTO contenidos_db (
+      INSERT INTO produccion_contenidos (
         id_contenido,
         id_publicacion,
         id_cuenta,
@@ -294,8 +294,8 @@ export async function getContenidosProduccion(filters = {}) {
         ${servicioExpr} AS servicio,
         cu.nombre_empresa,
         s.nombre_servicio_es
-      FROM contenidos_db c
-      LEFT JOIN cuentas_db cu ON cu.id_cuenta = c.id_cuenta
+      FROM produccion_contenidos c
+      LEFT JOIN comercial_cuentas cu ON cu.id_cuenta = c.id_cuenta
       LEFT JOIN servicios_db s ON s.id_servicio = ${servicioExpr}
       ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
       ORDER BY
@@ -340,10 +340,10 @@ export async function getContenidoProduccionById(idContenido) {
             '[]'::jsonb
           )
         ` : "'[]'::jsonb"} AS revistas
-      FROM contenidos_db c
-      LEFT JOIN cuentas_db cu ON cu.id_cuenta = c.id_cuenta
+      FROM produccion_contenidos c
+      LEFT JOIN comercial_cuentas cu ON cu.id_cuenta = c.id_cuenta
       LEFT JOIN servicios_db s ON s.id_servicio = ${servicioExpr}
-      ${hasRevistasTable ? "LEFT JOIN contenidos_revistas_db cr ON cr.contenido_id = c.id_contenido LEFT JOIN revistas_db r ON r.id_revista = cr.revista_id" : ""}
+      ${hasRevistasTable ? "LEFT JOIN contenidos_revistas_db cr ON cr.contenido_id = c.id_contenido LEFT JOIN servicios_revistas r ON r.id_revista = cr.revista_id" : ""}
       WHERE c.id_contenido = $1
       GROUP BY c.id_contenido, cu.nombre_empresa, s.nombre_servicio_es
       LIMIT 1
@@ -358,7 +358,7 @@ export async function deleteContenidoProduccion(idContenido) {
   const pool = getPgPool();
   const before = await getContenidoProduccionById(idContenido);
   const { rowCount } = await pool.query(
-    `DELETE FROM contenidos_db WHERE id_contenido = $1`,
+    `DELETE FROM produccion_contenidos WHERE id_contenido = $1`,
     [idContenido],
   );
 
@@ -402,7 +402,7 @@ export async function updateContenidoProduccion(idContenido, data = {}) {
   values.push(idContenido);
   const { rows } = await pool.query(
     `
-      UPDATE contenidos_db
+      UPDATE produccion_contenidos
       SET ${sets.join(", ")}, updated_at = now()
       WHERE id_contenido = $${values.length}
       RETURNING id_contenido
@@ -442,7 +442,7 @@ export async function createContenidoProduccion(data = {}) {
 
   const { rows } = await pool.query(
     `
-      INSERT INTO contenidos_db (
+      INSERT INTO produccion_contenidos (
         id_contenido,
         contenido_especifico_id,
         id_cuenta,

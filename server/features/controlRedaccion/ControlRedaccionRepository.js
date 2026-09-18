@@ -6,7 +6,7 @@ export async function getControlRedaccion() {
       responsable_correccion, revista, espana_previsto_numero,
       latam_previsto_numero, especial_numero, hueco_previsto, paginas,
       estado_publicacion_vidrioperfil
-    FROM control_redaccion_db
+    FROM produccion_control_redaccion
     ORDER BY CASE prioridad WHEN 'A' THEN 1 WHEN 'B' THEN 2 WHEN 'C' THEN 3 ELSE 4 END,
       empresa, id
   `);

@@ -48,8 +48,8 @@ export async function getFacturasClientes() {
   const pool = getPgPool();
   const { rows } = await pool.query(`
     SELECT f.*, c.nombre_empresa
-    FROM facturas_clientes_db f
-    LEFT JOIN cuentas_db c ON c.id_cuenta = f.id_cuenta
+    FROM administracion_facturas_clientes f
+    LEFT JOIN comercial_cuentas c ON c.id_cuenta = f.id_cuenta
     ORDER BY to_date(NULLIF(f.fecha_factura, ''), 'DD/MM/YYYY') DESC NULLS LAST, f.id_factura_cliente ASC
   `);
 
@@ -60,8 +60,8 @@ export async function getFacturasProveedores() {
   const pool = getPgPool();
   const { rows } = await pool.query(`
     SELECT f.*, p.nombre_proveedor
-    FROM facturas_proveedores_db f
-    LEFT JOIN proveedores_db p ON p.id_proveedor = f.id_proveedor
+    FROM administracion_facturas_proveedores f
+    LEFT JOIN administracion_proveedores p ON p.id_proveedor = f.id_proveedor
     ORDER BY to_date(NULLIF(f.fecha_factura, ''), 'DD/MM/YYYY') DESC NULLS LAST, f.id_factura_proveedor ASC
   `);
 
@@ -73,8 +73,8 @@ export async function getFacturaProveedorById(idFactura) {
   const { rows } = await pool.query(
     `
       SELECT f.*, p.nombre_proveedor
-      FROM facturas_proveedores_db f
-      LEFT JOIN proveedores_db p ON p.id_proveedor = f.id_proveedor
+      FROM administracion_facturas_proveedores f
+      LEFT JOIN administracion_proveedores p ON p.id_proveedor = f.id_proveedor
       WHERE f.id_factura_proveedor = $1
       LIMIT 1
     `,
@@ -95,7 +95,7 @@ export async function createFacturaProveedor(data = {}) {
 
   const { rows } = await pool.query(
     `
-      INSERT INTO facturas_proveedores_db (
+      INSERT INTO administracion_facturas_proveedores (
         id_factura_proveedor,
         id_proveedor,
         orden_compra_p3,
@@ -142,12 +142,12 @@ export async function createFacturaProveedorCompleta(data = {}) {
     if (Math.abs(suma - total) > 0.005) throw new Error("Los pagos deben cuadrar exactamente con el total");
     const idFactura = `FP-${Date.now()}`;
     const { rows } = await client.query(`
-      INSERT INTO facturas_proveedores_db (id_factura_proveedor,id_proveedor,numero_factura_proveedor,codigo_factura,fecha_factura,base_imponible,importe_total,forma_pago,estado,comentarios,documento_src)
+      INSERT INTO administracion_facturas_proveedores (id_factura_proveedor,id_proveedor,numero_factura_proveedor,codigo_factura,fecha_factura,base_imponible,importe_total,forma_pago,estado,comentarios,documento_src)
       VALUES ($1,$2,$3,$3,$4,$5,$6,$7,'registrada',$8,$9) RETURNING *
     `,[idFactura,data.id_proveedor,data.numero_factura_proveedor,data.fecha_factura,nullableNumber(data.base_imponible),total,pagos.map(p=>p.forma).join(", "),data.comentarios||"",data.documento_src]);
     for (let index=0; index<pagos.length; index++) {
       const pago=pagos[index];
-      await client.query(`INSERT INTO pagos_db (id_pago,id_factura_proveedor,id_proveedor,fecha_pago,total_pago,forma_pago,comentarios,nombre_planificacion,descripcion_planificacion)
+      await client.query(`INSERT INTO tesoreria_pagos_previstos (id_pago,id_factura_proveedor,id_proveedor,fecha_pago,total_pago,forma_pago,comentarios,nombre_planificacion,descripcion_planificacion)
         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,[`${idFactura}-P${index+1}`,idFactura,data.id_proveedor,pago.fecha,Number(pago.importe),pago.forma,data.comentarios||"",`Pago ${index+1} · ${data.numero_factura_proveedor}`,data.comentarios||""]);
     }
     await client.query("COMMIT");
@@ -165,7 +165,7 @@ export async function updateFacturaProveedor(idFactura, data = {}) {
   }
   const { rows } = await pool.query(
     `
-      UPDATE facturas_proveedores_db
+      UPDATE administracion_facturas_proveedores
       SET id_proveedor = $1,
           orden_compra_p3 = $2,
           numero_contabilidad = $3,
@@ -201,7 +201,7 @@ export async function updateFacturaProveedor(idFactura, data = {}) {
 export async function deleteFacturaProveedor(idFactura) {
   const pool = getPgPool();
   const { rowCount } = await pool.query(
-    `DELETE FROM facturas_proveedores_db WHERE id_factura_proveedor = $1`,
+    `DELETE FROM administracion_facturas_proveedores WHERE id_factura_proveedor = $1`,
     [idFactura],
   );
 

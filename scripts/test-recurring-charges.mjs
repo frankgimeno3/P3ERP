@@ -1,3 +1,4 @@
+import { readLegacyMigrationSql } from './readLegacyMigrationSql.mjs';
 // Isolated schema and transaction: all test records and DDL are rolled back.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -15,11 +16,11 @@ try {
   await db.query(`CREATE SCHEMA ${schema}`);
   await db.query(`SET LOCAL search_path TO ${schema}`);
   await db.query(`CREATE TABLE agentes_db(id_agente TEXT PRIMARY KEY,is_empleado_account BOOLEAN);
-    CREATE TABLE proveedores_db(id_proveedor TEXT PRIMARY KEY);
-    CREATE TABLE cargos_recurrentes(id_cargo_recurrente BIGSERIAL PRIMARY KEY,id_proveedor TEXT REFERENCES proveedores_db(id_proveedor),tipo_programacion TEXT,programacion JSONB,activo BOOLEAN DEFAULT TRUE,created_at TIMESTAMPTZ DEFAULT NOW(),updated_at TIMESTAMPTZ DEFAULT NOW());
+    CREATE TABLE administracion_proveedores(id_proveedor TEXT PRIMARY KEY);
+    CREATE TABLE tesoreria_cargos_recurrentes(id_cargo_recurrente BIGSERIAL PRIMARY KEY,id_proveedor TEXT REFERENCES administracion_proveedores(id_proveedor),tipo_programacion TEXT,programacion JSONB,activo BOOLEAN DEFAULT TRUE,created_at TIMESTAMPTZ DEFAULT NOW(),updated_at TIMESTAMPTZ DEFAULT NOW());
     INSERT INTO agentes_db VALUES ('employee',true),('not-employee',false);
-    INSERT INTO proveedores_db VALUES ('supplier');`);
-  const migration = fs.readFileSync('database/migrations/20260907_0001_payroll_recurring_charges.sql', 'utf8');
+    INSERT INTO administracion_proveedores VALUES ('supplier');`);
+  const migration = readLegacyMigrationSql('database/migrations/20260907_0001_payroll_recurring_charges.sql');
   await db.query(migration);
   await db.query(migration);
   assert.equal(await findPayrollCharge(db, 'employee'), null);
@@ -40,7 +41,7 @@ try {
   assert.equal(supplier.tipo_cargo, 'proveedor');
   assert.equal(supplier.id_agente, null);
   assert.equal(supplier.programacion[0].base_imponible, 100);
-  await db.query('UPDATE cargos_recurrentes SET activo=false WHERE id_agente=$1', ['employee']);
+  await db.query('UPDATE tesoreria_cargos_recurrentes SET activo=false WHERE id_agente=$1', ['employee']);
   assert.equal(await findPayrollCharge(db, 'employee'), null);
   assert.notEqual((await insertRecurringCharge(db, draft)).id_cargo_recurrente, created.id_cargo_recurrente);
   console.log('Database checks passed: migration, payroll ownership, amounts, duplicate prevention, suppliers, dates and inactive charges.');

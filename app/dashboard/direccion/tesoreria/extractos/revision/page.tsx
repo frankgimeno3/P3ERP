@@ -77,7 +77,7 @@ export default function RevisionLineasPage() {
             type="button"
             onClick={() =>
               router.push(
-                "/dashboard/direccion/bancos/extractos/revision/duplicados",
+                "/dashboard/direccion/tesoreria/extractos/revision/duplicados",
               )
             }
             className="cursor-pointer rounded bg-blue-950 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-900"
@@ -148,7 +148,7 @@ export default function RevisionLineasPage() {
                   />
                 </td>
                 <td className="p-3">{row.fecha_valor}</td>
-                <td className="p-3"><a href={`/dashboard/direccion/bancos/extractos/revision/${encodeURIComponent(row.id_linea_banco)}`} className="cursor-pointer rounded text-blue-900 hover:bg-blue-50 hover:underline focus-visible:outline focus-visible:outline-2">{row.concepto}</a>{possibleDuplicates.has(row.id_linea_banco) && <span className="mt-1 block text-xs text-rose-700">Posible duplicado</span>}</td>
+                <td className="p-3"><a href={`/dashboard/direccion/tesoreria/extractos/revision/${encodeURIComponent(row.id_linea_banco)}`} className="cursor-pointer rounded text-blue-900 hover:bg-blue-50 hover:underline focus-visible:outline focus-visible:outline-2">{row.concepto}</a>{possibleDuplicates.has(row.id_linea_banco) && <span className="mt-1 block text-xs text-rose-700">Posible duplicado</span>}</td>
                 <td className="p-3 text-right">{formatMoney(row.importe)}</td>
                 <td className="p-3">
                   {row.id_agente ? `Nómina · ${row.nombre_agente || row.id_agente}` : row.nombre_proveedor ||

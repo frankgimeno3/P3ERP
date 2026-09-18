@@ -94,7 +94,7 @@ try {
   await client.query("BEGIN");
   for (const row of rows) {
     await client.query(`
-      INSERT INTO ferias_db (
+      INSERT INTO administracion_ferias (
         id_feria,titulo_especifico_edicion,nombre_feria,pais,ciudad,edicion_numero,
         descripcion,fecha_incio,fecha_finalizacion,periodicidad,tematica,fecha_texto_original,
         fecha_inicio,fecha_fin,fuente_importacion,fuente_fila

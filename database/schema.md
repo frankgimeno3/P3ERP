@@ -13,27 +13,28 @@ Update this file whenever tables, columns, primary keys, indexes, or constraints
 ## Tables
 
 The 2026-09-17 event consolidation moved account and contact activity into
-`registro_eventos`. `cuentas_registro_eventos`, `contactos_registro_eventos`,
+`general_eventos`. `cuentas_registro_eventos`, `contactos_registro_eventos`,
 and the historical `comentarios_registro_eventos` name are compatibility views.
 See `database/migrations/20260917_0001_contactos_registro_eventos_nombre.sql`
 through `20260917_0004_eventos_vistas_defaults.sql`. The table sections below
 predate this consolidation and are not a current inventory of the live RDS.
 
-The 2026-07-23 proposal-to-invoice workflow extends `contratos_db`,
-`lineas_contratos_db`, `contenidos_db`, `gestiones_produccion_db`, `tareas_db`,
-`facturas_clientes_db`, and `ordenes_db`; it also introduces
-`cobros_contratos_db` and `lineas_facturas_db`. The authoritative additive
+The 2026-07-23 proposal-to-invoice workflow extends `comercial_contratos`,
+`comercial_contratos_lineas`, `produccion_contenidos`, `gestiones_produccion_db`, `tareas_db`,
+`administracion_facturas_clientes`, and `tesoreria_ordenes`; it also introduces
+`comercial_contratos_cobros` and `administracion_lineas_factura`. The authoritative additive
 definition is `database/migrations/20260723_0001_propuesta_contrato_facturacion.sql`.
 
 The VERI*FACTU extension adds fiscal-state and immutable-record mirror columns
-to `facturas_clientes_db`, plus `verifactu_records`, `verifactu_counters`, and
-`verifactu_jobs`. Database triggers prevent mutation/deletion of emitted
+to `administracion_facturas_clientes`, plus `fiscal_verifactu_registros` and `fiscal_verifactu_contadores`.
+The unused, empty `fiscal_verifactu_trabajos` and `tesoreria_registros_bancarios` tables were removed by
+`database/migrations/20260917_0007_drop_unused_empty_tables.sql`. Database triggers prevent mutation/deletion of emitted
 invoices and fiscal records and reject fiscal-record inserts outside the
 billing transaction. See `database/migrations/20260723_0002_verifactu.sql`.
 
 The AEAT-compliance extension adds the stable installation and per-version
-responsible declaration (`verifactu_installations`), the asynchronous delivery
-outbox (`verifactu_outbox`), tax-detail fields, global installation chaining,
+responsible declaration (`fiscal_verifactu_instalaciones`), the asynchronous delivery
+outbox (`fiscal_verifactu_envios`), tax-detail fields, global installation chaining,
 official hash metadata and XML record payloads. See
 `database/migrations/20260723_0003_verifactu_aeat_compliance.sql`.
 
@@ -97,7 +98,7 @@ Constraints:
 Indexes:
 - comentarios_cuentas_db_id_cuenta_idx: CREATE INDEX comentarios_cuentas_db_id_cuenta_idx ON public.comentarios_cuentas_db USING btree (id_cuenta)
 
-### contactos_db
+### comercial_contactos
 
 | # | Column | Type | Nullable | Default |
 |---:|---|---|---|---|
@@ -125,9 +126,9 @@ Constraints:
 - PRIMARY KEY contactos_db_pkey: PRIMARY KEY (id_contacto)
 
 Indexes:
-- contactos_db_id_cuenta_idx: CREATE INDEX contactos_db_id_cuenta_idx ON public.contactos_db USING btree (id_cuenta)
+- contactos_db_id_cuenta_idx: CREATE INDEX contactos_db_id_cuenta_idx ON public.comercial_contactos USING btree (id_cuenta)
 
-### contenidos_db
+### produccion_contenidos
 
 | # | Column | Type | Nullable | Default |
 |---:|---|---|---|---|
@@ -147,10 +148,10 @@ Constraints:
 - PRIMARY KEY contenidos_db_pkey: PRIMARY KEY (id_contenido)
 
 Indexes:
-- contenidos_db_id_publicacion_idx: CREATE INDEX contenidos_db_id_publicacion_idx ON public.contenidos_db USING btree (id_publicacion)
-- contenidos_db_hoja_prod_idx: CREATE INDEX contenidos_db_hoja_prod_idx ON public.contenidos_db USING btree (hoja_prod)
+- contenidos_db_id_publicacion_idx: CREATE INDEX contenidos_db_id_publicacion_idx ON public.produccion_contenidos USING btree (id_publicacion)
+- contenidos_db_hoja_prod_idx: CREATE INDEX contenidos_db_hoja_prod_idx ON public.produccion_contenidos USING btree (hoja_prod)
 
-### contratos_db
+### comercial_contratos
 
 | # | Column | Type | Nullable | Default |
 |---:|---|---|---|---|
@@ -177,9 +178,9 @@ Constraints:
 - PRIMARY KEY contratos_db_pkey: PRIMARY KEY (id_contrato)
 
 Indexes:
-- contratos_db_array_id_ordenes_idx: CREATE INDEX contratos_db_array_id_ordenes_idx ON public.contratos_db USING gin (array_id_ordenes)
+- contratos_db_array_id_ordenes_idx: CREATE INDEX contratos_db_array_id_ordenes_idx ON public.comercial_contratos USING gin (array_id_ordenes)
 
-### cuentas_db
+### comercial_cuentas
 
 | # | Column | Type | Nullable | Default |
 |---:|---|---|---|---|
@@ -234,11 +235,11 @@ Constraints:
 - PRIMARY KEY cuentas_db_pkey: PRIMARY KEY (id_cuenta)
 
 Indexes:
-- cuentas_db_created_at_idx: CREATE INDEX cuentas_db_created_at_idx ON public.cuentas_db USING btree (created_at)
-- cuentas_db_id_agente_idx: CREATE INDEX cuentas_db_id_agente_idx ON public.cuentas_db USING btree (id_agente)
-- cuentas_db_nombre_empresa_idx: CREATE INDEX cuentas_db_nombre_empresa_idx ON public.cuentas_db USING btree (nombre_empresa)
+- cuentas_db_created_at_idx: CREATE INDEX cuentas_db_created_at_idx ON public.comercial_cuentas USING btree (created_at)
+- cuentas_db_id_agente_idx: CREATE INDEX cuentas_db_id_agente_idx ON public.comercial_cuentas USING btree (id_agente)
+- cuentas_db_nombre_empresa_idx: CREATE INDEX cuentas_db_nombre_empresa_idx ON public.comercial_cuentas USING btree (nombre_empresa)
 
-### ferias_db
+### administracion_ferias
 
 | # | Column | Type | Nullable | Default |
 |---:|---|---|---|---|
@@ -272,11 +273,11 @@ Constraints:
 - PRIMARY KEY ferias_db_pkey: PRIMARY KEY (id_feria)
 
 Indexes:
-- ferias_db_fecha_finalizacion_idx: CREATE INDEX ferias_db_fecha_finalizacion_idx ON public.ferias_db USING btree (fecha_finalizacion)
-- ferias_db_id_contrato_idx: CREATE INDEX ferias_db_id_contrato_idx ON public.ferias_db USING btree (id_contrato)
-- ferias_db_id_cuenta_feria_idx: CREATE INDEX ferias_db_id_cuenta_feria_idx ON public.ferias_db USING btree (id_cuenta_feria)
+- ferias_db_fecha_finalizacion_idx: CREATE INDEX ferias_db_fecha_finalizacion_idx ON public.administracion_ferias USING btree (fecha_finalizacion)
+- ferias_db_id_contrato_idx: CREATE INDEX ferias_db_id_contrato_idx ON public.administracion_ferias USING btree (id_contrato)
+- ferias_db_id_cuenta_feria_idx: CREATE INDEX ferias_db_id_cuenta_feria_idx ON public.administracion_ferias USING btree (id_cuenta_feria)
 
-### facturas_clientes_db
+### administracion_facturas_clientes
 
 | # | Column | Type | Nullable | Default |
 |---:|---|---|---|---|
@@ -297,9 +298,9 @@ Constraints:
 - PRIMARY KEY facturas_clientes_db_pkey: PRIMARY KEY (id_factura_cliente)
 
 Indexes:
-- facturas_clientes_db_id_cuenta_idx: CREATE INDEX facturas_clientes_db_id_cuenta_idx ON public.facturas_clientes_db USING btree (id_cuenta)
+- facturas_clientes_db_id_cuenta_idx: CREATE INDEX facturas_clientes_db_id_cuenta_idx ON public.administracion_facturas_clientes USING btree (id_cuenta)
 
-### facturas_proveedores_db
+### administracion_facturas_proveedores
 
 | # | Column | Type | Nullable | Default |
 |---:|---|---|---|---|
@@ -321,9 +322,9 @@ Constraints:
 - PRIMARY KEY facturas_proveedores_db_pkey: PRIMARY KEY (id_factura_proveedor)
 
 Indexes:
-- facturas_proveedores_db_id_proveedor_idx: CREATE INDEX facturas_proveedores_db_id_proveedor_idx ON public.facturas_proveedores_db USING btree (id_proveedor)
+- facturas_proveedores_db_id_proveedor_idx: CREATE INDEX facturas_proveedores_db_id_proveedor_idx ON public.administracion_facturas_proveedores USING btree (id_proveedor)
 
-### lineas_contratos_db
+### comercial_contratos_lineas
 
 | # | Column | Type | Nullable | Default |
 |---:|---|---|---|---|
@@ -346,10 +347,10 @@ Constraints:
 - PRIMARY KEY lineas_contratos_db_pkey: PRIMARY KEY (id_linea_contrato)
 
 Indexes:
-- lineas_contratos_db_id_contrato_idx: CREATE INDEX lineas_contratos_db_id_contrato_idx ON public.lineas_contratos_db USING btree (id_contrato)
-- lineas_contratos_db_array_id_contenidos_idx: CREATE INDEX lineas_contratos_db_array_id_contenidos_idx ON public.lineas_contratos_db USING gin (array_id_contenidos)
+- lineas_contratos_db_id_contrato_idx: CREATE INDEX lineas_contratos_db_id_contrato_idx ON public.comercial_contratos_lineas USING btree (id_contrato)
+- lineas_contratos_db_array_id_contenidos_idx: CREATE INDEX lineas_contratos_db_array_id_contenidos_idx ON public.comercial_contratos_lineas USING gin (array_id_contenidos)
 
-### lineas_bancos
+### tesoreria_movimientos_bancarios
 
 | # | Column | Type | Nullable | Default |
 |---:|---|---|---|---|
@@ -378,12 +379,12 @@ Constraints:
 - CHECK lineas_bancos_id_check: CHECK (id_linea_banco ~ '^(sab|san)_[0-9]{2}_[0-9]+$')
 
 Indexes:
-- lineas_bancos_banco_idx: CREATE INDEX lineas_bancos_banco_idx ON public.lineas_bancos USING btree (banco)
-- lineas_bancos_fecha_operativa_idx: CREATE INDEX lineas_bancos_fecha_operativa_idx ON public.lineas_bancos USING btree (fecha_operativa)
-- lineas_bancos_estado_revision_idx: CREATE INDEX lineas_bancos_estado_revision_idx ON public.lineas_bancos USING btree (estado_revision)
-- lineas_bancos_id_agente_idx: CREATE INDEX lineas_bancos_id_agente_idx ON public.lineas_bancos USING btree (id_agente)
+- lineas_bancos_banco_idx: CREATE INDEX lineas_bancos_banco_idx ON public.tesoreria_movimientos_bancarios USING btree (banco)
+- lineas_bancos_fecha_operativa_idx: CREATE INDEX lineas_bancos_fecha_operativa_idx ON public.tesoreria_movimientos_bancarios USING btree (fecha_operativa)
+- lineas_bancos_estado_revision_idx: CREATE INDEX lineas_bancos_estado_revision_idx ON public.tesoreria_movimientos_bancarios USING btree (estado_revision)
+- lineas_bancos_id_agente_idx: CREATE INDEX lineas_bancos_id_agente_idx ON public.tesoreria_movimientos_bancarios USING btree (id_agente)
 
-### lineas_propuestas_db
+### comercial_propuestas_lineas
 
 | # | Column | Type | Nullable | Default |
 |---:|---|---|---|---|
@@ -408,9 +409,9 @@ Constraints:
 - PRIMARY KEY lineas_propuestas_db_pkey: PRIMARY KEY (id_linea_propuesta)
 
 Indexes:
-- lineas_propuestas_db_id_propuesta_idx: CREATE INDEX lineas_propuestas_db_id_propuesta_idx ON public.lineas_propuestas_db USING btree (id_propuesta)
+- lineas_propuestas_db_id_propuesta_idx: CREATE INDEX lineas_propuestas_db_id_propuesta_idx ON public.comercial_propuestas_lineas USING btree (id_propuesta)
 
-### mediateca_folders
+### mediateca_carpetas
 
 | # | Column | Type | Nullable | Default |
 |---:|---|---|---|---|
@@ -422,13 +423,13 @@ Indexes:
 
 Constraints:
 - PRIMARY KEY mediateca_folders_pkey: PRIMARY KEY (mediateca_folder_id)
-- FOREIGN KEY mediateca_folders_parent_fkey: FOREIGN KEY (mediateca_parent_folder_id) REFERENCES mediateca_folders(mediateca_folder_id) ON DELETE CASCADE
+- FOREIGN KEY mediateca_folders_parent_fkey: FOREIGN KEY (mediateca_parent_folder_id) REFERENCES mediateca_carpetas(mediateca_folder_id) ON DELETE CASCADE
 
 Indexes:
-- mediateca_folders_parent_idx: CREATE INDEX mediateca_folders_parent_idx ON public.mediateca_folders USING btree (mediateca_parent_folder_id)
-- mediateca_folders_name_idx: CREATE INDEX mediateca_folders_name_idx ON public.mediateca_folders USING btree (mediateca_folder_name)
+- mediateca_folders_parent_idx: CREATE INDEX mediateca_folders_parent_idx ON public.mediateca_carpetas USING btree (mediateca_parent_folder_id)
+- mediateca_folders_name_idx: CREATE INDEX mediateca_folders_name_idx ON public.mediateca_carpetas USING btree (mediateca_folder_name)
 
-### mediateca_contents
+### mediateca_archivos
 
 | # | Column | Type | Nullable | Default |
 |---:|---|---|---|---|
@@ -446,14 +447,14 @@ Constraints:
 - PRIMARY KEY mediateca_contents_pkey: PRIMARY KEY (mediateca_content_id)
 - UNIQUE mediateca_contents_mediateca_s3_key_key: UNIQUE (mediateca_s3_key)
 - CHECK mediateca_contents_type_check: CHECK (mediateca_content_type IN ('image', 'pdf'))
-- FOREIGN KEY mediateca_contents_folder_fkey: FOREIGN KEY (mediateca_folder_id) REFERENCES mediateca_folders(mediateca_folder_id) ON DELETE SET NULL
+- FOREIGN KEY mediateca_contents_folder_fkey: FOREIGN KEY (mediateca_folder_id) REFERENCES mediateca_carpetas(mediateca_folder_id) ON DELETE SET NULL
 
 Indexes:
-- mediateca_contents_folder_idx: CREATE INDEX mediateca_contents_folder_idx ON public.mediateca_contents USING btree (mediateca_folder_id)
-- mediateca_contents_type_idx: CREATE INDEX mediateca_contents_type_idx ON public.mediateca_contents USING btree (mediateca_content_type)
-- mediateca_contents_created_at_idx: CREATE INDEX mediateca_contents_created_at_idx ON public.mediateca_contents USING btree (mediateca_content_created_at)
+- mediateca_contents_folder_idx: CREATE INDEX mediateca_contents_folder_idx ON public.mediateca_archivos USING btree (mediateca_folder_id)
+- mediateca_contents_type_idx: CREATE INDEX mediateca_contents_type_idx ON public.mediateca_archivos USING btree (mediateca_content_type)
+- mediateca_contents_created_at_idx: CREATE INDEX mediateca_contents_created_at_idx ON public.mediateca_archivos USING btree (mediateca_content_created_at)
 
-### cobros_propuestas_db
+### comercial_propuestas_cobros
 
 | # | Column | Type | Nullable | Default |
 |---:|---|---|---|---|
@@ -472,9 +473,9 @@ Constraints:
 - PRIMARY KEY cobros_propuestas_db_pkey: PRIMARY KEY (id_cobro_propuesta)
 
 Indexes:
-- cobros_propuestas_db_id_propuesta_idx: CREATE INDEX cobros_propuestas_db_id_propuesta_idx ON public.cobros_propuestas_db USING btree (id_propuesta)
+- cobros_propuestas_db_id_propuesta_idx: CREATE INDEX cobros_propuestas_db_id_propuesta_idx ON public.comercial_propuestas_cobros USING btree (id_propuesta)
 
-### ordenes_db
+### tesoreria_ordenes
 
 | # | Column | Type | Nullable | Default |
 |---:|---|---|---|---|
@@ -497,11 +498,11 @@ Constraints:
 - CHECK ordenes_db_banco_cobro_check: CHECK (((banco_cobro IS NULL) OR (banco_cobro = ''::text) OR (banco_cobro = ANY (ARRAY['Sabadell'::text, 'Santander'::text]))))
 
 Indexes:
-- ordenes_db_id_contrato_idx: CREATE INDEX ordenes_db_id_contrato_idx ON public.ordenes_db USING btree (id_contrato)
-- ordenes_db_fecha_teorica_cobro_idx: CREATE INDEX ordenes_db_fecha_teorica_cobro_idx ON public.ordenes_db USING btree (fecha_teorica_cobro)
-- ordenes_db_forma_cobro_idx: CREATE INDEX ordenes_db_forma_cobro_idx ON public.ordenes_db USING btree (forma_cobro)
+- ordenes_db_id_contrato_idx: CREATE INDEX ordenes_db_id_contrato_idx ON public.tesoreria_ordenes USING btree (id_contrato)
+- ordenes_db_fecha_teorica_cobro_idx: CREATE INDEX ordenes_db_fecha_teorica_cobro_idx ON public.tesoreria_ordenes USING btree (fecha_teorica_cobro)
+- ordenes_db_forma_cobro_idx: CREATE INDEX ordenes_db_forma_cobro_idx ON public.tesoreria_ordenes USING btree (forma_cobro)
 
-### pagos_db
+### tesoreria_pagos_previstos
 
 | # | Column | Type | Nullable | Default |
 |---:|---|---|---|---|
@@ -521,9 +522,9 @@ Constraints:
 - PRIMARY KEY pagos_db_pkey: PRIMARY KEY (id_pago)
 
 Indexes:
-- pagos_db_id_proveedor_idx: CREATE INDEX pagos_db_id_proveedor_idx ON public.pagos_db USING btree (id_proveedor)
+- pagos_db_id_proveedor_idx: CREATE INDEX pagos_db_id_proveedor_idx ON public.tesoreria_pagos_previstos USING btree (id_proveedor)
 
-### propuestas_db
+### comercial_propuestas_db
 
 | # | Column | Type | Nullable | Default |
 |---:|---|---|---|---|
@@ -552,11 +553,11 @@ Constraints:
 - PRIMARY KEY propuestas_db_pkey: PRIMARY KEY (id_propuesta)
 
 Indexes:
-- propuestas_db_estado_idx: CREATE INDEX propuestas_db_estado_idx ON public.propuestas_db USING btree (estado_propuesta)
-- propuestas_db_fase_idx: CREATE INDEX propuestas_db_fase_idx ON public.propuestas_db USING btree (fase_propuesta)
-- propuestas_db_id_cuenta_idx: CREATE INDEX propuestas_db_id_cuenta_idx ON public.propuestas_db USING btree (id_cuenta_propuesta)
+- propuestas_db_estado_idx: CREATE INDEX propuestas_db_estado_idx ON public.comercial_propuestas_db USING btree (estado_propuesta)
+- propuestas_db_fase_idx: CREATE INDEX propuestas_db_fase_idx ON public.comercial_propuestas_db USING btree (fase_propuesta)
+- propuestas_db_id_cuenta_idx: CREATE INDEX propuestas_db_id_cuenta_idx ON public.comercial_propuestas_db USING btree (id_cuenta_propuesta)
 
-### proveedores_db
+### administracion_proveedores
 
 | # | Column | Type | Nullable | Default |
 |---:|---|---|---|---|
@@ -572,7 +573,7 @@ Indexes:
 Constraints:
 - PRIMARY KEY proveedores_db_pkey: PRIMARY KEY (id_proveedor)
 
-### publicaciones_db
+### servicios_publicaciones
 
 | # | Column | Type | Nullable | Default |
 |---:|---|---|---|---|
@@ -591,18 +592,7 @@ Constraints:
 Constraints:
 - PRIMARY KEY publicaciones_db_pkey: PRIMARY KEY (id_publicacion)
 
-### registros_bancarios_db
-
-| # | Column | Type | Nullable | Default |
-|---:|---|---|---|---|
-| 1 | id_registro_bancario | text | NO |  |
-| 2 | created_at | timestamp with time zone | NO | now() |
-| 3 | updated_at | timestamp with time zone | NO | now() |
-
-Constraints:
-- PRIMARY KEY registros_bancarios_db_pkey: PRIMARY KEY (id_registro_bancario)
-
-### remesas_db
+### tesoreria_remesas
 
 | # | Column | Type | Nullable | Default |
 |---:|---|---|---|---|
@@ -613,7 +603,7 @@ Constraints:
 Constraints:
 - PRIMARY KEY remesas_db_pkey: PRIMARY KEY (id_remesa)
 
-### revistas_db
+### servicios_revistas
 
 | # | Column | Type | Nullable | Default |
 |---:|---|---|---|---|
@@ -624,7 +614,7 @@ Constraints:
 Constraints:
 - PRIMARY KEY revistas_db_pkey: PRIMARY KEY (id_revista)
 
-### grupos_servicios
+### servicios_grupos_servicios
 
 | # | Column | Type | Nullable | Default |
 |---:|---|---|---|---|
@@ -636,7 +626,7 @@ Constraints:
 Constraints:
 - PRIMARY KEY grupos_servicios_pkey: PRIMARY KEY (id_medio)
 
-### roles_db
+### agentes_roles
 
 | # | Column | Type | Nullable | Default |
 |---:|---|---|---|---|
@@ -651,7 +641,7 @@ Constraints:
 Constraints:
 - PRIMARY KEY roles_db_pkey: PRIMARY KEY (id_rol)
 
-### seguimientos_db
+### agentes_seguimientos
 
 | # | Column | Type | Nullable | Default |
 |---:|---|---|---|---|
@@ -763,12 +753,12 @@ Indexes:
 
 Constraints:
 - PRIMARY KEY servicios_db_pkey: PRIMARY KEY (id_servicio)
-- FOREIGN KEY servicios_db_id_medio_fkey: FOREIGN KEY (id_medio) REFERENCES grupos_servicios(id_medio)
+- FOREIGN KEY servicios_db_id_medio_fkey: FOREIGN KEY (id_medio) REFERENCES servicios_grupos_servicios(id_medio)
 
 Indexes:
 - servicios_db_id_medio_idx: CREATE INDEX servicios_db_id_medio_idx ON public.servicios_db USING btree (id_medio)
 
-### registro_copias_seguridad
+### general_copias_seguridad
 
 | # | Column | Type | Nullable | Default |
 |---:|---|---|---|---|
@@ -784,9 +774,9 @@ Constraints:
 - CHECK registro_copias_seguridad_estado_check: CHECK (estado::text = ANY (ARRAY['correcta'::character varying, 'error'::character varying]::text[]))
 
 Indexes:
-- idx_registro_copias_seguridad_fecha: CREATE INDEX idx_registro_copias_seguridad_fecha ON public.registro_copias_seguridad USING btree (fecha DESC)
+- idx_registro_copias_seguridad_fecha: CREATE INDEX idx_registro_copias_seguridad_fecha ON public.general_copias_seguridad USING btree (fecha DESC)
 
-### anticipos_empleados
+### laboral_anticipos
 
 | # | Column | Type | Nullable | Default |
 |---:|---|---|---|---|
@@ -805,18 +795,18 @@ Constraints:
 - anticipos_empleados_anio_check: CHECK (((anio >= 2000) AND (anio <= 2100)))
 - anticipos_empleados_estado_check: CHECK ((estado = ANY (ARRAY['pagado'::text, 'pendiente'::text])))
 - anticipos_empleados_id_empleado_fkey: FOREIGN KEY (id_empleado) REFERENCES agentes_db(id_agente)
-- anticipos_empleados_id_transferencia_fkey: FOREIGN KEY (id_transferencia) REFERENCES lineas_bancos(id_linea_banco)
+- anticipos_empleados_id_transferencia_fkey: FOREIGN KEY (id_transferencia) REFERENCES tesoreria_movimientos_bancarios(id_linea_banco)
 - anticipos_empleados_id_transferencia_key: UNIQUE (id_transferencia)
 - anticipos_empleados_importe_neto_check: CHECK ((importe_neto > (0)::numeric))
 - anticipos_empleados_mes_check: CHECK (((mes >= 1) AND (mes <= 12)))
 - anticipos_empleados_pkey: PRIMARY KEY (id)
 
 Indexes:
-- anticipos_empleados_id_transferencia_key: CREATE UNIQUE INDEX anticipos_empleados_id_transferencia_key ON public.anticipos_empleados USING btree (id_transferencia)
-- anticipos_empleados_periodo_idx: CREATE INDEX anticipos_empleados_periodo_idx ON public.anticipos_empleados USING btree (id_empleado, anio, mes)
-- anticipos_empleados_pkey: CREATE UNIQUE INDEX anticipos_empleados_pkey ON public.anticipos_empleados USING btree (id)
+- anticipos_empleados_id_transferencia_key: CREATE UNIQUE INDEX anticipos_empleados_id_transferencia_key ON public.laboral_anticipos USING btree (id_transferencia)
+- anticipos_empleados_periodo_idx: CREATE INDEX anticipos_empleados_periodo_idx ON public.laboral_anticipos USING btree (id_empleado, anio, mes)
+- anticipos_empleados_pkey: CREATE UNIQUE INDEX anticipos_empleados_pkey ON public.laboral_anticipos USING btree (id)
 
-### nominas
+### laboral_nominas
 
 | # | Column | Type | Nullable | Default |
 |---:|---|---|---|---|
@@ -837,19 +827,19 @@ Constraints:
 - nominas_estado_check: CHECK ((estado = ANY (ARRAY['pagado'::text, 'pendiente'::text])))
 - nominas_id_empleado_anio_mes_key: UNIQUE (id_empleado, anio, mes)
 - nominas_id_empleado_fkey: FOREIGN KEY (id_empleado) REFERENCES agentes_db(id_agente)
-- nominas_id_transferencia_fkey: FOREIGN KEY (id_transferencia) REFERENCES lineas_bancos(id_linea_banco)
+- nominas_id_transferencia_fkey: FOREIGN KEY (id_transferencia) REFERENCES tesoreria_movimientos_bancarios(id_linea_banco)
 - nominas_id_transferencia_key: UNIQUE (id_transferencia)
 - nominas_importe_neto_check: CHECK ((importe_neto >= (0)::numeric))
 - nominas_mes_check: CHECK (((mes >= 1) AND (mes <= 12)))
 - nominas_pkey: PRIMARY KEY (id)
 
 Indexes:
-- nominas_anticipos_idx: CREATE INDEX nominas_anticipos_idx ON public.nominas USING gin (anticipos)
-- nominas_id_empleado_anio_mes_key: CREATE UNIQUE INDEX nominas_id_empleado_anio_mes_key ON public.nominas USING btree (id_empleado, anio, mes)
-- nominas_id_transferencia_key: CREATE UNIQUE INDEX nominas_id_transferencia_key ON public.nominas USING btree (id_transferencia)
-- nominas_pkey: CREATE UNIQUE INDEX nominas_pkey ON public.nominas USING btree (id)
+- nominas_anticipos_idx: CREATE INDEX nominas_anticipos_idx ON public.laboral_nominas USING gin (anticipos)
+- nominas_id_empleado_anio_mes_key: CREATE UNIQUE INDEX nominas_id_empleado_anio_mes_key ON public.laboral_nominas USING btree (id_empleado, anio, mes)
+- nominas_id_transferencia_key: CREATE UNIQUE INDEX nominas_id_transferencia_key ON public.laboral_nominas USING btree (id_transferencia)
+- nominas_pkey: CREATE UNIQUE INDEX nominas_pkey ON public.laboral_nominas USING btree (id)
 
-### calendarios_laborales
+### laboral_calendarios
 
 | # | Column | Type | Nullable | Default |
 |---:|---|---|---|---|
@@ -861,9 +851,9 @@ Constraints:
 - calendarios_laborales_pkey: PRIMARY KEY (anio)
 
 Indexes:
-- calendarios_laborales_pkey: CREATE UNIQUE INDEX calendarios_laborales_pkey ON public.calendarios_laborales USING btree (anio)
+- calendarios_laborales_pkey: CREATE UNIQUE INDEX calendarios_laborales_pkey ON public.laboral_calendarios USING btree (anio)
 
-### eventos_calendario_laboral
+### laboral_eventos_calendario
 
 | # | Column | Type | Nullable | Default |
 |---:|---|---|---|---|
@@ -877,17 +867,17 @@ Indexes:
 | 8 | created_at | timestamp with time zone | NO | now() |
 
 Constraints:
-- eventos_calendario_laboral_anio_fkey: FOREIGN KEY (anio) REFERENCES calendarios_laborales(anio)
+- eventos_calendario_laboral_anio_fkey: FOREIGN KEY (anio) REFERENCES laboral_calendarios(anio)
 - eventos_calendario_laboral_check: CHECK (((fin >= inicio) AND (EXTRACT(year FROM inicio) = (anio)::numeric) AND (EXTRACT(year FROM fin) = (anio)::numeric)))
 - eventos_calendario_laboral_pkey: PRIMARY KEY (id)
 - eventos_calendario_laboral_tipo_check: CHECK ((tipo = ANY (ARRAY['vacaciones'::text, 'festivo_nacional'::text, 'festivo_autonomico'::text, 'festivo_barcelona'::text, 'festivo_convenio'::text, 'deadline_revista'::text, 'publicacion_revista'::text, 'feria'::text])))
 - eventos_calendario_laboral_titulo_check: CHECK ((length(btrim(titulo)) > 0))
 
 Indexes:
-- eventos_calendario_laboral_anio_idx: CREATE INDEX eventos_calendario_laboral_anio_idx ON public.eventos_calendario_laboral USING btree (anio, inicio)
-- eventos_calendario_laboral_pkey: CREATE UNIQUE INDEX eventos_calendario_laboral_pkey ON public.eventos_calendario_laboral USING btree (id)
+- eventos_calendario_laboral_anio_idx: CREATE INDEX eventos_calendario_laboral_anio_idx ON public.laboral_eventos_calendario USING btree (anio, inicio)
+- eventos_calendario_laboral_pkey: CREATE UNIQUE INDEX eventos_calendario_laboral_pkey ON public.laboral_eventos_calendario USING btree (id)
 
-### empleados_libre_disposicion
+### laboral_dias_libre_disposicion
 
 | # | Column | Type | Nullable | Default |
 |---:|---|---|---|---|
@@ -905,10 +895,10 @@ Constraints:
 - empleados_libre_disposicion_pkey: PRIMARY KEY (id_empleado, anio, numero)
 
 Indexes:
-- empleados_libre_disposicion_id_empleado_fecha_key: CREATE UNIQUE INDEX empleados_libre_disposicion_id_empleado_fecha_key ON public.empleados_libre_disposicion USING btree (id_empleado, fecha)
-- empleados_libre_disposicion_pkey: CREATE UNIQUE INDEX empleados_libre_disposicion_pkey ON public.empleados_libre_disposicion USING btree (id_empleado, anio, numero)
+- empleados_libre_disposicion_id_empleado_fecha_key: CREATE UNIQUE INDEX empleados_libre_disposicion_id_empleado_fecha_key ON public.laboral_dias_libre_disposicion USING btree (id_empleado, fecha)
+- empleados_libre_disposicion_pkey: CREATE UNIQUE INDEX empleados_libre_disposicion_pkey ON public.laboral_dias_libre_disposicion USING btree (id_empleado, anio, numero)
 
-### ausencias_empleados
+### laboral_ausencias
 
 | # | Column | Type | Nullable | Default |
 |---:|---|---|---|---|
@@ -926,10 +916,10 @@ Constraints:
 - ausencias_empleados_pkey: PRIMARY KEY (id)
 
 Indexes:
-- ausencias_empleados_empleado_idx: CREATE INDEX ausencias_empleados_empleado_idx ON public.ausencias_empleados USING btree (id_empleado, inicio)
-- ausencias_empleados_pkey: CREATE UNIQUE INDEX ausencias_empleados_pkey ON public.ausencias_empleados USING btree (id)
+- ausencias_empleados_empleado_idx: CREATE INDEX ausencias_empleados_empleado_idx ON public.laboral_ausencias USING btree (id_empleado, inicio)
+- ausencias_empleados_pkey: CREATE UNIQUE INDEX ausencias_empleados_pkey ON public.laboral_ausencias USING btree (id)
 
-### comentarios_empleados
+### laboral_comentarios_empleados
 
 | # | Column | Type | Nullable | Default |
 |---:|---|---|---|---|
@@ -944,10 +934,10 @@ Constraints:
 - comentarios_empleados_pkey: PRIMARY KEY (id)
 
 Indexes:
-- comentarios_empleados_empleado_idx: CREATE INDEX comentarios_empleados_empleado_idx ON public.comentarios_empleados USING btree (id_empleado, created_at)
-- comentarios_empleados_pkey: CREATE UNIQUE INDEX comentarios_empleados_pkey ON public.comentarios_empleados USING btree (id)
+- comentarios_empleados_empleado_idx: CREATE INDEX comentarios_empleados_empleado_idx ON public.laboral_comentarios_empleados USING btree (id_empleado, created_at)
+- comentarios_empleados_pkey: CREATE UNIQUE INDEX comentarios_empleados_pkey ON public.laboral_comentarios_empleados USING btree (id)
 
-### procesos_contratacion
+### laboral_procesos_seleccion
 
 | # | Column | Type | Nullable | Default |
 |---:|---|---|---|---|
@@ -965,9 +955,9 @@ Constraints:
 - procesos_contratacion_pkey: PRIMARY KEY (id)
 
 Indexes:
-- procesos_contratacion_pkey: CREATE UNIQUE INDEX procesos_contratacion_pkey ON public.procesos_contratacion USING btree (id)
+- procesos_contratacion_pkey: CREATE UNIQUE INDEX procesos_contratacion_pkey ON public.laboral_procesos_seleccion USING btree (id)
 
-### candidatos_contratacion
+### laboral_candidatos
 
 | # | Column | Type | Nullable | Default |
 |---:|---|---|---|---|
@@ -982,15 +972,15 @@ Indexes:
 
 Constraints:
 - candidatos_contratacion_estado_check: CHECK ((estado = ANY (ARRAY['pendiente llamada'::text, 'rechazado en llamada'::text, 'pendiente reunión presencial'::text, 'rechazado en reunión presencial'::text, 'elegido'::text, 'reserva'::text])))
-- candidatos_contratacion_id_proceso_fkey: FOREIGN KEY (id_proceso) REFERENCES procesos_contratacion(id)
+- candidatos_contratacion_id_proceso_fkey: FOREIGN KEY (id_proceso) REFERENCES laboral_procesos_seleccion(id)
 - candidatos_contratacion_nombre_check: CHECK ((length(btrim(nombre)) > 0))
 - candidatos_contratacion_pkey: PRIMARY KEY (id)
 
 Indexes:
-- candidatos_contratacion_pkey: CREATE UNIQUE INDEX candidatos_contratacion_pkey ON public.candidatos_contratacion USING btree (id)
-- candidatos_contratacion_proceso_idx: CREATE INDEX candidatos_contratacion_proceso_idx ON public.candidatos_contratacion USING btree (id_proceso)
+- candidatos_contratacion_pkey: CREATE UNIQUE INDEX candidatos_contratacion_pkey ON public.laboral_candidatos USING btree (id)
+- candidatos_contratacion_proceso_idx: CREATE INDEX candidatos_contratacion_proceso_idx ON public.laboral_candidatos USING btree (id_proceso)
 
-### documentos_laborales
+### laboral_documentos
 
 | # | Column | Type | Nullable | Default |
 |---:|---|---|---|---|
@@ -1008,16 +998,16 @@ Indexes:
 Constraints:
 - documentos_laborales_almacenamiento_check: CHECK (((num_nonnulls(s3_key, contenido) = 1) AND ((contenido IS NULL) OR (octet_length(contenido) = tamano))))
 - documentos_laborales_check: CHECK ((num_nonnulls(id_empleado, id_nomina, id_anticipo) = 1))
-- documentos_laborales_id_anticipo_fkey: FOREIGN KEY (id_anticipo) REFERENCES anticipos_empleados(id)
+- documentos_laborales_id_anticipo_fkey: FOREIGN KEY (id_anticipo) REFERENCES laboral_anticipos(id)
 - documentos_laborales_id_empleado_fkey: FOREIGN KEY (id_empleado) REFERENCES agentes_db(id_agente)
-- documentos_laborales_id_nomina_fkey: FOREIGN KEY (id_nomina) REFERENCES nominas(id)
+- documentos_laborales_id_nomina_fkey: FOREIGN KEY (id_nomina) REFERENCES laboral_nominas(id)
 - documentos_laborales_pkey: PRIMARY KEY (id)
 - documentos_laborales_s3_key_key: UNIQUE (s3_key)
 - documentos_laborales_tamano_check: CHECK (((tamano > 0) AND (tamano <= 15728640)))
 
 Indexes:
-- documentos_laborales_anticipo_idx: CREATE INDEX documentos_laborales_anticipo_idx ON public.documentos_laborales USING btree (id_anticipo)
-- documentos_laborales_empleado_idx: CREATE INDEX documentos_laborales_empleado_idx ON public.documentos_laborales USING btree (id_empleado)
-- documentos_laborales_nomina_idx: CREATE INDEX documentos_laborales_nomina_idx ON public.documentos_laborales USING btree (id_nomina)
-- documentos_laborales_pkey: CREATE UNIQUE INDEX documentos_laborales_pkey ON public.documentos_laborales USING btree (id)
-- documentos_laborales_s3_key_key: CREATE UNIQUE INDEX documentos_laborales_s3_key_key ON public.documentos_laborales USING btree (s3_key)
+- documentos_laborales_anticipo_idx: CREATE INDEX documentos_laborales_anticipo_idx ON public.laboral_documentos USING btree (id_anticipo)
+- documentos_laborales_empleado_idx: CREATE INDEX documentos_laborales_empleado_idx ON public.laboral_documentos USING btree (id_empleado)
+- documentos_laborales_nomina_idx: CREATE INDEX documentos_laborales_nomina_idx ON public.laboral_documentos USING btree (id_nomina)
+- documentos_laborales_pkey: CREATE UNIQUE INDEX documentos_laborales_pkey ON public.laboral_documentos USING btree (id)
+- documentos_laborales_s3_key_key: CREATE UNIQUE INDEX documentos_laborales_s3_key_key ON public.laboral_documentos USING btree (s3_key)

@@ -141,7 +141,7 @@ export default function Page() {
             </thead>
             <tbody>
               {shown.map((r) => (
-                <tr key={r.id} tabIndex={0} onKeyDown={e=>{if(e.key==='Enter' && e.target===e.currentTarget)router.push(r.chargeId?`/dashboard/direccion/bancos/prevision-liquidez/${r.chargeId}`:`/dashboard/direccion/bancos/extractos/${r.id}`);}} onClick={()=>router.push(r.chargeId?`/dashboard/direccion/bancos/prevision-liquidez/${r.chargeId}`:`/dashboard/direccion/bancos/extractos/${r.id}`)} className="cursor-pointer border-b hover:bg-blue-50">
+                <tr key={r.id} tabIndex={0} onKeyDown={e=>{if(e.key==='Enter' && e.target===e.currentTarget)router.push(r.chargeId?`/dashboard/direccion/tesoreria/prevision-liquidez/${r.chargeId}`:`/dashboard/direccion/tesoreria/extractos/${r.id}`);}} onClick={()=>router.push(r.chargeId?`/dashboard/direccion/tesoreria/prevision-liquidez/${r.chargeId}`:`/dashboard/direccion/tesoreria/extractos/${r.id}`)} className="cursor-pointer border-b hover:bg-blue-50">
                   <td className="p-3">{r.description || "—"}</td>
                   <td className="p-3">{r.kind === 'nomina' ? 'Nómina' : 'Proveedor'}</td>
                   <td className="p-3">{r.provider}</td>
