@@ -2,7 +2,6 @@ import crypto from "node:crypto";
 import { getPgPool } from "../../database/pgClient.js";
 import { addCuentaEntityEvent, formatChangeDetail } from "../registroEventos/RegistroEventosRepository.js";
 import { accountActivity } from "../comentario/AccountActivity.js";
-import { createInvoiceDraft } from "../factura/FacturaClienteRepository.js";
 import { lockIncome, ensureOrderReceipt, syncOrderCollections } from "../prevision/IncomeReconciliation.js";
 
 const propuestaColumns = [
@@ -294,6 +293,7 @@ async function finalizeProposal(client, propuesta, status, actorId = "") {
   await assertProposalReadyForAcceptance(client, propuesta);
 
   const idContrato = `con_${propuesta.id_propuesta}`;
+  if((await client.query('SELECT 1 FROM tesoreria_ordenes WHERE id_contrato=$1 AND cancelada LIMIT 1',[idContrato])).rowCount)throw new Error('Esta propuesta tiene órdenes canceladas. Crea una nueva propuesta para generar nuevas órdenes.');
   await client.query(`
     ALTER TABLE comercial_contratos
       ADD COLUMN IF NOT EXISTS nombre_contrato TEXT NOT NULL DEFAULT '',
@@ -422,8 +422,8 @@ async function finalizeProposal(client, propuesta, status, actorId = "") {
     await client.query(
       `INSERT INTO tesoreria_ordenes (
         id_orden,id_contrato,numero_cobro,etiqueta_cobro,fecha_teorica_cobro,forma_cobro,
-        banco_cobro,base_imponible,cobro_total,id_cuenta,cobrada,id_cobro_contrato,id_cobro_propuesta
-       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,FALSE,$11,$12)
+        banco_cobro,base_imponible,cobro_total,id_cuenta,cobrada,id_cobro_contrato,id_cobro_propuesta,id_agente,con_iva
+       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,FALSE,$11,$12,$13,$14)
        ON CONFLICT (id_orden) DO UPDATE SET
         id_contrato=EXCLUDED.id_contrato,numero_cobro=EXCLUDED.numero_cobro,
         fecha_teorica_cobro=EXCLUDED.fecha_teorica_cobro,forma_cobro=EXCLUDED.forma_cobro,
@@ -432,18 +432,16 @@ async function finalizeProposal(client, propuesta, status, actorId = "") {
         id_cobro_contrato=EXCLUDED.id_cobro_contrato,id_cobro_propuesta=EXCLUDED.id_cobro_propuesta,updated_at=NOW()`,
       [idOrden,idContrato,payment.numero_cobro,`Cobro ${payment.numero_cobro || orderIds.length}`,
         payment.fecha_cobro,payment.forma_cobro,bank,paymentBase,payment.importe_cobro,
-        propuesta.id_cuenta_propuesta,idCobroContrato,payment.id_cobro_propuesta],
+        propuesta.id_cuenta_propuesta,idCobroContrato,payment.id_cobro_propuesta,actorId||propuesta.id_agente_propuesta,Boolean(propuesta.iva_aplicable)],
     );
   }
   await client.query(
     `UPDATE comercial_contratos SET array_id_ordenes=$1::jsonb,updated_at=NOW() WHERE id_contrato=$2`,
     [JSON.stringify(orderIds),idContrato],
   );
-  const contract = (await client.query('SELECT id_factura FROM comercial_contratos WHERE id_contrato=$1', [idContrato])).rows[0];
-  const invoiceId = contract.id_factura || (await createInvoiceDraft(idContrato,actorId,client)).id_factura_cliente;
   for (const orderId of orderIds) await ensureOrderReceipt(client,orderId,actorId);
   await syncOrderCollections(client,orderIds,actorId);
-  await accountActivity(client,propuesta.id_cuenta_propuesta,actorId,`ha confirmado la propuesta ${propuesta.id_propuesta}; factura en proceso ${invoiceId}, con las órdenes ${orderIds.join(', ')}.`);
+  await accountActivity(client,propuesta.id_cuenta_propuesta,actorId,`ha confirmado la propuesta ${propuesta.id_propuesta}; contrato ${idContrato}, con las órdenes ${orderIds.join(', ')}. La factura se creará cuando se solicite.`);
 }
 
 async function loadProposalExtras(client, proposalIds) {
@@ -579,9 +577,15 @@ async function replaceLineas(client, idPropuesta, lineas = []) {
   await client.query(`ALTER TABLE comercial_propuestas_lineas ADD COLUMN IF NOT EXISTS modo_precio TEXT NOT NULL DEFAULT 'calculado'`);
   await client.query(`ALTER TABLE comercial_propuestas_lineas ADD COLUMN IF NOT EXISTS precio_total_personalizado NUMERIC`);
   await client.query(`ALTER TABLE comercial_propuestas_lineas ADD COLUMN IF NOT EXISTS id_pagina_publicacion TEXT NOT NULL DEFAULT ''`);
+  const previousRows=await client.query('SELECT id_linea_propuesta,id_pagina_publicacion,especificaciones_linea FROM comercial_propuestas_lineas WHERE id_propuesta=$1',[idPropuesta]);
+  const previousById=new Map(previousRows.rows.map(row=>[row.id_linea_propuesta,row]));
   await client.query("DELETE FROM comercial_propuestas_lineas WHERE id_propuesta = $1", [idPropuesta]);
   for (let index = 0; index < lineas.length; index += 1) {
     const linea = lineas[index] ?? {};
+    const page=(linea.id_pagina_publicacion ? (await client.query('SELECT pagina_preferente FROM servicios_paginas_revista WHERE id_pagina_publicacion=$1',[linea.id_pagina_publicacion])).rows[0] : null);
+    const prior=previousById.get(linea.id_linea_propuesta);
+    const specification=String(page?.pagina_preferente||'').startsWith('pag_pref_') && prior?.id_pagina_publicacion===linea.id_pagina_publicacion
+      ? prior.especificaciones_linea : linea.especificaciones_linea ?? '';
     await client.query(
       `
         INSERT INTO comercial_propuestas_lineas (
@@ -625,7 +629,7 @@ async function replaceLineas(client, idPropuesta, lineas = []) {
         linea.descripcion_linea ?? "",
         linea.deadline_publicacion ?? "",
         linea.fecha_publicacion_publicacion ?? "",
-        linea.especificaciones_linea ?? "",
+        specification,
         linea.modo_precio ?? "calculado",
         linea.precio_total_personalizado == null ? null : asNumber(linea.precio_total_personalizado),
         linea.id_pagina_publicacion ?? "",

@@ -3,8 +3,10 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { MediatecaService } from "@/app/service/MediatecaService";
+import apiClient from '@/app/apiClient';
 
-export type MediatecaFolder = { id: string; name: string; path: string };
+export type MediatecaFolder = { id: string; name: string; path: string; allowedRoles?: string[] };
+const protectedRoots = new Set(['contratos_firmados','documentos_administracion','documentos_direccion','documentos_produccion']);
 export type MediatecaMedia = {
   id: string;
   name: string;
@@ -41,12 +43,13 @@ function mediaUrl(item: MediatecaMedia) {
 }
 
 function ModalFrame({ title, children, onClose }: { title: string; children: React.ReactNode; onClose: () => void }) {
+  useEffect(() => { const handler=(event:KeyboardEvent)=>{if(event.key==='Escape')onClose();};window.addEventListener('keydown',handler);return()=>window.removeEventListener('keydown',handler); }, [onClose]);
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/40 p-4" onMouseDown={onClose}>
       <div className="w-full max-w-md rounded-lg bg-white shadow-xl" onMouseDown={(event) => event.stopPropagation()}>
         <div className="flex items-center justify-between border-b px-5 py-4">
           <h2 className="font-semibold text-gray-900">{title}</h2>
-          <button type="button" onClick={onClose} className="rounded p-1 text-gray-500 hover:bg-gray-100">X</button>
+          <button type="button" onClick={onClose} aria-label="Cerrar" className="cursor-pointer rounded p-1 text-gray-500 hover:bg-gray-100">×</button>
         </div>
         <div className="p-5">{children}</div>
       </div>
@@ -233,12 +236,12 @@ function MoveModal({ item, onClose, onDone }: { item: MediatecaMedia; onClose: (
 
 function EditFolderModal({ folder, onClose, onDone }: { folder: MediatecaFolder; onClose: () => void; onDone: () => void }) {
   const [name, setName] = useState(folder.name);
-  const [roles, setRoles] = useState<string[]>([]);
+  const [roles, setRoles] = useState<string[]>(folder.allowedRoles || []);
   const [roleInput, setRoleInput] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const commonRoles = ["admin", "editor", "viewer", "contributor"];
+  const commonRoles = ["base", "administracion", "operaciones", "superadmin"];
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -259,7 +262,7 @@ function EditFolderModal({ folder, onClose, onDone }: { folder: MediatecaFolder;
       <form onSubmit={submit} className="space-y-4">
         <label className="block text-sm">
           Nombre de la carpeta
-          <input autoFocus value={name} onChange={(event) => setName(event.target.value)} className="mt-1 w-full rounded-lg border p-2" />
+          <input autoFocus value={name} disabled={protectedRoots.has(folder.name) && !folder.path.includes('/')} onChange={(event) => setName(event.target.value)} className="mt-1 w-full rounded-lg border p-2 disabled:bg-gray-100" />
         </label>
         
         <div className="text-sm">
@@ -358,6 +361,9 @@ export function MediatecaBrowser({
   const [renameTarget, setRenameTarget] = useState<MediatecaMedia | null>(null);
   const [moveTarget, setMoveTarget] = useState<MediatecaMedia | null>(null);
   const [editingFolder, setEditingFolder] = useState<MediatecaFolder | null>(null);
+  const [canManageFolders, setCanManageFolders] = useState(false);
+
+  useEffect(() => { apiClient.get('/api/v1/mediateca/access').then(response => setCanManageFolders(Boolean(response.data.canManageFolders))).catch(() => setCanManageFolders(false)); }, []);
 
   const currentPath = joinPath(segments);
   const currentFolderName = segments.length > 0 ? segments[segments.length - 1] : "raiz";
@@ -434,7 +440,7 @@ export function MediatecaBrowser({
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex gap-2">
-          <button type="button" onClick={() => setCreateOpen(true)} className="rounded-lg bg-blue-950 px-4 py-2 text-sm text-white">Crear carpeta</button>
+          {canManageFolders && <button type="button" onClick={() => setCreateOpen(true)} className="cursor-pointer rounded-lg bg-blue-950 px-4 py-2 text-sm text-white hover:bg-blue-900">Crear carpeta</button>}
           <button type="button" onClick={() => setAddOpen(true)} className="rounded-lg border border-blue-950 px-4 py-2 text-sm text-blue-950">Añadir archivo</button>
         </div>
         <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar archivo..." className="w-64 rounded-lg border p-2 text-sm" />
@@ -471,14 +477,14 @@ export function MediatecaBrowser({
                   {!picker && (
                     <td className="p-3 text-right">
                       <div className="flex justify-end gap-2">
-                        <button
+                        {canManageFolders && <button
                           type="button"
                           onClick={() => setEditingFolder(folder)}
                           className="rounded bg-blue-100 px-3 py-1 text-xs text-blue-800 hover:bg-blue-200"
                         >
                           Editar
-                        </button>
-                        <button type="button" onClick={() => void deleteFolder(folder)} className="rounded bg-red-50 px-3 py-1 text-xs text-red-700 hover:bg-red-100">Eliminar</button>
+                        </button>}
+                        {canManageFolders && !(protectedRoots.has(folder.name) && !folder.path.includes('/')) && <button type="button" onClick={() => void deleteFolder(folder)} className="cursor-pointer rounded bg-red-50 px-3 py-1 text-xs text-red-700 hover:bg-red-100">Eliminar</button>}
                       </div>
                     </td>
                   )}
@@ -570,13 +576,14 @@ export function MediatecaModal({
   initialPath?: string;
   allowPdfSelection?: boolean;
 }) {
+  useEffect(() => { if (!open) return; const handler=(event:KeyboardEvent)=>{if(event.key==='Escape')onClose();};window.addEventListener('keydown',handler);return()=>window.removeEventListener('keydown',handler); }, [open,onClose]);
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-4" onMouseDown={onClose}>
       <div className="flex max-h-[90vh] w-full max-w-6xl flex-col rounded-lg bg-white shadow-xl" onMouseDown={(event) => event.stopPropagation()}>
         <div className="flex items-center justify-between border-b px-6 py-4">
           <h2 className="text-lg font-semibold text-gray-900">Mediateca</h2>
-          <button type="button" onClick={onClose} className="rounded p-1 text-gray-500 hover:bg-gray-100">X</button>
+          <button type="button" onClick={onClose} aria-label="Cerrar" className="cursor-pointer rounded p-1 text-gray-500 hover:bg-gray-100">×</button>
         </div>
         <div className="overflow-auto p-6">
           <MediatecaBrowser

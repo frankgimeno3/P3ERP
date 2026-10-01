@@ -6,9 +6,12 @@ import Modal from "../RecurringChargeModal";
 import MiddleNav from "@/app/general_components/componentes_recurrentes/MiddleNav";
 type Tab = "registrados" | "pendientes";
 export default function Page() {
+  const onChanged=()=>window.dispatchEvent(new Event('p3:forecast-changed'));
   const router=useRouter();
   const [manage,setManage]=useState<{id:string;action:'edit'|'delete'}|null>(null);
   const embedded = false;
+  const [generating,setGenerating]=useState(false),[generationMessage,setGenerationMessage]=useState('');
+  const generate=async()=>{setGenerating(true);setGenerationMessage('');try{const response=await fetch('/api/v1/direccion/cargos-recurrentes/generar',{method:'POST'});const data=await response.json();if(!response.ok)throw Error(data.message);await load();onChanged?.();setGenerationMessage(data.generated+' nuevos cargos planificados hasta '+data.until);}catch(error:any){setLoadError(error.message);}finally{setGenerating(false);}};
   const [tab, setTab] = useState<Tab>("registrados"),
     [rec, setRec] = useState<any[]>([]),
     [lines, setLines] = useState<any[]>([]),
@@ -46,23 +49,23 @@ export default function Page() {
     () =>
       tab === "registrados"
         ? rec.flatMap((r) =>
-            (r.programacion || []).map((p: any, i: number) => ({
+            (r.planificado_hasta ? (r.vencimientos || []).map((v:any)=>({...v.programacion.regla,...v,total_iva:v.importe})) : (r.programacion || [])).map((p: any, i: number) => ({
               id: `${r.id_cargo_recurrente}-${i}`, chargeId:String(r.id_cargo_recurrente),
               bi: +p.base_imponible || 0,
               total: +p.total_iva || 0,
-              kind: r.tipo_cargo === 'nomina' ? 'nomina' : 'proveedor',
-              provider: r.tipo_cargo === 'nomina' ? r.nombre_agente || r.id_agente : r.nombre_proveedor || r.id_proveedor || 'Sin asociar',
+              kind: r.tipo_cargo || 'proveedor',
+              provider: r.tipo_cargo === 'otro' ? 'Sin destinatario' : r.tipo_cargo === 'nomina' ? r.nombre_agente || r.id_agente : r.nombre_proveedor || r.id_proveedor || 'Sin asociar',
               date:
-                r.tipo_programacion === "fechas"
+                p.fecha ? p.fecha.split('-').reverse().join('/') : r.tipo_programacion === "fechas"
                   ? `${String(p.dia).padStart(2, "0")}/${String(p.mes).padStart(2, "0")}${p.anio ? `/${p.anio}` : ''}`
                   : `Cada ${p.cada} ${p.unidad}`,
-              description: p.descripcion || "",
+              description: (p.descripcion || "")+(r.id_tarjeta?' · Pago mediante tarjeta':''),
               bank: "",
             })),
           )
         : lines
             .filter(
-              (l) => +l.importe < 0 && !l.id_pago && !l.id_cargo_recurrente,
+              (l) => +l.importe < 0 && !l.id_pago && !l.id_cargo_recurrente && !l.id_liquidacion_tarjeta,
             )
             .map((l) => ({
               id: l.id_linea_banco, chargeId:'',
@@ -110,15 +113,16 @@ export default function Page() {
             ))}
           </div>
           {tab === "registrados" && (
-            <button
+            <div className="flex flex-wrap gap-3"><button disabled={generating} onClick={generate} className="rounded border bg-white px-4 py-2 enabled:cursor-pointer enabled:hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50">{generating?'Generando...':'Generar cargos hasta dos años desde hoy'}</button><button
               onClick={() => setOpen(true)}
               className="cursor-pointer rounded bg-blue-950 px-4 py-2 font-semibold text-white hover:bg-blue-900"
             >
               Agregar cargo previsto
-            </button>
+            </button></div>
           )}
         </div>
         {loadError && <p role="alert" className="mb-4 rounded bg-red-50 p-3 text-red-700">{loadError}</p>}
+        {generationMessage && <p role="status" className="mb-4 rounded bg-green-50 p-3">{generationMessage}</p>}
         <Filters f={f} setF={setF} />
         <div className="overflow-x-auto rounded bg-white shadow">
           <table className="min-w-full text-sm">
@@ -143,7 +147,7 @@ export default function Page() {
               {shown.map((r) => (
                 <tr key={r.id} tabIndex={0} onKeyDown={e=>{if(e.key==='Enter' && e.target===e.currentTarget)router.push(r.chargeId?`/dashboard/direccion/tesoreria/prevision-liquidez/${r.chargeId}`:`/dashboard/direccion/tesoreria/extractos/${r.id}`);}} onClick={()=>router.push(r.chargeId?`/dashboard/direccion/tesoreria/prevision-liquidez/${r.chargeId}`:`/dashboard/direccion/tesoreria/extractos/${r.id}`)} className="cursor-pointer border-b hover:bg-blue-50">
                   <td className="p-3">{r.description || "—"}</td>
-                  <td className="p-3">{r.kind === 'nomina' ? 'Nómina' : 'Proveedor'}</td>
+                  <td className="p-3">{r.kind === 'otro' ? 'Otro' : r.kind === 'nomina' ? 'Nómina' : 'Proveedor'}</td>
                   <td className="p-3">{r.provider}</td>
                   <td className="p-3">{r.date}</td>
                   <td className="p-3">{r.bi ? r.bi.toFixed(2) + " €" : "—"}</td>
@@ -162,7 +166,7 @@ export default function Page() {
             </tbody>
           </table>
         </div>
-        {manage&&<RecurringChargeManageModal id={manage.id} action={manage.action} onClose={()=>setManage(null)} onSaved={()=>{setManage(null);load();}}/>}
+        {manage&&<RecurringChargeManageModal id={manage.id} action={manage.action} onClose={()=>setManage(null)} onSaved={()=>{setManage(null);load();onChanged?.();}}/>}
         {open && (
           <Modal
             providers={providers}
@@ -170,7 +174,7 @@ export default function Page() {
             close={() => setOpen(false)}
             done={() => {
               setOpen(false);
-              load();
+              load();onChanged?.();
             }}
           />
         )}
@@ -181,8 +185,8 @@ export default function Page() {
 
 function Filters({ f, setF }: { f: any; setF: (x: any) => void }) {
   return (
-    <div className="mb-4 grid gap-3 rounded bg-white p-4 shadow md:grid-cols-6">
-      <label className="text-sm font-medium">Tipo<select value={f.kind} onChange={event => setF({ ...f, kind: event.target.value })} className="mt-1 w-full cursor-pointer rounded border bg-white p-2 hover:border-blue-950"><option value="">Todos</option><option value="proveedor">Proveedor</option><option value="nomina">Nómina</option></select></label>
+    <div className="mb-4 grid gap-3 rounded bg-white p-4 shadow md:grid-cols-2 md:grid-rows-3">
+      <label className="text-sm font-medium">Tipo<select value={f.kind} onChange={event => setF({ ...f, kind: event.target.value })} className="mt-1 w-full cursor-pointer rounded border bg-white p-2 hover:border-blue-950"><option value="">Todos</option><option value="proveedor">Proveedor</option><option value="nomina">Nómina</option><option value="otro">Otro</option></select></label>
       {[
         ["bi", "Base imponible"],
         ["total", "Importe total / neto"],

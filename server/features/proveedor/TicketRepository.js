@@ -33,14 +33,16 @@ export async function createTicket(body, file) {
   if (!data.id_proveedor && !data.nuevo_proveedor) throw new ProveedorError('Selecciona un proveedor o completa sus datos para registrarlo.');
   const document = await ticketFile(file);
   return supplierTransaction(async db => {
+    await db.query("SELECT pg_advisory_xact_lock(hashtext('laboral:pagos'))");
     const provider = data.id_proveedor ? await findSupplier(data.id_proveedor,db) : await createOrFindSupplier(db,data.nuevo_proveedor);
     await db.query('SELECT id_proveedor FROM administracion_proveedores WHERE id_proveedor=$1 FOR KEY SHARE',[provider.id_proveedor]);
     let card = null;
     if (data.forma_pago === 'tarjeta') {
       if (!/^\d{4}$/.test(data.tarjeta_ultimos_digitos) || !data.tarjeta_banco) throw new ProveedorError('Indica los cuatro últimos dígitos y el banco de la tarjeta.');
-      const { rows } = await db.query("SELECT * FROM tesoreria_tarjetas WHERE estado='activa' AND ultimos_digitos=$1 AND lower(btrim(banco))=lower(btrim($2)) AND ($3::text IS NULL OR id_tarjeta=$3) FOR SHARE",[data.tarjeta_ultimos_digitos,data.tarjeta_banco,data.id_tarjeta || null]);
+      const { rows } = await db.query("SELECT *,to_char(inicio_periodo,'YYYY-MM-DD') inicio_periodo FROM tesoreria_tarjetas WHERE estado='activa' AND ultimos_digitos=$1 AND lower(btrim(banco))=lower(btrim($2)) AND ($3::text IS NULL OR id_tarjeta=$3) FOR SHARE",[data.tarjeta_ultimos_digitos,data.tarjeta_banco,data.id_tarjeta || null]);
       if (rows.length !== 1) throw new ProveedorError(rows.length > 1 ? 'Selecciona la tarjeta concreta del listado.' : 'No hay una tarjeta activa con esos datos. Regístrala desde Tarjetas.');
       card = rows[0];
+      if(card.inicio_periodo&&data.fecha_ticket<card.inicio_periodo)throw new ProveedorError('El ticket pertenece a un período anterior al abierto de la tarjeta. Reabre su liquidación antes de registrarlo.');
     }
     const result = await db.query(`INSERT INTO administracion_tickets(fecha_ticket,id_proveedor,nombre_personalizado_proveedor,base_imponible,importe_total,forma_pago,documento_src,ambito,id_tarjeta,tarjeta_ultimos_digitos,tarjeta_banco,tarjeta_nombre,tarjeta_tipo,archivo_nombre,archivo_tipo,archivo_contenido)
       VALUES ($1,$2,'',$3,$4,$5,'',$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING id_ticket`,

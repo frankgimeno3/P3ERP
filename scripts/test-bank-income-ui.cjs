@@ -10,7 +10,7 @@ const Wizard=load('app/dashboard/direccion/tesoreria/BankReviewWizard.tsx').defa
 const remesas=[{id_remesa:'REM-1',importe_total:300,numero_recibos:2,recibos_sin_orden:0,fecha_teorica:'15/09/2026',cobrada:false},{id_remesa:'REM-OTHER',importe_total:600,numero_recibos:1,recibos_sin_orden:0,cobrada:false,fecha_teorica:'15/09/2026'},{id_remesa:'REM-PAID',importe_total:300,numero_recibos:1,cobrada:true}];
 const orders=[{id_orden:'TRANSFER',forma_cobro:'transferencia',cobro_total:50,id_cuenta:'client',cliente:'Cliente'},{id_orden:'RECEIPT',forma_cobro:'recibo',cobro_total:50,id_cuenta:'client'}];
 let saved;
-global.fetch=async(url,options)=>{if(options?.method==='PUT'){saved=JSON.parse(options.body);return {ok:true,json:async()=>[]};}return {ok:true,json:async()=>url.includes('tipo=remesas')?remesas:url.endsWith('/ordenes')?orders:url.endsWith('/cuentas')?[{id_cuenta:'client',nombre_empresa:'Cliente'}]:[]};};
+global.fetch=async(url,options)=>{if(url.endsWith('/revision/memoria'))return {ok:true,json:async()=>({alerts:[],resolved:[],criteria:[],history:[],notes:[],occurrences:[],applications:[],lines:[]})};if(options?.method==='PUT'){saved=JSON.parse(options.body);return {ok:true,json:async()=>[]};}return {ok:true,json:async()=>url.includes('tipo=remesas')?remesas:url.endsWith('/cargos-recurrentes')?[{id_cargo_recurrente:99,tipo_cargo:'otro',tipo_programacion:'fechas',programacion:[{dia:22,mes:9,anio:2026,total_iva:360,descripcion:'Caja prevista'}]}]:url.endsWith('/ordenes')?orders:url.endsWith('/cuentas')?[{id_cuenta:'client',nombre_empresa:'Cliente'}]:[]};};
 const root=createRoot(document.getElementById('root'));
 const click=async text=>{const button=[...document.querySelectorAll('button')].find(b=>b.textContent===text);assert(button,text);await act(async()=>button.click());};
 const select=async(node,value)=>act(async()=>{node.value=value;node.dispatchEvent(new dom.window.Event('change',{bubbles:true}));});
@@ -18,6 +18,10 @@ const choose=async(label,text)=>{await act(async()=>document.querySelector(`[ari
 (async()=>{
   const lines=[{id_linea_banco:'income1',importe:300,fecha_valor:'15/09/2026',updated_at:'v'},{id_linea_banco:'income2',importe:50,fecha_valor:'15/09/2026',updated_at:'v'}];
   await act(async()=>root.render(React.createElement(Wizard,{lines,all:lines,onSaved(){},onClose(){},modal:true})));
+  await click('Continuar'); // Analysis is separate from identifying income.
+  assert.equal(document.querySelectorAll('nav[aria-label="Fases"] button').length,3);
+  assert(!document.querySelector('[aria-label="Tipo de ingreso income1"]'));
+  await click('Continuar');
   await click('Continuar');assert.match(document.querySelector('[role="alert"]').textContent,/tipo/);
   await select(document.querySelector('[aria-label="Tipo de ingreso income1"]'),'remesa');
   await click('Cuadrar por fecha e importe');
@@ -25,9 +29,23 @@ const choose=async(label,text)=>{await act(async()=>document.querySelector(`[ari
   assert(document.body.textContent.includes('Total seleccionado: 300'));
   await select(document.querySelector('[aria-label="Tipo de ingreso income2"]'),'transferencia');
   await choose('Orden de transferencia','TRANSFER');
-  for(let i=0;i<4;i++)await click('Continuar');
+  await click('Continuar');
+  assert.equal(document.querySelector('h2').textContent,'Revisión final');
   await click('Confirmar');
   assert.equal(saved.items[0].incomeType,'remesa');assert.deepEqual(saved.items[0].remesaIds,['REM-1']);
   assert.equal(saved.items[1].incomeType,'transferencia');assert.equal(saved.items[1].orderId,'TRANSFER');assert.equal(saved.items[1].entityId,'client');
-  await act(async()=>root.unmount());dom.window.close();console.log('PASS: income classification in phase 1, matching by amount/date, registered remittances only, transfer orders excluding receipts, five-phase batch confirmation.');
+  const withdrawals=[{id_linea_banco:'cash1',importe:-360,updated_at:'v'},{id_linea_banco:'cash2',importe:-370,updated_at:'v'}];
+  await act(async()=>root.render(React.createElement(Wizard,{key:'cash',lines:withdrawals,all:withdrawals,onSaved(){},onClose(){},modal:true})));
+  await click('Continuar');await click('Continuar');
+  const recipient=document.querySelector('[aria-label="Tipo cash1"]');assert.equal([...recipient.options].at(-1).textContent,'Otro');
+  await select(recipient,'otro');assert(!document.querySelector('[aria-label="Seleccionar destinatario"]'));
+  assert.equal(document.querySelectorAll('nav[aria-label="Fases"] button').length,4);
+  for(let i=0;i<2;i++)await click('Continuar');await click('Confirmar');
+  assert(saved.items.every(item=>item.entityType==='otro'&&!item.entityId&&!item.chargeId));
+  await act(async()=>root.render(React.createElement(Wizard,{key:'cash-planned',lines:withdrawals,all:withdrawals,onSaved(){},onClose(){},modal:true})));
+  await click('Continuar');await click('Continuar');await select(document.querySelector('[aria-label="Tipo cash1"]'),'otro');await click('Continuar');
+  const chargeSelect=[...document.querySelectorAll('select')].find(n=>[...n.options].some(o=>o.value==='99'));assert(chargeSelect);await select(chargeSelect,'99');
+  await click('Continuar');await click('Confirmar');
+  assert(saved.items.every(item=>item.entityType==='otro'&&item.chargeId==='99'&&item.expectedSchedule[0].total_iva===360));
+  await act(async()=>root.unmount());dom.window.close();console.log('PASS: income classification and Otro withdrawal batch through all review phases.');
 })().catch(e=>{console.error(e);process.exitCode=1;});

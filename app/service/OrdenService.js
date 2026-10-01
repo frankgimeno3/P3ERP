@@ -17,4 +17,12 @@ export class OrdenService {
         const response = await apiClient.put(`/api/v1/admin/control-administrativo/ordenes?id=${encodeURIComponent(idOrden)}`, data);
         return response.data;
     }
+
+    static async previewCancellation(idOrden) {
+        return (await apiClient.get('/api/v1/admin/control-administrativo/ordenes', {params:{id:idOrden,action:'cancelacion'}})).data;
+    }
+
+    static async cancelOrden(idOrden, version) {
+        return (await apiClient.post(`/api/v1/admin/control-administrativo/ordenes?id=${encodeURIComponent(idOrden)}`,{action:'cancelar',version})).data;
+    }
 }

@@ -1,6 +1,7 @@
 'use client'
 import React, { FC, useEffect, useState } from 'react';
 import { AgenteService } from '@/app/service/AgenteService';
+import TableColumnFilter from '@/app/components/TableColumnFilter';
 
 interface Agente {
   id_agente: string;
@@ -11,6 +12,8 @@ interface FiltroscuentasProps {
   clienteFiltro: string;
   setClienteFiltro: (value: string) => void;
   codigoCrmFiltro: string;
+  codigoEdisoftFiltro: string;
+  setCodigoEdisoftFiltro: (value: string) => void;
   setCodigoCrmFiltro: (value: string) => void;
   agenteFiltro: string;
   setAgenteFiltro: (value: string) => void;
@@ -24,6 +27,8 @@ const Filtroscuentas: FC<FiltroscuentasProps> = ({
   clienteFiltro,
   setClienteFiltro,
   codigoCrmFiltro,
+  codigoEdisoftFiltro,
+  setCodigoEdisoftFiltro,
   setCodigoCrmFiltro,
   agenteFiltro,
   setAgenteFiltro,
@@ -53,20 +58,13 @@ const Filtroscuentas: FC<FiltroscuentasProps> = ({
     <div className="flex w-full flex-col justify-left rounded bg-white p-5">
       <p className="mb-2 text-lg font-semibold">Buscador de cuentas</p>
 
-      <div className="flex w-full flex-row items-end justify-between gap-4">
-        <div className="flex flex-col">
-          <label className="text-sm font-medium">Nombre cliente</label>
-          <input type="text" value={clienteFiltro} onChange={(e) => setClienteFiltro(e.target.value)} placeholder="Nombre de empresa" className="rounded border px-2 py-1" />
-        </div>
-
-        <div className="flex flex-col">
-          <label className="text-sm font-medium">Codigo CRM</label>
-          <input type="text" value={codigoCrmFiltro} onChange={(e) => setCodigoCrmFiltro(e.target.value)} placeholder="Cuenta de cliente" className="rounded border px-2 py-1" />
-        </div>
-
-        <div className="flex flex-col">
-          <label className="text-sm font-medium">Agente</label>
-          <select value={agenteFiltro} onChange={(e) => setAgenteFiltro(e.target.value)} className="rounded border px-2 py-1">
+      <div className="grid w-full grid-cols-1 items-start gap-4 sm:grid-cols-2 xl:grid-cols-6">
+        <TableColumnFilter label="Nombre empresa" value={clienteFiltro} onChange={setClienteFiltro} />
+        <TableColumnFilter label="ID cuenta (Tiger)" value={codigoCrmFiltro} onChange={setCodigoCrmFiltro} />
+        <TableColumnFilter label="Código Edisoft" value={codigoEdisoftFiltro} onChange={setCodigoEdisoftFiltro} />
+        <details>
+          <summary className="cursor-pointer rounded p-1 hover:bg-blue-100 hover:text-blue-950">Agente asignado{agenteFiltro ? ' · Filtro activo' : ''}</summary>
+          <select aria-label="Filtrar agente asignado" value={agenteFiltro} onChange={(e) => setAgenteFiltro(e.target.value)} className="mt-2 w-full cursor-pointer rounded border bg-white p-2 hover:border-blue-400">
             <option value="">Todos los agentes</option>
             {agentes.map((agente) => (
               <option key={agente.id_agente} value={agente.id_agente}>
@@ -74,17 +72,9 @@ const Filtroscuentas: FC<FiltroscuentasProps> = ({
               </option>
             ))}
           </select>
-        </div>
-
-        <div className="flex flex-col">
-          <label className="font-medium">Pais</label>
-          <input type="text" value={paisFiltro} onChange={(e) => setPaisFiltro(e.target.value)} placeholder="Ej: Espana" className="rounded border px-2 py-1" />
-        </div>
-
-        <div className="flex flex-col">
-          <label className="font-medium">Tel principal</label>
-          <input type="number" value={telFiltro} onChange={(e) => setTelFiltro(e.target.value)} placeholder="Ej: 123" className="rounded border px-2 py-1" />
-        </div>
+        </details>
+        <TableColumnFilter label="País" value={paisFiltro} onChange={setPaisFiltro} />
+        <TableColumnFilter label="Tel principal" value={telFiltro} onChange={setTelFiltro} />
       </div>
     </div>
   );

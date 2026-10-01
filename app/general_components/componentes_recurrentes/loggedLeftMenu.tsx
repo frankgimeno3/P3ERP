@@ -22,6 +22,7 @@ function entryContainsPath(entry: DashboardMenuEntry, pathname: string): boolean
 
 export default function LoggedLeftMenu() {
   const pathname = usePathname();
+  const [collapsed, setCollapsed] = useState(false);
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const [role, setRole] = useState<string | null>(null);
 
@@ -48,14 +49,15 @@ export default function LoggedLeftMenu() {
   const toggle = (id: string) => setOpen((current) => ({ ...current, [id]: !current[id] }));
 
   return (
-    <aside className="flex min-h-screen w-[220px] min-w-[220px] shrink-0 flex-col bg-gray-900 py-3 text-gray-300 md:w-[240px] md:min-w-[240px]">
-      {role === null && (
+    <aside className={`flex min-h-screen shrink-0 flex-col py-3 text-gray-300 transition-[width] ${collapsed ? "w-12 min-w-12 bg-blue-950" : "w-[220px] min-w-[220px] bg-gray-900 md:w-[240px] md:min-w-[240px]"}`}>
+      <button type="button" aria-label={collapsed ? "Expandir menú" : "Ocultar menú"} aria-expanded={!collapsed} onClick={() => setCollapsed(!collapsed)} className="mb-3 mr-2 self-end rounded p-2 cursor-pointer text-white hover:bg-blue-800"><svg aria-hidden="true" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d={collapsed ? "M9 5l7 7-7 7" : "M15 5l-7 7 7 7"}/></svg></button>
+      {!collapsed && role === null && (
         <div className="flex min-h-48 flex-1 items-start justify-center pt-16" role="status" aria-label="Cargando menú de navegación">
           <span className="h-9 w-9 animate-spin rounded-full border-4 border-gray-700 border-t-blue-400 shadow-sm transition-opacity duration-300" />
           <span className="sr-only">Cargando menú…</span>
         </div>
       )}
-      {role !== null && dashboardMenu.filter((module) => canViewModule(role, module.id)).map((module) => (
+      {!collapsed && role !== null && dashboardMenu.filter((module) => canViewModule(role, module.id)).map((module) => (
         <div key={module.id} className="mb-2">
           <button type="button" onClick={() => toggle(module.id)} className="flex w-full cursor-pointer items-center justify-between rounded-r-lg border-l-2 border-transparent py-2 pl-3 pr-3 text-xs font-medium uppercase tracking-wide text-gray-300 transition-colors hover:bg-gray-800 hover:text-gray-100">
             <span>{module.label}</span>

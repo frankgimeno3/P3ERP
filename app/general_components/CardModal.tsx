@@ -88,7 +88,6 @@ export default function CardModal({ isOpen, onClose, onSelectCard }: CardModalPr
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...(editingCard ? { id_tarjeta: editingCard.id_tarjeta } : {}),
           ultimos_digitos: newCard.ultimos_digitos,
           nombre: newCard.nombre,
           banco: newCard.banco,

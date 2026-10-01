@@ -11,6 +11,14 @@ export class FacturaService {
         return response.data;
     }
 
+    static async getOrdenesFacturables() {
+        return (await apiClient.get('/api/v1/admin/facturas-clientes/ordenes')).data;
+    }
+
+    static async createFacturaOrdenDraft(idOrden) {
+        return (await apiClient.post('/api/v1/admin/facturas-clientes',{id_orden:idOrden})).data;
+    }
+
     static async createFacturaClienteDraft(idContrato) {
         const response = await apiClient.post('/api/v1/admin/facturas-clientes', { id_contrato: idContrato });
         return response.data;
@@ -24,6 +32,10 @@ export class FacturaService {
     static async updateFacturaCliente(idFactura, data) {
         const response = await apiClient.put(`/api/v1/admin/facturas-clientes/${encodeURIComponent(idFactura)}`, data);
         return response.data;
+    }
+
+    static async deleteFacturaCliente(idFactura, version) {
+        return (await apiClient.delete(`/api/v1/admin/facturas-clientes/${encodeURIComponent(idFactura)}`,{data:{version}})).data;
     }
 
     static async emitirFacturaCliente(idFactura, data) {

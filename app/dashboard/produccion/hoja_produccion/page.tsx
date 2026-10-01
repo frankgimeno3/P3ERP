@@ -48,9 +48,10 @@ const tableColumns = columns.filter(([field]) => !["codigo_crm", "publicacion_nu
 
 const Materiales: FC = () => {
   const router = useRouter();
-  const tabs = ["2026"];
-  const [year, setYear] = useState("2026");
+  const currentYear = new Intl.DateTimeFormat('en', {year:'numeric',timeZone:'Europe/Madrid'}).format(new Date());
+  const [year, setYear] = useState(currentYear);
   const [contenidos, setContenidos] = useState<HojaProduccionContenido[]>([]);
+  const tabs = [...new Set([currentYear, ...contenidos.map(c => c.ano_publicacion).filter(y => /^\d{4}$/.test(y))])].sort((a,b)=>Number(b)-Number(a)).concat('Anteriores', ...(contenidos.some(c=>!c.ano_publicacion) ? ['Sin año'] : []));
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [showPublished, setShowPublished] = useState(false);
   const [showOutOfContract, setShowOutOfContract] = useState(false);
@@ -60,17 +61,17 @@ const Materiales: FC = () => {
   useEffect(() => {
     setLoading(true);
     setError(null);
-    HojaProduccionService.getContenidos({ year })
+    HojaProduccionService.getContenidos()
       .then((data) => setContenidos(Array.isArray(data) ? data : []))
       .catch((error) => {
         setError(error?.message || "No se pudo cargar la hoja de produccion.");
         setContenidos([]);
       })
       .finally(() => setLoading(false));
-  }, [year]);
+  }, []);
 
   const handleRowClick = (event: React.MouseEvent<HTMLTableRowElement>, idContenido: string) => {
-    const href = `/dashboard/produccion/hoja_produccion/contenidos/${idContenido}`;
+    const href = `/dashboard/produccion/hoja_produccion/${idContenido}`;
     if (event.ctrlKey || event.metaKey) {
       event.preventDefault();
       window.open(href, "_blank");
@@ -80,6 +81,7 @@ const Materiales: FC = () => {
   };
 
   const contenidosFiltrados = contenidos.filter((contenido) => {
+    if ((contenido.ano_publicacion || 'Sin año') !== year) return false;
     const estado = String(contenido.estado || "").toLowerCase();
     const hasContrato = Boolean(String(contenido.contrato || "").trim());
     const isPublished = estado.includes("publicad");
@@ -113,9 +115,6 @@ const Materiales: FC = () => {
             <div className="flex flex-row flex-wrap items-center justify-end gap-3">
               <Link href="/dashboard/produccion/hoja_produccion/crear" className="bg-blue-950 text-white rounded-lg px-4 py-2 text-[13px] shadow-xl hover:bg-blue-900 cursor-pointer">
                 Agregar nuevo contenido
-              </Link>
-              <Link href="/dashboard/produccion/hoja_produccion/contenidos" className="cursor-pointer border border-blue-950 bg-white px-4 py-2 text-[13px] text-blue-950 hover:bg-blue-50">
-                Ver todos los contenidos
               </Link>
             </div>
           </div>

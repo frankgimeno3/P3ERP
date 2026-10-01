@@ -1,0 +1,33 @@
+import assert from 'node:assert/strict';
+import env from '@next/env';
+import { getPgPool } from '../server/database/pgClient.js';
+import { insertRecurringCharge, getRecurringCharge, listRecurringCharges } from '../server/features/prevision/RecurringChargeRepository.js';
+import { extendCharge, horizon, todayInSpain } from '../server/features/prevision/RecurringChargePlanning.js';
+env.loadEnvConfig(process.cwd());
+const pool=getPgPool(),db=await pool.connect();
+try {
+ const actual=await getRecurringCharge(16);
+ assert.ok(actual.vencimientos.length>0);
+ const listed=await listRecurringCharges();
+ assert.equal(listed.find(c=>String(c.id_cargo_recurrente)==='16').vencimientos.length,actual.vencimientos.length);
+ await db.query('BEGIN');
+ const c=await insertRecurringCharge(db,{tipo_cargo:'proveedor',tipo_programacion:'periodicidad',programacion:[{cada:3,unidad:'meses',total_iva:24.75,descripcion:'TEST rollback'}]});
+ const rows=(await db.query("SELECT *,to_char(fecha,'YYYY-MM-DD') fecha FROM tesoreria_cargos_vencimientos WHERE id_cargo_recurrente=$1 ORDER BY tesoreria_cargos_vencimientos.fecha",[c.id_cargo_recurrente])).rows;
+ assert.equal(rows.length,9);assert.equal(rows[0].fecha,todayInSpain());assert.equal(rows.at(-1).fecha,horizon(todayInSpain()));
+ assert.equal(await extendCharge(db,c),0);
+ assert.equal(await extendCharge(db,{...c,termina_planificacion:true},'2027-09-20'),0);
+ assert.ok(await extendCharge(db,c,'2027-09-20')>0);
+ const counts=(await db.query('SELECT count(*)::int total,count(DISTINCT (id_regla,fecha))::int unique_count FROM tesoreria_cargos_vencimientos WHERE id_cargo_recurrente=$1',[c.id_cargo_recurrente])).rows[0];
+ assert.equal(counts.total,counts.unique_count);
+ const other=await insertRecurringCharge(db,{tipo_cargo:'otro',tipo_programacion:'periodicidad',programacion:[{cada:3,unidad:'meses',total_iva:50,descripcion:'Otro TEST rollback'}]});
+ assert.equal(other.tipo_cargo,'otro');assert.equal(other.id_agente,null);assert.equal(other.id_proveedor,null);
+ const otherDates=(await db.query("SELECT to_char(fecha,'YYYY-MM-DD') fecha FROM tesoreria_cargos_vencimientos WHERE id_cargo_recurrente=$1 ORDER BY fecha",[other.id_cargo_recurrente])).rows;
+ assert.equal(otherDates.length,9);assert.equal(otherDates[0].fecha,todayInSpain());assert.equal(otherDates.at(-1).fecha,horizon(todayInSpain()));
+ assert.equal(await extendCharge(db,other),0);
+ assert.equal(await extendCharge(db,{...other,termina_planificacion:true},'2027-09-20'),0);
+ assert.ok(await extendCharge(db,other,'2027-09-20')>0);
+ await assert.rejects(insertRecurringCharge(db,{tipo_cargo:'otro',id_agente:'not-allowed',tipo_programacion:'periodicidad',programacion:[{cada:1,unidad:'meses',total_iva:10}]}),/Otro/);
+ console.log('PASS: Otro without recipient, two-year planning, extension, no duplicates and end-of-plan option.');
+ const real=(await db.query("SELECT count(*)::int total,min(fecha)::text first,max(fecha)::text last FROM tesoreria_cargos_vencimientos WHERE id_cargo_recurrente=16")).rows[0];
+ console.log(JSON.stringify({test:'PASS: creation, default start, persisted horizon, duplicate prevention, stopped recurrence and extension; test changes rolled back',charge16:real}));
+}finally{await db.query('ROLLBACK');db.release();await pool.end();}

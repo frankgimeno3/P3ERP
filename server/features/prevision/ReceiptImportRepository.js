@@ -21,6 +21,7 @@ export async function saveReceipt(db, row, actorId = '') {
     : (await db.query('SELECT * FROM tesoreria_ordenes WHERE (id_factura=$1 OR id_factura=$2) AND numero_cobro=$3 ORDER BY id_orden FOR UPDATE', [fact.id_factura_cliente,row.numero_factura,row.numero_cobro])).rows;
   if (candidates.length > 1) incomeError('La factura ' + row.numero_factura + ' tiene varias órdenes con número de cobro ' + row.numero_cobro + '.');
   let order = candidates[0];
+  if(order?.cancelada)incomeError('La orden '+order.id_orden+' está cancelada.');
   if (order && order.forma_cobro && !/recibo/i.test(order.forma_cobro)) incomeError('La orden ' + order.id_orden + ' no es de recibo. Corrige su forma de cobro antes de importar.');
   if (!order) order = (await db.query("INSERT INTO tesoreria_ordenes(id_orden,id_factura,numero_cobro,id_cuenta,forma_cobro,cobro_total,fecha_teorica_cobro,etiqueta_cobro) VALUES($1,$2,$3,$4,'recibo',$5,$6,$7) RETURNING *",
     [receiptOrderId(row.numero_recibo),fact.id_factura_cliente,row.numero_cobro,fact.id_cuenta || account,row.importe_recibo,row.fecha_teorica,'Recibo ' + row.numero_recibo])).rows[0];

@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import { planNext, horizon } from '../server/features/prevision/RecurringChargePlanning.js';
+const charge={id_cargo_recurrente:16,tipo_cargo:'proveedor',tipo_programacion:'periodicidad',programacion:[{id_regla:'r',inicio_dia:20,inicio_mes:9,inicio_anio:2026,cada:3,unidad:'meses',total_iva:24.75}]};
+const rows=planNext(charge,[],'2026-09-20');
+assert.equal(rows.length,9);assert.equal(rows[0].fecha,'2026-09-20');assert.equal(rows.at(-1).fecha,'2028-09-20');
+assert.equal(planNext(charge,rows,'2026-09-20').length,0);
+assert.deepEqual(planNext(charge,rows,'2027-01-01').map(r=>r.fecha),['2028-12-20']);
+assert.equal(planNext({...charge,termina_planificacion:true,planificado_hasta:'2028-09-20'},rows,'2027-01-01').length,0);
+assert.equal(planNext({...charge,termina_planificacion:true},[],'2026-09-20').length,9,'Ending still creates initial horizon');
+const endMonth={...charge,programacion:[{...charge.programacion[0],inicio_dia:31,inicio_mes:1,cada:1}]};
+const monthly=planNext(endMonth,[],'2026-01-31');assert.deepEqual(monthly.slice(0,3).map(r=>r.fecha),['2026-01-31','2026-02-28','2026-03-31']);
+assert.equal(horizon('2024-02-29'),'2026-02-28');
+assert.equal(planNext(charge,[{...rows[0],fecha:'2027-02-20'}],'2026-09-20')[0].fecha,'2027-05-20','Continue from last stored due date');
+console.log('OK: two-year horizon, idempotence, extension, stopped plans, month ends and last stored due date');

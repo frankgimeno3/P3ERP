@@ -1,3 +1,6 @@
+"use client";
+import { ContactoService } from "@/app/service/ContactoService";
+import { exportRows } from "../../exportRows";
 import { useRouter } from 'next/navigation';
 import React, { FC, useEffect, useState } from 'react';
 import * as XLSX from 'xlsx';
@@ -18,15 +21,23 @@ interface F2expcProps {
 
 const F2expc: FC<F2expcProps> = ({ configuracion, setFaseExportacionContacto }) => {
   const [cargando, setCargando] = useState(true);
+  const [error,setError]=useState("");
+  const [rows,setRows]=useState<any[][]>([]);
 const router = useRouter()
   useEffect(() => {
-     const timer = setTimeout(() => setCargando(false), 5000);
-    return () => clearTimeout(timer);
-  }, []);
+    let active=true;
+    setCargando(true);setError("");setRows([]);
+    ContactoService.getContactos().then(data=>{
+      if(active)setRows(exportRows("contactos",data,configuracion));
+    }).catch(reason=>{if(active)setError(reason?.message || "No se pudieron cargar los datos reales.");})
+      .finally(()=>{if(active)setCargando(false);});
+    return ()=>{active=false;};
+  }, [configuracion]);
 
   const handleDownload = () => {
+    if(cargando || error || rows.length<2)return;
      const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.aoa_to_sheet([configuracion.camposExcel.length > 0 ? configuracion.camposExcel : ["Sin datos"]]);
+    const ws = XLSX.utils.aoa_to_sheet(rows);
     XLSX.utils.book_append_sheet(wb, ws, "Exportación");
     XLSX.writeFile(wb, "exportacion_contactos.xlsx");
   };
@@ -50,7 +61,9 @@ const router = useRouter()
       </div>
       </div>
 
-       {cargando ? (
+       {error && <p role="alert" className="my-4 rounded bg-red-50 p-3 text-red-700">{error}</p>}
+      {!cargando && !error && <p className="my-4">{Math.max(0,rows.length-1)} registros encontrados.</p>}
+      {cargando ? (
         <div className="flex flex-col items-center justify-center my-12">
           <div className="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-16 w-16 mb-4 animate-spin"></div>
           <p className="text-gray-600">Generando exportación...</p>
@@ -58,14 +71,15 @@ const router = useRouter()
       ) : (
         <div className='flex flex-col gap-8'>
         <button
-          className="bg-blue-950 hover:bg-blue-950/90 text-white font-bold rounded-lg shadow-xl px-4 py-2 cursor-pointer"
-          onClick={handleDownload}
+          className="bg-blue-950 enabled:hover:bg-blue-950/90 text-white font-bold rounded-lg shadow-xl px-4 py-2 enabled:cursor-pointer disabled:opacity-50 disabled:cursor-default"
+          disabled={Boolean(error) || rows.length<2}
+            onClick={handleDownload}
         >
           Descargar Excel
         </button>
 
          <button
-          className="bg-blue-950 hover:bg-blue-950/90 text-white font-bold rounded-lg shadow-xl px-4 py-2 cursor-pointer"
+          className="bg-blue-950 enabled:hover:bg-blue-950/90 text-white font-bold rounded-lg shadow-xl px-4 py-2 enabled:cursor-pointer disabled:opacity-50 disabled:cursor-default"
           onClick={()=>{router.push("/dashboard/comercial/contactos")}}
         >
           Ir a contactos

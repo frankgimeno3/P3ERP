@@ -6,9 +6,11 @@ import MiddleNav from "@/app/general_components/componentes_recurrentes/MiddleNa
 import { AgenteService } from "@/app/service/AgenteService";
 import { CuentaService } from "@/app/service/CuentaService";
 import MisPendientes from "@/app/dashboard/comercial/propuestas/componentesPropuestas/tablaspropuestas/MisPendientes";
+import MyTasksPanel from '@/app/components/tasks/MyTasksPanel';
 import { canViewModule, normalizeRole } from "@/app/config/roleAccess";
 
 const tabs = [
+  { key: "tareas", label: "Mis tareas pendientes" },
   { key: "contenidos", label: "Mis contenidos" },
   { key: "clientes", label: "Mis cuentas" },
   { key: "propuestas", label: "Mis propuestas pendientes" },
@@ -24,7 +26,7 @@ const moduleTutorials: Record<string, string> = {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState("contenidos");
+  const [activeTab, setActiveTab] = useState("tareas");
   const [email, setEmail] = useState("");
   const [roles, setRoles] = useState<string[]>([]);
   const [agente, setAgente] = useState<any | null>(null);
@@ -245,7 +247,8 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        {activeTab !== "clientes" && activeTab !== "contenidos" && activeTab !== "propuestas" && (
+        {activeTab === 'tareas' && <div className="rounded bg-white p-6"><MyTasksPanel/></div>}
+        {activeTab !== "tareas" && activeTab !== "clientes" && activeTab !== "contenidos" && activeTab !== "propuestas" && (
           <div className="bg-white p-6 shadow-sm">
             <h2 className="text-lg font-semibold text-blue-950">{currentTab?.label}</h2>
             <p className="mt-2 text-sm text-gray-500">Sin datos para mostrar.</p>
@@ -364,4 +367,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-

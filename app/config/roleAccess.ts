@@ -9,6 +9,7 @@ export const roleRank: Record<AppRole, number> = {
 
 export function normalizeRole(role: unknown): AppRole {
   const value = String(role || "").trim().toLowerCase();
+  if (value === "direccion" || value === "dirección") return "superadmin";
   if (value === "administracion" || value === "operaciones" || value === "superadmin") return value;
   return "base";
 }
@@ -22,6 +23,7 @@ export function canViewModule(role: unknown, moduleId: string) {
 }
 
 export function canAccessDashboardPath(role: unknown, pathname: string) {
+  if (pathname === "/dashboard/comercial/contratos/crear" || pathname.startsWith("/dashboard/comercial/contratos/crear/")) return roleRank[normalizeRole(role)] >= roleRank.administracion;
   if (pathname.startsWith("/dashboard/direccion")) return canViewModule(role, "direccion");
   if (pathname.startsWith("/dashboard/operaciones")) return canViewModule(role, "operaciones");
   if (pathname.startsWith("/dashboard/administracion")) return canViewModule(role, "administracion");
@@ -30,9 +32,13 @@ export function canAccessDashboardPath(role: unknown, pathname: string) {
 
 export function canAccessApiPath(role: unknown, pathname: string, method: string) {
   const normalized = normalizeRole(role);
+  if (method === 'POST' && /^\/api\/v1\/tareas\/propias\/?$/.test(pathname)) return true;
+  if (pathname.startsWith('/api/v1/tareas') && (method !== 'GET' || pathname === '/api/v1/tareas/agentes')) return roleRank[normalized] >= roleRank.operaciones;
+  if (method !== 'GET' && pathname.startsWith('/api/v1/comercial/contratos/crear')) return roleRank[normalized] >= roleRank.administracion;
   if (/^\/api\/v1\/direccion\/laboral\/tareas-agentes(?:\/[^/]+)?\/?$/.test(pathname)) return roleRank[normalized] >= roleRank.operaciones;
   if (pathname.startsWith("/api/v1/direccion")) return normalized === "superadmin";
   if (pathname.startsWith("/api/v1/operaciones")) return roleRank[normalized] >= roleRank.operaciones;
+  if (method !== "GET" && pathname.startsWith("/api/v1/produccion/servicios")) return roleRank[normalized] >= roleRank.operaciones;
   const sharedAdminRead = method === "GET" && /^\/api\/v1\/admin\/(agentes|ferias|proveedores)(?:\/[^/]+)?\/?$/.test(pathname);
   if (sharedAdminRead) return true;
   if (/^\/api\/v1\/admin\/(agentes|roles|user(?:\/|$)|user-wizard)/.test(pathname)) {

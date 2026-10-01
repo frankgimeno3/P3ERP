@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { DeleteObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { DeleteObjectCommand, GetObjectCommand, HeadObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const region =
@@ -79,4 +79,14 @@ export async function deleteObjectFromS3(s3Key) {
   const key = String(s3Key || "").trim();
   if (!key) throw new Error("s3Key is required");
   await getClient().send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
+}
+
+export async function assertObjectExistsInS3(s3Key) {
+  if (!bucket) throw new Error('El bucket S3 no está configurado.');
+  await getClient().send(new HeadObjectCommand({ Bucket: bucket, Key: s3Key }));
+}
+
+export async function createPresignedDownload(s3Key) {
+  if (!bucket) throw new Error('El bucket S3 no está configurado.');
+  return getSignedUrl(getClient(), new GetObjectCommand({ Bucket: bucket, Key: s3Key }), { expiresIn: 300 });
 }

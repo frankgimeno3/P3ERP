@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createCuenta, getCuentas } from "../../../../../server/features/cuenta/CuentaRepository.js";
+import { createCuenta, getCuentas, getCuentasTotal } from "../../../../../server/features/cuenta/CuentaRepository.js";
 
 export const runtime = "nodejs";
 
@@ -9,6 +9,7 @@ function getFilters(request) {
   return {
     clienteFiltro: params.get("clienteFiltro")?.trim() || "",
     codigoCrmFiltro: params.get("codigoCrmFiltro")?.trim() || "",
+    codigoEdisoftFiltro: params.get("codigoEdisoftFiltro")?.trim() || "",
     agenteFiltro: params.get("agenteFiltro")?.trim() || "",
     telFiltro: params.get("telFiltro")?.trim() || "",
     paisFiltro: params.get("paisFiltro")?.trim() || "",
@@ -17,6 +18,7 @@ function getFilters(request) {
 
 export async function GET(request) {
   try {
+    if (new URL(request.url).searchParams.get('countOnly') === 'true') return NextResponse.json({ total: await getCuentasTotal() });
     const cuentas = await getCuentas(getFilters(request));
     return NextResponse.json(cuentas);
   } catch (error) {

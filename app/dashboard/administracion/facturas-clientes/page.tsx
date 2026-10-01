@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import MiddleNav from "@/app/general_components/componentes_recurrentes/MiddleNav";
 import { FacturaService } from "@/app/service/FacturaService";
+import UninvoicedContracts from './UninvoicedContracts';
 
 function formatMoney(value?: number) {
   const amount = Number(value ?? 0);
@@ -19,6 +20,7 @@ function getYear(fecha: string) {
 export default function FacturasClientesPage() {
   const router = useRouter();
   const [facturas, setFacturas] = useState<any[]>([]);
+  const [section,setSection]=useState<'facturas'|'contratos'>('facturas');
   const [activeYear, setActiveYear] = useState("");
   const [filtro, setFiltro] = useState("");
   const [loading, setLoading] = useState(true);
@@ -76,7 +78,7 @@ export default function FacturasClientesPage() {
   return (
     <div className="flex min-h-screen w-full flex-col bg-gray-200 text-gray-600">
       <MiddleNav tituloprincipal="Facturas clientes" />
-      <div className="min-h-screen w-full bg-gray-100 px-12 py-10 text-gray-600">
+      <div className="min-h-screen w-full bg-gray-100 px-12 py-10 text-gray-600"><div role="tablist" aria-label="Facturas y contratos" className="mb-5 flex gap-2">{([['facturas','Facturas'],['contratos','Contratos sin facturar']] as const).map(([value,label])=><button key={value} type="button" role="tab" aria-selected={section===value} onClick={()=>setSection(value)} className={`cursor-pointer rounded px-4 py-2 ${section===value?'bg-blue-950 text-white hover:bg-blue-900':'bg-white hover:bg-blue-50'}`}>{label}</button>)}</div>{section==='contratos'?<UninvoicedContracts/>:<>
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap gap-1">
             {years.map((year) => (
@@ -123,7 +125,7 @@ export default function FacturasClientesPage() {
             </tbody>
           </table>
         </div>
-      </div>
+      </>} </div>
       {conditionsOpen&&<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4" role="dialog" aria-modal="true" aria-labelledby="conditions-title"><div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-xl bg-white shadow-2xl"><div className="sticky top-0 flex items-center justify-between border-b bg-white p-5"><div><h2 id="conditions-title" className="text-lg font-semibold text-blue-950">Condiciones VERI*FACTU</h2><p className="text-sm text-gray-500">Checklist editable de implementación.</p></div><button type="button" onClick={()=>setConditionsOpen(false)} aria-label="Cerrar modal" className="cursor-pointer rounded px-2 text-2xl transition hover:bg-gray-100">×</button></div><div className="space-y-3 p-5">{conditions.map((condition,index)=><article key={index} className="rounded-lg border"><div className="flex items-center gap-3 p-4 transition hover:bg-blue-50"><input type="checkbox" checked={Boolean(condition.estado)} onChange={event=>{const next=conditions.map((item,i)=>i===index?{...item,estado:event.target.checked}:item);setConditions(next);void saveConditions(next);}} className="h-5 w-5 cursor-pointer"/><button type="button" onClick={()=>setExpandedCondition(value=>value===index?null:index)} className="flex flex-1 cursor-pointer items-center justify-between text-left font-semibold text-blue-950"><span>{condition.nombre}</span><span>{expandedCondition===index?"▴":"▾"}</span></button></div>{expandedCondition===index&&<div className="space-y-3 border-t bg-gray-50 p-4"><label className="block text-sm font-medium">Nombre<input value={condition.nombre} onChange={event=>setConditions(items=>items.map((item,i)=>i===index?{...item,nombre:event.target.value}:item))} className="mt-1 w-full rounded border bg-white p-2"/></label><label className="block text-sm font-medium">Descripción<textarea value={condition.descripcion} onChange={event=>setConditions(items=>items.map((item,i)=>i===index?{...item,descripcion:event.target.value}:item))} className="mt-1 min-h-24 w-full resize-y rounded border bg-white p-3"/></label><div className="flex justify-end"><button type="button" onClick={()=>void saveConditions()} className="cursor-pointer rounded bg-blue-950 px-4 py-2 text-sm text-white transition hover:bg-blue-900">Guardar cambios</button></div></div>}</article>)}</div></div></div>}
     </div>
   );

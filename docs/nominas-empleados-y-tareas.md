@@ -8,6 +8,27 @@ El endpoint `laboral_nominas-empleados` expone fichas agregadas; `laboral_nomina
 
 `laboral_tareas_empleado` registra id, nombre, agente, estado y descripción. La API de tareas filtra por agente y valida el agente también al editar una tarea. Los estados son pendiente, en curso, completada y cancelada.
 
+El panel abre en «Mis tareas pendientes», consultando la identidad autenticada
+del servidor. `/tareas` separa pendientes/en curso de completadas/canceladas;
+`/tareas/{id}` muestra el detalle. El middleware redirige a `/` si un agente
+sin rol Operaciones o superior intenta abrir una tarea ajena. La API
+`/api/v1/tareas` comprueba también propiedad y permisos, sin confiar en la
+identidad del navegador. La vista personal es de consulta.
+
+`/dashboard/operaciones/tareas` lista agentes con cuenta de empleado y sus
+totales. La ficha `/{id_agente}` permite crear tareas y abrir el detalle en
+modo edición. Crear y editar exige Operaciones o superior. Se reutiliza la
+tabla existente, sin duplicar tareas ni crear otra tabla.
+
+Desde el dashboard cada agente puede agregar sus propias tareas mediante
+un modal. `POST /api/v1/tareas/propias` fija agente e inicio pendiente en el
+servidor usando la identidad autenticada; no acepta asignaciones del navegador.
+La creación para otros agentes y la edición siguen reservadas a Operaciones.
+
+Pruebas: `scripts/test-task-workflow.mjs` usa un esquema aislado de RDS para
+verificar propiedad, permisos, creación y cambios de estado;
+`scripts/test-tasks-magazines-ui.cjs` comprueba pestañas y navegación.
+
 Aplicación: `node --experimental-default-type=module scripts/migrate-employee-payroll-tasks.mjs`.
 
 Verificación: `node --experimental-default-type=module scripts/test-bank-review-workflow.mjs`. Usa un esquema aislado que se revierte al terminar: comprueba nóminas, anticipos, asociación sin liquidación, exclusión de movimientos sin cargo asociado, migración repetida, tareas y edición de previsiones con detección de cambios concurrentes.

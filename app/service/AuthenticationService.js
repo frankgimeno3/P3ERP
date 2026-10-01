@@ -70,6 +70,7 @@ export default class AuthenticationService {
         cognitoUserPoolsTokenProvider.setKeyValueStorage(new CookieStorage());
         localStorage.removeItem('username');
         localStorage.removeItem('userPayload');
+        localStorage.removeItem('redirectAfterLogin');
         await signOut();
     }
 }

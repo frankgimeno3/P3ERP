@@ -42,6 +42,7 @@ function normalizeFolder(row, path = "") {
     name: row.mediateca_folder_name || "",
     parentId: row.mediateca_parent_folder_id || null,
     path,
+    allowedRoles: row.allowed_roles || [],
   };
 }
 
@@ -185,15 +186,21 @@ export async function updateFolder(folderId, data) {
   if (!name) throw new Error("name is required");
   const current = await getFolderRowById(pool, folderId);
   if (!current) throw new Error("Folder not found");
+  const protectedNames = new Set(['contratos_firmados','documentos_administracion','documentos_direccion','documentos_produccion']);
+  if (!current.mediateca_parent_folder_id && protectedNames.has(current.mediateca_folder_name) && name !== current.mediateca_folder_name) {
+    throw new Error('No se puede cambiar el nombre de esta carpeta principal');
+  }
+  const roles = Array.isArray(data?.allowed_roles) ? data.allowed_roles.filter(role => typeof role === 'string') : current.allowed_roles;
   const { rows } = await pool.query(
     `
       UPDATE mediateca_carpetas
       SET mediateca_folder_name = $2,
+          allowed_roles = $3::jsonb,
           mediateca_folder_updated_at = NOW()
       WHERE mediateca_folder_id = $1
       RETURNING *
     `,
-    [folderId, name],
+    [folderId, name, JSON.stringify(roles)],
   );
   return normalizeFolder(rows[0], await getFolderPathById(folderId));
 }
@@ -220,6 +227,11 @@ export async function deleteFolder(folderId) {
     const current = await getFolderRowById(client, folderId);
     if (!current) throw new Error("Folder not found");
     const folderIds = await descendantFolderIds(client, folderId);
+    const protectedFound = await client.query(`SELECT 1 FROM mediateca_carpetas
+      WHERE mediateca_folder_id=ANY($1::uuid[]) AND mediateca_parent_folder_id IS NULL
+        AND mediateca_folder_name=ANY($2::text[]) LIMIT 1`,
+      [folderIds, ['contratos_firmados','documentos_administracion','documentos_direccion','documentos_produccion']]);
+    if (protectedFound.rowCount) throw new Error('No se puede eliminar una carpeta principal protegida');
     const media = await client.query(
       "SELECT mediateca_content_id, mediateca_s3_key FROM mediateca_archivos WHERE mediateca_folder_id = ANY($1::uuid[])",
       [folderIds],

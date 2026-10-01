@@ -93,23 +93,27 @@ const client = await pool.connect();
 try {
   await client.query("BEGIN");
   for (const row of rows) {
+    const proposedBaseId='feria_base_'+crypto.createHash('md5').update(row.feria.trim().toLowerCase()).digest('hex');
+    await client.query(`INSERT INTO administracion_ferias_db(id_feria,nombre_feria,pais,periodicidad,tematica,descripcion)
+      VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT (lower(btrim(nombre_feria))) DO NOTHING`,
+      [proposedBaseId,row.feria,row.pais,row.periodicidad,row.tematica,row.tematica]);
+    const baseId=(await client.query('SELECT id_feria FROM administracion_ferias_db WHERE lower(btrim(nombre_feria))=lower(btrim($1))',[row.feria])).rows[0].id_feria;
     await client.query(`
-      INSERT INTO administracion_ferias (
-        id_feria,titulo_especifico_edicion,nombre_feria,pais,ciudad,edicion_numero,
-        descripcion,fecha_incio,fecha_finalizacion,periodicidad,tematica,fecha_texto_original,
+      INSERT INTO administracion_ferias_ediciones (
+        id_feria,id_feria_base,titulo_especifico_edicion,ciudad,edicion_numero,
+        descripcion,fecha_incio,fecha_finalizacion,fecha_texto_original,
         fecha_inicio,fecha_fin,fuente_importacion,fuente_fila
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13::date,$14::date,$15,$16)
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::date,$11::date,$12,$13)
       ON CONFLICT (fuente_importacion,fuente_fila) WHERE fuente_importacion <> '' AND fuente_fila IS NOT NULL
       DO UPDATE SET
-        titulo_especifico_edicion=EXCLUDED.titulo_especifico_edicion,nombre_feria=EXCLUDED.nombre_feria,
-        pais=EXCLUDED.pais,ciudad=EXCLUDED.ciudad,edicion_numero=EXCLUDED.edicion_numero,
+        id_feria_base=EXCLUDED.id_feria_base,titulo_especifico_edicion=EXCLUDED.titulo_especifico_edicion,
+        ciudad=EXCLUDED.ciudad,edicion_numero=EXCLUDED.edicion_numero,
         descripcion=EXCLUDED.descripcion,fecha_incio=EXCLUDED.fecha_incio,
-        fecha_finalizacion=EXCLUDED.fecha_finalizacion,periodicidad=EXCLUDED.periodicidad,
-        tematica=EXCLUDED.tematica,fecha_texto_original=EXCLUDED.fecha_texto_original,
+        fecha_finalizacion=EXCLUDED.fecha_finalizacion,fecha_texto_original=EXCLUDED.fecha_texto_original,
         fecha_inicio=EXCLUDED.fecha_inicio,fecha_fin=EXCLUDED.fecha_fin,updated_at=NOW()
     `, [
-      row.id, `${row.feria} ${row.year}`, row.feria, row.pais, row.ciudad, row.year,
-      row.tematica, legacyDate(row.start), legacyDate(row.end), row.periodicidad, row.tematica,
+      row.id, baseId, `${row.feria} ${row.year}`, row.ciudad, row.year,
+      row.tematica, legacyDate(row.start), legacyDate(row.end),
       row.fecha, row.start, row.end, source, row.sourceRow,
     ]);
   }

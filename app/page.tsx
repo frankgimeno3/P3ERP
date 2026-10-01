@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import {loginDestination} from "@/app/config/loginRedirect";
 import AuthenticationService from "@/app/service/AuthenticationService";
 
 const loadingTexts = [
@@ -35,9 +36,10 @@ export default function Home() {
   };
 
   const getLoginRedirect = () => {
-    const stored = localStorage.getItem("redirectAfterLogin");
-    if (stored && stored.startsWith("/") && !stored.startsWith("/unlogged")) return stored;
-    return "/dashboard";
+    let stored=null;
+    try {stored=localStorage.getItem("redirectAfterLogin");} catch {}
+    const target=loginDestination(window.location.search,stored);
+    return window.location.hash && !target.includes("#") ? target+window.location.hash : target;
   };
 
   const finishLoginRedirect = async () => {
@@ -49,18 +51,14 @@ export default function Home() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const storedPayload = localStorage.getItem("userPayload");
-      if (storedPayload) {
-        router.replace(getLoginRedirect());
-        return;
-      }
-
       try {
         const sessionPayload = await AuthenticationService.checkSession();
         if (sessionPayload) {
           localStorage.setItem("userPayload", JSON.stringify(sessionPayload));
-          router.replace(getLoginRedirect());
-        }
+          const target=getLoginRedirect();
+          localStorage.removeItem("redirectAfterLogin");
+          router.replace(target);
+        } else {localStorage.removeItem("userPayload");}
       } catch {
         console.log("No hay sesion activa");
       }

@@ -1,7 +1,6 @@
-import { readLegacyMigrationSql } from './readLegacyMigrationSql.mjs';
 import {createIngresoAdicional,getIngresosAdicionales} from '../server/features/prevision/PrevisionRepository.js';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
+import { readLegacyMigrationSql } from './readLegacyMigrationSql.mjs';
 import {randomUUID} from 'node:crypto';
 import env from '@next/env';
 import {getPgPool} from '../server/database/pgClient.js';
@@ -18,7 +17,7 @@ const pool=getPgPool(),db=await pool.connect(),schema='test_income_'+randomUUID(
 const connect=pool.connect.bind(pool),query=pool.query.bind(pool);
 try{
   await db.query('CREATE SCHEMA '+schema);await db.query('SET search_path TO '+schema+',public');
-  const tables=['tesoreria_pagos_previstos','tesoreria_ingresos_adicionales','tesoreria_ordenes','tesoreria_recibos_importados','tesoreria_remesas','tesoreria_movimientos_bancarios','administracion_facturas_clientes','comercial_cuentas','agentes_db','general_comentarios','general_eventos','cuentas_registro_eventos','comercial_contratos',
+  const tables=['tesoreria_cargos_recurrentes','tesoreria_cargos_vencimientos','tesoreria_vencimientos_aplicaciones','laboral_nominas','laboral_anticipos','tesoreria_pagos_previstos','tesoreria_ingresos_adicionales','tesoreria_ordenes','tesoreria_recibos_importados','tesoreria_remesas','tesoreria_movimientos_bancarios','administracion_facturas_clientes','comercial_cuentas','agentes_db','general_comentarios','general_eventos','cuentas_registro_eventos','comercial_contratos',
     'comercial_propuestas_db','comercial_propuestas_lineas','comercial_propuestas_cobros','comercial_contratos_lineas','produccion_contenidos','comercial_contratos_cobros','comercial_contactos','administracion_lineas_factura'];
   for(const table of tables)await db.query('CREATE TABLE '+schema+'.'+table+' (LIKE public.'+table+' INCLUDING ALL)');
   await db.query(readLegacyMigrationSql('database/migrations/20260914_0002_income_reconciliation.sql'));
@@ -71,14 +70,18 @@ try{
   await updatePropuesta(proposal.id_propuesta,{nombre_propuesta:'Modificada'},'actor');
   await updatePropuesta(proposal.id_propuesta,{estado_propuesta:'Aceptada'},'actor');
   const contract=(await db.query('SELECT * FROM comercial_contratos WHERE id_propuesta=$1',[proposal.id_propuesta])).rows[0];
-  assert(contract.id_factura);
+  assert.equal(contract.id_factura,null,'Accepting a proposal must not create an invoice');
   const generated=(await db.query('SELECT * FROM tesoreria_ordenes WHERE id_contrato=$1',[contract.id_contrato])).rows;
   assert.equal(generated.length,1);assert.equal(generated[0].id_factura,contract.id_factura);
+  assert.equal(generated[0].id_agente,'actor','The order belongs to the accepting agent, independently of the proposal owner');
   assert.equal((await db.query('SELECT count(*)::int n FROM tesoreria_recibos_importados WHERE id_orden=$1',[generated[0].id_orden])).rows[0].n,1);
   // Reopen the accepted proposal's draft and edit the same payment/order in the invoicing wizard.
   assert((await getEligibleContracts()).some(c=>c.id_contrato===contract.id_contrato));
   let draft=await createInvoiceDraft(contract.id_contrato,'actor');
-  assert.equal(draft.id_factura_cliente,contract.id_factura);
+  contract.id_factura=draft.id_factura_cliente;
+  assert(contract.id_factura,'An invoice is created only by an explicit request');
+  const linkedReceipt=(await db.query('SELECT numero_factura FROM tesoreria_recibos_importados WHERE id_orden=$1',[generated[0].id_orden])).rows[0];
+  assert.equal(linkedReceipt.numero_factura,contract.id_factura);
   const originalOrderId=generated[0].id_orden;
   const forecastBefore=await getLiquidityForecast('30/12/2099',pool);
   draft=await updateCustomerInvoice(contract.id_factura,{cobros:draft.cobros.map(c=>({...c,forma_cobro:'Transferencia bancaria',fecha_cobro:'2099-12-30',banco_cobro:'Santander'}))},'actor');

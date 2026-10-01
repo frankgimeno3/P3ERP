@@ -28,16 +28,16 @@
     ]
   },
   "/dashboard/comercial/cuentas": {
-    "summary": "Consulta y administra la cartera de cuentas de cliente.",
+    "summary": "Consulta y administra la cartera de cuentas de cliente. El total de cuentas se muestra al entrar y no cambia al aplicar filtros.",
     "steps": [
-      "Usa los filtros para localizar una cuenta.",
+      "La tabla distingue el ID cuenta (Tiger) del Código Edisoft, utilizado para identificar cuentas en los Excel administrativos. Cada columna tiene su filtro desplegable, cerrado inicialmente; abre el que necesites y combina los filtros para localizar una cuenta.",
       "Abre una fila para consultar su ficha, contactos, propuestas, comentarios y actividad.",
       "Pulsa Nueva cuenta para iniciar el alta guiada.",
       "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape."
     ]
   },
   "/dashboard/comercial/contactos": {
-    "summary": "Gestiona las personas de contacto asociadas a las cuentas.",
+    "summary": "Gestiona las personas de contacto asociadas a las cuentas. El total de contactos se muestra al entrar y no cambia al aplicar filtros.",
     "steps": [
       "Filtra la lista por los datos conocidos.",
       "Abre un contacto para revisar o modificar su ficha y eventos.",
@@ -52,15 +52,24 @@
       "Abre una propuesta para consultar su contenido, estado y seguimiento.",
       "Crea, edita, replica o actualiza la propuesta según el flujo comercial.",
       "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape.",
-      "Crear, modificar o eliminar una propuesta registra un comentario con el usuario en la cuenta. Al aceptarla se genera o reutiliza una factura en proceso con sus órdenes y recibos; el comentario identifica la propuesta, la factura y las órdenes."
+      "Crear, modificar o eliminar una propuesta registra un comentario con el usuario en la cuenta. Al aceptarla se generan el contrato, las órdenes y los recibos; no se crea una factura automáticamente.",
+      "Despliega Filtros: la primera fila contiene nombre del cliente, código CRM y agente; la segunda contiene Desde, Hasta y estado.",
+      "En Plantillas crea y edita productos en español y, si hace falta, versiones en otros idiomas. En la fase Servicios usa una versión del mismo idioma de la propuesta para sustituir o añadir productos.",
+      "Buscar cuenta abre una tabla con filtros y 30 cuentas por pagina. Al elegir una cuenta se selecciona su contacto principal o el primero; si no tiene contactos se activa automaticamente el contacto manual."
     ]
   },
   "/dashboard/comercial/contratos": {
-    "summary": "Consulta los contratos generados para cada cliente.",
+    "summary": "Consulta contratos y crea nuevos contratos directamente desde Comercial.",
     "steps": [
-      "Localiza el cliente o contrato en el listado.",
+      "Crear contrato solo est? disponible para Administraci?n, Operaciones y Direcci?n. En la ficha se puede cambiar el contacto de la cuenta, iniciar una factura y reemplazar ?rdenes pendientes: las pagadas quedan bloqueadas y las nuevas deben sumar el mismo total.",
+      "Pulsa Agregar contrato para introducir cuenta, servicios, cobros y fechas; el alta crea contrato, órdenes, recibos y contenidos de producción. No crea facturas automáticamente.",
+      "Localiza el cliente o contrato en el listado. Se muestran como máximo 50 contratos por página; usa Anterior y Siguiente para navegar. Al cambiar filtros o pestaña vuelves a la primera página.",
       "Abre el contrato para revisar empresa, contenidos y condiciones de cobro.",
-      "Verifica los datos antes de continuar con facturación y producción."
+      "El agente comercial del contrato y el responsable de seguimiento de cada contenido son independientes: cambiar uno no sustituye al otro. En contratos importados sin desglose, las líneas de contenido indican Incluido en el total y el importe conjunto se muestra en una línea global, sin inventar precios unitarios. El IVA refleja el porcentaje del contrato, incluido el 0 %. Los importes e impuestos desconocidos aparecen como pendientes o sin determinar.",
+      "Verifica los datos antes de continuar con facturación y producción.",
+      "La ficha individual conserva los datos generales, servicios, órdenes y facturas relacionadas. Las órdenes muestran sus importes, fechas, banco y estado, con enlaces a Control administrativo; las facturas enlazan a su detalle.. También permite subir y consultar el contrato firmado en PDF o imagen dentro de la carpeta del agente empleado y su año.",
+      "La ficha tiene pestañas Datos y Vista de documento. El documento ofrece versión original en el idioma registrado y versión GM con plantilla y catálogo en español. Cada versión tiene descarga PDF.",
+      "Al crear un contrato independiente, Intercambio sin cobro monetario permite registrar el valor ofrecido y las condiciones sin generar cobros. Se muestran en los datos y en el documento del contrato."
     ]
   },
   "/dashboard/comercial/documentacion": {
@@ -72,44 +81,93 @@
     ]
   },
   "/dashboard/produccion/hoja_produccion": {
-    "summary": "Muestra la hoja de producción 2026 con la estructura completa de contenidos, anuncios, artículos y publicación.",
+    "summary": "Muestra la hoja de producción con pestañas 2026 y Anteriores, conservando la estructura de contenidos, anuncios, artículos y publicación.",
     "steps": [
       "Despliega Filtros, cerrado inicialmente, para buscar por los campos de la hoja. La tabla no muestra Código CRM, Publicación / Nº web, Factura ni Comentarios.",
       "Usa los controles para incluir publicados o contenidos fuera de contrato.",
-      "Pulsa una fila para abrir el detalle del contenido."
+      "El cliente se muestra con el nombre actual de su cuenta vinculada, aunque el Excel original usase otro nombre. El agente es quien sigue ese contenido para obtener materiales y puede ser distinto del agente comercial del contrato.",
+      "Pulsa una fila para abrir /hoja_produccion/[id]. Puedes editar especificaciones en un área de texto, Publicación / Nº web, agente por nombre, fecha límite con día, mes y año separados y estado. Pulsa Guardar cambios para conservar la edición. También puedes subir materiales. Volver regresa a la hoja de producción.",
+      "Las pestañas incluyen el año actual y todos los años presentes en los contenidos. Anteriores conserva los contenidos históricos importados; Sin año permite localizar los que aún no tienen fecha."
+    ]
+  },
+  "/dashboard/produccion/revistas": {
+    "summary": "Consulta revistas pendientes y el calendario de publicación, materiales y recordatorios.",
+    "steps": [
+      "En Pendientes el orden es Vidrio Plano, Ventanas, Quién es Quién y el resto. Estas tres revistas tienen subpestañas de edición; no se repite la columna ni el filtro de edición. Número es la primera columna. Un solo desplegable Filtros, inicialmente cerrado, muestra los filtros compactos de las columnas visibles.",
+      "Usa Agregar revista para crear una edicion y establece si esta publicada o pendiente de publicar.",
+      "Cambia el estado de una revista desde la tabla; las pendientes son las disponibles al elegir detalle de publicación en propuestas.",
+      "En Calendario consulta todas las revistas, con Número como primera columna, y usa Modificar para editar las tres fechas mediante día, mes y año."
+    ]
+  },
+  "/dashboard/produccion/contenidos": {
+    "summary": "Consulta contenidos de producción por revista o en un listado completo.",
+    "steps": [
+      "Filtrar por revista conserva la vista de revistas y permite abrir sus anuncios y artículos.",
+      "Todos los contenidos muestra los registros de producción; abre los filtros por columna y pulsa una fila para entrar en el detalle del contenido."
+    ]
+  },
+  "/dashboard/produccion/contenidos/[id]": {
+    "summary": "Detalle de un contenido de producción y sus materiales.",
+    "steps": [
+      "Edita especificaciones, Publicación / Nº web, agente por nombre, fecha límite con día, mes y año separados y estado; pulsa Guardar cambios. Agregar materiales permite subir un archivo vinculado al contenido."
+    ]
+  },
+  "/dashboard/produccion/contenidos/revistas/[id_revista]": {
+    "summary": "Revisa los materiales recibidos para cada contenido de una revista.",
+    "steps": [
+      "Alterna Anuncios y Artículos; cada pestaña separa no revisados, incidencias, OK producción y no recibidos.",
+      "Despliega un contenido para ver sus archivos, fecha de aportación, estado y comentarios de producción.",
+      "Abre el contenido para agregar materiales desde su carpeta de revista."
     ]
   },
   "/dashboard/administracion/ferias": {
-    "summary": "Mantiene el catálogo de ferias y eventos comerciales.",
+    "summary": "Separa el catálogo de ferias de sus ediciones concretas.",
     "steps": [
-      "Busca y filtra las ferias disponibles.",
-      "Abre una feria para modificar sus datos y relevancia.",
-      "Usa Crear para registrar un nuevo evento.",
-      "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape."
+      "Al crear una edición, elige Intercambio en un selector Sí/No de la primera fila y escribe inicio y finalización en tres campos: día, mes y año.",
+      "En ediciones, el filtro Pa?s usa el pa?s de la feria del cat?logo; Intercambio se elige con S?/No y las fechas se introducen por d?a, mes y a?o.",
+      "Usa las pestañas Ediciones relevantes pendientes, Otras pendientes, Ediciones pasadas y Ferias.",
+      "Abre Filtros por columna para buscar dentro de cada pestaña.",
+      "Agregar Edición abre el formulario de una edición y Agregar nueva feria crea un registro del catálogo.",
+      "En la ficha de una edición puedes guardar los apartados de intercambio, logística y entidades asociadas."
+    ]
+  },
+  "/dashboard/administracion/ferias/catalogo/[id]": {
+    "summary": "Muestra los datos generales de una feria del catálogo.",
+    "steps": [
+      "Consulta país, periodicidad, temática y descripción. Las ediciones de esa feria tienen sus propias fechas y apartados de gestión."
     ]
   },
   "/dashboard/administracion/control-administrativo": {
     "summary": "Supervisa órdenes y operaciones pendientes de control administrativo.",
     "steps": [
-      "Utiliza los filtros para encontrar una orden.",
+      "Los filtros incluyen estado de cobro, fecha de cobro y base imponible. Agregar contrato abre la creaci?n manual de contratos.",
+      "Órdenes muestra las vigentes cuyo código empieza por C y los dos últimos dígitos del año actual (por ejemplo, C26 en 2026). Órdenes años anteriores reúne todos los demás códigos, incluidas sus canceladas. Canceladas muestra las canceladas del año actual. Los contadores siguen el mismo criterio; utiliza los filtros para encontrar una orden.",
       "Abre el detalle para revisar datos comerciales y administrativos.",
       "Completa las acciones necesarias antes de facturar o cerrar la orden.",
       "Subir excel de control administrativo permite cargar .xlsx o .xls, revisar la correspondencia de columnas y previsualizar las órdenes antes de confirmar. Identificador de orden es obligatorio; las columnas no reconocidas se conservan como campos adicionales visibles en el detalle.",
       "Se crean órdenes nuevas y se actualizan únicamente los campos diferentes con valor. Las celdas vacías o \"-\" conservan los datos anteriores y las órdenes ausentes del archivo no se eliminan.",
       "La tabla muestra importe, fecha real y estado de cobro. Cuando proceden de la revisión bancaria, el estado y la fecha se modifican desde esa revisión. Las modificaciones generan comentarios en la cuenta asociada.",
-      "Las órdenes aparecen desde que se acepta la propuesta. Al preparar su factura, los datos de pago actualizan esas mismas órdenes; no se crean duplicados al terminar el asistente."
+      "Las órdenes aparecen desde que se acepta la propuesta. Al preparar su factura, los datos de pago actualizan esas mismas órdenes; no se crean duplicados al terminar el asistente.",
+      "Nuevo contrato sin propuesta abre una ruta propia con cuatro fases: cuenta y contrato, servicios, órdenes de cobro y revisión. Se crea sin factura y termina en la ficha del contrato. Los importes de las órdenes deben sumar el total de servicios con impuestos.",
+      "Importación masiva abre un asistente para contratos, facturas u órdenes, uno o varios registros. Descarga la plantilla exacta, sube el Excel, valida, revisa incidencias desplegables y confirma el conjunto.",
+      "Abre Filtros para desplegar los criterios; el contador indica cuántos están activos aunque el panel esté cerrado.",
+      "La columna Factura enlaza a su ficha e indica si es previa o definitiva.",
+      "Órdenes muestra las vigentes y Canceladas conserva las órdenes canceladas. Las canceladas no generan ingresos previstos ni se pueden modificar o sobrescribir mediante Excel."
     ]
   },
   "/dashboard/administracion/facturas-clientes": {
     "summary": "Gestiona facturas de clientes y su cumplimiento Verifactu.",
     "steps": [
       "Consulta o filtra las facturas existentes.",
+      "La ficha abre en Datos, con la edición habitual. Vista de documento muestra los datos guardados con el formato A4 de Proporción 3: cliente, conceptos, impuestos, total y vencimientos. Guarda los cambios en Datos para actualizar la vista. Los precios unitarios sin desglose y los datos fiscales ausentes no se inventan; abrir la vista no emite la factura.",
       "Crea una factura desde contratos y revisa impuestos, importes y destinatario.",
       "Abre registros Verifactu o crea una rectificativa cuando corresponda.",
-      "La factura muestra el total cobrado, estado y fecha de cobro calculados a partir de sus órdenes. La revisión bancaria actualiza esta información conservando los vínculos existentes. La factura en proceso generada al confirmar la propuesta todavía no supone un envío a Verifactu.",
-      "Al aceptar una propuesta se crean el contrato, la factura en proceso y las órdenes de Control administrativo. El asistente permite seleccionar contratos pendientes, incluidos los que ya tienen esa factura previa, y reutiliza el mismo borrador.",
+      "La factura muestra el total cobrado, estado y fecha de cobro calculados a partir de sus órdenes. La revisión bancaria actualiza esta información conservando los vínculos existentes. Crear una factura previa no supone emitirla ni enviarla a Verifactu.",
+      "Al aceptar una propuesta se crean el contrato y las órdenes de Control administrativo, sin factura automática. La factura se crea cuando el usuario lo solicita.",
       "Guardar los datos de pago actualiza las órdenes existentes con importe, vencimiento, forma de cobro y banco, conservando sus identificadores. La base se reparte según los impuestos de la factura. Recibo genera o actualiza su recibo; al cambiar a transferencia se retira el recibo que no tenga remesa. Los cobros confirmados o remesados requieren resolver antes sus asociaciones.",
-      "Recibos y transferencias son ingresos previstos de las órdenes, no ingresos recurrentes. Afectan a la liquidez una sola vez según banco y fecha, mientras sigan pendientes. Terminar el asistente prepara la factura; la emisión fiscal mantiene su confirmación específica."
+      "Recibos y transferencias son ingresos previstos de las órdenes, no ingresos recurrentes. Afectan a la liquidez una sola vez según banco y fecha, mientras sigan pendientes. Terminar el asistente prepara la factura; la emisión fiscal mantiene su confirmación específica.",
+      "En la ficha de una factura en borrador, Eliminar borrador abre una confirmación. Elimina factura y líneas, conservando contratos, órdenes y recibos; las órdenes quedan sin factura. No permite borrar facturas emitidas, contabilizadas, con cobros confirmados ni con documentos derivados. El modal admite × y Escape.",
+      "Contratos sin facturar muestra contratos sin ninguna factura asociada. Solo el código del contrato es enlace; Crear factura genera un borrador a petición del usuario. Sus filtros por columna empiezan cerrados. En Vista de documento, Descargar PDF descarga el documento guardado."
     ]
   },
   "/dashboard/administracion/pendiente-cobro": {
@@ -130,16 +188,17 @@
     ]
   },
   "/dashboard/administracion/proveedores": {
-    "summary": "Consulta proveedores unificados con filtros combinables dentro del desplegable Filtros. El botón Crear proveedor está arriba a la derecha y abre el alta en tres fases. Las fichas se abren en la pestaña Datos.",
+    "summary": "Consulta proveedores sin identificadores técnicos en la tabla, con un filtro desplegable inicialmente cerrado por columna. El botón Crear proveedor está arriba a la derecha y abre el alta en tres fases. Las fichas se abren en la pestaña Datos.",
     "steps": [
-      "Despliega Filtros para buscar por proveedor, nombre fiscal y código fiscal; puedes combinarlos y se mantienen al cerrar el desplegable. No hay búsqueda general adicional.",
+      "Despliega el encabezado de cada columna para filtrar por proveedor, nombre fiscal, VAT, país, moneda, pagos, total o último pago. Los filtros se combinan y se mantienen al cerrar el desplegable.",
+      "En Cargos Pendientes, la tabla reúne pagos pendientes y programaciones recurrentes, distinguiendo su estado y fecha o periodicidad. Cada columna tiene un filtro desplegable inicialmente cerrado. Pulsa Editar en el resumen de cargos recurrentes o su concepto en la tabla para abrir el modal; al guardar se actualizan ambos lugares.",
       "Pulsa Crear proveedor: introduce un nombre obligatorio y revisa coincidencias; después comprueba el código fiscal o pulsa No lo sé, saltar. En la tercera fase completa el nombre fiscal, selecciona obligatoriamente un país del catálogo mundial y escribe la moneda. El país usa un único campo desplegable: al pulsarlo aparecen opciones y al escribir se filtran; selecciona una opción. El identificador y las fechas de registro son automáticos.",
-      "Al guardar se vuelven a comprobar duplicados y se abre la ficha en Datos. Desde las otras pestañas consulta cargos pendientes, tickets, facturas y precios.",
+      "Al guardar se vuelven a comprobar duplicados y se abre la ficha en Datos. La cabecera y la ruta de navegación muestran el nombre del proveedor en lugar de su identificador. Desde las otras pestañas consulta cargos pendientes, tickets, facturas y precios.",
       "Desde la ficha puedes Agregar cargo previsto con el mismo modal de Previsión de liquidez y el proveedor preseleccionado. En Tickets y Facturas, los botones de alta abren los formularios administrativos con ese proveedor seleccionado. En Precios, Agregar producto / servicio guarda servicio, descripción, unidad y precio por unidad en administracion_benchmark_proveedores.",
       "Las variantes indicadas de ADOBE, AMAZON BUSINESS, BANCO SABADELL, BITAVIS SERVEIS INFORMATICS, CORREOS, ENDESA, LINKEDIN, MOEVE, PIXUP, VERISURE, THALASSA y STARRESA se muestran en una única ficha por proveedor, conservando sus referencias y el acceso desde los identificadores antiguos.",
       "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape.",
       "La ficha contiene Cargos bancarios, con todos los gastos relacionados con el proveedor, tengan o no pago previsto o cargo recurrente, y un filtro por columna.",
-      "En Datos, Comentarios del proveedor se guarda en RDS en Comentarios_proveedor al pulsar Editar y Guardar.",
+      "Datos se presenta en un panel blanco con Agregar cargo previsto y Eliminar arriba a la derecha. Los datos se distribuyen en tres filas de dos campos: nombre e identificador, nombre fiscal y CIF/VAT, país y moneda. Solo el identificador es de lectura; país y moneda se eligen mediante selectores con búsqueda. Los comentarios quedan debajo a ancho completo. Los cambios se guardan automáticamente y el estado permite reintentar si falla; escribir en un selector requiere elegir una opción válida antes de guardar.",
       "Eliminar proveedor pide confirmación: desvincula y conserva facturas, tickets, pagos, cargos recurrentes y movimientos; elimina los precios y productos/servicios propios. Tener registros asociados ya no bloquea el borrado con un 409.",
       "Al editar un proveedor se conserva el nombre introducido, sin aplicar equivalencias de importación. La ficha muestra la respuesta guardada en RDS y confirma el guardado; los errores de validación se muestran con su detalle."
     ]
@@ -156,10 +215,24 @@
   "/dashboard/administracion/proveedores/tickets": {
     "summary": "Registra tickets y justificantes de gastos de proveedor.",
     "steps": [
-      "Consulta los tickets ya registrados.",
+      "Consulta los tickets P3 y GM ya registrados. El pago con tarjeta enlaza con su ficha de Administración > Tarjetas.",
+      "Al añadir un ticket, elige proveedor, fecha, importes, efectivo o una tarjeta activa, y adjunta PDF, JPG o PNG de hasta 15 MB. El ticket queda asociado a esa tarjeta. Si corresponde a una suscripción prevista, vincúlalo a su vencimiento en la pestaña Tickets de la tarjeta para evitar contar ambos importes.",
       "Pulsa Añadir para introducir un nuevo justificante. Desde Tickets en la ficha del proveedor puedes iniciar el mismo formulario con el proveedor preseleccionado.",
       "Comprueba proveedor, concepto, importes y fecha antes de guardar.",
       "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape."
+    ]
+  },
+  "/dashboard/administracion/tarjetas": {
+    "summary": "Gestiona tarjetas, sus tickets, suscripciones y liquidaciones bancarias.",
+    "steps": [
+      "Crea una tarjeta con código único, nombre, últimos cuatro dígitos, banco Sabadell o Santander, tipo, estado y descripción. Se conservan las tarjetas registradas anteriormente; configura su calendario antes de liquidarlas.",
+      "Indica la periodicidad en meses, inicio del período abierto, próximo cierre y fecha del cargo bancario mediante dd, mm y yyyy. Los ciclos siguientes conservan los días elegidos y usan el último día en meses más cortos. Tras liquidar, el calendario y el banco quedan protegidos.",
+      "La ficha muestra sus datos y cuatro pestañas: Tickets, Cargos recurrentes (suscripciones), Liquidaciones anteriores y Próxima liquidación.",
+      "Tickets permite añadir un justificante o asignar uno existente sin tarjeta. Puedes vincular un ticket a un vencimiento de suscripción del período abierto: su importe real sustituye esa previsión, sin sumarlos dos veces. No se pueden cambiar tickets de períodos cerrados.",
+      "En suscripciones, asocia un cargo previsto de proveedor u Otro, crea uno nuevo o edita su programación. Una suscripción solo pertenece a una tarjeta. Sus vencimientos se incluyen en el cierre correspondiente y salen del banco en la fecha de liquidación, sin computar también como pagos directos.",
+      "Próxima liquidación muestra tickets y suscripciones del período abierto, con su total actualizado. En Conciliación, selecciona uno o varios cargos de esa misma liquidación y pulsa Liquidación tarjeta. Elige la tarjeta y revisa el desglose y la diferencia con el banco; si hay diferencia, explica el motivo.",
+      "Confirmar guarda la previsión de ese momento y el importe real, marca los movimientos como revisados y abre el período siguiente. Liquidaciones anteriores conserva ese desglose aunque después cambien las suscripciones. Si los datos cambian mientras revisas, debes cargar de nuevo la previsión.",
+      "Para reabrir, abre uno de los movimientos de la última liquidación desde su revisión bancaria y pulsa Reabrir liquidación. La confirmación afecta a todos sus movimientos. La liquidación anterior queda anulada en el histórico y ese período vuelve a ser el próximo. Esta revisión requiere acceso a Dirección."
     ]
   },
   "/dashboard/operaciones/data": {
@@ -181,7 +254,7 @@
       "El rol determina los módulos visibles y el servidor bloquea las rutas y APIs no autorizadas aunque se intente acceder directamente.",
       "Abre la ficha de un agente para modificarlo o borrarlo; el borrado exige escribir borrar y elimina su cuenta, sus listas y sus tareas, sin afectar las de otros agentes.",
       "La pestaña Asuntos muestra solo empleados activos, sin columna de estado. Abre una fila para gestionar libre disposición, documentos, ausencias y comentarios.",
-      "Dentro de Agentes, Activos es la pestaña inicial e Inactivos reúne las cuentas no activas, incluidas las bloqueadas. Cada tabla tiene filtros independientes por ID, nombre, email y rol (selector), sin columna Estado.",
+      "Dentro de Agentes, Activos es la pestaña inicial y muestra empleados activos; Inactivos reúne empleados no activos, incluidos los bloqueados. No empleados reúne los agentes sin cuenta de empleado, cualquiera que sea su estado. Los filtros por ID, nombre, email y rol se mantienen al cambiar de pestaña. Las tablas no tienen columnas Estado ni Cuenta de empleado.",
       "La ficha del agente contiene Detalles, Nóminas y Tareas. Nóminas muestra su ficha única con historial bancario y la nómina pactada con enlace para editar el cargo recurrente.",
       "Tareas muestra ID, nombre, agente, estado y descripción. Filtra por ID, nombre, descripción o estado; Crear tarea abre un modal que se cierra con × o Escape. Abre cualquier fila para consultar y editar su tarea en una subpágina."
     ]
@@ -203,7 +276,7 @@
     ]
   },
   "/dashboard/direccion/tesoreria": {
-    "summary": "Importa, ordena y revisa los movimientos de las cuentas bancarias de la empresa.",
+    "summary": "En Tesorería puedes importar, ordenar y revisar los movimientos de las cuentas bancarias de la empresa.",
     "steps": [
       "Pulsa Añadir extracto, selecciona Santander o Sabadell e indica expresamente si el archivo tiene cabezal. Sin cabezal exige la tabla en la primera fila; con cabezal localiza la tabla después de los datos informativos de la cuenta.",
       "La aplicación detecta el sentido cronológico y compara las coincidencias exactas de cada movimiento para reconocer movimientos registrados e intercalar los ausentes con identificadores ordinales. En la fase de confirmación se muestra el rango de fechas operativas del archivo y la última fecha registrada para ese banco. Si hay movimientos anteriores, puedes marcar Omitir anteriores: se excluyen de la subida y se recalcula el total; los del mismo día se conservan y siguen pasando por la comparación de movimientos. La importación conserva los identificadores y todos los vínculos existentes con nóminas, anticipos y pagos. Solo inserta movimientos nuevos, con el siguiente identificador disponible por banco y año, aunque su fecha sea anterior. Cada coincidencia exacta consume una sola aparición, independientemente del orden del archivo. Si quedan cero movimientos nuevos, Finalizar sin subir cierra el asistente sin importar nada. El aviso distingue los movimientos comprobados de los omitidos; desmarca Omitir para comprobar los anteriores.",
@@ -216,20 +289,28 @@
     "steps": [
       "Cambia entre las pestañas Sabadell y Santander y abre, cuando lo necesites, el filtro inicialmente oculto de dos filas para buscar por fecha, tipo, concepto, importe, estado o asociación.",
       "Pulsa Añadir extracto, elige banco y formato con o sin cabezal, y confirma las líneas nuevas detectadas. En la fase de confirmación se muestra el rango de fechas operativas del archivo y la última fecha registrada para ese banco. Si hay movimientos anteriores, puedes marcar Omitir anteriores: se excluyen de la subida y se recalcula el total; los del mismo día se conservan y siguen pasando por la comparación de movimientos. La importación conserva los identificadores y todos los vínculos existentes con nóminas, anticipos y pagos. Solo inserta movimientos nuevos, con el siguiente identificador disponible por banco y año, aunque su fecha sea anterior. Cada coincidencia exacta consume una sola aparición, independientemente del orden del archivo. Si quedan cero movimientos nuevos, Finalizar sin subir cierra el asistente sin importar nada. El aviso distingue los movimientos comprobados de los omitidos; desmarca Omitir para comprobar los anteriores.",
-      "Pulsa el concepto para abrir el asistente de revisión o usa Revisión de líneas para trabajar en bloque.",
+      "Pulsa el concepto para abrir el asistente de revisión o usa Conciliación para trabajar en bloque.",
       "La ficha de cada extracto muestra el apartado Cargo previsto: indica si existe una asociación, su programación e importe y un enlace para consultarla o modificarla. Si no existe, Asociar o crear cargo previsto abre el asistente compartido; si falta destinatario, permite elegir primero proveedor o empleado. Los ingresos no admiten cargos previstos. La asociación se guarda al confirmar el asistente."
     ]
   },
-  "/dashboard/direccion/tesoreria/extractos/revision": {
+  "/dashboard/direccion/tesoreria/extractos/conciliacion": {
     "summary": "Revisa, asigna y concilia líneas bancarias individualmente o en bloque.",
     "steps": [
-      "La ficha y el modal de revisión utilizan las mismas cinco fases, con Volver atrás: avisos, destinatario, previsión, ajustes y revisión final. Solo se guarda al confirmar la fase 5, también para ingresos y nóminas.",
-      "La fase 1 lista por separado otros registros con el mismo importe y con el mismo concepto del mes del movimiento o del anterior. Cada coincidencia abre su ficha en otra pestaña. Debajo se muestra el estado de la selección y se bloquea la mezcla de revisados y sin revisar.",
-      "En fase 2 elige proveedor, cliente o empleado. Para nóminas selecciona primero nómina completa, anticipo o nómina con importe adicional. En fase 3 selecciona su cargo recurrente y la nómina mensual registrada, o prepara su alta para el periodo indicado.",
+      "Liquidación tarjeta aparece al seleccionar líneas. Selecciona cargos sin revisar ni asignar del banco de la tarjeta y pertenecientes a una misma liquidación. Revisa la previsión actual, explica cualquier diferencia y confirma: se guarda el histórico y se abre el siguiente período de la tarjeta.",
+      "La ficha y el modal comienzan preguntando cómo quieres revisar: revisión completa o directa. La directa se confirma allí con un comentario. La completa adapta sus fases al caso: ingresos tiene tres (Avisos y comparación, Identificar cobros, Revisión final); proveedores y otros cargos tienen cuatro (Avisos y comparación, Asignado a, Cargo previsto e importes, Revisión final); nóminas tiene cinco (Avisos y comparación, Asignado a, Previsión de nómina, Liquidación de nóminas, Revisión final). Para cargos asignados a clientes se muestra Orden de cobro en lugar de Cargo previsto e importes. La navegación muestra el número y el nombre de cada fase, permite volver atrás y guarda únicamente al confirmar la revisión final.",
+      "Las selecciones mixtas incluyen solo las fases necesarias: Destinatarios y cobros reúne la identificación de ingresos y destinatarios de cargos; Previsiones e importes muestra solo cargos; Liquidación de nóminas aparece únicamente si hay nóminas y muestra solo esos movimientos. Cambiar el destinatario recalcula las fases. Asignar a un cargo previsto tiene dos fases (previsión e importes, Confirmar asociación); la asignación directa a proveedor conserva su modal de una pantalla.",
+      "La fase 1, Avisos y comparación, compara también los movimientos seleccionados entre sí y consulta hasta dos años anteriores al movimiento más antiguo de la selección. El importe por sí solo no genera una alerta: se utiliza el cargo recurrente o un concepto relacionado, conservando números de local y contrato. Los cambios de referencias explícitas y meses escritos no impiden relacionar recibos.",
+      "La cabecera explica cuántos movimientos estás revisando y muestra una tarjeta por movimiento, con fecha, importe, concepto y referencia secundaria. En la pantalla inicial, Antes de empezar y su explicación aparecen fuera del recuadro gris, justo encima de ¿Cómo quieres revisar? En las fases siguientes se explica el propósito de la fase actual. La revisión permanece en Avisos y comparación hasta pulsar Continuar, incluso cuando no hay avisos. Los ingresos se clasifican después, en Identificar cobros.",
+      "En fase 1, Análisis de potenciales riesgos de duplicado o error y su resumen general se muestran siempre, sin desplegable exterior. Debajo hay un desplegable por movimiento seleccionado, incluso si no tiene incidencias. Cerrado identifica el movimiento e indica si hay posibles incidencias, faltan datos o no se han detectado incidencias pendientes. Abierto muestra únicamente sus avisos, comparaciones, previsiones y decisiones. Encima de cada movimiento relacionado se indican sus coincidencias concretas de importe, concepto, cargo previsto, proveedor o fecha. Los movimientos ya seleccionados no se repiten como relacionados; tampoco se muestran ni se cuentan comparaciones históricas que solo los incluyan a ellos. Los avisos de riesgo entre seleccionados se conservan en sus análisis y comparten la decisión. Los recibos próximos se agrupan con una ventana de 10 días. Sin asociación no significa impago: puede faltar el extracto o la conciliación.",
+      "Para aceptar un aviso escribe un motivo. La decisión queda preparada y solo se guarda al confirmar la revisión final. Si se ofrece Aplicar a futuros recibos, es una opción explícita limitada a los mismos cargos, importes, conceptos, cantidad de movimientos y proximidad. Un tercer recibo o un cambio relevante vuelve a evaluarse; editar comentarios no reabre una decisión.",
+      "En Asociar movimientos a vencimientos selecciona la obligación concreta que paga cada movimiento y su importe. Se admiten pagos parciales y repartir un movimiento entre vencimientos del mismo cargo. Preparar asociaciones no guarda todavía: se confirma junto con la revisión, sin permitir superar el importe bancario ni el pendiente de la obligación.",
+      "Las fases de previsiones y revisión final actualizan la comparación con el proveedor y cargo elegidos. Las decisiones preparadas que ya no encajan se señalan para retirarlas. Las asociaciones y decisiones se guardan en la misma operación que la revisión; un error revierte toda la operación. Marcar como NO revisado conserva las asociaciones.",
+      "Desde Fase 1 puedes desplegar las decisiones anteriores, reabrir un aviso o dejar de aplicar un criterio; estas acciones sí se guardan al pulsarlas. Los descartes antiguos de duplicados se conservan para sus movimientos originales, sin inventar criterios futuros. La revisión directa no crea criterios ni guarda asociaciones preparadas.",
+      "En fase 2 elige Proveedor, Cliente / ingreso o Nómina y selecciona obligatoriamente una fila de la tabla de destinatarios. Cada columna tiene un filtro y los filtros se combinan. La fila elegida queda marcada; puedes seleccionarla con clic, Enter o espacio. Cambiar de tipo elimina la selección anterior. Para proveedores se muestran nombre, nombre fiscal, NIF / CIF e identificador; clientes y empleados muestran nombre e identificador. En Previsión de nómina selecciona o crea el cargo recurrente, o indica Ex-Empleado. En Liquidación de nóminas elige el tipo de pago y comprueba el periodo, la nómina mensual y los anticipos.",
       "En fase 4 los anticipos pagados se deducen del neto previsto. Los pendientes se muestran aparte, sin deducirlos. Un anticipo nuevo debe coincidir con el movimiento y se registra vinculado a la nómina del empleado y mes. El adicional puntual debe cuadrar con la diferencia y no modifica el cargo recurrente. La nómina completa debe coincidir con el pendiente; si no hay anticipos registrados y es mayor, puedes confirmar la subida de la previsión mensual.",
-      "Para proveedores selecciona o crea un cargo previsto con el mismo formulario de Previsión de liquidez. El interruptor Con IVA está activado inicialmente: la base es total dividido entre 1,21; Sin IVA usa el total. Si el cargo supera la previsión, puedes aumentar los importes previstos desde fase 4.",
+      "Para proveedores, Cargo previsto e importes reúne la selección o creación del cargo, los comentarios y la comprobación de importes de cada movimiento. El interruptor Con IVA está activado inicialmente: la base es total dividido entre 1,21; Sin IVA usa el total. Si el cargo supera la previsión, puedes aumentar los importes previstos desde esta misma fase. En selecciones múltiples, el IVA del movimiento y la subida de previsión se ajustan por registro.",
       "Asignación común permite continuar si ya está asignado al mismo destinatario, mostrando un aviso. Se comprueban también proveedores y empleados de los pagos y cargos vinculados aunque falte la asignación directa. Si cambia el destinatario, cada incidencia exige elegir omitir la línea o sobrescribir su asignación y sus vínculos incompatibles. El guardado es transaccional y comprueba que los datos no hayan cambiado.",
-      "La fase 5 detalla el movimiento, destinatario, programación del cargo, pago u orden, base e IVA, nómina prevista, anticipos, adicional y cualquier subida mensual antes de confirmar. Volver a revisar una nómina con adicional conserva el cálculo original y no duplica el adicional.",
+      "Revisión final detalla el movimiento y los datos aplicables a su caso: destinatario, programación del cargo, orden de cobro, base e IVA o liquidación de nómina y ajustes. Volver a revisar una nómina con adicional conserva el cálculo original y no duplica el adicional.",
       "Filtra por Con proveedor o Sin proveedor y consulta la columna Asignado a. Con uno o varios revisados seleccionados, el botón cambia a Marcar como NO revisado, en rojo, con confirmación. Sus pagos se conservan. Asignar a un cargo previsto exige cargos previamente asignados a proveedor o nómina y no admite ingresos.",
       "Usa Detectar duplicados para comparar coincidencias por fecha e importe, eliminar una línea o confirmar de forma persistente que el grupo no es duplicado. El listado resalta en rosa casi blanco y con la etiqueta Posible duplicado los grupos con la misma fecha operativa e importe, incluyendo coincidencias entre bancos y con movimientos revisados. Los grupos confirmados íntegramente como no duplicados dejan de resaltarse.",
       "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape.",
@@ -237,32 +318,36 @@
       "La columna Cargo recurrente muestra la descripción del cargo asociado y enlaza a su ficha. El filtro Cargo recurrente permite ver todos los movimientos, solo gastos con cargo recurrente o solo gastos sin cargo recurrente; estas dos opciones excluyen ingresos. Si el cargo no tiene descripción, se muestra su identificador.",
       "Los filtros se organizan en dos filas: la primera contiene solo Concepto a todo el ancho; la segunda contiene Ingresos y cargos, Asignado a (Todos, Ninguno, Proveedor, Cliente o Nómina) y Cargo recurrente (Todos, Con cargo recurrente o Sin cargo recurrente). Ninguno muestra movimientos sin proveedor, cliente ni empleado asignados.",
       "Este listado muestra exclusivamente movimientos pendientes de revisar. Al confirmar la revisión, desaparecen del listado y de la selección. Los movimientos revisados se consultan en Extractos.",
-      "En la fase 1, los avisos por mismo importe o concepto excluyen todos los movimientos incluidos en la selección actual. Solo se muestran coincidencias con otros registros externos a esa selección.",
       "La fase 3 elimina Pago previsto: para proveedores solo se selecciona o crea un cargo recurrente. Para nóminas, el interruptor comienza en Empleado actual. Ex-Empleado impide crear o asociar cargos recurrentes y permite continuar sin ellos. En fase 4 se comprueba el importe mensual y los anticipos; si no hay nómina mensual registrada, se puede ajustar su neto total. La fase 5 confirma el pago sin crear recurrencia.",
       "En revisión masiva de nóminas, cada movimiento conserva el mes y año de su fecha bancaria. La fase 3 configura únicamente la recurrencia común; la fase 4 permite ajustar el periodo y clasificar cada movimiento como nómina completa, anticipo o adicional. Los anticipos se registran antes del pago final del mismo mes. Si dos movimientos se han marcado como nómina completa para el mismo mes, se pide corregir su clasificación antes de confirmar.",
       "Tipo de este movimiento incluye Otros para nóminas. Se registra con ese tipo en el histórico del empleado y conserva el movimiento bancario, sin descontarlo como anticipo ni modificar el neto mensual o la previsión. Se permite para empleados actuales y ex-empleados.",
-      "Asignar a proveedor abre un modal directo con un único selector con búsqueda y Confirmar, sin fases adicionales. Las incidencias de reasignación se resuelven por registro. Para nóminas, clientes o cargos recurrentes utiliza la revisión normal o la acción específica de cargo previsto.",
-      "En fase 1, Revisión normal es la opción predeterminada. Revisión forzada permite confirmar inmediatamente: marca como revisados los movimientos seleccionados sin modificar sus destinatarios, pagos o cargos recurrentes.",
+      "Asignar a proveedor abre un modal directo con la tabla filtrable de proveedores y Confirmar, sin fases adicionales. Las incidencias de reasignación se resuelven por registro. Para nóminas, clientes o cargos recurrentes utiliza la revisión completa o la acción específica de cargo previsto.",
+      "La pregunta sobre marcar directamente los movimientos o realizar una revisión completa aparece únicamente al inicio. Ambas opciones, Revisión completa y Revisión directa, son visibles en el interruptor y se indica la seleccionada. Completa es la predeterminada; Directa permite confirmar desde esa pantalla con un comentario, conservando las asociaciones existentes. Las pestañas de fases solo aparecen al comenzar la revisión completa.",
       "En nóminas, Tipo de este movimiento incluye Otros: se guarda como pago independiente en el histórico del empleado, sin consumir anticipos ni modificar la liquidación mensual.",
       "Solo el concepto es un enlace para abrir el movimiento. El resto de la fila no navega; la casilla sirve exclusivamente para seleccionar el registro. La descripción del cargo recurrente se muestra como texto.",
-      "Para proveedores, la fase 3 permite introducir comentarios del movimiento aunque no se seleccione ni cree cargo previsto. En fase 5 pueden editarse antes de confirmar y se guardan en el extracto bancario. En una selección múltiple, editar el comentario común en fase 3 lo aplica a todos; la fase 5 permite ajustarlo por registro.",
-      "La revisión forzada exige un comentario en fase 1. Confirmar permanece deshabilitado si está vacío o contiene solo espacios. El comentario se añade a los comentarios existentes de cada movimiento y se guarda junto al estado revisado.",
-      "La revisión forzada requiere un comentario obligatorio en la fase 1. Confirmar queda deshabilitado si está vacío; el comentario se añade a los comentarios existentes de cada movimiento y también se valida en el servidor.",
-      "Para ingresos, la fase 1 exige elegir Transferencia, Remesa u Otro. Transferencia selecciona una orden pendiente; Remesa permite buscar una o varias remesas registradas, sin seleccionar recibos individuales. Cada movimiento de una revisión múltiple conserva su selección.",
+      "Para proveedores, la fase 3 permite introducir comentarios del movimiento aunque no se seleccione ni cree cargo previsto. Al crear un cargo previsto, Banco de pago se selecciona inicialmente según el banco del movimiento y Descripción parte del mismo valor inicial que Comentarios del movimiento. Total IVA se rellena con el importe absoluto del movimiento y puede editarse; Base imponible se calcula automáticamente dividiendo ese total entre 1,21 con IVA o tomando el mismo total sin IVA. El banco, la descripción y los comentarios pueden modificarse después de forma independiente. En Revisión final pueden editarse antes de confirmar y se guardan en el extracto bancario. En una selección múltiple, editar el comentario común en fase 3 lo aplica a todos; la revisión final permite ajustarlo por registro.",
+      "La revisión directa exige un comentario en la pantalla inicial. Confirmar permanece deshabilitado si está vacío o contiene solo espacios. El comentario se añade a los comentarios existentes de cada movimiento y se guarda junto al estado revisado; también se valida en el servidor.",
+      "Para ingresos, Identificar cobros exige elegir Transferencia, Remesa u Otro. Transferencia selecciona una orden pendiente; Remesa permite buscar una o varias remesas registradas, sin seleccionar recibos individuales. Cada movimiento de una revisión múltiple conserva su selección. Después se pasa directamente a Revisión final, sin pantallas de cargos previstos ni anticipos.",
       "Cuadrar por fecha e importe filtra las remesas pendientes cuyo total coincide con el movimiento y cuya fecha es la más cercana dentro de siete días. Revisa y selecciona la coincidencia antes de continuar.",
-      "Al confirmar, la suma debe coincidir exactamente con el ingreso. Se actualizan estados y fechas de cobro de las órdenes y recibos vinculados, las remesas y la factura, con comentario del usuario en la cuenta. Desmarcar la revisión recalcula esos estados; un cobro ya conciliado no puede duplicarse."
+      "Al confirmar, la suma debe coincidir exactamente con el ingreso. Se actualizan estados y fechas de cobro de las órdenes y recibos vinculados, las remesas y la factura, con comentario del usuario en la cuenta. Desmarcar la revisión recalcula esos estados; un cobro ya conciliado no puede duplicarse.",
+      "En Asignado a, Otro aparece al final para revisar cargos sin proveedor, cliente ni empleado. Permite un comentario y asociar un cargo previsto de tipo Otro. Si existe una asignación anterior, confirma su sustitución o conserva ese movimiento omitiéndolo.",
+      "Conciliación sustituye al nombre Revisión de líneas. En Otro puedes seleccionar o crear un cargo previsto de tipo Otro sin destinatario, y asociar sus vencimientos mediante el análisis. Las asociaciones se conservan al volver a conciliar.",
+      "La ruta de Conciliación es /dashboard/direccion/tesoreria/extractos/conciliacion. Los detalles de movimientos y Duplicados se abren dentro de esta ruta. La URL se escribe sin tilde; el menú mantiene el nombre Conciliación. Las direcciones antiguas de revision y conciliación redirigen conservando la subruta y los filtros de la URL."
     ]
   },
   "/dashboard/direccion/tesoreria/prevision-liquidez": {
     "summary": "Proyecta la liquidez a partir de cobros y cargos previstos.",
     "steps": [
+      "Los cargos asociados a tarjetas se incluyen junto con sus tickets en la fecha de liquidación de la tarjeta, sin sumarse también como pagos directos. Configura las tarjetas y consulta sus próximos cierres en Administración > Tarjetas.",
       "Indica la fecha con los campos separados de día, mes y año para calcular la liquidez de ambos bancos.",
       "Usa las pestañas Previsión de ingresos y Previsión de cargos situadas debajo del resumen.",
+      "Los cargos periódicos de proveedores parten por defecto de hoy y guardan sus vencimientos hasta dos años desde hoy. Puedes modificar el primer vencimiento y la periodicidad en Editar. Generar cargos hasta dos años desde hoy amplía desde el último vencimiento guardado y no duplica los existentes.",
+      "Al crear un cargo se pregunta si termina con el último recurrente planificado. La casilla está desmarcada por defecto y también puede cambiarse en la ficha del cargo y en Cargos Pendientes del proveedor. Marcada, conserva los vencimientos existentes y excluye el cargo de futuras ampliaciones. Las fechas explícitas respetan su año y no se convierten en una recurrencia nueva.",
       "En Cargos previstos registrados consulta fecha, tipo Proveedor o Nómina, destinatario, base imponible, importe total o neto y descripción. Al agregar un cargo elige el tipo: Proveedor muestra su buscador y permite dejarlo sin asignar; Nómina muestra el selector de empleado y su importe neto sin IVA. Solo se admite un cargo previsto activo por empleado, con una o varias reglas. El formulario también se utiliza desde la ficha del proveedor y la revisión bancaria. Con IVA calcula automáticamente la base dividiendo el total entre 1,21; Sin IVA usa el total.",
       "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape.",
       "Cada cargo de tipo nómina genera o reutiliza automáticamente la ficha única del empleado en Laboral > Nóminas. Desde esa ficha puedes modificar la programación del cargo y consultar sus movimientos bancarios.",
       "Cada cargo recurrente tiene acciones Editar y Eliminar con modal de confirmación. Editar permite modificar los datos de su programación; Eliminar desasigna todos los extractos vinculados y conserva los movimientos y nóminas registrados.",
-      "Pulsa una fila para abrir /dashboard/direccion/tesoreria/prevision-liquidez/[id], con los datos del cargo previsto y una tabla de todos sus registros bancarios asociados.",
+      "Pulsa una fila para abrir /dashboard/direccion/tesoreria/prevision-liquidez/[id], con fondo blanco, los datos del cargo, los vencimientos planificados y los movimientos del extracto que ya se han asociado a ese cargo recurrente.",
       "La tabla de cargos previstos presenta Descripción, Tipo y Asignado a como primeras columnas, seguidas de Fecha, Base imponible, Importe y Acciones.",
       "Todos es la pestaña inicial y reúne recibos y transferencias. Puedes cambiar a Recibos, Transfers o Remesas; cada remesa aparece una sola vez.",
       "Debajo de las pestañas hay un filtro por cada campo visible, distribuido en dos filas. Los filtros se combinan; las fechas tienen dd, mm y yyyy separados. Limpiar filtros restablece la tabla y cambiar de pestaña reinicia los filtros.",
@@ -274,7 +359,11 @@
       "Cada recibo se vincula a una orden por factura y número de cobro; si no existe, se crea. Las coincidencias ambiguas deben resolverse antes de importar. Los importes y fechas se actualizan en la orden sin duplicarla.",
       "Número de remesa, Remesa en carpeta e Importe remesa solo sustituyen datos anteriores cuando llega un nuevo valor. Las remesas se registran y agrupan sus recibos; su total visible se calcula dinámicamente sumando los importes de sus órdenes.",
       "La revisión bancaria confirma el cobro y la fecha real de órdenes, recibos y remesas, y actualiza el total cobrado de la factura. Los cambios quedan en los comentarios de la cuenta asociada.",
-      "Los ingresos previstos proceden de las órdenes pendientes: recibos y transferencias, sin recurrencia. Los cambios de importe, fecha y banco realizados al preparar la factura se reflejan en esas órdenes y en liquidez. Agrupar recibos en una remesa no suma un ingreso adicional."
+      "Los ingresos previstos proceden de las órdenes pendientes: recibos y transferencias, sin recurrencia. Los cambios de importe, fecha y banco realizados al preparar la factura se reflejan en esas órdenes y en liquidez. Agrupar recibos en una remesa no suma un ingreso adicional.",
+      "En la programación periódica de proveedores puedes indicar el primer vencimiento mediante dd, mm y yyyy separados. Esa fecha permite identificar cada obligación futura, incluso trimestral o anual. Sin fecha de inicio no se inventan periodos ni pagos pendientes. Cada regla conserva su identidad al editarla o reordenarla; las asociaciones históricas mantienen el importe previsto que se confirmó.",
+      "Al agregar un cargo previsto, Otro permite planificar sin proveedor ni empleado. Conserva importes, IVA, periodicidad y la ampliación hasta dos años, salvo que marques que termina con los vencimientos planificados.",
+      "Los filtros de ingresos se distribuyen en tres filas. Los de cargos tienen tres filas de dos campos en escritorio y se apilan en pantallas estrechas.",
+      "El total incluye ingresos pendientes, pagos pendientes, vencimientos de proveedor y Otro, y nóminas previstas. Se descuentan los importes ya aplicados y anticipos pagados. Los importes sin banco asignado aparecen aparte y se incluyen en el total; el banco se elige al crear o editar el cargo. Las nóminas mensuales sin fecha se estiman al final de mes. Actualizar previsión recalcula los resultados."
     ]
   },
   "/dashboard/direccion/tesoreria/prevision-ingresos": {
@@ -306,7 +395,7 @@
     "summary": "Consulta la finalidad y la estructura actual de cada tabla RDS.",
     "steps": [
       "Abre una tabla para ver sus columnas, tipos, claves, valores por defecto y descripciones.",
-      "La estructura se consulta en PostgreSQL al abrir la p?gina; los cambios de esquema aparecen autom?ticamente. Las descripciones funcionales se mantienen como comentarios de tabla en RDS."
+      "La estructura se consulta en PostgreSQL al abrir la página; los cambios de esquema aparecen automáticamente. Las descripciones funcionales se mantienen como comentarios de tabla en RDS."
     ]
   },
   "/dashboard/direccion/copias-seguridad": {
@@ -353,7 +442,8 @@
       "Cada recibo se vincula a una orden por factura y número de cobro; si no existe, se crea. Las coincidencias ambiguas deben resolverse antes de importar. Los importes y fechas se actualizan en la orden sin duplicarla.",
       "Número de remesa, Remesa en carpeta e Importe remesa solo sustituyen datos anteriores cuando llega un nuevo valor. Las remesas se registran y agrupan sus recibos; su total visible se calcula dinámicamente sumando los importes de sus órdenes.",
       "La revisión bancaria confirma el cobro y la fecha real de órdenes, recibos y remesas, y actualiza el total cobrado de la factura. Los cambios quedan en los comentarios de la cuenta asociada.",
-      "Los ingresos previstos proceden de las órdenes pendientes: recibos y transferencias, sin recurrencia. Los cambios de importe, fecha y banco realizados al preparar la factura se reflejan en esas órdenes y en liquidez. Agrupar recibos en una remesa no suma un ingreso adicional."
+      "Los ingresos previstos proceden de las órdenes pendientes: recibos y transferencias, sin recurrencia. Los cambios de importe, fecha y banco realizados al preparar la factura se reflejan en esas órdenes y en liquidez. Agrupar recibos en una remesa no suma un ingreso adicional.",
+      "El total incluye ingresos pendientes, pagos pendientes, vencimientos de proveedor y Otro, y nóminas previstas. Se descuentan los importes ya aplicados y anticipos pagados. Los importes sin banco asignado aparecen aparte y se incluyen en el total; el banco se elige al crear o editar el cargo. Las nóminas mensuales sin fecha se estiman al final de mes. Actualizar previsión recalcula los resultados."
     ]
   },
   "/dashboard/direccion/previsiones/prevision-ingresos": {
@@ -387,7 +477,8 @@
     "steps": [
       "Despliega Filtros, cerrado inicialmente, para localizar artículos, empresas o números de revista. Prioridad y Dónde está siguen disponibles como filtros, pero no aparecen en la tabla.",
       "Consulta el estado de corrección y la planificación editorial en la tabla.",
-      "Pulsa Limpiar filtros para volver a mostrar todos los registros."
+      "Pulsa Limpiar filtros para volver a mostrar todos los registros.",
+      "Añadir contenido para artículo abre un modal con empresa, título, estado, responsable, revista, páginas y publicación en Vidrioperfil (casilla). Debes rellenar al menos un destino previsto: España, Latam, Especial o Hueco. Revista puede quedar en blanco; los responsables son Ricardo, Frank o Paco. Al guardar aparece el artículo en la tabla. Cierra con ×, Cancelar o Escape."
     ]
   },
   "/dashboard/operaciones/agentes/asuntos": {
@@ -397,15 +488,151 @@
       "Abre un empleado para ver sus datos de agente. La condición de cuenta de empleado se modifica en Dirección, Laboral, Agentes.",
       "Selecciona el año para consultar sus tres días de libre disposición. Marca cada día usado e introduce su fecha separada en dd, mm y yyyy; guarda los cambios.",
       "Sube y descarga documentación del empleado. Registra, edita o elimina ausencias indicando motivo, fechas y comentarios.",
-      "Añade comentarios a la ficha; el historial permanece visible al cambiar de año."
+      "Añade comentarios a la ficha; el historial permanece visible al cambiar de año.",
+      "Los nuevos documentos requieren S3 configurado. Si falta el bucket, la subida muestra un error y no guarda el archivo como respaldo en RDS. Los documentos antiguos almacenados en RDS siguen siendo descargables."
     ]
   },
   "/dashboard/administracion/facturas-clientes/crear": {
     "summary": "Prepara una factura a partir del contrato y sus órdenes de cobro.",
     "steps": [
-      "Al aceptar una propuesta se crean el contrato, la factura en proceso y las órdenes de Control administrativo. El asistente permite seleccionar contratos pendientes, incluidos los que ya tienen esa factura previa, y reutiliza el mismo borrador.",
+      "El origen de la factura puede ser un contrato o una sola orden. La selecci?n se hace en una tabla con filtros por columna. La opci?n inicial deja la factura previa para emitir VeriFactu despu?s; al elegir rellenarlo ahora se solicitan los datos del emisor y se emite al finalizar.",
+      "Al aceptar una propuesta se crean el contrato y las órdenes de Control administrativo, sin factura automática. La factura se crea cuando el usuario lo solicita.",
       "Guardar los datos de pago actualiza las órdenes existentes con importe, vencimiento, forma de cobro y banco, conservando sus identificadores. La base se reparte según los impuestos de la factura. Recibo genera o actualiza su recibo; al cambiar a transferencia se retira el recibo que no tenga remesa. Los cobros confirmados o remesados requieren resolver antes sus asociaciones.",
       "Recibos y transferencias son ingresos previstos de las órdenes, no ingresos recurrentes. Afectan a la liquidez una sola vez según banco y fecha, mientras sigan pendientes. Terminar el asistente prepara la factura; la emisión fiscal mantiene su confirmación específica."
+    ]
+  },
+  "/dashboard/operaciones/data/exportar/cuentas": {
+    "summary": "Exporta cuentas desde los registros reales del ERP.",
+    "steps": [
+      "La exportación consulta los registros reales mediante la API y aplica los filtros seleccionados. Muestra el número de resultados; si falla la consulta o no hay coincidencias, no permite descargar. El Excel contiene las filas y columnas seleccionadas; no se simula una generación mediante esperas."
+    ]
+  },
+  "/dashboard/operaciones/data/exportar/contactos": {
+    "summary": "Exporta contactos desde los registros reales del ERP.",
+    "steps": [
+      "La exportación consulta los registros reales mediante la API y aplica los filtros seleccionados. Muestra el número de resultados; si falla la consulta o no hay coincidencias, no permite descargar. El Excel contiene las filas y columnas seleccionadas; no se simula una generación mediante esperas."
+    ]
+  },
+  "/dashboard/administracion/control-administrativo/nuevo-contrato": {
+    "summary": "Crea un contrato independiente, sin propuesta ni factura previa.",
+    "steps": [
+      "Selecciona una cuenta real y, opcionalmente, agente y contacto de esa cuenta. Introduce nombre, fechas y comentarios.",
+      "Añade servicios con unidades, precio e IVA y distribuye el total entre órdenes con fecha, forma de cobro y banco.",
+      "Revisa los datos y confirma una sola vez. Se guardan contrato, servicios, cobros y órdenes en una transacción, con comentario en la cuenta; no se crea una factura.",
+      "La ficha del contrato muestra sus detalles, órdenes y facturas. Los recibos y transferencias pendientes alimentan las previsiones.",
+      "Al elegir o cambiar la cuenta se rellena su agente asignado. Puedes modificarlo. La fecha fin es opcional.",
+      "En Servicios se utiliza el mismo selector por canal, servicio y especificaciones y la misma tabla compacta que en propuestas. Puedes ajustar unidades, descuentos y modo de precio; esos datos se conservan en el contrato y al preparar su factura.",
+      "En el paso de cobro puedes elegir Intercambio sin cobro monetario y describir sus condiciones. Se conserva el valor de los servicios y se crean contrato y contenidos, sin órdenes de cobro, recibos ni facturas automáticas."
+    ]
+  },
+  "/dashboard/administracion/control-administrativo/importacion-masiva": {
+    "summary": "Importa contratos, facturas u órdenes con formato explícito y revisión previa.",
+    "steps": [
+      "Elige tipo, un registro o varios, y política para identificadores existentes: actualizar campos con valor, omitir o resolver por fila.",
+      "Consulta los nombres exactos de columnas y descarga la plantilla. Una fila por registro en la primera hoja; .xlsx o .xls, hasta 10 MB y 5.000 filas. Las asociaciones usan IDs existentes; las fechas admiten dd/mm/yyyy o fechas Excel.",
+      "Sube y valida sin escribir en la base de datos. Las tarjetas desplegables muestran errores y valores anteriores/nuevos. Corrige el archivo o decide actualizar o saltar cada fila y vuelve a validar.",
+      "La confirmación guarda todo el conjunto válido en una transacción. Si otro usuario modifica los datos después de validar, se exige nueva validación. Celdas vacías o guiones no borran valores y filas ausentes no eliminan registros.",
+      "Las facturas se importan en proceso: no se emiten ni envían a VeriFactu. Se bloquean las sobrescrituras de facturas emitidas/contabilizadas y órdenes cobradas o conciliadas. Los contratos importados contienen datos generales; sus órdenes pueden importarse después."
+    ]
+  },
+  "/dashboard/operaciones/servicios": {
+    "summary": "Gestiona el catálogo real de servicios y canales utilizado en propuestas.",
+    "steps": [
+      "Alterna las pestañas Servicios y Canales. Los botones superiores permiten crear ambos registros y agregar una revista mediante el mismo formulario del catálogo de Revistas.",
+      "Pulsa un canal para ver y editar su nombre y consultar sus servicios. Crear servicio asociado fija ese canal.",
+      "Pulsa un servicio desde cualquiera de las tablas para abrir su ficha y editar código al crear, canal, tarifa, soporte, fechas, concepto de factura, disponibilidad y contenido en cuatro idiomas. Oculto evita que aparezca en propuestas.",
+      "El menú lateral comienza expandido. La flecha superior lo reduce a una columna azul; la flecha contraria lo vuelve a expandir."
+    ]
+  },
+  "/dashboard/operaciones/servicios/crear": {
+    "summary": "Crea o edita la ficha de un servicio del catálogo.",
+    "steps": [
+      "Accede desde Operaciones → Servicios. Consulta la guía de esa página para los campos, pestañas y disponibilidad en propuestas."
+    ]
+  },
+  "/dashboard/operaciones/servicios/[id]": {
+    "summary": "Crea o edita la ficha de un servicio del catálogo.",
+    "steps": [
+      "Accede desde Operaciones → Servicios. Consulta la guía de esa página para los campos, pestañas y disponibilidad en propuestas."
+    ]
+  },
+  "/dashboard/operaciones/servicios/canales/crear": {
+    "summary": "Gestiona un canal y sus servicios asociados.",
+    "steps": [
+      "Accede desde Operaciones → Servicios. Consulta la guía de esa página para los campos, pestañas y disponibilidad en propuestas."
+    ]
+  },
+  "/dashboard/operaciones/servicios/canales/[id]": {
+    "summary": "Gestiona un canal y sus servicios asociados.",
+    "steps": [
+      "Accede desde Operaciones → Servicios. Consulta la guía de esa página para los campos, pestañas y disponibilidad en propuestas."
+    ]
+  },
+  "/dashboard/operaciones/servicios/canales/[id]/nuevo-servicio": {
+    "summary": "Gestiona un canal y sus servicios asociados.",
+    "steps": [
+      "Accede desde Operaciones → Servicios. Consulta la guía de esa página para los campos, pestañas y disponibilidad en propuestas."
+    ]
+  },
+  "/dashboard/comercial/propuestas/crear": {
+    "summary": "Buscar y seleccionar cuenta abre un modal con filtros por empresa, código, país y correo. Elige una cuenta válida y confirma. Se preselecciona su contacto principal si lo tiene.",
+    "steps": [
+      "Buscar y seleccionar cuenta abre un modal con filtros por empresa, código, país y correo. Elige una cuenta válida y confirma. Se preselecciona su contacto principal si lo tiene.",
+      "En Cobros el primer vencimiento se propone a dos meses; cada cobro añadido toma la fecha del anterior más un mes. El banco inicial depende del país de la cuenta y todas las fechas y bancos pueden editarse."
+    ]
+  },
+  "/dashboard/comercial/propuestas/[id_propuesta]/editar": {
+    "summary": "La fase Servicios comparte el selector y la tabla compacta con los contratos independientes. Sus campos y márgenes se han reducido para aprovechar el ancho disponible.",
+    "steps": [
+      "La fase Servicios comparte el selector y la tabla compacta con los contratos independientes. Sus campos y márgenes se han reducido para aprovechar el ancho disponible.",
+      "En Cobros el primer vencimiento se propone a dos meses; cada cobro añadido toma la fecha del anterior más un mes. Todas las fechas pueden editarse."
+    ]
+  },
+  "/dashboard/comercial/cuentas/[id_cuenta]": {
+    "summary": "En Contactos, una corona amarilla identifica el contacto principal. Marca la casilla de otro contacto y confirma el cambio en el modal. El primer contacto creado en la cuenta se marca automáticamente; las propuestas nuevas lo preseleccionan.",
+    "steps": [
+      "En Contactos, una corona amarilla identifica el contacto principal. Marca la casilla de otro contacto y confirma el cambio en el modal. El primer contacto creado en la cuenta se marca automáticamente; las propuestas nuevas lo preseleccionan."
+    ]
+  },
+  "/dashboard/administracion/control-administrativo/[...id_orden]": {
+    "summary": "Ficha organizada en Datos de la orden, Factura asociada, Cobro y Otros datos de la orden, con cancelación en dos fases.",
+    "steps": [
+      "Si la orden no tiene factura, se puede crear una factura previa desde ella o vincular una factura sin asignar de la misma cuenta y con el mismo importe.",
+      "Datos de la orden muestra contrato, número X/Y, cuenta, agente actual, estado y fecha de firma de la propuesta. El agente inicial de las órdenes nuevas es quien acepta la propuesta; puede cambiarse sin modificar el agente de la propuesta.",
+      "Factura asociada muestra su referencia previa o definitiva, fecha, líneas e importes, con enlace a la ficha completa y un desplegable para abrir otras órdenes de esa factura.",
+      "Cobro permite alternar Con IVA y Sin IVA. Con IVA calcula una base de importe dividido por 1,21, no editable. Forma de cobro y banco son desplegables. Pendiente de cobro oculta la fecha real; Cobrada exige introducirla con día, mes y año. Los cobros de revisión bancaria se gestionan desde esa revisión.",
+      "Otros datos de la orden reúne remesa, propuesta de origen, agente y contacto de esa propuesta, contacto de seguimiento de cobro de la cuenta y comentarios. El botón flotante Guardar aparece solo si hay cambios y desaparece al guardar o restablecer los valores originales.",
+      "Cancelar orden avisa primero y después muestra los documentos afectados para confirmar. Retira recibos y transferencias pendientes, elimina la factura pendiente exclusiva y conserva las compartidas. Una factura emitida o contabilizada o un cobro confirmado impiden cancelar hasta resolverlos. La orden y una copia de los documentos eliminados permanecen como historial; deja de sumar en liquidez. El modal se cierra con × o Escape."
+    ]
+  },
+  "/": {
+    "summary": "Acceso al ERP mediante inicio de sesión.",
+    "steps": [
+      "Si tu sesión ha caducado o abres una página sin identificarte, el login conserva la ruta en el parámetro next. Tras iniciar sesión vuelves a esa página con sus parámetros de URL. Entrar directamente al login sin destino abre el dashboard.",
+      "La recuperación conserva la dirección de la página, no los cambios de formularios que todavía no hayas guardado."
+    ]
+  },
+  "/tareas": {
+    "summary": "Consulta las tareas asignadas a tu agente.",
+    "steps": [
+      "Pendientes agrupa pendiente y en curso. Terminadas agrupa completada y cancelada.",
+      "Abre el nombre de una tarea para consultar su detalle. Solo el agente asignado y Operaciones o superior pueden acceder.",
+      "Puedes crearte tareas desde el dashboard. Operaciones crea tareas para empleados y administra su edición."
+    ]
+  },
+  "/dashboard/operaciones/tareas": {
+    "summary": "Crea y supervisa las tareas de los agentes empleados.",
+    "steps": [
+      "Abre un empleado para consultar sus tareas pendientes y terminadas.",
+      "Crear tarea asigna una nueva tarea pendiente al empleado de la ficha. El modal se cierra con la cruz o Escape.",
+      "Abre una tarea para editar nombre, descripción y estado. Guarda los cambios para actualizarlos en RDS."
+    ]
+  },
+  "/dashboard": {
+    "summary": "Panel personal del agente.",
+    "steps": [
+      "Mis tareas pendientes es la primera pestaña y muestra las tareas pendientes o en curso asignadas a tu agente. Ver todas mis tareas abre pendientes y terminadas. Los filtros de Tarea, Estado y Descripción están encima de la tabla, reunidos en un único desplegable Filtros, inicialmente cerrado. Al abrirlo se muestran todos juntos; cerrarlo conserva los filtros aplicados. El filtro Estado es un select con las opciones Todos los estados, Pendiente y En curso.",
+      "En Mis tareas pendientes, Agregar tarea abre un modal con nombre y descripción. La tarea se asigna al agente autenticado, queda pendiente y aparece en la lista al guardarla. No permite elegir otro agente."
     ]
   }
 }

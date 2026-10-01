@@ -1,0 +1,36 @@
+import assert from 'node:assert/strict';
+import {randomUUID} from 'node:crypto';
+import env from '@next/env';
+import {getPgPool} from '../server/database/pgClient.js';
+import {readTasks,writeTask,taskEmployees,createOwnTask} from '../server/features/laboral/TaskRepository.js';
+env.loadEnvConfig(process.cwd());
+const pool=getPgPool(),db=await pool.connect(),schema='test_tasks_'+randomUUID().replaceAll('-',''),query=pool.query.bind(pool);
+try{
+ await db.query('CREATE SCHEMA '+schema);await db.query('SET search_path TO '+schema+',public');
+ for(const table of ['agentes_db','laboral_tareas_empleado'])await db.query('CREATE TABLE '+schema+'.'+table+' (LIKE public.'+table+' INCLUDING ALL)');
+ pool.query=(...args)=>db.query(...args);
+ await db.query("INSERT INTO agentes_db(id_agente,nombre_completo_agente,is_empleado_account) VALUES('owner','Propietario',true),('other','Otro',true),('external','Externo',false)");
+ const manager={id:'manager',role:'operaciones'},owner={id:'owner',role:'base'},other={id:'other',role:'administracion'};
+ const task=await writeTask(manager,null,{agente:'owner',nombre:'Preparar material',descripcion:'Detalle',estado:'pendiente'});
+ assert.equal((await readTasks(owner)).length,1);assert.equal((await readTasks(other)).length,0);
+ assert.equal((await readTasks(owner,{id:task.id})).nombre,'Preparar material');
+ await assert.rejects(readTasks(other,{id:task.id}),e=>e.status===403);
+ await assert.rejects(readTasks(other,{employee:'owner'}),e=>e.status===403);
+ await assert.rejects(readTasks({id:'',role:'superadmin'}),e=>e.status===401);
+ await assert.rejects(taskEmployees(owner),e=>e.status===403);
+ await assert.rejects(writeTask(owner,task.id,{...task,estado:'completada'}),e=>e.status===403);
+ await assert.rejects(writeTask(manager,null,{agente:'external',nombre:'No',estado:'pendiente'}),e=>e.status===400);
+ assert.equal((await taskEmployees(manager)).length,2);
+ assert.equal((await taskEmployees(manager)).find(a=>a.id_agente==='owner').pendientes,1);
+ assert.equal((await readTasks(manager,{employee:'owner'})).length,1);
+ await writeTask(manager,task.id,{...task,estado:'completada',descripcion:'Finalizada'});
+ assert.equal((await readTasks(owner,{id:task.id})).descripcion,'Finalizada');
+ assert.equal((await taskEmployees(manager)).find(a=>a.id_agente==='owner').terminadas,1);
+ assert.equal((await readTasks({id:'admin',role:'superadmin'},{id:task.id})).estado,'completada');
+ const own=await createOwnTask(owner,{nombre:'Mi tarea',descripcion:'Seguimiento',agente:'other',estado:'completada'});
+ assert.equal(own.agente,'owner');assert.equal(own.estado,'pendiente');assert.equal((await readTasks(other)).length,0);
+ await assert.rejects(createOwnTask({id:'',role:'base'},{nombre:'Sin sesión'}),e=>e.status===401);
+ await assert.rejects(createOwnTask(owner,{nombre:'  '}));
+ console.log('PASS: self-created tasks always belong to the authenticated agent and start pending.');
+ console.log('PASS: own tasks, cross-agent denial, manager create/edit, employee filtering and completed tasks in isolated RDS schema');
+}finally{pool.query=query;await db.query('RESET search_path');await db.query('DROP SCHEMA IF EXISTS '+schema+' CASCADE');db.release();await pool.end();}

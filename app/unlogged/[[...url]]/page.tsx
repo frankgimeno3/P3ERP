@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo } from "react";
+import {loginUrl,safeLoginTarget} from "@/app/config/loginRedirect";
+import { useMemo } from "react";
 import { useParams } from "next/navigation";
 
 export default function UnloggedPage() {
@@ -9,17 +10,12 @@ export default function UnloggedPage() {
   const previousUrl = useMemo(() => {
     const encoded = Array.isArray(params.url) ? params.url.join("/") : "";
     try {
-      return decodeURIComponent(encoded || "/dashboard");
+      return safeLoginTarget(decodeURIComponent(encoded || "/dashboard")) || "/dashboard";
     } catch {
       return "/dashboard";
     }
   }, [params.url]);
 
-  useEffect(() => {
-    if (previousUrl.startsWith("/") && !previousUrl.startsWith("/unlogged")) {
-      localStorage.setItem("redirectAfterLogin", previousUrl);
-    }
-  }, [previousUrl]);
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-950 p-8 text-white">
@@ -30,7 +26,7 @@ export default function UnloggedPage() {
           Estabas en la pagina <strong>{previousUrl}</strong>, pero la sesion ha caducado por seguridad o por inactividad.
           Al volver a iniciar sesion te devolveremos a esa misma pagina.
         </p>
-        <Link href="/" className="mt-6 inline-flex rounded bg-blue-950 px-4 py-2 text-sm font-medium text-white hover:bg-blue-900">
+        <Link href={loginUrl(previousUrl)} className="mt-6 inline-flex rounded bg-blue-950 px-4 py-2 text-sm font-medium text-white hover:bg-blue-900">
           Iniciar sesion de nuevo
         </Link>
       </section>

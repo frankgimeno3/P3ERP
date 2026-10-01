@@ -1,5 +1,6 @@
 "use client";
 
+import {proposalDate} from '@/app/config/proposalDate';
 import React, { FC, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PropuestaService } from "@/app/service/PropuestaService";
@@ -38,7 +39,7 @@ const MisPendientes: FC<MisPendientesProps> = ({
   }, [clienteFiltro, codigoCRMFiltro, agenteActual]);
 
   const resultadosFiltrados = propuestas.filter((propuesta) => {
-    const fecha = propuesta.fecha_envio_propuesta ? new Date(propuesta.fecha_envio_propuesta) : null;
+    const fecha = proposalDate(propuesta.fecha_envio_propuesta);
     const values: Record<string, string> = {
       id_propuesta: String(propuesta.id_propuesta || ""),
       empresa: String(propuesta.cuenta?.nombre_empresa || propuesta.id_cuenta_propuesta || ""),
@@ -46,8 +47,8 @@ const MisPendientes: FC<MisPendientesProps> = ({
       fecha: String(propuesta.fecha_envio_propuesta || ""),
     };
     return (
-      (!fechaInicio || (fecha && fecha >= new Date(fechaInicio))) &&
-      (!fechaFin || (fecha && fecha <= new Date(fechaFin))) &&
+      (proposalDate(fechaInicio)===null || (fecha!==null && fecha >= proposalDate(fechaInicio)!)) &&
+      (proposalDate(fechaFin)===null || (fecha!==null && fecha <= proposalDate(fechaFin)!)) &&
       Object.entries(filters).every(([field, query]) => !query.trim() || values[field]?.toLowerCase().includes(query.trim().toLowerCase()))
     );
   });

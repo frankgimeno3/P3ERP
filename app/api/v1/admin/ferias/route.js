@@ -20,8 +20,8 @@ export async function POST(request) {
   try {
     const body = await request.json();
 
-    if (!body?.id_feria || !body?.titulo_especifico_edicion) {
-      return NextResponse.json({ message: "id_feria y titulo_especifico_edicion son obligatorios" }, { status: 400 });
+    if (!body?.id_feria_base || !body?.titulo_especifico_edicion) {
+      return NextResponse.json({ message: "Feria del catálogo y título de la edición son obligatorios" }, { status: 400 });
     }
 
     const feria = await createFeria(body);
@@ -29,8 +29,8 @@ export async function POST(request) {
   } catch (error) {
     console.error("Error in POST /api/v1/admin/ferias:", error);
     return NextResponse.json(
-      { message: "Error al crear la feria", detail: process.env.NODE_ENV === "development" ? error.message : undefined },
-      { status: 500 },
+      { message: error.status === 400 ? error.message : "Error al crear la edición", detail: process.env.NODE_ENV === "development" ? error.message : undefined },
+      { status: error.status || 500 },
     );
   }
 }

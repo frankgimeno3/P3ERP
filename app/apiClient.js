@@ -1,4 +1,5 @@
 import axios from "axios";
+import {loginUrl,safeLoginTarget} from "./config/loginRedirect.js";
 
 const apiClient = axios.create();
 
@@ -13,9 +14,9 @@ apiClient.interceptors.response.use(
     if (error.response) {
       if (error.response.status === 401 && typeof window !== "undefined") {
         const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-        if (!currentUrl.startsWith("/unlogged")) {
-          window.localStorage.setItem("redirectAfterLogin", currentUrl || "/dashboard");
-          window.location.href = `/unlogged/${encodeURIComponent(currentUrl || "/dashboard")}`;
+        if (safeLoginTarget(currentUrl)) {
+          try {window.localStorage.removeItem("userPayload");} catch {}
+          window.location.replace(loginUrl(currentUrl));
         }
       }
       throw {

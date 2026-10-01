@@ -41,6 +41,8 @@ export const dashboardMenu: DashboardMenuModule[] = [
     children: [
       page("Hoja de producción", "/dashboard/produccion/hoja_produccion"),
       page("Control redacción", "/dashboard/produccion/control_redaccion"),
+      page("Contenidos", "/dashboard/produccion/contenidos"),
+      page("Revistas", "/dashboard/produccion/revistas"),
     ],
   },
   {
@@ -48,6 +50,7 @@ export const dashboardMenu: DashboardMenuModule[] = [
     label: "Administración",
     children: [
       page("Ferias", "/dashboard/administracion/ferias"),
+      page("Tarjetas", "/dashboard/administracion/tarjetas"),
       group("clientes", "Clientes", [
         page("Control administrativo", "/dashboard/administracion/control-administrativo"),
         page("Facturas clientes", "/dashboard/administracion/facturas-clientes"),
@@ -65,6 +68,8 @@ export const dashboardMenu: DashboardMenuModule[] = [
     id: "operaciones",
     label: "Operaciones",
     children: [
+      page("Tareas", "/dashboard/operaciones/tareas"),
+      page("Servicios", "/dashboard/operaciones/servicios"),
       page("Gestión de BBDD", "/dashboard/operaciones/data"),
 
       page("Gestión de cuentas", "/dashboard/operaciones/gestion_cuentas"),
@@ -80,9 +85,9 @@ export const dashboardMenu: DashboardMenuModule[] = [
         page("Calendario laboral", "/dashboard/direccion/laboral/calendario-laboral"),
         page("Contratación", "/dashboard/direccion/laboral/contratacion"),
       ]),
-      group("tesoreria", "Tesorer?a", [
+      group("tesoreria", "Tesorería", [
         page("Extractos", "/dashboard/direccion/tesoreria/extractos"),
-        page("Revisión de líneas", "/dashboard/direccion/tesoreria/extractos/revision"),
+        page("Conciliación", "/dashboard/direccion/tesoreria/extractos/conciliacion"),
         page("Previsión liquidez", "/dashboard/direccion/tesoreria/prevision-liquidez"),
       ]),
       page("Horas Juan", "/dashboard/direccion/horas-juan"),

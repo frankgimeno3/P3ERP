@@ -3,10 +3,12 @@
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import React, { FC, useEffect, useState } from 'react';
+import apiClient from '@/app/apiClient';
 import { ContactoService } from '@/app/service/ContactoService';
 
 interface Contacto {
   id_contacto: string;
+  es_principal?: boolean;
   nombre_completo_contacto: string;
   cargo_contacto?: string;
   email_contacto?: string;
@@ -18,6 +20,9 @@ interface ContenidoContactosEmpresaProps {
 
 const ContenidoContactosEmpresa: FC<ContenidoContactosEmpresaProps> = ({ id_cuenta }) => {
   const router = useRouter();
+  const [principal,setPrincipal]=useState<Contacto|null>(null);
+  useEffect(()=>{if(!principal)return;const close=(e:KeyboardEvent)=>{if(e.key==='Escape')setPrincipal(null);};window.addEventListener('keydown',close);return()=>window.removeEventListener('keydown',close);},[principal]);
+  const confirmarPrincipal=async()=>{if(!principal)return;setProcesando(true);setError(null);try{await apiClient.put('/api/v1/comercial/cuentas/'+encodeURIComponent(id_cuenta)+'/contacto-principal',{id_contacto:principal.id_contacto});setContactosFiltrados(rows=>rows.map(row=>({...row,es_principal:row.id_contacto===principal.id_contacto})));setPrincipal(null);}catch(e:any){setError(e.message);}finally{setProcesando(false);}};
   const [contactosFiltrados, setContactosFiltrados] = useState<Contacto[]>([]);
   const [contactoSeleccionado, setContactoSeleccionado] = useState<Contacto | null>(null);
   const [desvincularCuenta, setDesvincularCuenta] = useState(false);
@@ -25,24 +30,15 @@ const ContenidoContactosEmpresa: FC<ContenidoContactosEmpresaProps> = ({ id_cuen
   const [procesando, setProcesando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const cargarContactos = () => {
-    ContactoService.getContactos({ id_cuenta })
-      .then((data) => setContactosFiltrados(Array.isArray(data) ? data : []))
-      .catch((error) => {
-        console.error('Error fetching contactos de cuenta:', error);
-        setContactosFiltrados([]);
-      });
-  };
-
   useEffect(() => {
-    cargarContactos();
-  }, [id_cuenta]);
+    let active=true;ContactoService.getContactos({id_cuenta}).then(data=>{if(active)setContactosFiltrados(Array.isArray(data)?data:[]);}).catch(()=>{if(active)setError('No se pudieron cargar los contactos.');});return()=>{active=false;};
+  },[id_cuenta]);
 
   useEffect(() => {
     if (!contactoSeleccionado) return;
 
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') cerrarModal();
+      if (e.key === 'Escape') {setContactoSeleccionado(null);setDesvincularCuenta(false);setBorrarContacto(false);setError(null);}
     };
 
     window.addEventListener('keydown', handleEsc);
@@ -122,7 +118,7 @@ const ContenidoContactosEmpresa: FC<ContenidoContactosEmpresaProps> = ({ id_cuen
               <th className="text-left p-2 font-light">Nombre y apellidos</th>
               <th className="text-left p-2 font-light">Cargo</th>
               <th className="text-left p-2 font-light">Email principal</th>
-              <th className="text-left p-2 font-light">Acciones</th>
+              <th className="text-left p-2 font-light">Contacto principal</th><th className="text-left p-2 font-light">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -136,6 +132,7 @@ const ContenidoContactosEmpresa: FC<ContenidoContactosEmpresaProps> = ({ id_cuen
                 <td className="p-2 border-b border-gray-200">{contacto.nombre_completo_contacto}</td>
                 <td className="p-2 border-b border-gray-200">{contacto.cargo_contacto || '-'}</td>
                 <td className="p-2 border-b border-gray-200">{contacto.email_contacto || '-'}</td>
+                <td className="p-2 border-b border-gray-200" onClick={e=>e.stopPropagation()}><span title="Contrato princial">{contacto.es_principal ? <svg aria-label="Contacto principal" className="h-6 w-6 text-yellow-500" viewBox="0 0 24 24" fill="currentColor"><path d="M2 5l5 4 5-7 5 7 5-4-3 14H5L2 5zm3 16h14v2H5z"/></svg> : <input type="checkbox" aria-label={`Marcar como principal a ${contacto.nombre_completo_contacto}`} checked={false} onChange={()=>{setError(null);setPrincipal(contacto);}} className="h-4 w-4 cursor-pointer hover:ring-2 hover:ring-yellow-300"/>}</span></td>
                 <td className="p-2 border-b border-gray-200">
                   <button
                     type="button"
@@ -154,16 +151,17 @@ const ContenidoContactosEmpresa: FC<ContenidoContactosEmpresaProps> = ({ id_cuen
         </table>
       )}
 
+      {principal&&<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"><section role="dialog" aria-modal="true" aria-label="Cambiar contacto principal" className="relative w-full max-w-lg rounded bg-white p-6 shadow-xl"><button aria-label="Cerrar" onClick={()=>setPrincipal(null)} className="absolute right-3 top-2 cursor-pointer rounded px-2 text-2xl hover:bg-gray-100">×</button><h2 className="pr-8 text-lg font-semibold">Cambiar contacto principal</h2><p className="my-4">¿Quieres establecer a {principal.nombre_completo_contacto} como contacto principal de esta cuenta?</p>{error&&<p role="alert" className="text-red-700">{error}</p>}<div className="mt-4 flex justify-end gap-3"><button onClick={()=>setPrincipal(null)} className="cursor-pointer rounded border px-4 py-2 hover:bg-gray-100">Cancelar</button><button disabled={procesando} onClick={confirmarPrincipal} className="rounded bg-blue-950 px-4 py-2 text-white enabled:cursor-pointer enabled:hover:bg-blue-900 disabled:opacity-50">Confirmar cambio</button></div></section></div>}
       {contactoSeleccionado && (
         <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
           <div className="bg-white rounded-xl shadow-2xl w-[520px] p-6 relative">
             <button
               type="button"
               onClick={cerrarModal}
-              className="absolute top-2 right-3 text-gray-500 hover:text-gray-800 text-xl"
+              className="absolute top-2 right-3 cursor-pointer text-gray-500 hover:text-gray-800 text-xl"
               aria-label="Cerrar modal"
             >
-              x
+              ×
             </button>
 
             <div className="flex flex-col gap-4">

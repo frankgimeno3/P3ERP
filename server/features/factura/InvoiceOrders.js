@@ -15,6 +15,7 @@ export async function syncInvoiceOrders(db, invoiceId, actorId = '') {
     [invoice.id_contrato, payment.id_cobro_contrato, payment.numero_cobro])).rows;
     if (matches.length > 1) throw new Error('Varias órdenes coinciden con el cobro ' + payment.numero_cobro);
     const previous = matches[0];
+    if(previous?.cancelada)continue;
     const total = Number(payment.importe_cobro);
     if (!Number.isFinite(total) || total < 0) throw new Error('Importe de cobro no válido');
     const patch = {

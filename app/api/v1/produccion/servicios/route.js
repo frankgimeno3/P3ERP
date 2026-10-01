@@ -27,6 +27,6 @@ export async function POST(request) {
   try {
     return NextResponse.json(await createServicio(await request.json()), { status: 201 });
   } catch (error) {
-    return NextResponse.json({ message: "Error al crear el servicio", detail: error.message }, { status: 500 });
+    return NextResponse.json({ message: error.code==='23505'?'El código de servicio ya existe.':error.status?error.message:'No se pudo guardar el servicio.' }, { status: error.code==='23505'?409:error.status || 500 });
   }
 }

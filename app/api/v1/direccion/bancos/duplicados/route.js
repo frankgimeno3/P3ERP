@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { getPgPool } from '../../../../../../server/database/pgClient.js';
 
+import { rememberDuplicateDiscard } from '@/server/features/banco/BankReviewMemoryRepository.js';
+import { requestActor } from '@/server/features/comentario/AccountActivity.js';
+
 export const runtime = 'nodejs';
 const duplicateQuery = `
   WITH grupos AS (
@@ -16,7 +19,10 @@ const duplicateQuery = `
   ORDER BY g.fecha_operativa DESC, g.importe
 `;
 export async function GET() { const { rows } = await getPgPool().query(duplicateQuery); return NextResponse.json(rows.map(row => row.lineas)); }
-export async function POST(request) { try { const body = await request.json(); const ids = Array.isArray(body.ids) ? body.ids.filter(Boolean) : []; if (ids.length < 2) return NextResponse.json({ message: 'Indica las líneas del grupo' }, { status: 400 }); const { rows } = await getPgPool().query(`UPDATE tesoreria_movimientos_bancarios SET duplicado_descartado=TRUE,updated_at=NOW() WHERE id_linea_banco=ANY($1::text[]) RETURNING id_linea_banco`, [ids]); return NextResponse.json({ confirmadas: rows.map(row => row.id_linea_banco) }); } catch (error) { return NextResponse.json({ message: error.message || 'No se pudo confirmar el grupo' }, { status: 500 }); } }
+export async function POST(request) {
+  try { return NextResponse.json(await rememberDuplicateDiscard(await request.json(),requestActor(request))); }
+  catch(error) { return NextResponse.json({message:error.message || 'No se pudo confirmar el grupo'}, {status:error.status || 500}); }
+}
 export async function DELETE(request) {
   try {
     const body = await request.json();

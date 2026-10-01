@@ -1,6 +1,7 @@
 import { requestActor } from "../../../../../../server/features/comentario/AccountActivity.js";
 import { NextResponse } from "next/server";
 import { getCustomerInvoice, updateCustomerInvoice } from "../../../../../../server/features/factura/FacturaClienteRepository.js";
+import {deleteDraftInvoice} from "../../../../../../server/features/factura/DraftInvoiceDeletion.js";
 
 export const runtime = "nodejs";
 const getId = async (params) => (await params)?.id_factura;
@@ -15,4 +16,12 @@ export async function PUT(request, { params }) {
     const data = await updateCustomerInvoice(await getId(params), await request.json(), requestActor(request));
     return data ? NextResponse.json(data) : NextResponse.json({ message: "Factura no encontrada" }, { status: 404 });
   } catch (error) { return NextResponse.json({ message: "Error al guardar la factura", detail: error.message }, { status: 400 }); }
+}
+
+export async function DELETE(request,{params}) {
+  try {
+    const {version}=await request.json();
+    const result=await deleteDraftInvoice(await getId(params),version,requestActor(request));
+    return result?NextResponse.json(result):NextResponse.json({message:'Factura no encontrada'},{status:404});
+  }catch(error){return NextResponse.json({message:error.message},{status:error.status||400});}
 }

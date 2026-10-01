@@ -143,6 +143,11 @@ export async function getCuentas(filters = {}) {
     where.push(`id_cuenta ILIKE $${values.length}`);
   }
 
+  if (filters.codigoEdisoftFiltro) {
+    values.push(`%${filters.codigoEdisoftFiltro}%`);
+    where.push(`id_edisoft::text ILIKE $${values.length}`);
+  }
+
   if (filters.agenteFiltro) {
     values.push(filters.agenteFiltro);
     where.push(`id_agente = $${values.length}`);
@@ -280,4 +285,9 @@ export async function deleteCuenta(idCuenta, actor = "") {
     }).catch(() => {});
   }
   return rows[0] ? normalizeCuenta(rows[0]) : null;
+}
+
+export async function getCuentasTotal() {
+  const { rows } = await getPgPool().query("SELECT count(*)::int AS total FROM comercial_cuentas");
+  return rows[0].total;
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import {proposalDate} from '@/app/config/proposalDate';
 import React, { FC, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import PropSvg from "../svg/PropSvg";
@@ -42,10 +43,10 @@ const TodasPropuestas: FC<TodasPropuestasProps> = ({
   }, [clienteFiltro, codigoCRMFiltro, agenteFiltro, estadoFiltro]);
 
   const resultadosFiltrados = propuestas.filter((propuesta) => {
-    const fecha = propuesta.fecha_envio_propuesta ? new Date(propuesta.fecha_envio_propuesta) : null;
+    const fecha = proposalDate(propuesta.fecha_envio_propuesta);
     return (
-      (!fechaInicio || (fecha && fecha >= new Date(fechaInicio))) &&
-      (!fechaFin || (fecha && fecha <= new Date(fechaFin)))
+      (proposalDate(fechaInicio)===null || (fecha!==null && fecha >= proposalDate(fechaInicio)!)) &&
+      (proposalDate(fechaFin)===null || (fecha!==null && fecha <= proposalDate(fechaFin)!))
     );
   });
 

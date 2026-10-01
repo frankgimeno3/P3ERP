@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getFeriaById } from "../../../../../../server/features/feria/FeriaRepository.js";
+import { getFeriaById,updateFeriaEditionDetails } from "../../../../../../server/features/feria/FeriaRepository.js";
 
 export const runtime = "nodejs";
 
@@ -20,4 +20,9 @@ export async function GET(_request, { params }) {
       { status: 500 },
     );
   }
+}
+
+export async function PATCH(request,{params}) {
+  try {const {id_feria}=await params;const result=await updateFeriaEditionDetails(id_feria,await request.json());return result?NextResponse.json(result):NextResponse.json({message:'Edición no encontrada'},{status:404});}
+  catch(error){return NextResponse.json({message:error.message},{status:500});}
 }

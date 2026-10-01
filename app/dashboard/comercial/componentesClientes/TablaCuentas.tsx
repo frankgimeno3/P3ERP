@@ -8,6 +8,7 @@ import LastTigerUpdate from '../LastTigerUpdate';
 
 interface Cuenta {
   id_cuenta: string;
+  id_edisoft: string;
   nombre_empresa: string;
   pais_cuenta: string;
   id_agente: string;
@@ -20,6 +21,7 @@ interface Cuenta {
 interface TablacuentasProps {
   clienteFiltro: string;
   codigoCrmFiltro: string;
+  codigoEdisoftFiltro: string;
   agenteFiltro: string;
   telFiltro: string;
   paisFiltro: string;
@@ -33,6 +35,7 @@ interface Agente {
 const Tablacuentas: FC<TablacuentasProps> = ({
   clienteFiltro,
   codigoCrmFiltro,
+  codigoEdisoftFiltro,
   agenteFiltro,
   telFiltro,
   paisFiltro,
@@ -71,6 +74,7 @@ const Tablacuentas: FC<TablacuentasProps> = ({
         const filters = {
           clienteFiltro: clienteFiltro || '',
           codigoCrmFiltro: codigoCrmFiltro || '',
+          codigoEdisoftFiltro: codigoEdisoftFiltro || '',
           agenteFiltro: agenteFiltro || '',
           telFiltro: telFiltro || '',
           paisFiltro: paisFiltro || '',
@@ -92,7 +96,7 @@ const Tablacuentas: FC<TablacuentasProps> = ({
     };
 
     fetchCuentas();
-  }, [clienteFiltro, codigoCrmFiltro, agenteFiltro, telFiltro, paisFiltro]);
+  }, [clienteFiltro, codigoCrmFiltro, codigoEdisoftFiltro, agenteFiltro, telFiltro, paisFiltro]);
 
   const resultadosFiltrados = useMemo(() => {
     // Server-side filtering is already done, but we can do additional client-side filtering if needed
@@ -102,7 +106,7 @@ const Tablacuentas: FC<TablacuentasProps> = ({
   // Reset to page 1 when filters change
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [clienteFiltro, codigoCrmFiltro, agenteFiltro, telFiltro, paisFiltro]);
+  }, [clienteFiltro, codigoCrmFiltro, codigoEdisoftFiltro, agenteFiltro, telFiltro, paisFiltro]);
 
   const totalPages = Math.ceil(resultadosFiltrados.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -154,7 +158,8 @@ const Tablacuentas: FC<TablacuentasProps> = ({
         <thead className="bg-blue-950/80 text-white rounded-lg">
           <tr>
             <th className="text-left p-2 font-light pl-6">Nombre Empresa </th>
-            <th className="text-left p-2 font-light">ID Cuenta</th>
+            <th className="text-left p-2 font-light">ID cuenta (Tiger)</th>
+            <th className="text-left p-2 font-light">Código Edisoft</th>
             <th className="text-left p-2 font-light">Agente Asignado</th>
             <th className="text-left p-2 font-light">País</th>
             <th className="text-left p-2 font-light">Tel principal</th>
@@ -169,6 +174,7 @@ const Tablacuentas: FC<TablacuentasProps> = ({
             >
               <td className="p-2 border-b border-gray-200 pl-6">{res.nombre_empresa}</td>
               <td className="p-2 border-b border-gray-200">{res.id_cuenta}</td>
+              <td className="p-2 border-b border-gray-200">{res.id_edisoft || '—'}</td>
               <td className="p-2 border-b border-gray-200">{getNombreCompletoAgente(res.id_agente)}</td>
               <td className="p-2 border-b border-gray-200">{res.pais_cuenta}</td>
               <td className="p-2 border-b border-gray-200">

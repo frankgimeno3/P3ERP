@@ -79,6 +79,7 @@ const Contactos: FC = () => {
     <div className="flex flex-col bg-gray-200 h-full min-h-screen text-gray-600">
       <MiddleNav tituloprincipal="Contactos" />
       <div className="bg-gray-100 min-h-screen px-8 text-gray-600">
+        <p role="status" className="pt-4 text-sm font-semibold">{loading ? 'Cargando total…' : error ? 'No se ha podido cargar el total de contactos.' : `Total de contactos: ${allContactos.length.toLocaleString('es-ES')}`}</p>
         <div className="flex flex-row justify-end py-4">
           <Link
             href="/dashboard/comercial/contactos/crear"

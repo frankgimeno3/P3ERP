@@ -62,7 +62,7 @@ const ContenidoCuenta: FC<ContenidoCuentaProps> = ({ id_cuenta }) => {
   }, [contenidos, medio, query]);
 
   const handleRowClick = (event: React.MouseEvent<HTMLTableRowElement>, idContenido: string) => {
-    const href = `/dashboard/produccion/hoja_produccion/contenidos/${idContenido}`;
+    const href = `/dashboard/produccion/hoja_produccion/${idContenido}`;
     if (event.ctrlKey || event.metaKey) {
       event.preventDefault();
       window.open(href, '_blank');

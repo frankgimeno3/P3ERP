@@ -2,6 +2,8 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import { randomUUID } from 'node:crypto';
+import { ruleStart, withRuleIds } from '../server/features/banco/BankReviewAnalysis.js';
 
 const source = fs.readFileSync('app/api/v1/direccion/bancos/revision/route.js', 'utf8')
   .replace(/^import .*;\r?\n/gm, '').replace(/export /g, '');
@@ -17,7 +19,7 @@ async function run({ line = {}, linked = false, entity = true, action = 'assign'
     if (sql.startsWith('INSERT INTO tesoreria_cargos_recurrentes')) return { rows: [{ id_cargo_recurrente: 2 }] };
     return { rows: [] };
   } };
-  const context = vm.createContext({ NextResponse: { json: (body, options) => ({ body, status: options?.status || 200 }) }, getPgPool: () => ({ connect: async () => db }) });
+  const context = vm.createContext({ randomUUID, ruleStart, withRuleIds, NextResponse: { json: (body, options) => ({ body, status: options?.status || 200 }) }, getPgPool: () => ({ connect: async () => db }) });
   vm.runInContext(repository + '\n' + source, context);
   const response = await context.PUT({ json: async () => ({ ids: ['bank-1'], action, entityType, entityId: 'person-1', ...extra }) });
   return { response, calls };

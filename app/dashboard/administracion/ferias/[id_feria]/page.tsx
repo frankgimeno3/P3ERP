@@ -5,6 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import MiddleNav from "@/app/general_components/componentes_recurrentes/MiddleNav";
 import { FeriaService } from "@/app/service/FeriaService";
 
+const detailFields=[['intercambio_detalle','Intercambio'],['vuelos_detalle','Vuelos'],['transporte_detalle','Transporte'],['transporte_revistas_detalle','Transporte revistas'],['stand_detalle','Stand'],['material_feria_detalle','Material feria'],['acreditaciones_detalle','Acreditaciones'],['propuestas_asociadas_detalle','Propuestas asociadas'],['contratos_asociados_detalle','Contratos asociados'],['cuentas_asociadas_detalle','Cuentas asociadas']] as const;
+
 function formatBool(value: boolean) {
   return value ? "Si" : "No";
 }
@@ -15,6 +17,7 @@ export default function FeriaDetallePage() {
   const [feria, setFeria] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [details,setDetails]=useState<Record<string,string>>({}),[saving,setSaving]=useState(false);
 
   useEffect(() => {
     const fetchFeria = async () => {
@@ -23,6 +26,7 @@ export default function FeriaDetallePage() {
         setError("");
         const data = await FeriaService.getFeriaById(params.id_feria);
         setFeria(data);
+        setDetails(Object.fromEntries(detailFields.map(([key])=>[key,data[key]||''])));
       } catch (err) {
         console.error("Error fetching feria:", err);
         setError("No se ha podido cargar la feria.");
@@ -66,6 +70,7 @@ export default function FeriaDetallePage() {
       ["En Vidrioperfil", formatBool(feria.en_vidrioperfil)],
     ];
   }, [feria]);
+  const saveDetails=async()=>{if(!feria)return;setSaving(true);setError('');try{const updated=await FeriaService.updateEditionDetails(feria.id_feria,details);setFeria(updated);}catch(reason:any){setError(reason.response?.data?.message||reason.message);}finally{setSaving(false);}};
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-gray-200 text-gray-600">
@@ -89,6 +94,7 @@ export default function FeriaDetallePage() {
                 </div>
               ))}
             </div>
+            <section className="mt-8"><h2 className="mb-4 text-lg font-semibold text-blue-950">Gestión de la edición</h2><div className="grid gap-4 md:grid-cols-2">{detailFields.map(([key,label])=><label key={key} className="text-sm font-medium">{label}<textarea value={details[key]||''} onChange={event=>setDetails(previous=>({...previous,[key]:event.target.value}))} className="mt-1 min-h-28 w-full rounded border p-3 font-normal"/></label>)}</div><button type="button" disabled={saving} onClick={saveDetails} className="mt-4 cursor-pointer rounded bg-blue-950 px-4 py-2 text-white hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-50">{saving?'Guardando...':'Guardar apartados'}</button></section>
           </div>
         )}
       </div>

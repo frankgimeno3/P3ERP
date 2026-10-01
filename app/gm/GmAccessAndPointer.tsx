@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import {loginUrl} from "@/app/config/loginRedirect";
 import type { ReactNode } from "react";
 
 export default function GmAccessAndPointer({ children }: { children: ReactNode }) {
@@ -17,8 +18,7 @@ export default function GmAccessAndPointer({ children }: { children: ReactNode }
         setAllowed(true);
       })
       .catch(() => {
-        localStorage.setItem("redirectAfterLogin", pathname || "/gm");
-        router.replace(`/unlogged/${encodeURIComponent(pathname || "/gm")}`);
+        router.replace(loginUrl(window.location.pathname+window.location.search+window.location.hash));
       });
   }, [pathname, router]);
 

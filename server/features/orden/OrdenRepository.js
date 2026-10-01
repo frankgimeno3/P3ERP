@@ -7,7 +7,24 @@ function numberOrZero(value) {
 function normalizeOrden(row) {
   return {
     id_orden: row.id_orden,
+    cancelada: Boolean(row.cancelada),
+    estado: row.cancelada ? 'Cancelada' : row.datos_importacion?.sin_cobro_monetario ? 'Sin cobro monetario' : row.cobrada ? 'Cobrada' : 'Pendiente de cobro',
+    cancelada_at: row.cancelada_at,
+    cancelacion_detalle: row.cancelacion_detalle || {},
+    id_agente: row.agente_orden_id || '',
+    id_contacto_cobro: row.id_contacto_cobro || '',
+    comentarios: row.comentarios || '',
+    con_iva: row.con_iva !== false,
+    numero_orden: row.numero_orden || `${row.numero_cobro || 1}/${row.total_ordenes || 1}`,
+    id_propuesta: row.id_propuesta || '',
+    nombre_propuesta: row.nombre_propuesta || '',
+    fecha_firma_propuesta: row.fecha_firma_contrato || '',
+    agente_propuesta: row.agente_propuesta || '',
+    id_agente_propuesta: row.id_agente_propuesta || '',
+    contacto_propuesta: row.contacto_propuesta || '',
+    id_contacto_propuesta: row.id_contacto_propuesta || '',
     id_cuenta: row.id_cuenta || row.id_cuenta_contrato || row.id_cuenta_factura || '',
+    tipo_factura: row.id_factura ? (row.verifactu_estado_envio==='factura emitida' || row.estado_factura==='enviada' ? 'Definitiva' : 'Previa') : '',
     numero_factura: row.numero_factura || row.id_factura || '',
     numero_recibo: row.numero_recibo || '',
     id_remesa: row.id_remesa || '',
@@ -33,6 +50,13 @@ function normalizeOrden(row) {
 const ordenesSelect = `
   SELECT
     o.id_orden,
+    o.cancelada,o.cancelada_at,o.cancelacion_detalle,o.id_contacto_cobro,o.comentarios,o.con_iva,
+    COALESCE(NULLIF(o.id_agente,''),aceptacion.id_agente,c.id_agente_contrato) agente_orden_id,
+    substring(o.id_orden from '(\\d+/\\d+)$') numero_orden,
+    (SELECT count(*) FROM tesoreria_ordenes sibling WHERE sibling.id_contrato=o.id_contrato) total_ordenes,
+    c.id_propuesta,c.fecha_firma_contrato,p.nombre_propuesta,p.id_agente_propuesta,p.id_contacto_propuesta,
+    ap.nombre_completo_agente agente_propuesta,
+    COALESCE(NULLIF(cp.nombre_completo_contacto,''),NULLIF(concat_ws(' ',cp.nombre_contacto,cp.apellidos_contacto),''),'') contacto_propuesta,
     o.id_cuenta,
     o.datos_importacion,
     o.numero_cobro,
@@ -51,20 +75,29 @@ const ordenesSelect = `
     c.id_agente_contrato,
     cu.nombre_empresa,
     a.nombre_completo_agente,
-    f.ya_contabilizada
+    f.estado AS estado_factura,f.verifactu_estado_envio,f.ya_contabilizada
     ,f.id_cuenta AS id_cuenta_factura,f.numero_factura,r.numero_recibo,r.id_remesa,r.cliente AS cliente_recibo
   FROM tesoreria_ordenes o
   LEFT JOIN comercial_contratos c ON c.id_contrato = o.id_contrato
   LEFT JOIN administracion_facturas_clientes f ON f.id_factura_cliente = o.id_factura
   LEFT JOIN comercial_cuentas cu ON cu.id_cuenta = COALESCE(NULLIF(o.id_cuenta,''),c.id_cuenta_contrato,f.id_cuenta)
-  LEFT JOIN agentes_db a ON a.id_agente = c.id_agente_contrato
-  LEFT JOIN tesoreria_recibos_importados r ON r.id_orden=o.id_orden
+  LEFT JOIN comercial_propuestas_db p ON p.id_propuesta=c.id_propuesta
+  LEFT JOIN agentes_db ap ON ap.id_agente=p.id_agente_propuesta
+  LEFT JOIN comercial_contactos cp ON cp.id_contacto=p.id_contacto_propuesta
+  LEFT JOIN LATERAL (SELECT e.id_agente FROM cuentas_registro_eventos e
+    WHERE e.id_cuenta=c.id_cuenta_contrato AND NULLIF(e.id_agente,'') IS NOT NULL
+      AND strpos(e.detalles,'ha confirmado la propuesta ' || c.id_propuesta || ';')>0
+    ORDER BY e.created_at ASC LIMIT 1) aceptacion ON TRUE
+  LEFT JOIN agentes_db a ON a.id_agente = COALESCE(NULLIF(o.id_agente,''),aceptacion.id_agente,c.id_agente_contrato)
+  LEFT JOIN LATERAL (SELECT r.* FROM tesoreria_recibos_importados r WHERE r.id_orden=o.id_orden ORDER BY r.numero_recibo LIMIT 1) r ON TRUE
 `;
 
 export async function getOrdenesAdministrativas(filters = {}) {
   const pool = getPgPool();
   const values = [];
   const where = [];
+
+  if (filters.canceladas !== undefined) { values.push(Boolean(filters.canceladas)); where.push(`o.cancelada=$${values.length}`); }
 
   if (filters.search) {
     values.push(`%${String(filters.search).trim()}%`);
@@ -96,14 +129,29 @@ export async function getOrdenesAdministrativas(filters = {}) {
 export async function getOrdenAdministrativaById(idOrden) {
   const pool = getPgPool();
   const { rows } = await pool.query(`${ordenesSelect} WHERE o.id_orden = $1 LIMIT 1`, [idOrden]);
-  return rows[0] ? normalizeOrden(rows[0]) : null;
+  if (!rows[0]) return null;
+  const order=normalizeOrden(rows[0]);
+  const [invoice,contacts,receipts]=await Promise.all([
+    order.id_factura ? pool.query('SELECT * FROM administracion_facturas_clientes WHERE id_factura_cliente=$1',[order.id_factura]) : {rows:[]},
+    pool.query('SELECT id_contacto,nombre_completo_contacto,nombre_contacto,apellidos_contacto,email_contacto FROM comercial_contactos WHERE id_cuenta=$1 ORDER BY nombre_completo_contacto',[order.id_cuenta]),
+    pool.query('SELECT numero_recibo,id_remesa,importe_recibo FROM tesoreria_recibos_importados WHERE id_orden=$1 ORDER BY numero_recibo',[idOrden]),
+  ]);
+  let factura=invoice.rows[0] || null;
+  if(factura){
+    const [lines,otherOrders]=await Promise.all([
+      pool.query('SELECT * FROM administracion_lineas_factura WHERE id_factura_cliente=$1 ORDER BY posicion',[order.id_factura]),
+      pool.query('SELECT id_orden,numero_cobro,cobro_total,cancelada FROM tesoreria_ordenes WHERE id_factura=$1 AND id_orden<>$2 ORDER BY numero_cobro,id_orden',[order.id_factura,idOrden]),
+    ]);
+    factura={...factura,lineas:lines.rows,otras_ordenes:otherOrders.rows};
+  }else if(order.cancelacion_detalle.factura_eliminada) factura={...order.cancelacion_detalle.factura_eliminada,eliminada:true,otras_ordenes:[]};
+  return {...order,factura,contactos_cuenta:contacts.rows,recibos:receipts.rows};
 }
 
 export async function getPrevisionIngresosOrdenes(tipo) {
   const pool = getPgPool();
   const normalizedTipo = String(tipo || "").toLowerCase();
   const values = [];
-  const where = [];
+  const where = ['NOT o.cancelada'];
 
   if (normalizedTipo === "recibos") {
     where.push("(o.forma_cobro ILIKE '%recibo%' OR o.datos_importacion->>'tipo_ingreso'='recibo')");

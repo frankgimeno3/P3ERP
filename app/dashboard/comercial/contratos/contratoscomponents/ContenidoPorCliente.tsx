@@ -41,6 +41,12 @@ const ContenidoPorCliente: FC<ContenidoPorClienteProps> = ({ estado = 'curso' })
   const [propuestaFiltro, setPropuestaFiltro] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [page, setPage] = useState(1);
+  const pageSize = 50;
+
+  useEffect(() => {
+    setPage(1);
+  }, [estado, clienteFiltro, agenteFiltro, contactoFiltro, propuestaFiltro]);
 
   useEffect(() => {
     const fetchContratos = async () => {
@@ -70,10 +76,9 @@ const ContenidoPorCliente: FC<ContenidoPorClienteProps> = ({ estado = 'curso' })
     router.push(href);
   };
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
   const contratosFiltrados = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     return contratos.filter((contrato) => {
       const fechaFin = parseDMY(contrato.fecha_fin_contrato);
       const matchEstado = estado === 'anteriores' ? Boolean(fechaFin && fechaFin < today) : !fechaFin || fechaFin >= today;
@@ -84,6 +89,11 @@ const ContenidoPorCliente: FC<ContenidoPorClienteProps> = ({ estado = 'curso' })
       return matchEstado && matchCliente && matchAgente && matchContacto && matchPropuesta;
     });
   }, [agenteFiltro, clienteFiltro, contactoFiltro, contratos, estado, propuestaFiltro]);
+
+  const totalPages = Math.max(1, Math.ceil(contratosFiltrados.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const firstIndex = (currentPage - 1) * pageSize;
+  const contratosPagina = contratosFiltrados.slice(firstIndex, firstIndex + pageSize);
 
   return (
     <div className="mt-8 flex flex-col gap-4 rounded-xl">
@@ -120,7 +130,7 @@ const ContenidoPorCliente: FC<ContenidoPorClienteProps> = ({ estado = 'curso' })
                 <td colSpan={7} className="p-6 text-center text-gray-500">No hay contratos para mostrar.</td>
               </tr>
             )}
-            {!loading && contratosFiltrados.map((contrato) => {
+            {!loading && contratosPagina.map((contrato) => {
               const idContrato = `${contrato.id_contrato ?? 'no_id'}`;
               return (
                 <tr
@@ -159,6 +169,16 @@ const ContenidoPorCliente: FC<ContenidoPorClienteProps> = ({ estado = 'curso' })
           </tbody>
         </table>
       </div>
+      {!loading && contratosFiltrados.length > 0 && (
+        <nav aria-label="Paginación de contratos" className="flex flex-wrap items-center justify-between gap-3 rounded bg-white p-4 text-sm">
+          <p aria-live="polite">Mostrando {firstIndex + 1}–{Math.min(firstIndex + pageSize, contratosFiltrados.length)} de {contratosFiltrados.length} contratos</p>
+          <div className="flex items-center gap-3">
+            <button type="button" disabled={currentPage === 1} onClick={() => setPage(currentPage - 1)} className="rounded border px-4 py-2 enabled:cursor-pointer enabled:hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50">Anterior</button>
+            <span>Página {currentPage} de {totalPages}</span>
+            <button type="button" disabled={currentPage === totalPages} onClick={() => setPage(currentPage + 1)} className="rounded border px-4 py-2 enabled:cursor-pointer enabled:hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50">Siguiente</button>
+          </div>
+        </nav>
+      )}
     </div>
   );
 };

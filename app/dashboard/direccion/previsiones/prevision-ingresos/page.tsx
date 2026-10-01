@@ -80,7 +80,7 @@ export default function PrevisionIngresosPage() {
   }, [reloadKey, tab]);
 
   const columns = tab === "remesas" ? remesaColumns : tab === "transfers" ? incomeColumns : receiptIncomeColumns;
-  const filterRows = [columns.slice(0, Math.ceil(columns.length / 2)), columns.slice(Math.ceil(columns.length / 2))];
+  const filterRows = Array.from({length:3},(_,index)=>columns.slice(Math.ceil(index*columns.length/3),Math.ceil((index+1)*columns.length/3)));
   const ordenesFiltradas = useMemo(() => ordenes.filter(orden => columns.every(column => {
     if (column.date) {
       const value = cellValue(orden, column).split(/[ ,]/)[0].split("/");
@@ -107,7 +107,7 @@ export default function PrevisionIngresosPage() {
           </div>
         </div>
         <div className="overflow-x-auto rounded border border-gray-200 bg-white p-4">
-          <div className="grid gap-3" style={{ gridTemplateRows: "repeat(2, auto)", minWidth: Math.ceil(columns.length / 2) * 140 }}>
+          <div className="grid gap-3" style={{ gridTemplateRows: "repeat(3, auto)", minWidth: Math.ceil(columns.length / 3) * 140 }}>
             {filterRows.map((row, index) => <div key={index} className="grid gap-3" style={{ gridTemplateColumns: "repeat(" + row.length + ", minmax(0, 1fr))" }}>
               {row.map(column => column.date ? <fieldset key={column.key} className="min-w-0"><legend className="mb-1 text-xs font-medium text-slate-600">{column.label}</legend><div className="flex gap-1">{["dd", "mm", "yyyy"].map(part => <input key={part} aria-label={column.label + ": " + part} inputMode="numeric" maxLength={part === "yyyy" ? 4 : 2} placeholder={part} value={filters[column.key + "_" + part] || ""} onChange={e => setFilters(current => ({ ...current, [column.key + "_" + part]: e.target.value.replace(/\D/g, "") }))} className="min-w-0 w-full rounded border border-gray-300 px-1 py-2 text-sm outline-none focus:border-blue-950" />)}</div></fieldset> : <label key={column.key} className="min-w-0 text-xs font-medium text-slate-600">{column.label}<input type="search" value={filters[column.key] || ""} onChange={e => setFilters(current => ({ ...current, [column.key]: e.target.value }))} placeholder={"Filtrar " + column.label.toLowerCase()} className="mt-1 w-full rounded border border-gray-300 px-2 py-2 text-sm font-normal outline-none focus:border-blue-950" /></label>)}
             </div>)}

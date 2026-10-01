@@ -26,7 +26,6 @@ export async function uploadDocument(request, kind, ownerId) {
   if (!file || typeof file.arrayBuffer !== 'function' || !file.size || file.size > limit) throw new LaboralError('Selecciona un archivo de entre 1 byte y 15 MB.');
   const id = randomUUID(), contenido = Buffer.from(await file.arrayBuffer());
   const metadata = { id, nombre: file.name.slice(0,255), contentType: file.type || 'application/octet-stream', size: file.size };
-  if (!(process.env.AWS_S3_BUCKET || process.env.S3_BUCKET)) return addDocument(kind, ownerId, { ...metadata, contenido });
   const { bucket, client } = storage();
   const key = `laboral/${kind}/${ownerId}/${id}`;
   // Documents are downloaded only through the authenticated Dirección endpoint.

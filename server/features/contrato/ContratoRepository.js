@@ -6,6 +6,7 @@ function numberOrZero(value) {
 
 function normalizeOrden(row) {
   return {
+    ...row,
     id_orden: row.id_orden,
     id_contrato: row.id_contrato ?? "",
     forma_cobro: row.forma_cobro ?? "",
@@ -24,6 +25,7 @@ function normalizeOrden(row) {
 
 function normalizeLinea(row) {
   return {
+    ...row,
     id_linea_contrato: row.id_linea_contrato,
     numero_linea_contrato: row.numero_linea_contrato,
     id_publicacion: row.id_publicacion ?? "",
@@ -41,6 +43,7 @@ function normalizeLinea(row) {
 
 function normalizeContrato(row) {
   return {
+    ...row,
     id_contrato: row.id_contrato,
     id_agente_contrato: row.id_agente_contrato ?? "",
     nombre_agente_contrato: row.nombre_agente_contrato ?? "",
@@ -71,7 +74,9 @@ const baseSelect = `
   SELECT
     c.*,
     a.nombre_completo_agente AS nombre_agente_contrato,
-    cu.nombre_empresa,
+    COALESCE(cu.nombre_empresa,(SELECT string_agg(shared.nombre_empresa, ' / ' ORDER BY shared.nombre_empresa)
+      FROM comercial_cuentas shared WHERE shared.id_cuenta IN
+      (SELECT jsonb_array_elements_text(COALESCE(to_jsonb(c)->'datos_importacion'->'cuentas','[]'::jsonb))))) AS nombre_empresa,
     co.nombre_completo_contacto AS nombre_contacto
   FROM comercial_contratos c
   LEFT JOIN agentes_db a ON a.id_agente = c.id_agente_contrato
@@ -102,16 +107,20 @@ export async function getContratoById(idContrato) {
 
   if (!rows[0]) return null;
 
-  const [lineas, ordenes] = await Promise.all([
+  const [lineas, facturas, ordenes] = await Promise.all([
     pool.query(
       `
-        SELECT *
-        FROM comercial_contratos_lineas
-        WHERE id_contrato = $1
-        ORDER BY numero_linea_contrato ASC NULLS LAST, id_linea_contrato ASC
+        SELECT l.*,s.nombre_servicio_es AS producto_documento_es
+        FROM comercial_contratos_lineas l
+        LEFT JOIN servicios_db s ON s.id_servicio=l.id_servicio
+        WHERE l.id_contrato = $1
+        ORDER BY l.numero_linea_contrato ASC NULLS LAST, l.id_linea_contrato ASC
       `,
       [idContrato],
     ),
+    pool.query(`SELECT f.* FROM administracion_facturas_clientes f WHERE f.id_contrato=$1
+      OR f.id_factura_cliente=$2 OR f.id_factura_cliente IN(SELECT id_factura FROM tesoreria_ordenes WHERE id_contrato=$1)
+      ORDER BY f.created_at DESC,f.id_factura_cliente`,[idContrato,rows[0].id_factura || null]),
     pool.query(
       `
         SELECT *
@@ -127,12 +136,20 @@ export async function getContratoById(idContrato) {
     ...rows[0],
     lineas_contrato: lineas.rows.map(normalizeLinea),
     ordenes: ordenes.rows.map(normalizeOrden),
+    facturas: facturas.rows,
   });
 }
 
 export async function updateContrato(idContrato, data = {}) {
   const pool = getPgPool();
-  const agentId = String(data.id_agente_contrato ?? "").trim();
+  const current=(await pool.query('SELECT id_agente_contrato,id_cuenta_contrato FROM comercial_contratos WHERE id_contrato=$1',[idContrato])).rows[0];
+  if(!current)return null;
+  const agentId = String(data.id_agente_contrato ?? current.id_agente_contrato ?? "").trim();
+  const contactId=String(data.id_contacto_contrato??'').trim();
+  if(data.id_contacto_contrato!==undefined && contactId){
+    const belongs=await pool.query('SELECT 1 FROM comercial_contactos WHERE id_contacto=$1 AND id_cuenta=$2',[contactId,current.id_cuenta_contrato]);
+    if(!belongs.rowCount)throw new Error('El contacto debe pertenecer a la cuenta del contrato');
+  }
 
   if (agentId) {
     const agent = await pool.query(
@@ -145,18 +162,12 @@ export async function updateContrato(idContrato, data = {}) {
   const { rowCount } = await pool.query(
     `UPDATE comercial_contratos
      SET id_agente_contrato=$1,
+         id_contacto_contrato=CASE WHEN $3::boolean THEN $4 ELSE id_contacto_contrato END,
          updated_at=NOW()
      WHERE id_contrato=$2`,
-    [agentId, idContrato],
+    [agentId, idContrato,data.id_contacto_contrato!==undefined,contactId],
   );
   if (!rowCount) return null;
-
-  await pool.query(
-    `UPDATE produccion_contenidos
-     SET id_agente=$1,updated_at=NOW()
-     WHERE id_contrato=$2`,
-    [agentId || null, idContrato],
-  );
 
   return getContratoById(idContrato);
 }

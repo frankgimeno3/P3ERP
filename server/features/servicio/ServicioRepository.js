@@ -1,5 +1,27 @@
 import { getPgPool } from "../../database/pgClient.js";
 import crypto from "node:crypto";
+import { parseImportDate } from '../prevision/ReceiptExcel.js';
+
+async function prepareServicio(data,creating=false) {
+  const result={...data};
+  const fail=message=>{throw Object.assign(new Error(message),{status:400});};
+  if(creating || data.nombre_servicio_es!==undefined)if(!String(data.nombre_servicio_es || '').trim())fail('El nombre del servicio en español es obligatorio.');
+  for (const lang of ['es','en','it','pt']) for (const field of ['nombre','medio','edicion','publicacion']) {
+    const column=`${field}_servicio_${lang}`;
+    if ((creating || data[column]!==undefined) && !String(data[column] || '').trim()) fail(`Falta la traducción ${column}`);
+  }
+  if (!creating) for (const field of ['nombre','medio','edicion','publicacion']) {
+    if (data[`${field}_servicio_es`]!==undefined && ['en','it','pt'].some(lang=>data[`${field}_servicio_${lang}`]===undefined)) {
+      fail(`Debes enviar las traducciones de ${field} al modificar su texto en español`);
+    }
+  }
+  if(creating || data.id_medio!==undefined)if(!(await getPgPool().query('SELECT 1 FROM servicios_grupos_servicios WHERE id_medio=$1',[data.id_medio])).rowCount)fail('Selecciona un canal existente.');
+  if(data.precio_tarifa!==undefined){result.precio_tarifa=data.precio_tarifa===''||data.precio_tarifa==null?null:Number(data.precio_tarifa);if(result.precio_tarifa!==null&&(!Number.isFinite(result.precio_tarifa)||result.precio_tarifa<0))fail('La tarifa debe ser un importe positivo o cero.');}
+  for(const key of ['fecha_deadline_servicio','fecha_publicacion_servicio'])if(data[key]!==undefined){try{result[key]=parseImportDate(data[key]) || '';}catch{fail('Fecha no válida: '+key);}}
+  if(data.disponibilidad!==undefined&&!['Ofrecible','Oculto'].includes(data.disponibilidad))fail('Disponibilidad no válida.');
+  for(const [lang,key] of Object.entries({es:'nombre_espanol',en:'nombre_ingles',it:'nombre_italiano',pt:'nombre_portugues'}))if(data['nombre_servicio_'+lang]!==undefined)result[key]=String(data['nombre_servicio_'+lang] || '').trim();
+  return result;
+}
 
 function normalizeServicio(row) {
   return {
@@ -95,13 +117,15 @@ export async function getServicioById(idServicio) {
   return rows[0] ? normalizeServicio(rows[0]) : null;
 }
 
-const editableColumns = ["id_medio", "ano_servicio", "soporte_servicio", "precio_servicio", "precio_tarifa", "concepto_factura", "fecha_deadline_servicio", "fecha_publicacion_servicio", "medio_servicio_es", "edicion_servicio_es", "publicacion_servicio_es", "nombre_servicio_es", "medio_servicio_en", "edicion_servicio_en", "publicacion_servicio_en", "nombre_servicio_en", "medio_servicio_it", "edicion_servicio_it", "publicacion_servicio_it", "nombre_servicio_it", "medio_servicio_pt", "edicion_servicio_pt", "publicacion_servicio_pt", "nombre_servicio_pt", "disponibilidad", "comentarios"];
+const editableColumns = ["nombre_espanol", "nombre_ingles", "nombre_italiano", "nombre_portugues", "id_medio", "ano_servicio", "soporte_servicio", "precio_servicio", "precio_tarifa", "concepto_factura", "fecha_deadline_servicio", "fecha_publicacion_servicio", "medio_servicio_es", "edicion_servicio_es", "publicacion_servicio_es", "nombre_servicio_es", "medio_servicio_en", "edicion_servicio_en", "publicacion_servicio_en", "nombre_servicio_en", "medio_servicio_it", "edicion_servicio_it", "publicacion_servicio_it", "nombre_servicio_it", "medio_servicio_pt", "edicion_servicio_pt", "publicacion_servicio_pt", "nombre_servicio_pt", "disponibilidad", "comentarios"];
 
 export async function saveServicio(idServicio, data = {}) {
   const pool = getPgPool();
+  if(!await getServicioById(idServicio))throw Object.assign(new Error('Servicio no encontrado.'),{status:404});
+  data=await prepareServicio(data);
   const columns = editableColumns.filter((column) => data[column] !== undefined);
   if (!columns.length) return getServicioById(idServicio);
-  const values = columns.map((column) => data[column] ?? "");
+  const values = columns.map((column) => column==='precio_tarifa' ? data[column] : data[column] ?? "");
   values.push(idServicio);
   await pool.query(`UPDATE servicios_db SET ${columns.map((column, index) => `${column}=$${index + 1}`).join(", ")}, updated_at=NOW() WHERE id_servicio=$${values.length}`, values);
   return getServicioById(idServicio);
@@ -109,10 +133,11 @@ export async function saveServicio(idServicio, data = {}) {
 
 export async function createServicio(data = {}) {
   const pool = getPgPool();
+  data=await prepareServicio(data,true);
   const id = String(data.id_servicio || "").trim();
-  if (!id) throw new Error("El código único del servicio es obligatorio");
+  if (!id || !/^[\p{L}\p{N}_-]{1,100}$/u.test(id) || ['crear','canales'].includes(id)) throw Object.assign(new Error("Usa un código de hasta 100 letras, números o guiones distinto de crear y canales."),{status:400});
   const columns = ["id_servicio", ...editableColumns.filter((column) => data[column] !== undefined)];
-  const values = [id, ...columns.slice(1).map((column) => data[column] ?? "")];
+  const values = [id, ...columns.slice(1).map((column) => column==='precio_tarifa' ? data[column] : data[column] ?? "")];
   await pool.query(`INSERT INTO servicios_db (${columns.join(", ")}) VALUES (${values.map((_, index) => `$${index + 1}`).join(", ")})`, values);
   return getServicioById(id);
 }

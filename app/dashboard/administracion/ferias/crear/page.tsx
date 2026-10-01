@@ -8,11 +8,11 @@ import { ContratoService } from "@/app/service/ContratoService";
 import { FeriaService } from "@/app/service/FeriaService";
 import { PropuestaService } from "@/app/service/PropuestaService";
 import { RevistaService } from "@/app/service/RevistaService";
-import CountrySelect from "@/app/components/CountrySelect";
 
 const emptyFeria = {
   titulo_especifico_edicion: "",
   nombre_feria: "",
+  id_feria_base: "",
   pais: "",
   ciudad: "",
   edicion_numero: "",
@@ -40,14 +40,16 @@ export default function CrearFeriaPage() {
   const [inicio, setInicio] = useState<any>({});
   const [fin, setFin] = useState<any>({});
   const [revistas, setRevistas] = useState<any[]>([]);
+  const [catalogo,setCatalogo]=useState<any[]>([]);
   const [propuestas, setPropuestas] = useState<any[]>([]);
   const [contratos, setContratos] = useState<any[]>([]);
-  const [modal, setModal] = useState<"revista" | "intercambio" | "propuesta" | "contrato" | null>(null);
+  const [modal, setModal] = useState<"feria" | "revista" | "intercambio" | "propuesta" | "contrato" | null>(null);
   const [query, setQuery] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
     RevistaService.getRevistas().then((data) => setRevistas(Array.isArray(data) ? data : [])).catch(() => setRevistas([]));
+    FeriaService.getCatalogo().then(data=>setCatalogo(Array.isArray(data)?data:[])).catch(()=>setCatalogo([]));
     PropuestaService.getPropuestas().then((data) => setPropuestas(Array.isArray(data) ? data : [])).catch(() => setPropuestas([]));
     ContratoService.getContratos().then((data) => setContratos(Array.isArray(data) ? data : [])).catch(() => setContratos([]));
   }, []);
@@ -95,12 +97,14 @@ export default function CrearFeriaPage() {
         {error && <div className="mb-4 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
         <section className="bg-white p-6 shadow-sm">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {["titulo_especifico_edicion", "nombre_feria", "pais", "ciudad", "edicion_numero", "periodicidad", "tematica", "descripcion"].map((field) => (
+            {["titulo_especifico_edicion", "ciudad", "edicion_numero", "descripcion"].map((field) => (
               <label key={field} className="text-sm">
                 <span className="mb-1 block text-xs font-semibold uppercase text-gray-500">{field}</span>
-                {field === "pais" ? <CountrySelect value={form.pais} onChange={(pais) => setForm({ ...form, pais })} className="w-full rounded border px-3 py-2" /> : <input value={form[field] || ""} onChange={(event) => setForm({ ...form, [field]: event.target.value })} className="w-full rounded border px-3 py-2" />}
+                <input value={form[field] || ""} onChange={(event) => setForm({ ...form, [field]: event.target.value })} className="w-full rounded border px-3 py-2" />
               </label>
             ))}
+            <div className="text-sm"><span className="mb-1 block text-xs font-semibold uppercase text-gray-500">Nombre feria *</span><button type="button" onClick={()=>setModal('feria')} className="w-full cursor-pointer rounded border px-3 py-2 text-left hover:bg-blue-50">{form.nombre_feria||'Seleccionar feria del catálogo'}</button></div>
+            <div className="text-sm"><label className="mb-1 block text-xs font-semibold uppercase text-gray-500" htmlFor="intercambio-select">Intercambio</label><div className="flex gap-2"><select id="intercambio-select" value={form.hay_intercambio?'si':'no'} onChange={event=>setForm({...form,hay_intercambio:event.target.value==='si',estado_intercambio:event.target.value==='si'?form.estado_intercambio:'',id_propuesta_intercambio:event.target.value==='si'?form.id_propuesta_intercambio:''})} className="min-w-0 flex-1 cursor-pointer rounded border px-3 py-2 hover:border-blue-950"><option value="no">No</option><option value="si">Sí</option></select>{form.hay_intercambio&&<button type="button" onClick={()=>setModal('intercambio')} className="cursor-pointer rounded border px-3 py-2 hover:bg-blue-50">Configurar</button>}</div></div>
             {[
               ["inicio", inicio, "Fecha inicio"],
               ["fin", fin, "Fecha finalizacion"],
@@ -123,15 +127,12 @@ export default function CrearFeriaPage() {
               <button type="button" onClick={() => setModal("revista")} className="rounded bg-blue-950 px-3 py-1 text-white">Si, seleccionar revista</button>
               {form.id_revista_especial && <p className="mt-2 text-xs text-gray-600">{form.id_revista_especial}</p>}
             </div>
-            <button type="button" onClick={() => setModal("intercambio")} className="rounded border px-3 py-2 text-left text-sm hover:bg-gray-50">
-              Intercambio {form.estado_intercambio ? `- ${form.estado_intercambio}` : ""}
-            </button>
             <button type="button" onClick={() => setModal("contrato")} className="rounded border px-3 py-2 text-left text-sm hover:bg-gray-50">
               Contrato {form.id_contrato ? `- ${form.id_contrato}` : ""}
             </button>
           </div>
           <div className="mt-6 flex justify-end">
-            <button type="button" onClick={createFeria} disabled={!form.titulo_especifico_edicion} className="rounded bg-blue-950 px-4 py-2 text-sm font-medium text-white hover:bg-blue-900 disabled:bg-gray-400">Crear feria</button>
+            <button type="button" onClick={createFeria} disabled={!form.titulo_especifico_edicion||!form.id_feria_base} className="cursor-pointer rounded bg-blue-950 px-4 py-2 text-sm font-medium text-white hover:bg-blue-900 disabled:cursor-not-allowed disabled:bg-gray-400">Crear edición</button>
           </div>
         </section>
       </div>
@@ -143,7 +144,7 @@ export default function CrearFeriaPage() {
               <p className="text-lg font-semibold text-blue-950">Seleccionar</p>
               <button type="button" aria-label="Cerrar" onClick={() => { setModal(null); setQuery(""); }} className="cursor-pointer text-3xl leading-none transition hover:text-blue-700">×</button>
             </div>
-            {modal === "intercambio" ? (
+            {modal === 'feria' ? <><input value={query} onChange={event=>setQuery(event.target.value)} placeholder="Filtrar ferias" className="mb-3 w-full rounded border p-2"/><div className="max-h-[55vh] overflow-auto"><table className="w-full text-left text-sm"><thead><tr>{['Feria','País','Periodicidad','Temática'].map(label=><th key={label} className="p-2">{label}</th>)}</tr></thead><tbody>{filtered(catalogo).map(item=><tr key={item.id_feria} onClick={()=>{setForm({...form,id_feria_base:item.id_feria,nombre_feria:item.nombre_feria,pais:item.pais,periodicidad:item.periodicidad,tematica:item.tematica});setModal(null);setQuery('');}} className="cursor-pointer border-t hover:bg-blue-50"><td className="p-2">{item.nombre_feria}</td><td className="p-2">{item.pais}</td><td className="p-2">{item.periodicidad}</td><td className="p-2">{item.tematica}</td></tr>)}</tbody></table></div></> : modal === "intercambio" ? (
               <div className="space-y-2">
                 {intercambioOptions.map(([value, label]) => (
                   <button key={value} type="button" onClick={() => {

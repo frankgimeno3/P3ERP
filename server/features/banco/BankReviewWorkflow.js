@@ -2,6 +2,9 @@ import { randomUUID } from 'node:crypto';
 import { getPgPool } from '../../database/pgClient.js';
 import { insertRecurringCharge, RecurringChargeError, validateRecurringCharge } from '../prevision/RecurringChargeRepository.js';
 import { lockIncome, reconcileBankIncome, syncOrderCollections } from '../prevision/IncomeReconciliation.js';
+import { withRuleIds } from './BankReviewAnalysis.js';
+import { savePlannedReviewMemory } from './BankReviewMemoryRepository.js';
+import { reopenCardSettlements } from '../proveedor/CardSettlementRepository.js';
 
 const fail = message => { throw new RecurringChargeError(message, 409); };
 export const cents = value => Math.round(Number(value) * 100);
@@ -79,6 +82,7 @@ export async function saveBankWorkflow(body, actorId = '') {
     await lockIncome(db);
     const lines = (await db.query('SELECT * FROM tesoreria_movimientos_bancarios WHERE id_linea_banco=ANY($1::text[]) ORDER BY id_linea_banco FOR UPDATE', [ids])).rows;
     if (lines.length !== ids.length) fail('Algún movimiento ya no existe.');
+    if(body.action!=='unreview'&&(await db.query('SELECT 1 FROM tesoreria_tarjetas_movimientos WHERE id_linea_banco=ANY($1::text[]) LIMIT 1',[ids])).rowCount)fail('Reabre primero la liquidación de tarjeta para modificar sus movimientos.');
     if (body.action === 'force-review') {
       if(typeof body.forcedComment !== 'string' || !body.forcedComment.trim() || body.forcedComment.length>30000)fail('El comentario de revisión forzada es obligatorio y no puede superar 30000 caracteres.');
       if(lines.some(l=>l.estado_revision))fail('Selecciona solamente movimientos sin revisar.');
@@ -91,6 +95,7 @@ export async function saveBankWorkflow(body, actorId = '') {
     }
     if (body.action === 'unreview') {
       if (lines.some(l => !l.estado_revision)) fail('Selecciona únicamente registros revisados.');
+      await reopenCardSettlements(db,ids);
       const result = await db.query('UPDATE tesoreria_movimientos_bancarios SET estado_revision=FALSE,updated_at=NOW() WHERE id_linea_banco=ANY($1::text[]) RETURNING *', [ids]);
       const incomeIds=lines.filter(l=>Number(l.importe)>0).map(l=>l.id_linea_banco);
       const linked = incomeIds.length ? (await db.query('SELECT id_orden FROM tesoreria_aplicaciones_cobro WHERE id_linea_banco=ANY($1::text[])', [incomeIds])).rows : [];
@@ -124,7 +129,9 @@ export async function saveBankWorkflow(body, actorId = '') {
         continue;
       }
       if (Number(line.importe) > 0 && line.estado_revision) fail('Desmarca la revisión del ingreso antes de cambiar su asociación.');
-      if (!['proveedor','cliente','nomina'].includes(item.entityType) || !item.entityId) fail('Selecciona un destinatario.');
+      const unassigned = item.entityType === 'otro';
+      if (unassigned && (Number(line.importe) >= 0 || item.entityId || item.paymentId || item.orderId || item.increase || item.formerEmployee)) fail('Otro admite cargos previstos sin proveedor, cliente ni empleado.');
+      if (!unassigned && (!['proveedor','cliente','nomina'].includes(item.entityType) || !item.entityId)) fail('Selecciona un destinatario.');
       const field = { proveedor: 'id_proveedor', cliente: 'id_cuenta', nomina: 'id_agente' }[item.entityType];
       const linked = (await db.query("SELECT id_empleado FROM laboral_nominas WHERE id_transferencia=$1 UNION ALL SELECT id_empleado FROM laboral_anticipos WHERE id_transferencia=$1", [line.id_linea_banco])).rows;
       const linkedCharge = line.id_cargo_recurrente ? (await db.query('SELECT * FROM tesoreria_cargos_recurrentes WHERE id_cargo_recurrente=$1 FOR SHARE',[line.id_cargo_recurrente])).rows[0] : null;
@@ -132,10 +139,14 @@ export async function saveBankWorkflow(body, actorId = '') {
       const owners = [line,linkedCharge,linkedPayment,...linked.map(r=>({id_agente:r.id_empleado}))].filter(Boolean);
       const other = owners.some(owner=>['id_proveedor','id_cuenta','id_agente'].some(k => owner[k] && (k !== field || owner[k] !== item.entityId)));
       if (other && item.resolution !== 'overwrite') fail(`Decide si omites o sobrescribes ${line.id_linea_banco}.`);
+      if (unassigned && !item.chargeId && !item.newCharge) {
+        if(body.memory?.allocations?.some(plan=>plan.lineId===line.id_linea_banco&&plan.allocations?.length))fail('Selecciona un cargo previsto para asociar vencimientos.');
+        await db.query('DELETE FROM tesoreria_vencimientos_aplicaciones WHERE id_linea_banco=$1',[line.id_linea_banco]);
+      }
       if ((item.entityType === 'nomina' || body.mode === 'charge') && Number(line.importe) >= 0) fail('Los ingresos no admiten cargos previstos ni nóminas.');
-      if (body.mode === 'charge' && (!line.id_proveedor && !line.id_agente || other)) fail('Asigna primero el movimiento a su proveedor o empleado.');
+      if (body.mode === 'charge' && (!unassigned && !line.id_proveedor && !line.id_agente || other)) fail('Asigna primero el movimiento a su proveedor o empleado.');
       const table = { proveedor: 'administracion_proveedores', cliente: 'comercial_cuentas', nomina: 'agentes_db' }[item.entityType];
-      if (!(await db.query(`SELECT ${field} FROM ${table} WHERE ${field}=$1 ${item.entityType === 'nomina' ? 'AND is_empleado_account=TRUE' : ''} FOR SHARE`, [item.entityId])).rowCount) fail('El destinatario ya no existe.');
+      if (!unassigned && !(await db.query(`SELECT ${field} FROM ${table} WHERE ${field}=$1 ${item.entityType === 'nomina' ? 'AND is_empleado_account=TRUE' : ''} FOR SHARE`, [item.entityId])).rowCount) fail('El destinatario ya no existe.');
       // Release a previous payroll association explicitly, keeping its record and documents.
       if (linked.length && (other || item.entityType !== 'nomina')) {
         if (item.resolution !== 'overwrite') fail('Confirma la sustitución del pago vinculado.');
@@ -150,14 +161,15 @@ export async function saveBankWorkflow(body, actorId = '') {
         if (!charge) { charge = await insertRecurringCharge(db, { ...item.newCharge, tipo_cargo: item.entityType, id_proveedor: item.entityType === 'proveedor' ? item.entityId : null, id_agente: item.entityType === 'nomina' ? item.entityId : null }); created.set(key, charge); }
       } else if (item.chargeId) {
         charge = (await db.query('SELECT * FROM tesoreria_cargos_recurrentes WHERE id_cargo_recurrente=$1 AND activo=TRUE FOR UPDATE', [item.chargeId])).rows[0];
-        if (!charge || charge[field] !== item.entityId || (charge.tipo_cargo || 'proveedor') !== item.entityType) fail('El cargo previsto no corresponde al destinatario.');
+        if(charge?.id_tarjeta)fail('Este cargo se paga mediante tarjeta. Usa Liquidación tarjeta para revisar el movimiento bancario.');
+        if (!charge || !unassigned && charge[field] !== item.entityId || (charge.tipo_cargo || 'proveedor') !== item.entityType) fail('El cargo previsto no corresponde al destinatario.');
         const original = created.get(`original:${charge.id_cargo_recurrente}`) || charge.programacion;
-        if (JSON.stringify(original) !== JSON.stringify(item.expectedSchedule)) fail('El cargo previsto ha cambiado. Vuelve a comprobarlo.');
+        if (JSON.stringify(original) !== JSON.stringify(item.expectedSchedule) && JSON.stringify(withRuleIds({...charge,programacion:original}).programacion) !== JSON.stringify(item.expectedSchedule)) fail('El cargo previsto ha cambiado. Vuelve a comprobarlo.');
         created.set(`original:${charge.id_cargo_recurrente}`,original);
       }
       if (body.mode === 'charge' && !charge && !item.formerEmployee) fail('Selecciona o crea un cargo previsto.');
       if (charge && Number(line.importe) >= 0) fail('Los ingresos no admiten cargos previstos.');
-      let snapshot = other ? null : line.nomina_revision;
+      let snapshot = other || unassigned ? null : line.nomina_revision;
       if (body.mode !== 'review' && item.entityType === 'nomina') snapshot = {...snapshot,ex_empleado:item.formerEmployee === true};
       if (body.mode === 'review' && item.entityType === 'nomina') snapshot = await payroll(db, line, item, charge);
       if (charge && item.entityType === 'proveedor' && item.increase) {
@@ -167,6 +179,12 @@ export async function saveBankWorkflow(body, actorId = '') {
         const schedule = charge.programacion.map(r => ({ ...r, total_iva: amount, base_imponible: Math.round(amount / (item.vat === false ? 1 : 1.21) * 100) / 100 }));
         validateRecurringCharge({ ...charge, programacion: schedule });
         await db.query('UPDATE tesoreria_cargos_recurrentes SET programacion=$1::jsonb,updated_at=NOW() WHERE id_cargo_recurrente=$2', [JSON.stringify(schedule),charge.id_cargo_recurrente]);
+        for (const plannedRule of withRuleIds({ ...charge, programacion: schedule }).programacion) {
+          await db.query(`UPDATE tesoreria_cargos_vencimientos v SET importe=$3,programacion=$4::jsonb
+            WHERE id_cargo_recurrente=$1 AND id_regla=$2
+            AND NOT EXISTS(SELECT 1 FROM tesoreria_vencimientos_aplicaciones a WHERE a.id_vencimiento=v.id)`,
+          [charge.id_cargo_recurrente, plannedRule.id_regla, plannedRule.total_iva, JSON.stringify({ tipo: charge.tipo_programacion, regla: plannedRule })]);
+        }
       }
       let paymentId = item.paymentId || null;
       if (paymentId && !charge) {
@@ -178,13 +196,15 @@ export async function saveBankWorkflow(body, actorId = '') {
       if (item.orderId) {
         const order = (await db.query('SELECT o.*,COALESCE(o.id_cuenta,c.id_cuenta_contrato) AS id_cuenta FROM tesoreria_ordenes o LEFT JOIN comercial_contratos c ON c.id_contrato=o.id_contrato WHERE o.id_orden=$1 FOR SHARE OF o', [item.orderId])).rows[0];
         if (!order || item.entityType !== 'cliente' || order.id_cuenta !== item.entityId) fail('La orden no corresponde al cliente.');
+        if(order.cancelada)fail('La orden está cancelada y no admite movimientos bancarios.');
         orderId = item.orderId;
       }
-      const comments = body.mode === 'review' && item.entityType === 'proveedor' && item.commentsEdited === true ? item.comments : null;
+      const comments = body.mode === 'review' && ['proveedor','otro'].includes(item.entityType) && item.commentsEdited === true ? item.comments : null;
       if(comments !== null && (typeof comments !== 'string' || comments.length>30000))fail('Revisa los comentarios del movimiento.');
       saved.push((await db.query('UPDATE tesoreria_movimientos_bancarios SET id_proveedor=$1,id_cuenta=$2,id_agente=$3,id_cargo_recurrente=$4,id_pago=$5,id_orden=$6,estado_revision=$7,nomina_revision=$8::jsonb,comentarios=COALESCE($10,comentarios),updated_at=NOW() WHERE id_linea_banco=$9 RETURNING *', [item.entityType === 'proveedor' ? item.entityId : null,item.entityType === 'cliente' ? item.entityId : null,item.entityType === 'nomina' ? item.entityId : null,charge?.id_cargo_recurrente || null,paymentId,orderId,body.mode === 'review' ? true : other ? false : line.estado_revision,JSON.stringify(snapshot),line.id_linea_banco,comments])).rows[0]);
     }
     if (!saved.length) fail('No quedan movimientos para guardar.');
+    if (body.mode === 'review') await savePlannedReviewMemory(db, body.memory, saved, actorId);
     await db.query('COMMIT'); return saved;
   } catch (error) { await db.query('ROLLBACK'); throw error; }
   finally { db.release(); }

@@ -2,7 +2,6 @@
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import MiddleNav from "@/app/general_components/componentes_recurrentes/MiddleNav";
-import CardModal from "@/app/general_components/CardModal";
 
 type TabType = "P3" | "GM";
 
@@ -11,7 +10,6 @@ export default function TicketsProveedoresPage() {
   const [gmRows, setGmRows] = useState<any[]>([]);
   const [filter, setFilter] = useState("");
   const [currentTab, setCurrentTab] = useState<TabType>("P3");
-  const [cardModalOpen, setCardModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
   // Load tickets
@@ -69,7 +67,7 @@ export default function TicketsProveedoresPage() {
           <td className="p-3">{row.proveedor}</td>
           <td className="p-3">{Number(row.base_imponible || 0).toFixed(2)} €</td>
           <td className="p-3">{Number(row.importe_total).toFixed(2)} €</td>
-          <td className="p-3">{row.forma_pago}</td>
+          <td className="p-3">{row.id_tarjeta?<Link className="cursor-pointer text-blue-900 underline hover:text-blue-600" href={`/dashboard/administracion/tarjetas/${encodeURIComponent(row.id_tarjeta)}`}>{row.pago}</Link>:row.forma_pago}</td>
           <td className="p-3">
             <a
               href={row.documento_src}
@@ -87,8 +85,8 @@ export default function TicketsProveedoresPage() {
           <td className="p-3">{row.id_ticket}</td>
           <td className="p-3">{row.fecha_ticket}</td>
           <td className="p-3">{row.proveedor}</td>
-          <td className="p-3">{Number(row.importe).toFixed(2)} €</td>
-          <td className="p-3">{row.forma_pago}</td>
+          <td className="p-3">{Number(row.importe_total).toFixed(2)} €</td>
+          <td className="p-3">{row.id_tarjeta?<Link className="cursor-pointer text-blue-900 underline hover:text-blue-600" href={`/dashboard/administracion/tarjetas/${encodeURIComponent(row.id_tarjeta)}`}>{row.pago}</Link>:row.forma_pago}</td>
           <td className="p-3">
             <a
               href={row.documento_src}
@@ -113,7 +111,7 @@ export default function TicketsProveedoresPage() {
             <button
               key={tab}
               onClick={() => setCurrentTab(tab)}
-              className={`px-4 py-2 border-b-2 transition font-semibold ${
+              className={`cursor-pointer hover:bg-blue-50 px-4 py-2 border-b-2 transition font-semibold ${
                 currentTab === tab
                   ? "border-blue-950 text-blue-950"
                   : "border-transparent text-gray-500 hover:text-gray-700"
@@ -134,12 +132,12 @@ export default function TicketsProveedoresPage() {
             className="w-full rounded border bg-white px-3 py-2 sm:w-96"
           />
           <div className="flex gap-2">
-            <button
-              onClick={() => setCardModalOpen(true)}
+            <Link
+              href="/dashboard/administracion/tarjetas"
               className="cursor-pointer rounded bg-purple-600 px-5 py-2 text-white transition hover:bg-purple-700"
             >
               Tarjetas
-            </button>
+            </Link>
             <Link
               href={
                 currentTab === "P3"
@@ -191,7 +189,6 @@ export default function TicketsProveedoresPage() {
       </main>
 
       {/* Card Modal */}
-      <CardModal isOpen={cardModalOpen} onClose={() => setCardModalOpen(false)} />
     </div>
   );
 }

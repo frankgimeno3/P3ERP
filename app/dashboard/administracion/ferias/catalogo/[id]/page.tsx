@@ -1,0 +1,7 @@
+'use client';
+import Link from 'next/link';
+import {useEffect,useState} from 'react';
+import {useParams} from 'next/navigation';
+import apiClient from '@/app/apiClient';
+import MiddleNav from '@/app/general_components/componentes_recurrentes/MiddleNav';
+export default function FeriaCatalogDetail(){const {id}=useParams<{id:string}>(),[row,setRow]=useState<any>(null),[error,setError]=useState('');useEffect(()=>{if(id)apiClient.get(`/api/v1/admin/ferias/catalogo/${encodeURIComponent(id)}`).then(response=>setRow(response.data)).catch(reason=>setError(reason.response?.data?.message||reason.message));},[id]);return <main className="min-h-screen bg-gray-100 text-slate-800"><MiddleNav tituloprincipal="Feria"/><div className="mx-auto max-w-4xl p-6"><Link href="/dashboard/administracion/ferias" className="cursor-pointer text-blue-900 hover:underline">← Volver a ferias</Link>{error&&<p role="alert" className="mt-4 text-red-700">{error}</p>}{row&&<section className="mt-5 rounded bg-white p-6"><h1 className="mb-5 text-2xl font-semibold">{row.nombre_feria}</h1><dl className="grid gap-5 md:grid-cols-2">{([['pais','País'],['periodicidad','Periodicidad'],['tematica','Temática'],['descripcion','Descripción']] as const).map(([key,label])=><div key={key}><dt className="text-xs font-semibold uppercase text-slate-500">{label}</dt><dd className="mt-1">{row[key]||'—'}</dd></div>)}</dl></section>}</div></main>;}

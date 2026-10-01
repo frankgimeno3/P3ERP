@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createRevista, getRevistas } from "../../../../../server/features/revista/RevistaRepository.js";
+import { ensureMagazineFolders } from "@/server/features/produccion/GestionesProduccionRepository.js";
 
 export const runtime = "nodejs";
 
@@ -20,6 +21,7 @@ export async function POST(request) {
   try {
     const body = await request.json();
     const revista = await createRevista(body);
+    await ensureMagazineFolders([revista]);
     return NextResponse.json(revista, { status: 201 });
   } catch (error) {
     console.error("Error in POST /api/v1/produccion/revistas:", error);

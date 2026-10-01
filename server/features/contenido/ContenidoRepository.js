@@ -1,9 +1,11 @@
 import { getPgPool } from "../../database/pgClient.js";
+import { normalizeProductionDeadline } from "../../../app/lib/productionContentFields.js";
 import { addCuentaEntityEvent, formatChangeDetail } from "../registroEventos/RegistroEventosRepository.js";
 
 function getYearFromDate(value) {
   if (!value) return "";
   const text = String(value).trim();
+  if (/^\d{4}-\d{2}-\d{2}/.test(text)) return text.slice(0,4);
   const parts = text.split(/[/-]/).map((part) => part.trim());
   const yearPart = parts.length >= 3 ? parts[2] : "";
   if (!yearPart) return "";
@@ -19,7 +21,7 @@ function normalizeHojaProd(row) {
     id_contenido: row.id_contenido,
     codigo_crm: row.codigo_crm_hoja || row.id_cuenta || "",
     agente: row.nombre_completo_agente || row.id_agente || "",
-    cliente: row.cliente_hoja || row.nombre_empresa || row.id_cuenta || "",
+    cliente: row.nombre_empresa || row.cliente_hoja || row.id_cuenta || "",
     contrato: row.id_contrato || "",
     factura: row.factura_hoja || row.factura || "",
     publicacion_num_web: row.publicacion_num_web || row.nombre_publicacion || "",
@@ -38,6 +40,13 @@ function normalizeHojaProd(row) {
 
 function normalizeContenido(row) {
   return {
+    nombre_contenido: row.nombre_contenido ?? "",
+    especificaciones_contenido: row.especificaciones_contenido ?? "",
+    publicacion_num_web: row.publicacion_num_web ?? "",
+    cliente_hoja: row.cliente_hoja ?? "",
+    tipo_revista_servicio: row.tipo_revista_servicio ?? "",
+    id_contrato: row.id_contrato ?? "",
+    estado_contenido: row.estado_contenido ?? "",
     id_contenido: row.id_contenido,
     id_publicacion: row.id_publicacion ?? "",
     id_cuenta: row.id_cuenta ?? "",
@@ -382,6 +391,20 @@ export async function updateContenidoProduccion(idContenido, data = {}) {
   const values = [];
   const sets = [];
 
+  for (const field of ["especificaciones_contenido", "publicacion_num_web", "id_agente", "deadline_contenido"]) {
+    if (!Object.prototype.hasOwnProperty.call(data, field)) continue;
+    let value = String(data[field] ?? '');
+    if (field === 'deadline_contenido') {
+      try { value = normalizeProductionDeadline(value); }
+      catch (error) { error.statusCode = 400; throw error; }
+    }
+    if (field === 'id_agente' && value && !(await pool.query('SELECT 1 FROM agentes_db WHERE id_agente=$1', [value])).rowCount) {
+      const error = new Error('Selecciona un agente válido.'); error.statusCode = 400; throw error;
+    }
+    values.push(value);
+    sets.push(`${field} = $${values.length}`);
+  }
+
   if (Object.prototype.hasOwnProperty.call(data, "estado")) {
     values.push(data.estado || "");
     sets.push(`estado_contenido = $${values.length}`);
@@ -413,7 +436,7 @@ export async function updateContenidoProduccion(idContenido, data = {}) {
   const updated = rows[0] ? await getContenidoProduccionById(rows[0].id_contenido) : null;
   if (before && updated?.id_cuenta) {
     const idAgente = data.id_agente || updated.id_agente || before.id_agente || "";
-    for (const field of ["estado", "estado_material_contenido", "array_ids_materiales"]) {
+    for (const field of ["estado", "estado_material_contenido", "array_ids_materiales", "especificaciones_contenido", "publicacion_num_web", "id_agente", "deadline_contenido"]) {
       if (Object.prototype.hasOwnProperty.call(data, field)) {
         const beforeValue = field === "estado" ? before.estado : before[field];
         const afterValue = field === "estado" ? updated.estado : updated[field];

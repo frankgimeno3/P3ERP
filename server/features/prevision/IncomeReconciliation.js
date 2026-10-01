@@ -7,22 +7,22 @@ export const lockIncome = db => db.query("SELECT pg_advisory_xact_lock(hashtext(
 export const receiptOrderId = number => `ord_rec_${createHash('sha256').update(number).digest('hex').slice(0, 24)}`;
 
 export async function ensureOrderReceipt(db, orderId, actorId = '') {
-  const order = (await db.query(`SELECT o.*,COALESCE(NULLIF(f.numero_factura,''),o.id_factura,o.id_orden) numero_factura,
+  const order = (await db.query(`SELECT o.*,COALESCE(NULLIF(f.numero_factura,''),NULLIF(o.id_factura,'')) numero_factura,
     cu.nombre_empresa FROM tesoreria_ordenes o LEFT JOIN administracion_facturas_clientes f ON f.id_factura_cliente=o.id_factura
     LEFT JOIN comercial_contratos c ON c.id_contrato=o.id_contrato
     LEFT JOIN comercial_cuentas cu ON cu.id_cuenta=COALESCE(NULLIF(o.id_cuenta,''),c.id_cuenta_contrato,f.id_cuenta)
     WHERE o.id_orden=$1`, [orderId])).rows[0];
-  if (!order || !/recibo/i.test(order.forma_cobro || '') || !(order.numero_cobro > 0)) return;
+  if (!order || order.cancelada || !/recibo/i.test(order.forma_cobro || '') || !(order.numero_cobro > 0)) return;
   const existing = (await db.query('SELECT * FROM tesoreria_recibos_importados WHERE id_orden=$1', [orderId])).rows[0];
   if (existing) {
-    const changed = incomeCents(existing.importe_recibo) !== incomeCents(order.cobro_total) || (existing.fecha_teorica || '') !== (order.fecha_teorica_cobro || '');
+    const changed = incomeCents(existing.importe_recibo) !== incomeCents(order.cobro_total) || (existing.fecha_teorica || '') !== (order.fecha_teorica_cobro || '') || (existing.numero_factura || '') !== (order.numero_factura || '');
     if (changed) {
-      await db.query('UPDATE tesoreria_recibos_importados SET importe_recibo=$2,fecha_teorica=$3,updated_at=now() WHERE numero_recibo=$1', [existing.numero_recibo,order.cobro_total,order.fecha_teorica_cobro]);
+      await db.query('UPDATE tesoreria_recibos_importados SET importe_recibo=$2,fecha_teorica=$3,numero_factura=$4,updated_at=now() WHERE numero_recibo=$1', [existing.numero_recibo,order.cobro_total,order.fecha_teorica_cobro,order.numero_factura]);
       await orderActivity(db,orderId,actorId,`ha actualizado el importe y vencimiento del recibo ${existing.numero_recibo} desde su orden.`);
     }
-    return {...existing,importe_recibo:order.cobro_total,fecha_teorica:order.fecha_teorica_cobro};
+    return {...existing,importe_recibo:order.cobro_total,fecha_teorica:order.fecha_teorica_cobro,numero_factura:order.numero_factura};
   }
-  const number = `${order.numero_factura}-${String(order.numero_cobro).padStart(3, '0')}`;
+  const number = `${order.numero_factura||order.id_orden}-${String(order.numero_cobro).padStart(3, '0')}`;
   const result = await db.query(`INSERT INTO tesoreria_recibos_importados
     (numero_recibo,numero_factura,numero_cobro,id_orden,cliente,importe_recibo,fecha_teorica)
     VALUES($1,$2,$3,$4,$5,$6,$7) ON CONFLICT(numero_recibo) DO UPDATE SET id_orden=EXCLUDED.id_orden
@@ -42,7 +42,7 @@ export async function syncInvoiceCollection(db, invoiceIds) {
         CASE WHEN bool_and(o.cobrada) THEN to_char(max(p3_income_date(o.fecha_real_cobro)),'DD/MM/YYYY') END fecha
         FROM tesoreria_ordenes o LEFT JOIN LATERAL(SELECT sum(a.importe) importe FROM tesoreria_aplicaciones_cobro a
           JOIN tesoreria_movimientos_bancarios b USING(id_linea_banco) WHERE a.id_orden=o.id_orden AND b.estado_revision) payments ON TRUE
-        WHERE o.id_factura=$1) s WHERE f.id_factura_cliente=$1`, [id]);
+        WHERE o.id_factura=$1 AND NOT o.cancelada) s WHERE f.id_factura_cliente=$1`, [id]);
   }
 }
 
@@ -50,7 +50,7 @@ export async function syncOrderCollections(db, orderIds, actorId = '') {
   const invoices = [];
   for (const id of [...new Set(orderIds.filter(Boolean))].sort()) {
     const order = (await db.query('SELECT * FROM tesoreria_ordenes WHERE id_orden=$1 FOR UPDATE', [id])).rows[0];
-    if (!order) continue;
+    if (!order || order.cancelada) continue;
     const totals = (await db.query(`SELECT count(*)::int records,
       COALESCE(sum(a.importe) FILTER(WHERE b.estado_revision),0) total,
       to_char(max(p3_income_date(COALESCE(NULLIF(b.fecha_valor,''),b.fecha_operativa))) FILTER(WHERE b.estado_revision),'DD/MM/YYYY') fecha,
@@ -92,6 +92,7 @@ export async function reconcileBankIncome(db, line, item, actorId = '') {
     if (!owner?.id_cuenta || item.entityId !== owner.id_cuenta) incomeError('La transferencia debe corresponder a la cuenta de la orden.');
   } else if (item.orderId || item.remesaIds?.length) incomeError('Otros ingresos no admiten órdenes ni remesas asociadas.');
   for (const order of orders) {
+    if(order.cancelada)incomeError(`La orden ${order.id_orden} está cancelada.`);
     if (!(Number(order.cobro_total) > 0)) incomeError(`La orden ${order.id_orden} no tiene un importe positivo.`);
     const existing = (await db.query(`SELECT a.id_linea_banco FROM tesoreria_aplicaciones_cobro a JOIN tesoreria_movimientos_bancarios b USING(id_linea_banco)
       WHERE a.id_orden=$1 AND b.estado_revision AND a.id_linea_banco<>$2 LIMIT 1`, [order.id_orden,line.id_linea_banco])).rows;

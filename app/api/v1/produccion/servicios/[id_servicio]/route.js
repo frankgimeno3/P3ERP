@@ -13,7 +13,7 @@ export async function PUT(request, context) {
     const idServicio = await getIdServicio(context);
     return NextResponse.json(await saveServicio(idServicio, await request.json()));
   } catch (error) {
-    return NextResponse.json({ message: "Error al actualizar el servicio", detail: error.message }, { status: 500 });
+    return NextResponse.json({ message: error.code==='23505'?'El código de servicio ya existe.':error.status?error.message:'No se pudo guardar el servicio.' }, { status: error.code==='23505'?409:error.status || 500 });
   }
 }
 

@@ -28,6 +28,7 @@ export async function PUT(request) {
           return NextResponse.json({ message: 'El destinatario no existe o no es una cuenta de empleado.' }, { status: 400 });
         }
         const { rows: lines } = await client.query('SELECT * FROM tesoreria_movimientos_bancarios WHERE id_linea_banco=ANY($1::text[]) FOR UPDATE', [ids]);
+        if((await client.query('SELECT 1 FROM tesoreria_tarjetas_movimientos WHERE id_linea_banco=ANY($1::text[]) LIMIT 1',[ids])).rowCount)throw Object.assign(new Error('Reabre primero la liquidación de tarjeta.'),{status:409});
         if (lines.length !== new Set(ids).size) {
           await client.query('ROLLBACK');
           return NextResponse.json({ message: 'Alguna línea ya no existe. Actualiza la selección.' }, { status: 409 });

@@ -4,8 +4,6 @@ import React, { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import MiddleNav from "@/app/general_components/componentes_recurrentes/MiddleNav";
 import { HojaProduccionService } from "@/app/service/HojaProduccionService";
-import { MaterialService } from "@/app/service/MaterialService";
-import { MediatecaService } from "@/app/service/MediatecaService";
 import { AgenteService } from "@/app/service/AgenteService";
 
 const fieldClass = "w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-950";
@@ -50,7 +48,6 @@ export default function CrearContenidoHojaProduccionPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [destinos, setDestinos] = useState<string[]>([]);
-  const [materiales, setMateriales] = useState<{ nombre: string; archivo: File | null; comentarios: string }[]>([]);
   const [agentes, setAgentes] = useState<any[]>([]);
 
   useEffect(() => {
@@ -68,24 +65,14 @@ export default function CrearContenidoHojaProduccionPage() {
 
     try {
       if (destinos.length === 0) throw new Error("Selecciona al menos un destino.");
-      const materialIds: string[] = [];
-      for (const material of materiales) {
-        if (!material.archivo || !material.nombre.trim()) continue;
-        const presign = await MediatecaService.createPresign({ filename: material.archivo.name, contentType: material.archivo.type || "application/octet-stream" });
-        const upload = await fetch(presign.uploadUrl, { method: "PUT", headers: { "Content-Type": material.archivo.type || "application/octet-stream" }, body: material.archivo });
-        if (!upload.ok) throw new Error(`No se ha podido almacenar ${material.nombre}.`);
-        await MediatecaService.createMedia({ mediaId: presign.mediaId, contentName: material.nombre, s3Key: presign.s3Key, cdnUrl: presign.cdnUrl, folderPath: "produccion/materiales", contentType: material.archivo.type, type: material.archivo.type.includes("image") ? "image" : "pdf" });
-        const saved = await MaterialService.saveMaterial("", { nombre_material: material.nombre, comentarios: material.comentarios, mediateca_id: presign.mediaId, archivo_url: presign.cdnUrl });
-        materialIds.push(saved.id_material);
-      }
-      await HojaProduccionService.createContenido({
+      const created = await HojaProduccionService.createContenido({
         ...form,
         deadline_contenido: joinDate(deadlineParts),
         fecha_publicacion: joinDate(fechaPublicacionParts),
         destinos_publicacion: destinos,
-        materiales_array: materialIds,
+        materiales_array: [],
       });
-      router.push("/dashboard/produccion/hoja_produccion");
+      router.push(`/dashboard/produccion/hoja_produccion/${encodeURIComponent(created.id_contenido)}`);
     } catch (err: any) {
       setError(err?.response?.data?.message || err?.message || "No se pudo crear el contenido.");
     } finally {
@@ -161,23 +148,7 @@ export default function CrearContenidoHojaProduccionPage() {
                 ))}
               </div>
             </fieldset>
-            <section className="border-t border-gray-200 pt-4 md:col-span-2">
-              <div className="mb-3 flex items-center justify-between">
-                <div><h2 className="text-sm font-semibold text-blue-950">Materiales</h2><p className="text-sm text-gray-500">Los archivos quedarán almacenados y podrán reutilizarse.</p></div>
-                <button type="button" onClick={() => setMateriales([...materiales, { nombre: "", archivo: null, comentarios: "" }])} className="rounded border border-blue-950 px-3 py-2 text-sm text-blue-950">Agregar material</button>
-              </div>
-              <div className="space-y-3">
-                {materiales.map((material, index) => (
-                  <div key={index} className="grid gap-3 border border-gray-200 p-3 md:grid-cols-[1fr_1fr_1.5fr_auto]">
-                    <input value={material.nombre} onChange={(event) => setMateriales(materiales.map((item, itemIndex) => itemIndex === index ? { ...item, nombre: event.target.value } : item))} placeholder="Nombre del material" className={fieldClass} />
-                    <input type="file" onChange={(event) => setMateriales(materiales.map((item, itemIndex) => itemIndex === index ? { ...item, archivo: event.target.files?.[0] || null } : item))} className={fieldClass} />
-                    <input value={material.comentarios} onChange={(event) => setMateriales(materiales.map((item, itemIndex) => itemIndex === index ? { ...item, comentarios: event.target.value } : item))} placeholder="Comentarios" className={fieldClass} />
-                    <button type="button" onClick={() => setMateriales(materiales.filter((_, itemIndex) => itemIndex !== index))} className="px-3 text-red-700">Quitar</button>
-                  </div>
-                ))}
-              </div>
-            </section>
-          </div>
+         </div>
 
           {error && <p className="mt-4 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
 

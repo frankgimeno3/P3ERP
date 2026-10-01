@@ -45,12 +45,11 @@ const dashboardRoutes = [
   '/dashboard/operaciones/agentes/roles',
   '/dashboard/operaciones/agentes',
   '/dashboard/operaciones/gestion_cuentas',
-  '/dashboard/produccion/hoja_produccion/contenidos',
-  '/dashboard/produccion/hoja_produccion/contenidos/[id_contenido]',
   '/dashboard/produccion/hoja_produccion',
   '/dashboard/produccion/hoja_produccion/crear',
   '/dashboard/produccion/hoja_produccion/[id]',
-  '/dashboard/produccion/hoja_produccion/[id]/[idMaterial]',
+  '/dashboard/produccion/contenidos',
+  '/dashboard/produccion/contenidos/revistas/[id_revista]',
 ];
 
 const roleSections: Record<string, string[]> = {

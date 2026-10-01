@@ -1,0 +1,23 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import XLSX from 'xlsx';
+import env from '@next/env';
+import {getPgPool} from '../server/database/pgClient.js';
+const folder=path.resolve(process.env.USERPROFILE,'OneDrive/Escritorio/respaldo-cuentas-20260916');
+fs.mkdirSync(folder,{recursive:true});
+if(fs.existsSync(path.join(folder,'snapshot-manifest.json')))throw new Error('Audit already backed up: do not overwrite this operation.');
+const csv=fs.readFileSync(path.resolve(process.env.USERPROFILE,'OneDrive/Escritorio/Cuentas (1).csv'));
+const book=XLSX.read(csv,{type:'buffer',raw:true,codepage:65001});
+const rows=XLSX.utils.sheet_to_json(book.Sheets[book.SheetNames[0]],{defval:'',raw:true});
+fs.writeFileSync(path.join(folder,'csv-parsed.json'),JSON.stringify(rows,null,2));
+console.log(JSON.stringify({folder,csvRows:rows.length,headers:Object.keys(rows[0] || {}),firstRow:rows[0]},null,2));
+env.loadEnvConfig(process.cwd());const pool=getPgPool(),db=await pool.connect();
+try{await db.query('BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY');
+const columns=(await db.query("SELECT table_name,column_name,data_type,column_default,is_nullable FROM information_schema.columns WHERE table_schema='public' ORDER BY table_name,ordinal_position")).rows;
+const constraints=(await db.query("SELECT conrelid::regclass::text AS child,confrelid::regclass::text AS parent,contype,conname,pg_get_constraintdef(oid) AS definition FROM pg_constraint WHERE connamespace='public'::regnamespace ORDER BY conrelid::regclass::text,conname")).rows;
+const triggers=(await db.query("SELECT event_object_table,trigger_name,action_statement FROM information_schema.triggers WHERE trigger_schema='public'")).rows;
+const tables=(await db.query("SELECT tablename FROM pg_tables WHERE schemaname='public' ORDER BY tablename")).rows.map(r=>r.tablename);
+const counts={};for(const table of tables)counts[table]=(await db.query('SELECT count(*)::int n FROM public."'+table+'"')).rows[0].n;
+const metadata={columns,constraints,triggers,counts};fs.writeFileSync(path.join(folder,'metadata.json'),JSON.stringify(metadata,null,2));
+console.log(JSON.stringify({counts,foreignKeys:constraints.filter(c=>c.contype==='f'),triggers},null,2));
+await db.query('ROLLBACK');}finally{db.release();await pool.end();}

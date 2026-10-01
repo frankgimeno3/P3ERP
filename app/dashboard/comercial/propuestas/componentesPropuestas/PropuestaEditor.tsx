@@ -1,7 +1,8 @@
 "use client";
-import SearchableSelect from "@/app/components/SearchableSelect";
+import {PageChoice,ProposalLineRow,ServiceWizardBody,emptyLinea,type Linea} from "@/app/components/ProposalServices";
+import AccountSearchModal from "@/app/components/AccountSearchModal";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import MiddleNav from "@/app/general_components/componentes_recurrentes/MiddleNav";
@@ -12,33 +13,8 @@ import { PropuestaService } from "@/app/service/PropuestaService";
 import { AgenteService } from "@/app/service/AgenteService";
 import { RevistaService } from "@/app/service/RevistaService";
 import PropuestaPreview from "@/app/dashboard/comercial/propuestas/componentesPropuestas/PropuestaPreview";
-
-type Linea = {
-  id_linea_propuesta?: string;
-  id_servicio: string;
-  medio: string;
-  publicacion: string;
-  producto: string;
-  precio_tarifa: number;
-  descuento_producto: number;
-  tipo_descuento_producto?: "porcentaje" | "importe";
-  precio_unitario: number;
-  unidades: number;
-  descripcion_linea: string;
-  deadline_publicacion: string;
-  fecha_publicacion_publicacion: string;
-  grupo_servicio?: string;
-  revista_id?: string;
-  id_publicacion?: string;
-  medio_publicacion?: string;
-  edicion_publicacion?: string;
-  detalle_publicacion?: string;
-  especificaciones_linea?: string;
-  modo_precio?: "calculado" | "tachado" | "gratis" | "personalizado";
-  precio_total_personalizado?: number | null;
-  id_pagina_publicacion?: string;
-  servicio_personalizado?: boolean;
-};
+import ProposalTemplatePicker from './ProposalTemplatePicker';
+import { addCalendarMonths } from '@/app/config/paymentDates';
 
 type Cobro = {
   id_cobro_propuesta?: string;
@@ -84,25 +60,6 @@ type FormState = {
   transferencias_intercambio: TransferenciaIntercambio[];
   moneda: "€" | "$";
 };
-
-const emptyLinea = (): Linea => ({
-  id_servicio: "",
-  medio: "",
-  publicacion: "",
-  producto: "",
-  precio_tarifa: 0,
-  descuento_producto: 0,
-  tipo_descuento_producto: "porcentaje",
-  precio_unitario: 0,
-  unidades: 1,
-  descripcion_linea: "",
-  deadline_publicacion: "",
-  fecha_publicacion_publicacion: "",
-  especificaciones_linea: "",
-  modo_precio: "calculado",
-  precio_total_personalizado: null,
-  id_pagina_publicacion: "",
-});
 
 const emptyCobro = (numero: number, importe = 0): Cobro => ({
   numero_cobro: numero,
@@ -206,15 +163,6 @@ function ToggleQuestion({ label, checked, onChange }: { label: string; checked: 
 
 function Switch({ checked, onChange, label }: { checked: boolean; onChange: (checked: boolean) => void; label: string }) {
   return <button type="button" role="switch" aria-checked={checked} aria-label={label} onClick={() => onChange(!checked)} className={`relative h-6 w-11 cursor-pointer rounded-full transition-colors hover:ring-2 hover:ring-blue-200 ${checked ? "bg-blue-950" : "bg-gray-300"}`}><span className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${checked ? "translate-x-5" : "translate-x-0"}`} /></button>;
-}
-
-function PageChoice({ page, selected, onSelect }: { page: any; selected: boolean; onSelect: () => void }) {
-  const sold = Boolean(page.has_content);
-  const offered = !sold && Boolean(page.ofrecida);
-  const color = sold ? "border-red-300 bg-red-50 text-red-800" : offered ? "border-orange-300 bg-orange-50 text-orange-800" : "border-green-300 bg-green-50 text-green-800";
-  const preference = String(page.pagina_preferente || "");
-  const label = preference === "portada" ? "Portada" : preference === "interior_portada" ? "Interior de portada" : `Página preferente ${page.pagina_actual}`;
-  return <button type="button" onClick={onSelect} disabled={sold} className={`w-full rounded border p-3 text-left text-sm transition hover:brightness-95 disabled:cursor-not-allowed ${!sold ? "cursor-pointer" : ""} ${color} ${selected ? "ring-2 ring-blue-600" : ""}`}><strong>{label}</strong><span className="block text-xs">{sold ? "Vendida" : offered ? "Ofrecida" : "Disponible"}</span></button>;
 }
 
 function toNumber(value: unknown) {
@@ -365,66 +313,6 @@ function LineaEditor({
   );
 }
 
-function ProposalLineRow({ linea, index, total, moneda, onPatch, onRemove }: { linea: Linea; index: number; total: number; moneda: string; onPatch: (patch: Partial<Linea>) => void; onRemove: () => void }) {
-  const mode = linea.modo_precio || "calculado";
-  return <tr className="border-t border-slate-600 bg-slate-900 text-white">
-    <td className="p-3"><button type="button" onClick={onRemove} aria-label={`Eliminar ${linea.producto}`} className="h-7 w-7 cursor-pointer rounded bg-red-600 text-white hover:bg-red-700">×</button></td>
-    <td className="min-w-52 p-3"><input value={linea.medio || ""} onChange={(event) => onPatch({ medio: event.target.value })} className={`w-full rounded bg-white px-3 py-2 text-center font-medium text-slate-800 ${mode === "tachado" ? "line-through" : ""}`} /></td>
-    <td className="min-w-48 p-3"><input value={linea.descripcion_linea} onChange={(event) => onPatch({ descripcion_linea: event.target.value })} className="w-full rounded border border-slate-600 bg-slate-800 px-3 py-2" placeholder="Descripción" /></td>
-    <td className="min-w-52 p-3"><input value={linea.especificaciones_linea || ""} onChange={(event) => onPatch({ especificaciones_linea: event.target.value })} className="w-full rounded border border-slate-600 bg-slate-800 px-3 py-2" placeholder="Especificaciones" /></td>
-    <td className="w-24 p-3"><input type="number" min="1" value={linea.unidades} onChange={(event) => onPatch({ unidades: toNumber(event.target.value) })} className="w-20 rounded border border-slate-600 bg-slate-800 px-2 py-2 text-center" /></td>
-    <td className="w-36 p-3"><div className="flex min-w-[118px] items-center gap-2 whitespace-nowrap rounded border border-slate-600 bg-slate-800 px-2"><input type="number" min="0" value={linea.precio_unitario} onChange={(event) => onPatch({ precio_unitario: toNumber(event.target.value) })} className="min-w-0 flex-1 bg-transparent py-2 text-right outline-none" /><span className="shrink-0">{moneda}</span></div></td>
-    <td className="w-40 p-3">{mode === "calculado" ? <div className="flex min-w-[128px] items-center whitespace-nowrap rounded border border-slate-600 bg-slate-800"><input type="number" min="0" max={linea.tipo_descuento_producto === "importe" ? undefined : 100} value={linea.descuento_producto} onChange={(event) => onPatch({ descuento_producto: toNumber(event.target.value) })} className="min-w-0 flex-1 bg-transparent px-2 py-2 text-right outline-none" /><select aria-label="Tipo de descuento" value={linea.tipo_descuento_producto || "porcentaje"} onChange={(event) => onPatch({ tipo_descuento_producto: event.target.value as Linea["tipo_descuento_producto"], descuento_producto: 0 })} className="cursor-pointer border-l border-slate-600 bg-slate-700 px-2 py-2 text-white hover:bg-slate-600"><option value="porcentaje">%</option><option value="importe">{moneda}</option></select></div> : null}</td>
-    <td className="w-40 p-3">{mode === "personalizado" ? <div className="flex min-w-[118px] items-center gap-2 whitespace-nowrap rounded border border-slate-600 bg-slate-800 px-2"><input type="number" min="0" value={linea.precio_total_personalizado ?? 0} onChange={(event) => onPatch({ precio_total_personalizado: toNumber(event.target.value) })} className="min-w-0 flex-1 bg-transparent py-2 text-right outline-none" /><span className="shrink-0">{moneda}</span></div> : <span className={`inline-block min-w-[118px] whitespace-nowrap text-right ${mode === "tachado" ? "line-through" : ""}`}>{mode === "gratis" ? "Gratis" : `${total.toFixed(2)} ${moneda}`}</span>}</td>
-    <td className="min-w-40 p-3"><div className="space-y-1 rounded bg-white p-2 text-xs text-slate-800">{[["calculado", "Precio calculado"], ["tachado", "Tachado"], ["gratis", "Gratis"], ["personalizado", "Personalizado"]].map(([value, label]) => <label key={value} className="flex cursor-pointer items-center gap-2"><input type="radio" name={`precio-linea-${index}`} checked={mode === value} onChange={() => onPatch({ modo_precio: value as Linea["modo_precio"], precio_total_personalizado: value === "personalizado" ? total : null })} className="cursor-pointer" />{label}</label>)}</div></td>
-  </tr>;
-}
-
-function ServiceWizardBody({ step, linea, grupos, servicios, revistas, onPatch, onSelectService, onApplyPublication, onStep }: { step: number; linea: Linea; grupos: { id: string; nombre: string }[]; servicios: any[]; revistas: any[]; onPatch: (patch: Partial<Linea>) => void; onSelectService: (id: string) => void; onApplyPublication: (id: string) => void; onStep: (step: number) => void }) {
-  const [search, setSearch] = useState("");
-  const selectedGroup = grupos.find((group) => group.id === linea.grupo_servicio);
-  const magazineChannel = String(selectedGroup?.nombre || "").toLowerCase().includes("revista");
-  const normalizeOption = (value: unknown) => String(value || "").trim().replace(/\s+/g, " ");
-  const optionKey = (value: unknown) => normalizeOption(value).toLocaleLowerCase("es");
-  const uniqueValues = (values: unknown[]): string[] => {
-    const options = new Map<string, string>();
-    values.forEach((value) => {
-      const normalized = normalizeOption(value);
-      if (normalized && !options.has(optionKey(normalized))) options.set(optionKey(normalized), normalized);
-    });
-    return Array.from(options.values());
-  };
-  const medios = uniqueValues(revistas.map((item) => item.medio_publicacion));
-  const editions = uniqueValues(revistas.filter((item) => optionKey(item.medio_publicacion) === optionKey(linea.medio_publicacion)).map((item) => item.edicion_publicacion));
-  const publicationDetails = revistas.filter((item) => optionKey(item.medio_publicacion) === optionKey(linea.medio_publicacion) && optionKey(item.edicion_publicacion) === optionKey(linea.edicion_publicacion)).filter((item, index, items) => items.findIndex((candidate) => optionKey(candidate.detalle_publicacion) === optionKey(item.detalle_publicacion)) === index);
-  const filteredBase = servicios.filter((service) => {
-    if (service.id_medio !== linea.grupo_servicio) return false;
-    if (search && !`${service.nombre_servicio_es} ${service.id_servicio}`.toLowerCase().includes(search.toLowerCase())) return false;
-    return true;
-  });
-  const filtered = magazineChannel ? filteredBase.filter((service, index, items) => items.findIndex((candidate) => optionKey(candidate.nombre_servicio_es) === optionKey(service.nombre_servicio_es) && toNumber(candidate.precio_tarifa ?? candidate.precio_servicio) === toNumber(service.precio_tarifa ?? service.precio_servicio)) === index) : filteredBase;
-  const customChannel = linea.grupo_servicio === "otros";
-
-  if (step === 1) return <div><p className="mb-3 text-sm font-semibold text-blue-950">Canal - Grupo de servicios</p><div className="grid gap-4 md:grid-cols-3">{grupos.map((group) => <button key={group.id} type="button" onClick={() => { onPatch({ grupo_servicio: group.id, id_servicio: "", producto: "", medio: "", publicacion: "", revista_id: "", id_publicacion: "", servicio_personalizado: false }); onStep(2); }} className={`cursor-pointer rounded-lg border-2 p-5 text-left transition hover:border-blue-500 hover:bg-blue-50 ${linea.grupo_servicio === group.id ? "border-blue-600 bg-blue-50" : "border-gray-200"}`}><strong className="block text-blue-950">{group.nombre}</strong><span className="mt-1 block text-xs text-gray-500">{group.id}</span></button>)}</div></div>;
-
-  if (step === 2) return <div className="space-y-4">
-    <button type="button" onClick={() => onStep(1)} className="cursor-pointer text-sm text-blue-700 hover:underline">← Volver a canales</button>
-    <p className="text-sm">Canal - Grupo de servicios: <strong>{selectedGroup?.nombre}</strong></p>
-    {magazineChannel && <div className="grid gap-3 md:grid-cols-3"><label className="text-sm">Revista<select value={linea.medio_publicacion || ""} onChange={(event) => onPatch({ medio_publicacion: event.target.value, edicion_publicacion: "", detalle_publicacion: "", revista_id: "", id_publicacion: "" })} className="mt-1 w-full cursor-pointer rounded border bg-slate-800 p-3 text-white"><option value="">Selecciona una revista...</option>{medios.map((medio) => <option key={medio} value={medio}>{medio}</option>)}</select></label><label className="text-sm">Edición<select disabled={!linea.medio_publicacion} value={linea.edicion_publicacion || ""} onChange={(event) => onPatch({ edicion_publicacion: event.target.value, detalle_publicacion: "", id_publicacion: "" })} className="mt-1 w-full cursor-pointer rounded border bg-slate-800 p-3 text-white disabled:cursor-not-allowed disabled:bg-gray-400"><option value="">Selecciona una edición...</option>{editions.map((edition) => <option key={edition} value={edition}>{edition}</option>)}</select></label><label className="text-sm">Detalle de publicación<select disabled={!linea.edicion_publicacion} value={linea.detalle_publicacion || ""} onChange={(event) => { const item = publicationDetails.find((publication) => optionKey(publication.detalle_publicacion) === optionKey(event.target.value)); const id = item?.id_publicacion || ""; onPatch({ detalle_publicacion: event.target.value, id_publicacion: id, revista_id: item?.id_revista || "" }); if (id) onApplyPublication(id); }} className="mt-1 w-full cursor-pointer rounded border bg-slate-800 p-3 text-white disabled:cursor-not-allowed disabled:bg-gray-400"><option value="">Selecciona un detalle...</option>{publicationDetails.map((item) => <option key={item.id_publicacion || item.detalle_publicacion} value={item.detalle_publicacion}>{item.detalle_publicacion}</option>)}</select></label></div>}
-    {(!magazineChannel || linea.id_publicacion) ? <><label className="block text-sm">Filtrar servicios por nombre<input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Nombre o identificador del servicio..." className="mt-1 w-full rounded border bg-slate-800 p-3 text-white placeholder:text-slate-400" /></label><div className="max-h-[42vh] space-y-2 overflow-y-auto pr-1">{filtered.map((service) => { const price = toNumber(service.precio_tarifa ?? service.precio_servicio); return <button key={service.id_servicio} type="button" onClick={() => { onSelectService(service.id_servicio); onStep(3); }} className={`flex w-full cursor-pointer items-center justify-between rounded-lg border-2 p-4 text-left hover:border-blue-500 hover:bg-blue-50 ${linea.id_servicio === service.id_servicio ? "border-blue-600 bg-blue-50" : "border-gray-200"}`}><span><strong className="block text-blue-950">{service.nombre_servicio_es || service.id_servicio}</strong><span className="text-xs text-gray-500">{service.id_servicio}</span></span><strong className="text-blue-950">{price.toFixed(2)} €</strong></button>; })}{customChannel && <button type="button" onClick={() => { onPatch({ id_servicio: "personalizado", producto: "", servicio_personalizado: true, precio_tarifa: 0, precio_unitario: 0 }); onStep(3); }} className="flex w-full cursor-pointer items-center justify-between rounded-lg border-2 border-dashed p-4 text-left transition hover:border-blue-500 hover:bg-blue-50"><span><strong className="block text-blue-950">Personalizado</strong><span className="text-xs text-gray-500">Escribe libremente el nombre del servicio</span></span><strong className="text-blue-950">Precio editable</strong></button>}{filtered.length === 0 && !customChannel && <p className="rounded bg-gray-50 p-5 text-center text-sm text-gray-500">No hay servicios para este canal.</p>}</div></> : <p className="rounded bg-gray-50 p-5 text-sm text-gray-500">Selecciona primero una revista, una edición y un detalle para ver sus servicios.</p>}
-  </div>;
-
-  return <div className="space-y-4"><button type="button" onClick={() => onStep(2)} className="cursor-pointer text-sm text-blue-700 hover:underline">← Volver a servicios</button><div className="rounded border bg-gray-50 p-4"><span className="text-xs uppercase text-gray-500">Servicio seleccionado</span>{linea.servicio_personalizado ? <label className="mt-2 block text-sm">Nombre del servicio personalizado<input autoFocus value={linea.producto} onChange={(event) => onPatch({ producto: event.target.value })} placeholder="Escribe el nombre del servicio..." className="mt-1 w-full rounded border bg-white p-3" /></label> : <div className="mt-1 flex justify-between gap-4"><strong className="text-blue-950">{linea.producto}</strong><strong>{toNumber(linea.precio_tarifa).toFixed(2)} €</strong></div>}</div><div className="grid gap-4 md:grid-cols-2"><label className="text-sm">Descripción<textarea value={linea.descripcion_linea} onChange={(event) => onPatch({ descripcion_linea: event.target.value })} className="mt-1 min-h-24 w-full rounded border p-3" /></label><label className="text-sm">Especificaciones<textarea value={linea.especificaciones_linea || ""} onChange={(event) => onPatch({ especificaciones_linea: event.target.value })} className="mt-1 min-h-24 w-full rounded border p-3" /></label></div>{magazineChannel && linea.id_publicacion && <MagazinePageSelector publicationId={linea.id_publicacion} selected={linea.id_pagina_publicacion || ""} onSelect={(id) => onPatch({ id_pagina_publicacion: id })} />}</div>;
-}
-
-function MagazinePageSelector({ publicationId, selected, onSelect }: { publicationId: string; selected: string; onSelect: (id: string) => void }) {
-  const [pages, setPages] = useState<any[]>([]);
-  useEffect(() => { RevistaService.getPaginas(publicationId).then((data) => setPages(Array.isArray(data?.paginas) ? data.paginas : [])).catch(() => setPages([])); }, [publicationId]);
-  const preferred = pages.filter((page) => String(page.pagina_preferente || "").startsWith("pag_pref_"));
-  const placements = pages.filter((page) => ["portada", "interior_portada"].includes(String(page.pagina_preferente || "")));
-  return <div className="rounded border p-4"><p className="mb-3 font-semibold text-blue-950">Página preferente</p><div className="grid gap-4 md:grid-cols-2"><div className="grid grid-cols-2 gap-2">{preferred.map((page) => <PageChoice key={page.id_pagina_publicacion} page={page} selected={selected === page.id_pagina_publicacion} onSelect={() => !page.has_content && onSelect(page.id_pagina_publicacion)} />)}</div><div className="space-y-2">{placements.map((page) => <PageChoice key={page.id_pagina_publicacion} page={page} selected={selected === page.id_pagina_publicacion} onSelect={() => !page.has_content && onSelect(page.id_pagina_publicacion)} />)}<div className="rounded border border-dashed p-3 text-sm"><strong>Página premium</strong><p className="text-xs text-gray-500">Selecciona una página numerada a la izquierda.</p></div></div></div></div>;
-}
-
 function defaultForm(cuentaId = ""): FormState {
   const id = makeId();
   return {
@@ -511,7 +399,10 @@ export default function PropuestaEditor({
   const router = useRouter();
   const [step, setStep] = useState(mode === "replicate" ? 0 : 1);
   const [form, setForm] = useState<FormState>(() => defaultForm(cuentaInicial));
+  const formRef=useRef(form);
+  formRef.current=form;
   const [cuentas, setCuentas] = useState<any[]>([]);
+  const [accountSearch,setAccountSearch]=useState(false);
   const [contactos, setContactos] = useState<any[]>([]);
   const [servicios, setServicios] = useState<any[]>([]);
   const [agentes, setAgentes] = useState<any[]>([]);
@@ -523,9 +414,11 @@ export default function PropuestaEditor({
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
-  const [accountFilters, setAccountFilters] = useState({ codigo: "", empresa: "", pais: "", correo: "" });
   const [manualContact, setManualContact] = useState(false);
-  const [accountPage, setAccountPage] = useState(1);
+  const [templateOpen,setTemplateOpen]=useState(false);
+  const [preferredPageIds,setPreferredPageIds]=useState<Set<string>>(new Set());
+  const publicationIds=[...new Set(form.lineas.map(line=>line.id_publicacion).filter(Boolean))].join('|');
+  useEffect(()=>{const ids=publicationIds.split('|').filter(Boolean);if(!ids.length){setPreferredPageIds(new Set());return;}let active=true;Promise.all(ids.map(id=>RevistaService.getPaginas(id))).then(results=>{if(!active)return;setPreferredPageIds(new Set(results.flatMap(result=>result?.paginas||[]).filter((page:any)=>String(page.pagina_preferente||'').startsWith('pag_pref_')).map((page:any)=>page.id_pagina_publicacion)));}).catch(()=>{if(active)setPreferredPageIds(new Set());});return()=>{active=false;};},[publicationIds]);
 
   useEffect(() => setSaved(false), [form]);
 
@@ -541,9 +434,15 @@ export default function PropuestaEditor({
       setContactos([]);
       return;
     }
-    ContactoService.getContactos({ id_cuenta: form.id_cuenta_propuesta })
-      .then((data) => setContactos(Array.isArray(data) ? data : []))
-      .catch(() => setContactos([]));
+    let active=true;const accountId=form.id_cuenta_propuesta;
+    ContactoService.getContactos({ id_cuenta: accountId })
+      .then((data) => {if(!active)return;const rows=Array.isArray(data)?data:[];setContactos(rows);setManualContact(rows.length===0||Boolean(formRef.current.contacto_personalizado));setForm(prev=>{
+        if(prev.id_cuenta_propuesta!==accountId)return prev;
+        if(!rows.length)return {...prev,id_contacto_propuesta:'',contacto_personalizado:prev.contacto_personalizado||{nombre:'',email:'',cargo:''}};
+        if(prev.id_contacto_propuesta||prev.contacto_personalizado)return prev;
+        return {...prev,id_contacto_propuesta:rows.find(item=>item.es_principal)?.id_contacto||rows[0].id_contacto};
+      });})
+      .catch(() => {if(active)setContactos([]);});return()=>{active=false;};
   }, [form.id_cuenta_propuesta]);
 
   useEffect(() => {
@@ -596,19 +495,6 @@ export default function PropuestaEditor({
     () => cuentas.find((item) => item.id_cuenta === form.id_cuenta_propuesta),
     [cuentas, form.id_cuenta_propuesta],
   );
-  const filteredAccounts = useMemo(() => cuentas.filter((item) =>
-    (!accountFilters.codigo || String(item.id_cuenta || "").toLowerCase().includes(accountFilters.codigo.toLowerCase()))
-    && (!accountFilters.empresa || String(item.nombre_empresa || "").toLowerCase().includes(accountFilters.empresa.toLowerCase()))
-    && (!accountFilters.pais || String(item.pais_cuenta || "").toLowerCase().includes(accountFilters.pais.toLowerCase()))
-    && (!accountFilters.correo || String(item.correo_principal || "").toLowerCase().includes(accountFilters.correo.toLowerCase())),
-  ), [accountFilters, cuentas]);
-  const accountPageSize = 6;
-  const accountPageCount = Math.max(1, Math.ceil(filteredAccounts.length / accountPageSize));
-  const visibleAccounts = filteredAccounts.slice((accountPage - 1) * accountPageSize, accountPage * accountPageSize);
-
-  useEffect(() => setAccountPage(1), [accountFilters]);
-  useEffect(() => setAccountPage((current) => Math.min(current, accountPageCount)), [accountPageCount]);
-
   useEffect(() => {
     if (!cuenta) return;
     const country = String(cuenta.pais_facturacion || cuenta.pais_cuenta || "").trim().toLowerCase();
@@ -651,11 +537,11 @@ export default function PropuestaEditor({
   const baseImponible = form.base_imponible_personalizada ? Math.max(0, toNumber(form.importe_base_personalizada)) : calculatedBase;
   const totalConIva = form.iva_aplicable ? baseImponible * 1.21 : baseImponible;
   const cobrosTotal = form.cobros.reduce((sum, cobro) => sum + toNumber(cobro.importe_cobro), 0);
-  const cuentaEspanola = ["españa", "espana", "spain", "es"].includes(String(cuenta?.pais_facturacion || cuenta?.pais_cuenta || "").trim().toLowerCase());
+  const cuentaEspanola = ["españa", "espana", "spain", "es"].includes(String(cuenta?.pais_cuenta || cuenta?.pais_facturacion || "").trim().toLowerCase());
 
   useEffect(() => {
     if (step !== 3 || form.cobros.length) return;
-    setForm((prev) => ({ ...prev, cobros: [{ ...emptyCobro(1, totalConIva), banco_cobro: cuentaEspanola ? "Banco Santander" : "Banco Sabadell" }] }));
+    setForm((prev) => ({ ...prev, cobros: [{ ...emptyCobro(1, totalConIva), fecha_cobro: addCalendarMonths('', 2), banco_cobro: cuentaEspanola ? "Banco Santander" : "Banco Sabadell" }] }));
   }, [cuentaEspanola, form.cobros.length, step, totalConIva]);
 
   function updateLine(index: number, patch: Partial<Linea>) {
@@ -704,11 +590,14 @@ export default function PropuestaEditor({
     const edicion = servicio?.[`edicion_servicio_${suffix}`] || servicio?.edicion_servicio_es || "";
     const publicacion = servicio?.[`publicacion_servicio_${suffix}`] || servicio?.publicacion_servicio_es || "";
     const nombre = servicio?.[`nombre_servicio_${suffix}`] || servicio?.nombre_servicio_es || "";
+    const selectedMagazine=lineModalDraft?.id_publicacion ? revistasById.get(lineModalDraft.id_publicacion) : null;
+    const issue=selectedMagazine?.numero_publicacion||selectedMagazine?.numero||'';
+    const issueWord={es:'número',en:'issue',it:'numero',pt:'número'}[language];
     return {
       grupo_servicio: servicio?.id_medio || "",
       id_servicio: idServicio,
       medio,
-      publicacion: `${edicion} ${publicacion}`.trim(),
+      publicacion: `${edicion} ${publicacion} ${issue?`${issueWord} ${issue}`:''}`.trim(),
       producto: nombre,
       descripcion_linea: `${edicion} ${publicacion}`.trim(),
       especificaciones_linea: nombre,
@@ -833,7 +722,7 @@ export default function PropuestaEditor({
   return (
     <div className="min-h-screen bg-gray-100 text-gray-600">
       <MiddleNav tituloprincipal={title} />
-      <div className="px-12 py-6">
+      <div className="px-4 py-6 md:px-6">
         {step >= 2 && <div className="mb-4 flex justify-end gap-3">
           <button type="button" onClick={() => void save(mode === "edit" && !isDraftProposal ? form.estado_propuesta : "En construcción", String(step))} disabled={saving} aria-label="Guardar cambios" className={`cursor-pointer rounded-lg border px-4 py-2 text-sm transition-colors hover:bg-green-50 disabled:cursor-not-allowed ${saved ? "border-green-600 bg-green-50 text-green-700" : "border-blue-950 text-blue-950"}`}>
             <span aria-hidden="true">▣</span> {saved ? "Guardado" : "Guardar"}
@@ -883,12 +772,13 @@ export default function PropuestaEditor({
                 <section>
                   <h2 className="mb-3 text-lg font-semibold text-blue-950">Datos generales</h2>
                   <p className="mb-3 text-sm text-gray-500">Selecciona una cuenta para comenzar la propuesta.<RequiredBadge complete={Boolean(cuenta)} /></p>
-                  <SearchableSelect label="Cuenta de la propuesta" required value={form.id_cuenta_propuesta} onChange={id=>setForm(prev=>({...prev,id_cuenta_propuesta:id,id_contacto_propuesta:'',contacto_personalizado:null}))} options={cuentas.map(item=>({value:item.id_cuenta,label:[item.nombre_empresa,item.id_cuenta,item.pais_cuenta,item.correo_principal].filter(Boolean).join(' · ')}))} />
+                  <button type="button" onClick={()=>setAccountSearch(true)} className="w-full cursor-pointer rounded border bg-white p-3 text-left hover:bg-blue-50">{cuenta ? cuenta.nombre_empresa+' · '+cuenta.id_cuenta : 'Buscar y seleccionar cuenta'}</button>
+                  {accountSearch&&<AccountSearchModal accounts={cuentas} onClose={()=>setAccountSearch(false)} onSelect={id=>{setManualContact(false);setContactos([]);setForm(prev=>({...prev,id_cuenta_propuesta:id,id_contacto_propuesta:'',contacto_personalizado:null}));setAccountSearch(false);}}/>}
                 </section>
 
                 {cuenta && <section>
                   <div className="mb-4 rounded border border-green-300 bg-green-50 p-4 text-sm"><span className="block text-xs font-semibold uppercase text-green-700">Cuenta seleccionada</span><strong className="text-blue-950">{cuenta.nombre_empresa || cuenta.id_cuenta}</strong><span className="ml-2 text-gray-600">({cuenta.id_cuenta}) · {cuenta.pais_cuenta || "País sin indicar"}</span></div>
-                  <div className="mb-3 flex flex-wrap items-center justify-between gap-4"><div><h3 className="font-semibold text-blue-950">Contactos de la cuenta<RequiredBadge complete={Boolean(form.id_contacto_propuesta || manualContactValid)} /></h3><p className="text-sm text-gray-500">Selecciona obligatoriamente un contacto para continuar.</p></div><div className="rounded border bg-gray-50 p-3 text-sm"><p>¿Deseas introducir el contacto manualmente?</p><div className="mt-2 flex items-center justify-center gap-3"><span>No</span><button type="button" role="switch" aria-checked={manualContact} aria-label="Introducir el contacto manualmente" onClick={() => { const checked = !manualContact; setManualContact(checked); setForm((prev) => ({ ...prev, id_contacto_propuesta: "", contacto_personalizado: checked ? { nombre: "", email: "", cargo: "" } : null })); }} className={`relative h-6 w-11 cursor-pointer rounded-full transition-colors hover:ring-2 hover:ring-blue-200 ${manualContact ? "bg-blue-950" : "bg-gray-300"}`}><span className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${manualContact ? "translate-x-5" : "translate-x-0"}`} /></button><span>Sí</span></div></div></div>
+                  <div className="mb-3 flex flex-wrap items-center justify-between gap-4"><div><h3 className="font-semibold text-blue-950">Contactos de la cuenta<RequiredBadge complete={Boolean(form.id_contacto_propuesta || manualContactValid)} /></h3><p className="text-sm text-gray-500">Selecciona obligatoriamente un contacto para continuar.</p></div><div className="rounded border bg-gray-50 p-3 text-sm"><p>¿Deseas introducir el contacto manualmente?</p><div className="mt-2 flex items-center justify-center gap-3"><span>No</span><button type="button" role="switch" aria-checked={manualContact} aria-label="Introducir el contacto manualmente" disabled={contactos.length===0} onClick={() => { const checked = !manualContact; setManualContact(checked); setForm((prev) => ({ ...prev, id_contacto_propuesta: "", contacto_personalizado: checked ? { nombre: "", email: "", cargo: "" } : null })); }} className={`relative h-6 w-11 cursor-pointer rounded-full transition-colors hover:ring-2 hover:ring-blue-200 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:ring-0 ${manualContact ? "bg-blue-950" : "bg-gray-300"}`}><span className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${manualContact ? "translate-x-5" : "translate-x-0"}`} /></button><span>Sí</span></div></div></div>
                   {!manualContact ? <div className="overflow-x-auto border"><table className="min-w-full text-sm"><thead className="bg-blue-950 text-white"><tr><th className="p-2 text-left">Nombre</th><th className="p-2 text-left">Correo</th><th className="p-2 text-left">Teléfono</th></tr></thead><tbody>{contactos.map((item) => <tr key={item.id_contacto} onClick={() => setForm((prev) => ({ ...prev, id_contacto_propuesta: item.id_contacto, contacto_personalizado: null }))} className={`cursor-pointer border-t hover:bg-blue-50 ${form.id_contacto_propuesta === item.id_contacto ? "bg-green-50" : ""}`}><td className="p-2">{item.nombre_completo_contacto}</td><td className="p-2">{item.email_contacto || "-"}</td><td className="p-2">{item.telefono_contacto || "-"}</td></tr>)}</tbody></table></div> : <div className="grid gap-3 md:grid-cols-2"><label className="text-sm">Nombre del contacto<RequiredBadge complete={Boolean(form.contacto_personalizado?.nombre.trim())} /><input value={form.contacto_personalizado?.nombre || ""} onChange={(event) => setForm((prev) => ({ ...prev, contacto_personalizado: { nombre: event.target.value, email: prev.contacto_personalizado?.email || "", cargo: "" } }))} className="mt-1 w-full rounded border p-2" /></label><label className="text-sm">Correo del contacto<RequiredBadge complete={Boolean(form.contacto_personalizado?.email.trim())} /><input type="email" value={form.contacto_personalizado?.email || ""} onChange={(event) => setForm((prev) => ({ ...prev, contacto_personalizado: { nombre: prev.contacto_personalizado?.nombre || "", email: event.target.value, cargo: "" } }))} className="mt-1 w-full rounded border p-2" /></label></div>}
                 </section>}
                 <label className="block text-sm">Título de la propuesta<RequiredBadge complete={Boolean(form.nombre_propuesta.trim())} /><input value={form.nombre_propuesta} onChange={(event) => setForm((prev) => ({ ...prev, nombre_propuesta: event.target.value }))} className="mt-1 w-full rounded border p-2" /></label>
@@ -976,11 +866,12 @@ export default function PropuestaEditor({
 
             {step === 2 && (
               <div className="space-y-4">
+                <div className="flex justify-end"><button type="button" onClick={()=>setTemplateOpen(true)} className="cursor-pointer rounded bg-blue-950 px-4 py-2 text-white hover:bg-blue-900">Usar plantilla</button></div>
                 <div className="rounded border bg-white p-5"><div className="mb-3 flex items-center justify-between"><h2 className="font-semibold text-blue-950">Datos de la propuesta</h2><button type="button" onClick={() => setStep(1)} className="cursor-pointer text-sm text-blue-800 underline hover:text-blue-950">Volver a Datos generales</button></div><div className="grid gap-3 text-sm md:grid-cols-2"><p><span className="block text-gray-500">Cuenta</span><strong>{cuenta?.nombre_empresa || form.id_cuenta_propuesta}</strong></p><p><span className="block text-gray-500">País</span><strong>{cuenta?.pais_cuenta || "-"}</strong></p><p><span className="block text-gray-500">Título</span><strong>{form.nombre_propuesta}</strong></p><p><span className="block text-gray-500">Fecha de creación</span><strong>{form.fecha_envio_propuesta}</strong></p><p><span className="block text-gray-500">Fecha estimada de expiración</span><strong>{form.fecha_validez_propuesta}</strong></p></div></div>
                 <div className="overflow-x-auto rounded-lg">
-                  <table className="min-w-[1200px] w-full text-sm"><thead className="bg-slate-700 text-white"><tr><th className="p-3" /><th className="p-3 text-left">Servicio</th><th className="p-3 text-left">Descripción</th><th className="p-3 text-left">Especificaciones</th><th className="p-3">Unidades</th><th className="p-3">Precio unitario</th><th className="p-3">Descuento</th><th className="p-3">Total servicio</th><th className="p-3 text-left">Acciones</th></tr></thead><tbody>
+                  <table className="min-w-[900px] w-full text-xs"><thead className="bg-slate-700 text-white"><tr><th className="p-3" /><th className="p-3 text-left">Servicio</th><th className="p-3 text-left">Descripción</th><th className="p-3 text-left">Especificaciones</th><th className="p-3">Unidades</th><th className="p-3">Precio unitario</th><th className="p-3">Descuento</th><th className="p-3">Total servicio</th><th className="p-3 text-left">Acciones</th></tr></thead><tbody>
                     <tr className="bg-slate-300"><td colSpan={9} className="p-3 text-center"><button type="button" onClick={() => { setLineModalDraft(emptyLinea()); setLineModalIndex(0); setLineModalStep(1); }} className="cursor-pointer rounded bg-blue-50 px-4 py-2 font-medium text-blue-950 hover:bg-blue-100">+ Agregar servicio aquí</button></td></tr>
-                    {form.lineas.map((linea, index) => <React.Fragment key={linea.id_linea_propuesta || index}><ProposalLineRow linea={linea} index={index} total={lineTotal(linea)} moneda={form.moneda} onPatch={(patch) => updateLine(index, patch)} onRemove={() => setForm((prev) => ({ ...prev, lineas: prev.lineas.filter((_, i) => i !== index) }))} /><tr className="bg-slate-300"><td colSpan={9} className="p-3 text-center"><button type="button" onClick={() => { setLineModalDraft(emptyLinea()); setLineModalIndex(index + 1); setLineModalStep(1); }} className="cursor-pointer rounded bg-blue-50 px-4 py-2 font-medium text-blue-950 hover:bg-blue-100">+ Agregar servicio aquí</button></td></tr></React.Fragment>)}
+                    {form.lineas.map((linea, index) => <React.Fragment key={linea.id_linea_propuesta || index}><ProposalLineRow linea={linea} index={index} total={lineTotal(linea)} moneda={form.moneda} lockSpecifications={preferredPageIds.has(linea.id_pagina_publicacion||'')} onPatch={(patch) => updateLine(index, patch)} onRemove={() => setForm((prev) => ({ ...prev, lineas: prev.lineas.filter((_, i) => i !== index) }))} /><tr className="bg-slate-300"><td colSpan={9} className="p-3 text-center"><button type="button" onClick={() => { setLineModalDraft(emptyLinea()); setLineModalIndex(index + 1); setLineModalStep(1); }} className="cursor-pointer rounded bg-blue-50 px-4 py-2 font-medium text-blue-950 hover:bg-blue-100">+ Agregar servicio aquí</button></td></tr></React.Fragment>)}
                   </tbody></table>
                 </div>
                 <div className="ml-auto w-full max-w-md space-y-3 rounded border bg-white p-4 text-sm">
@@ -1003,30 +894,30 @@ export default function PropuestaEditor({
                 <div className="flex justify-between rounded-lg bg-gray-50 p-4 text-sm"><span>IVA determinado por el país: <strong>{form.iva_aplicable ? "21%" : "0%"}</strong></span><span>Total de la propuesta: <strong>{totalConIva.toFixed(2)} €</strong></span></div>
                 <div className="flex justify-between">
                   <p className="font-semibold">Cobros</p>
-                  <button type="button" onClick={() => setForm((prev) => ({ ...prev, cobros: [...prev.cobros, emptyCobro(prev.cobros.length + 1, prev.cobros.length ? 0 : totalConIva)] }))} className="rounded-lg bg-blue-950 px-4 py-2 text-sm text-white">
+                  <button type="button" onClick={() => setForm((prev) => ({ ...prev, cobros: [...prev.cobros, { ...emptyCobro(prev.cobros.length + 1, prev.cobros.length ? 0 : totalConIva), fecha_cobro: addCalendarMonths(prev.cobros.at(-1)?.fecha_cobro || '', prev.cobros.length ? 1 : 2), banco_cobro: cuentaEspanola ? 'Banco Santander' : 'Banco Sabadell' }] }))} className="cursor-pointer rounded-lg bg-blue-950 px-4 py-2 text-xs text-white hover:bg-blue-900">
                     Anadir cobro
                   </button>
                 </div>
                 {form.cobros.map((cobro, index) => (
-                  <div key={index} className="grid gap-3 rounded-lg border p-4 md:grid-cols-5">
+                  <div key={index} className="grid gap-3 rounded-lg border p-3 text-xs md:grid-cols-5 [&_legend]:text-xs [&_input]:text-xs [&_select]:text-xs">
                     <DatePartsInput required
                       label="Fecha cobro"
                       value={cobro.fecha_cobro}
                       onChange={(value) => setForm((prev) => ({ ...prev, cobros: prev.cobros.map((item, i) => (i === index ? { ...item, fecha_cobro: value } : item)) }))}
                     />
-                    <label className="flex flex-col gap-1 text-sm">
+                    <label className="flex flex-col gap-1 text-xs">
                       Importe
                       <input type="number" value={cobro.importe_cobro} onChange={(event) => setForm((prev) => ({ ...prev, cobros: prev.cobros.map((item, i) => (i === index ? { ...item, importe_cobro: toNumber(event.target.value) } : item)) }))} className="rounded-lg border p-2" />
                     </label>
-                    <label className="flex flex-col gap-1 text-sm">
+                    <label className="flex flex-col gap-1 text-xs">
                       Forma de cobro
-                      <select value={cobro.forma_cobro} onChange={(event) => { const method = event.target.value; const bank = method === "PayPal" ? "PayPal" : method === "Recibo" ? "Banco Sabadell" : cuentaEspanola ? "Banco Santander" : "Banco Sabadell"; setForm((prev) => ({ ...prev, cobros: prev.cobros.map((item, i) => (i === index ? { ...item, forma_cobro: method, banco_cobro: bank } : item)) })); }} className="cursor-pointer rounded-lg border p-2">
+                      <select value={cobro.forma_cobro} onChange={(event) => { const method = event.target.value; const bank = method === "PayPal" ? "PayPal" : cuentaEspanola ? "Banco Santander" : "Banco Sabadell"; setForm((prev) => ({ ...prev, cobros: prev.cobros.map((item, i) => (i === index ? { ...item, forma_cobro: method, banco_cobro: bank } : item)) })); }} className="cursor-pointer rounded-lg border p-2">
                         <option>Transferencia bancaria</option>
                         <option>Recibo</option>
                         <option>PayPal</option>
                       </select>
                     </label>
-                    <label className="flex flex-col gap-1 text-sm">
+                    <label className="flex flex-col gap-1 text-xs">
                       Banco
                       <select value={cobro.banco_cobro} onChange={(event) => setForm((prev) => ({ ...prev, cobros: prev.cobros.map((item, i) => (i === index ? { ...item, banco_cobro: event.target.value } : item)) }))} className="rounded-lg border p-2">
                         <option>Banco Sabadell</option>
@@ -1034,7 +925,7 @@ export default function PropuestaEditor({
                         <option>PayPal</option>
                       </select>
                     </label>
-                    <button type="button" onClick={() => setForm((prev) => ({ ...prev, cobros: prev.cobros.filter((_, i) => i !== index) }))} className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+                    <button type="button" onClick={() => setForm((prev) => ({ ...prev, cobros: prev.cobros.filter((_, i) => i !== index) }))} className="cursor-pointer rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700 hover:bg-red-100">
                       Quitar
                     </button>
                   </div>
@@ -1136,6 +1027,7 @@ export default function PropuestaEditor({
                   </div>
                   <div className="mb-4 flex gap-2 border-y py-3">{["Canal", "Servicio", "Especificaciones"].map((label, index) => <button key={label} type="button" disabled={index + 1 > lineModalStep} onClick={() => setLineModalStep(index + 1)} className={`rounded-full px-3 py-1 text-sm ${index + 1 === lineModalStep ? "bg-blue-100 text-blue-800" : "bg-gray-100"} ${index + 1 <= lineModalStep ? "cursor-pointer hover:bg-blue-50" : "cursor-not-allowed"}`}>{index + 1} · {label}</button>)}</div>
                   <ServiceWizardBody
+                    language={form.idioma_propuesta}
                     step={lineModalStep}
                     linea={lineModalDraft}
                     servicios={servicios}
@@ -1154,6 +1046,7 @@ export default function PropuestaEditor({
                 </div>
               </div>
             )}
+            {templateOpen&&<ProposalTemplatePicker language={form.idioma_propuesta} onLanguageChange={value=>setForm(prev=>({...prev,idioma_propuesta:value as FormState['idioma_propuesta']}))} onUse={(lines,mode)=>{setForm(prev=>({...prev,lineas:mode==='replace'?lines:[...prev.lineas,...lines]}));setTemplateOpen(false);}} onClose={()=>setTemplateOpen(false)}/>}
           </div>
         </div>
       </div>

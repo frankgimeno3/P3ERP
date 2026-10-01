@@ -1,203 +1,37 @@
-"use client";
+'use client';
+import {useEffect,useState} from 'react';
+import {useRouter} from 'next/navigation';
+import MiddleNav from '@/app/general_components/componentes_recurrentes/MiddleNav';
+import CountrySelect from '@/app/components/CountrySelect';
+import DatePartsInput from '@/app/components/DatePartsInput';
+import {FeriaService} from '@/app/service/FeriaService';
 
-import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import MiddleNav from "@/app/general_components/componentes_recurrentes/MiddleNav";
-import { FeriaService } from "@/app/service/FeriaService";
+type Tab='relevantes'|'otras'|'pasadas'|'ferias';
+const tabs:{key:Tab;label:string}[]=[{key:'relevantes',label:'Ediciones relevantes pendientes'},{key:'otras',label:'Otras pendientes'},{key:'pasadas',label:'Ediciones pasadas'},{key:'ferias',label:'Ferias'}];
+const editionColumns=[['titulo_especifico_edicion','Título edición'],['nombre_feria','Nombre feria'],['pais','País'],['hay_intercambio','Intercambio'],['id_contrato','Contrato'],['hay_especial','Especial'],['fecha_incio','Fecha inicio'],['fecha_finalizacion','Fecha finalización']] as const;
+const fairColumns=[['nombre_feria','Nombre feria'],['pais','País'],['periodicidad','Periodicidad'],['tematica','Temática']] as const;
+const isPast=(row:any)=>{const raw=String(row.fecha_fin||row.fecha_finalizacion||'');const match=raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);const date=match?new Date(Number(match[3]),Number(match[2])-1,Number(match[1])):new Date(raw);return !Number.isNaN(date.getTime())&&date.getTime()<new Date().setHours(0,0,0,0);};
+const relevant=(row:any)=>Boolean(row.es_relevante||row.hay_intercambio||row.hay_especial||String(row.id_contrato||'').trim());
+const matchesDate=(value:unknown,query:string)=>{const raw=String(value||'').slice(0,10);const parts=raw.includes('-')?raw.split('-').reverse():raw.split('/');return query.split('/').every((part,index)=>!part||String(parts[index]||'').startsWith(part));};
+const display=(value:any)=>typeof value==='boolean'?(value?'Sí':'No'):String(value||'—');
 
-type TabKey = "relevantes" | "otras" | "pasadas";
-
-const tabs: { key: TabKey; label: string }[] = [
-  { key: "relevantes", label: "Relevantes pendientes" },
-  { key: "otras", label: "Otras pendientes" },
-  { key: "pasadas", label: "Pasadas" },
-];
-
-function parseDate(value: string) {
-  const match = String(value || "").trim().match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
-  return match ? new Date(Number(match[3]), Number(match[2]) - 1, Number(match[1])) : null;
-}
-
-function isPast(feria: any) {
-  const finalDate = parseDate(feria.fecha_finalizacion);
-  if (!finalDate) return false;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  finalDate.setHours(0, 0, 0, 0);
-  return finalDate < today;
-}
-
-function isRelevant(feria: any) {
-  return Boolean(feria.es_relevante || feria.hay_intercambio || feria.hay_especial || String(feria.id_contrato || "").trim());
-}
-
-function formatBool(value: boolean) {
-  return value ? "Si" : "No";
-}
-
-export default function FeriasPage() {
-  const router = useRouter();
-  const [tab, setTab] = useState<TabKey>("relevantes");
-  const [ferias, setFerias] = useState<any[]>([]);
-  const [query, setQuery] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [selectionMode, setSelectionMode] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [applying, setApplying] = useState(false);
-
-  useEffect(() => {
-    const fetchFerias = async () => {
-      try {
-        setLoading(true);
-        setError("");
-        const data = await FeriaService.getFerias();
-        setFerias(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error("Error fetching ferias:", err);
-        setError("No se han podido cargar las ferias.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchFerias();
-  }, []);
-
-  const feriasFiltradas = useMemo(() => {
-    return ferias.filter((feria) => {
-      const matchesQuery = !query.trim() || Object.values(feria).join(" ").toLowerCase().includes(query.trim().toLowerCase());
-      const pasada = isPast(feria);
-      if (tab === "pasadas") return pasada && matchesQuery;
-      if (pasada) return false;
-      return (tab === "relevantes" ? isRelevant(feria) : !isRelevant(feria)) && matchesQuery;
-    });
-  }, [ferias, query, tab]);
-  const hasOtherPending = useMemo(() => ferias.some((feria) => !isPast(feria) && !isRelevant(feria)), [ferias]);
-
-  const changeTab = (nextTab: TabKey) => {
-    setTab(nextTab);
-    setSelectionMode(false);
-    setSelectedIds(new Set());
-  };
-  const toggleSelection = (id: string) => {
-    setSelectedIds((current) => {
-      const next = new Set(current);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
-  };
-  const applyRelevant = async () => {
-    if (!selectedIds.size) return;
-    try {
-      setApplying(true);
-      setError("");
-      const updated = await FeriaService.markRelevant([...selectedIds]);
-      const ids = new Set((Array.isArray(updated) ? updated : []).map((feria) => feria.id_feria));
-      setFerias((current) => current.map((feria) => ids.has(feria.id_feria) ? { ...feria, es_relevante: true } : feria));
-      setSelectedIds(new Set());
-      setSelectionMode(false);
-    } catch (requestError: any) {
-      setError(requestError?.message || "No se pudieron marcar las ferias como relevantes.");
-    } finally {
-      setApplying(false);
-    }
-  };
-
-  return (
-    <div className="flex min-h-screen w-full flex-col bg-gray-200 text-gray-600">
-      <MiddleNav tituloprincipal="Ferias" />
-      <div className="min-h-screen w-full bg-gray-100 px-12 py-10 text-gray-600">
-        <div className="mb-4 flex flex-col gap-3">
-          <div className="flex flex-row">
-            {tabs.map((item, index) => (
-              <button
-                key={item.key}
-                type="button"
-                onClick={() => changeTab(item.key)}
-                className={`w-60 cursor-pointer rounded-tr-lg p-3 text-center text-sm transition-all duration-300 ${
-                  tab === item.key ? "z-30 rounded-tl-lg bg-blue-950 text-white" : "z-10 bg-white text-gray-700 hover:bg-gray-200"
-                }`}
-                style={{ marginLeft: index === 0 ? "0px" : "-5px" }}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-          <div className="flex flex-wrap justify-between gap-3">
-            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar feria..." className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-950 sm:w-96" />
-            <div className="flex gap-2">
-              {tab === "otras" && hasOtherPending && <button type="button" disabled={applying || (selectionMode && selectedIds.size === 0)} onClick={() => selectionMode ? void applyRelevant() : setSelectionMode(true)} className="cursor-pointer rounded border border-emerald-700 bg-white px-4 py-2 text-sm font-medium text-emerald-800 transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:border-gray-300 disabled:text-gray-400 disabled:hover:bg-white">{applying ? "Aplicando..." : selectionMode ? "Aplicar" : "Marcar como relevantes"}</button>}
-              <button type="button" onClick={() => router.push("/dashboard/administracion/ferias/crear")} className="cursor-pointer rounded bg-blue-950 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-900">
-                Agregar feria
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {error && <div className="mb-4 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
-
-        <div className="overflow-x-auto bg-white">
-          <table className="min-w-full text-xs">
-            <thead className="bg-blue-950 text-white">
-              <tr>
-                {selectionMode && <th className="w-12 p-2 text-center font-light">Sel.</th>}
-                <th className="p-2 pl-6 text-left font-light">Titulo edicion</th>
-                <th className="p-2 text-left font-light">Nombre feria</th>
-                <th className="p-2 text-left font-light">Pais</th>
-                <th className="p-2 text-left font-light">Ciudad</th>
-                <th className="p-2 text-left font-light">Periodicidad</th>
-                <th className="p-2 text-left font-light">Temática</th>
-                <th className="p-2 text-left font-light">Edicion</th>
-                <th className="p-2 text-left font-light">Fecha inicio</th>
-                <th className="p-2 text-left font-light">Fecha finalizacion</th>
-                <th className="p-2 text-left font-light">Intercambio</th>
-                <th className="p-2 text-left font-light">Contrato</th>
-                <th className="p-2 text-left font-light">Especial</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading && (
-                <tr>
-                  <td colSpan={12 + (selectionMode ? 1 : 0)} className="p-6 text-center text-gray-500">
-                    Cargando ferias...
-                  </td>
-                </tr>
-              )}
-
-              {!loading && feriasFiltradas.length === 0 && (
-                <tr>
-                  <td colSpan={12 + (selectionMode ? 1 : 0)} className="p-6 text-center text-gray-500">
-                    No hay ferias en esta pestana.
-                  </td>
-                </tr>
-              )}
-
-              {!loading && feriasFiltradas.map((feria) => (
-                <tr
-                  key={feria.id_feria}
-                  onClick={() => selectionMode ? toggleSelection(feria.id_feria) : router.push(`/dashboard/administracion/ferias/${feria.id_feria}`)}
-                  className={`cursor-pointer transition ${selectedIds.has(feria.id_feria) ? "bg-emerald-100 hover:bg-emerald-100" : "hover:bg-gray-50"}`}
-                >
-                  {selectionMode && <td className="border-b border-gray-200 p-2 text-center"><input type="checkbox" aria-label={`Seleccionar ${feria.nombre_feria}`} checked={selectedIds.has(feria.id_feria)} onClick={(event) => event.stopPropagation()} onChange={() => toggleSelection(feria.id_feria)} className="h-4 w-4 cursor-pointer accent-emerald-700" /></td>}
-                  <td className="border-b border-gray-200 p-2 pl-6 font-medium text-blue-950">{feria.titulo_especifico_edicion || "-"}</td>
-                  <td className="border-b border-gray-200 p-2">{feria.nombre_feria || "-"}</td>
-                  <td className="border-b border-gray-200 p-2">{feria.pais || "-"}</td>
-                  <td className="border-b border-gray-200 p-2">{feria.ciudad || "-"}</td>
-                  <td className="border-b border-gray-200 p-2">{feria.periodicidad || "-"}</td>
-                  <td className="border-b border-gray-200 p-2">{feria.tematica || "-"}</td>
-                  <td className="border-b border-gray-200 p-2">{feria.edicion_numero || "-"}</td>
-                  <td className="border-b border-gray-200 p-2">{feria.fecha_incio || "-"}</td>
-                  <td className="border-b border-gray-200 p-2">{feria.fecha_finalizacion || "-"}</td>
-                  <td className="border-b border-gray-200 p-2">{formatBool(feria.hay_intercambio)}</td>
-                  <td className="border-b border-gray-200 p-2">{feria.id_contrato || "-"}</td>
-                  <td className="border-b border-gray-200 p-2">{formatBool(feria.hay_especial)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
+export default function FeriasPage(){
+  const router=useRouter(),[tab,setTab]=useState<Tab>('relevantes'),[editions,setEditions]=useState<any[]>([]),[catalog,setCatalog]=useState<any[]>([]);
+  const [filters,setFilters]=useState<Record<string,string>>({}),[modal,setModal]=useState(false),[saving,setSaving]=useState(false),[loading,setLoading]=useState(true),[error,setError]=useState('');
+  const [form,setForm]=useState({nombre_feria:'',pais:'',periodicidad:'',tematica:'',descripcion:''});
+  const reload=async()=>{const [e,f]=await Promise.all([FeriaService.getFerias(),FeriaService.getCatalogo()]);setEditions(e);setCatalog(f);};
+  useEffect(()=>{reload().catch(()=>setError('No se han podido cargar las ferias.')).finally(()=>setLoading(false));},[]);
+  useEffect(()=>{if(!modal)return;const close=(event:KeyboardEvent)=>{if(event.key==='Escape')setModal(false);};window.addEventListener('keydown',close);return()=>window.removeEventListener('keydown',close);},[modal]);
+  const columns=tab==='ferias'?fairColumns:editionColumns;
+  const source=tab==='ferias'?catalog:editions.filter(row=>tab==='pasadas'?isPast(row):!isPast(row)&&(tab==='relevantes'?relevant(row):!relevant(row)));
+  const visible=source.filter(row=>columns.every(([key])=>{const query=(filters[key]||'').trim().toLocaleLowerCase('es');if(!query)return true;if(key==='hay_intercambio')return (query==='si')===Boolean(row.hay_intercambio);if(key==='fecha_incio'||key==='fecha_finalizacion')return matchesDate(row[key],query);return display(row[key]).toLocaleLowerCase('es').includes(query);}));
+  const create=async(event:React.FormEvent)=>{event.preventDefault();setSaving(true);setError('');try{await FeriaService.createCatalogo(form);await reload();setModal(false);setForm({nombre_feria:'',pais:'',periodicidad:'',tematica:'',descripcion:''});setTab('ferias');}catch(reason:any){setError(reason.response?.data?.message||reason.message);}finally{setSaving(false);}};
+  const mark=async(id:string)=>{setError('');try{await FeriaService.markRelevant([id]);await reload();}catch(reason:any){setError(reason.response?.data?.message||reason.message);}};
+  return <main className="min-h-screen bg-gray-100 text-slate-700"><MiddleNav tituloprincipal="Ferias"/><div className="mx-auto max-w-7xl p-6">
+    <div className="mb-5 flex flex-wrap justify-between gap-3"><h1 className="text-2xl font-semibold">Ferias</h1><div className="flex gap-2"><button type="button" onClick={()=>router.push('/dashboard/administracion/ferias/crear')} className="cursor-pointer rounded bg-blue-950 px-4 py-2 text-sm text-white hover:bg-blue-900">Agregar Edición</button><button type="button" onClick={()=>setModal(true)} className="cursor-pointer rounded border border-blue-950 bg-white px-4 py-2 text-sm text-blue-950 hover:bg-blue-50">Agregar nueva feria</button></div></div>
+    {error&&<p role="alert" className="mb-4 rounded bg-red-50 p-3 text-red-700">{error}</p>}
+    <div className="mb-4 flex flex-wrap gap-2">{tabs.map(item=><button key={item.key} type="button" onClick={()=>{setTab(item.key);setFilters({});}} className={`cursor-pointer rounded px-3 py-2 text-sm hover:bg-blue-100 ${tab===item.key?'bg-blue-950 text-white hover:bg-blue-900':'bg-white'}`}>{item.label}</button>)}</div>
+    <details className="mb-4 rounded border bg-white p-3"><summary className="cursor-pointer text-xs font-medium hover:text-blue-900">Filtros por columna</summary><div className="mt-3 grid gap-3 text-xs md:grid-cols-4">{columns.map(([key,label])=>key==='fecha_incio'||key==='fecha_finalizacion'?<div key={key} className="[&_legend]:text-xs [&_input]:text-xs"><DatePartsInput label={label} value={filters[key]||''} onChange={value=>setFilters(previous=>({...previous,[key]:value}))}/></div>:key==='hay_intercambio'?<label key={key} className="text-xs">{label}<select value={filters[key]||''} onChange={event=>setFilters(previous=>({...previous,[key]:event.target.value}))} className="mt-1 w-full cursor-pointer rounded border p-2 text-xs hover:border-blue-900"><option value="">Todos</option><option value="si">Sí</option><option value="no">No</option></select></label>:<label key={key} className="text-xs">{label}<input value={filters[key]||''} onChange={event=>setFilters(previous=>({...previous,[key]:event.target.value}))} className="mt-1 w-full rounded border p-2 text-xs"/></label>)}</div></details>
+    <div className="overflow-x-auto rounded border bg-white"><table className="w-full text-left text-xs"><thead className="bg-blue-950 text-white"><tr>{columns.map(([key,label])=><th key={key} className="p-3">{label}</th>)}{tab==='otras'&&<th className="p-3">Acción</th>}</tr></thead><tbody>{visible.map(row=><tr key={row.id_feria} onClick={()=>router.push(tab==='ferias'?`/dashboard/administracion/ferias/catalogo/${encodeURIComponent(row.id_feria)}`:`/dashboard/administracion/ferias/${encodeURIComponent(row.id_feria)}`)} className="cursor-pointer border-t hover:bg-blue-50">{columns.map(([key])=><td key={key} className="p-3">{display(row[key])}</td>)}{tab==='otras'&&<td className="p-3"><button type="button" onClick={event=>{event.stopPropagation();void mark(row.id_feria);}} className="cursor-pointer text-blue-900 hover:underline">Marcar relevante</button></td>}</tr>)}</tbody></table>{loading?<p className="p-5">Cargando...</p>:!visible.length&&<p className="p-5">No hay registros con estos filtros.</p>}</div>
+  </div>{modal&&<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"><section role="dialog" aria-modal="true" aria-label="Agregar nueva feria" className="relative w-full max-w-xl rounded bg-white p-6"><button type="button" aria-label="Cerrar" onClick={()=>setModal(false)} className="absolute right-3 top-2 cursor-pointer px-2 text-2xl hover:bg-gray-100">×</button><h2 className="mb-4 text-xl font-semibold">Agregar nueva feria</h2><form onSubmit={create} className="space-y-3"><label className="block text-sm">Nombre feria<input required value={form.nombre_feria} onChange={event=>setForm({...form,nombre_feria:event.target.value})} className="mt-1 w-full rounded border p-2"/></label><div><p className="text-sm">País</p><CountrySelect value={form.pais} onChange={pais=>setForm({...form,pais})} className="w-full rounded border p-2"/></div>{(['periodicidad','tematica'] as const).map(key=><label key={key} className="block text-sm">{key==='tematica'?'Temática':'Periodicidad'}<input value={form[key]} onChange={event=>setForm({...form,[key]:event.target.value})} className="mt-1 w-full rounded border p-2"/></label>)}<label className="block text-sm">Descripción<textarea value={form.descripcion} onChange={event=>setForm({...form,descripcion:event.target.value})} className="mt-1 w-full rounded border p-2"/></label><button type="submit" disabled={saving} className="cursor-pointer rounded bg-blue-950 px-4 py-2 text-white hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-50">{saving?'Guardando...':'Crear feria'}</button></form></section></div>}</main>;
 }

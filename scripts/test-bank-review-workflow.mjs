@@ -10,6 +10,7 @@ import { employeePayrolls, agentTasks, saveAgentTask } from '../server/features/
 import {deleteSupplier,updateSupplier,supplierBankCharges} from '../server/features/proveedor/SupplierAdminRepository.js';
 import { updateRecurringCharge,deleteRecurringCharge,getRecurringCharge } from '../server/features/prevision/RecurringChargeRepository.js';
 import { savePayment, listTransfers } from '../server/features/laboral/LaboralRepository.js';
+import { loadReviewAnalysis } from '../server/features/banco/BankReviewMemoryRepository.js';
 env.loadEnvConfig(process.cwd());
 assert.equal(payrollCalculation(1000,200,800,'completa',0,false).net,100000);
 assert.equal(payrollCalculation(1000,200,850,'adicional',50,false).net,105000);
@@ -24,7 +25,7 @@ try {
   await db.query(`CREATE SCHEMA ${schema}`);await db.query(`SET LOCAL search_path TO ${schema}`);
   await db.query(`CREATE TABLE agentes_db(id_agente TEXT PRIMARY KEY,is_empleado_account BOOLEAN);
     CREATE TABLE administracion_proveedores(id_proveedor TEXT PRIMARY KEY);CREATE TABLE comercial_cuentas(id_cuenta TEXT PRIMARY KEY);
-    CREATE TABLE tesoreria_cargos_recurrentes(id_cargo_recurrente BIGSERIAL PRIMARY KEY,tipo_cargo TEXT,id_proveedor TEXT,id_agente TEXT,tipo_programacion TEXT,programacion JSONB,activo BOOLEAN DEFAULT TRUE,updated_at TIMESTAMPTZ DEFAULT NOW());
+    CREATE TABLE tesoreria_cargos_recurrentes(id_cargo_recurrente BIGSERIAL PRIMARY KEY,banco_pago TEXT,tipo_cargo TEXT,id_proveedor TEXT,id_agente TEXT,tipo_programacion TEXT,programacion JSONB,activo BOOLEAN DEFAULT TRUE,updated_at TIMESTAMPTZ DEFAULT NOW());
     CREATE TABLE tesoreria_movimientos_bancarios(id_linea_banco TEXT PRIMARY KEY,comentarios TEXT DEFAULT '',importe NUMERIC,id_agente TEXT,id_proveedor TEXT,id_cuenta TEXT,id_pago TEXT,id_orden TEXT,id_cargo_recurrente BIGINT,estado_revision BOOLEAN DEFAULT FALSE,nomina_revision JSONB,banco TEXT,fecha_valor TEXT,concepto TEXT,created_at TIMESTAMPTZ DEFAULT NOW(),updated_at TIMESTAMPTZ DEFAULT NOW());
     CREATE TABLE comercial_contratos(id_contrato TEXT PRIMARY KEY,id_cuenta_contrato TEXT);
     CREATE TABLE tesoreria_ordenes(id_orden TEXT PRIMARY KEY,id_cuenta TEXT,id_contrato TEXT);
@@ -50,6 +51,8 @@ try {
   await db.query("ALTER TABLE agentes_db ADD nombre_completo_agente text, ADD nombre_agente text, ADD apellidos_agente text; ALTER TABLE tesoreria_cargos_recurrentes ADD created_at timestamptz DEFAULT now()");
   await db.query(readLegacyMigrationSql('database/migrations/20260911_0002_employee_payroll_tasks.sql'));
   await db.query(readLegacyMigrationSql('database/migrations/20260911_0003_payroll_history_identity.sql'));
+  await db.query(fs.readFileSync('database/migrations/20260920_0001_bank_review_memory.sql','utf8'));
+  await db.query(fs.readFileSync('database/migrations/20260920_0002_recurring_charge_horizon.sql','utf8'));
   pool.connect=async()=>adapter;
   pool.query=adapter.query.bind(adapter);
   const line=async id=>(await db.query('SELECT * FROM tesoreria_movimientos_bancarios WHERE id_linea_banco=$1',[id])).rows[0];
@@ -188,6 +191,31 @@ try {
   await saveBankWorkflow({action:'force-review',forcedComment:'Verified manually',ids:['forced'],items:[{id:'forced',version:forceBefore.updated_at}]});
   const forceAfter=await line('forced');assert.equal(forceAfter.estado_revision,true);assert.equal(forceAfter.comentarios,'Verified manually');assert.equal(forceAfter.id_proveedor,'supplier');assert.equal(forceAfter.id_cargo_recurrente,null);
   await assert.rejects(saveBankWorkflow({action:'force-review',ids:['forced'],items:[]}));
+  await db.query(fs.readFileSync('database/migrations/20260920_0001_bank_review_memory.sql','utf8'));
+  const memorySchedule=[{id_regla:'memory-rule',cada:1,unidad:'meses',inicio_dia:1,inicio_mes:1,inicio_anio:2026,total_iva:50}];
+  const memoryCharge=(await db.query("INSERT INTO tesoreria_cargos_recurrentes(tipo_cargo,id_proveedor,tipo_programacion,programacion) VALUES('proveedor','supplier','periodicidad',$1) RETURNING *",[JSON.stringify(memorySchedule)])).rows[0];
+  await db.query("INSERT INTO tesoreria_movimientos_bancarios(id_linea_banco,importe,fecha_operativa,fecha_valor,concepto) VALUES('memory-a',-50,'02/04/2026','02/04/2026','Memoria mantenimiento local 154'),('memory-b',-50,'04/04/2026','04/04/2026','Memoria mantenimiento local 154')");
+  const memoryIds=['memory-a','memory-b'];
+  const memoryItems=await Promise.all(memoryIds.map(id=>item(id,{entityType:'proveedor',entityId:'supplier',chargeId:String(memoryCharge.id_cargo_recurrente),expectedSchedule:memoryCharge.programacion})));
+  const preview=await loadReviewAnalysis(adapter,{ids:memoryIds,drafts:memoryItems},true);
+  const march=preview.occurrences.find(o=>o.fecha==='2026-03-01'),april=preview.occurrences.find(o=>o.fecha==='2026-04-01');
+  const workflowBody={action:'workflow',mode:'review',ids:memoryIds,items:memoryItems};
+  await assert.rejects(saveBankWorkflow({...workflowBody,memory:{allocations:[{lineId:'memory-a',allocations:[{id:march.id,amount:50}]},{lineId:'memory-b',allocations:[{id:april.id,amount:60}]}],decisions:[]}}),/supera/);
+  assert.equal((await line('memory-a')).estado_revision,false);assert.equal((await line('memory-a')).id_cargo_recurrente,null);
+  assert.equal((await db.query('SELECT * FROM tesoreria_vencimientos_aplicaciones')).rowCount,0);
+  await saveBankWorkflow({...workflowBody,memory:{allocations:[{lineId:'memory-a',allocations:[{id:march.id,amount:50}]},{lineId:'memory-b',allocations:[{id:april.id,amount:50}]}],decisions:[]}},'tester');
+  assert.equal((await line('memory-a')).estado_revision,true);
+  assert.equal((await db.query('SELECT * FROM tesoreria_vencimientos_aplicaciones')).rowCount,2);
+  assert.equal((await loadReviewAnalysis(adapter,{ids:memoryIds})).alerts.length,0);
+  await saveBankWorkflow({action:'unreview',ids:memoryIds});
+  assert.equal((await db.query('SELECT * FROM tesoreria_vencimientos_aplicaciones')).rowCount,2);
+  // A concrete decision based on draft assignments is committed with the same review.
+  await db.query("DELETE FROM tesoreria_vencimientos_aplicaciones WHERE id_linea_banco=ANY($1::text[])",[memoryIds]);
+  const decisionAnalysis=await loadReviewAnalysis(adapter,{ids:memoryIds});
+  const decisionAlert=decisionAnalysis.alerts.find(a=>a.type==='repeat');
+  await saveBankWorkflow({...workflowBody,items:await Promise.all(memoryIds.map(id=>item(id,{entityType:'proveedor',entityId:'supplier',chargeId:String(memoryCharge.id_cargo_recurrente),expectedSchedule:memoryCharge.programacion}))),memory:{allocations:[],decisions:[{key:decisionAlert.key,fingerprint:decisionAlert.fingerprint,reason:'Dos obligaciones comprobadas'}]}},'tester');
+  assert.equal((await loadReviewAnalysis(adapter,{ids:memoryIds})).alerts.length,0);
+  console.log('Atomic bank review memory passed: draft assignment, allocations, decisions, rollback and unreview preservation.');
   const beforeDeleting=await getRecurringCharge(sc.id_cargo_recurrente);
   assert(beforeDeleting.movimientos.length>0);
   await assert.rejects(deleteRecurringCharge(sc.id_cargo_recurrente,{confirm:false,version:beforeDeleting.updated_at}));
@@ -207,4 +235,23 @@ try {
   console.log('Forced review, recurring deletion/detachment, supplier comments and supplier deletion preserving bank records passed.');
   console.log('Employee payroll aggregation, advance visibility, recurring edit, idempotent backfill and agent tasks passed.');
   console.log('Bank workflow passed: advances, full payroll, additional pay, raises, supplier assignment/reassignment, VAT, mixed selection, stale data, income, unreview and benchmark storage.');
+  await db.query("INSERT INTO tesoreria_movimientos_bancarios(id_linea_banco,importe,id_agente) VALUES('other-1',-360,NULL),('other-2',-370,'employee')");
+  const otherItems=await Promise.all(['other-1','other-2'].map(async id=>({id,version:(await line(id)).updated_at,entityType:'otro',entityId:'',comments:'Retirada de efectivo',commentsEdited:true})));
+  await assert.rejects(saveBankWorkflow({mode:'review',ids:['other-1','other-2'],items:otherItems}),/sobrescribes/);
+  assert.equal((await line('other-1')).estado_revision,false,'The failed batch must roll back');
+  otherItems[1].resolution='overwrite';
+  await saveBankWorkflow({mode:'review',ids:['other-1','other-2'],items:otherItems});
+  for(const id of ['other-1','other-2']){const result=await line(id);assert.equal(result.estado_revision,true);assert.equal(result.id_agente,null);assert.equal(result.id_proveedor,null);assert.equal(result.id_cargo_recurrente,null);assert.equal(result.comentarios,'Retirada de efectivo');}
+  const otherCharge=(await db.query("INSERT INTO tesoreria_cargos_recurrentes(tipo_cargo,tipo_programacion,programacion) VALUES('otro','fechas',$1::jsonb) RETURNING *",[JSON.stringify([{id_regla:'cash-rule',dia:22,mes:9,anio:2026,total_iva:360,base_imponible:360}])])).rows[0];
+  await db.query("INSERT INTO tesoreria_cargos_vencimientos(id,id_cargo_recurrente,id_regla,fecha,importe,programacion) VALUES('cash-due',$1,'cash-rule','2026-09-22',360,'{}')",[otherCharge.id_cargo_recurrente]);
+  await db.query("UPDATE tesoreria_cargos_recurrentes SET planificado_hasta='2028-09-22' WHERE id_cargo_recurrente=$1",[otherCharge.id_cargo_recurrente]);
+  const otherBody=async()=>({mode:'review',ids:['other-1'],items:[{id:'other-1',version:(await line('other-1')).updated_at,entityType:'otro',entityId:'',chargeId:String(otherCharge.id_cargo_recurrente),expectedSchedule:otherCharge.programacion}],memory:{allocations:[{lineId:'other-1',allocations:[{id:'cash-due',amount:360}]}],decisions:[]}});
+  await saveBankWorkflow({action:'unreview',ids:['other-1']});
+  await saveBankWorkflow(await otherBody());
+  assert.equal(String((await line('other-1')).id_cargo_recurrente),String(otherCharge.id_cargo_recurrente));
+  await saveBankWorkflow({action:'unreview',ids:['other-1']});
+  await saveBankWorkflow(await otherBody());
+  assert.equal(Number((await db.query("SELECT sum(importe) value FROM tesoreria_vencimientos_aplicaciones WHERE id_linea_banco='other-1'")).rows[0].value),360);
+  console.log('PASS: Otro links a planned charge and its due date, preserving the allocation on repeat review.');
+  console.log('PASS: Otro batch review without recipient, comments, explicit reassignment and atomic rollback.');
 } finally {pool.connect=connect;pool.query=query;await db.query('ROLLBACK');db.release();await pool.end();}

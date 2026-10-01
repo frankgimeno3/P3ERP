@@ -77,7 +77,13 @@ export default function Agentes({ initialTab = 'agentes' }: { initialTab?: 'agen
   const [statusTab,setStatusTab] = useState('activo');
   const [filters,setFilters] = useState({id:'',nombre:'',email:'',rol:''});
   const matches = (value:string,query:string) => (value || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().includes(query.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase());
-  const visible = agentes.filter(a => (statusTab === 'activo' ? a.estado_agente === 'activo' : a.estado_agente !== 'activo') && matches(a.id_agente,filters.id) && matches(a.nombre_completo_agente || a.nombre_agente+' '+a.apellidos_agente,filters.nombre) && matches(a.email_agente,filters.email) && (!filters.rol || a.rol_agente === filters.rol));
+  const visible = agentes.filter(a => {
+    const isEmployee = a.is_empleado_account !== false;
+    const inTab = statusTab === 'no_empleado'
+      ? !isEmployee
+      : isEmployee && (statusTab === 'activo' ? a.estado_agente === 'activo' : a.estado_agente !== 'activo');
+    return inTab && matches(a.id_agente,filters.id) && matches(a.nombre_completo_agente || a.nombre_agente+' '+a.apellidos_agente,filters.nombre) && matches(a.email_agente,filters.email) && (!filters.rol || a.rol_agente === filters.rol);
+  });
   const rolesByName = useMemo(() => new Set(roles.map((role) => role.nombre_rol || role.id_rol).filter(Boolean)), [roles]);
 
   const getNombreAgente = (agente: Agente) => {
@@ -104,7 +110,7 @@ export default function Agentes({ initialTab = 'agentes' }: { initialTab?: 'agen
         </div>
       )}
 
-      <div role="tablist" aria-label="Estado de agentes" className="mb-4 flex gap-2">{[['activo','Activos'],['inactivo','Inactivos']].map(([value,label])=><button key={value} role="tab" aria-selected={statusTab===value} onClick={()=>setStatusTab(value)} className={`cursor-pointer rounded px-4 py-2 hover:bg-blue-100 ${statusTab===value?'bg-blue-950 text-white hover:bg-blue-800':'bg-white'}`}>{label}</button>)}</div>
+      <div role="tablist" aria-label="Clasificación de agentes" className="mb-4 flex flex-wrap gap-2">{[['activo','Activos'],['inactivo','Inactivos'],['no_empleado','No empleados']].map(([value,label])=><button key={value} role="tab" aria-selected={statusTab===value} onClick={()=>setStatusTab(value)} className={`cursor-pointer rounded px-4 py-2 hover:bg-blue-100 ${statusTab===value?'bg-blue-950 text-white hover:bg-blue-800':'bg-white'}`}>{label}</button>)}</div>
       <div className="mb-4 grid gap-3 md:grid-cols-4">{(['id','nombre','email'] as const).map(key=><label key={key}>{key==='id'?'ID':key==='nombre'?'Nombre':'Email'}<input className="block w-full rounded border p-2" value={filters[key]} onChange={e=>setFilters({...filters,[key]:e.target.value})} /></label>)}<label>Rol<select className="block w-full cursor-pointer rounded border p-2 hover:border-blue-900" value={filters.rol} onChange={e=>setFilters({...filters,rol:e.target.value})}><option value="">Todos</option>{Array.from(new Set([...rolesByName,...agentes.map(a=>a.rol_agente)])).filter(Boolean).sort().map(role=><option key={role} value={role}>{role}</option>)}</select></label></div>
       <div key={statusTab} role="tabpanel" className="overflow-hidden rounded bg-white shadow-sm">
           <table className="min-w-full text-sm">
@@ -115,14 +121,13 @@ export default function Agentes({ initialTab = 'agentes' }: { initialTab?: 'agen
                 <th className="px-4 py-2 text-left">Email</th>
                 <th className="px-4 py-2 text-left">Rol</th>
 
-                <th className="px-4 py-2 text-left">Cuenta de empleado</th>
                 <th className="px-4 py-2 text-left">Accesos extra</th>
               </tr>
             </thead>
             <tbody>
               {loading && (
                 <tr className="border-t border-gray-200">
-                  <td className="px-4 py-3 text-gray-500" colSpan={6}>
+                  <td className="px-4 py-3 text-gray-500" colSpan={5}>
                     Cargando agentes...
                   </td>
                 </tr>
@@ -130,7 +135,7 @@ export default function Agentes({ initialTab = 'agentes' }: { initialTab?: 'agen
 
               {!loading && visible.length === 0 && (
                 <tr className="border-t border-gray-200">
-                  <td className="px-4 py-3 text-gray-500" colSpan={6}>
+                  <td className="px-4 py-3 text-gray-500" colSpan={5}>
                     No hay agentes para mostrar.
                   </td>
                 </tr>
@@ -148,7 +153,6 @@ export default function Agentes({ initialTab = 'agentes' }: { initialTab?: 'agen
                     <td className="px-4 py-2">{agente.email_agente || '-'}</td>
                     <td className="px-4 py-2">{agente.rol_agente || '-'}</td>
 
-                    <td className="px-4 py-2">{agente.is_empleado_account ? 'Sí' : 'No'}</td>
                     <td className="px-4 py-2">
                       {agente.accesos_personalizados ? `${agente.array_accesos_adicionales?.length || 0} adicionales` : rolesByName.has(agente.rol_agente) ? 'rol base' : '-'}
                     </td>

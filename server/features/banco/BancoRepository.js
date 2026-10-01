@@ -1,4 +1,5 @@
 import { getPgPool } from "../../database/pgClient.js";
+import { supplierTransaction, ProveedorError } from '../proveedor/SupplierAdminRepository.js';
 
 function numberOrZero(value) {
   return value === null || value === undefined ? 0 : Number(value);
@@ -29,6 +30,7 @@ function normalizeLineaBanco(row) {
     remesa_ids: row.remesa_ids || [],
     ordenes_cobro: row.ordenes_cobro || [],
     id_pago: row.id_pago ?? "",
+    id_liquidacion_tarjeta: row.id_liquidacion_tarjeta || null,
     id_cargo_recurrente: row.id_cargo_recurrente === null || row.id_cargo_recurrente === undefined ? null : Number(row.id_cargo_recurrente),
     created_at: row.created_at,
     updated_at: row.updated_at,
@@ -86,7 +88,7 @@ function ordinalId(banco, fechaOperativa, serial) {
 export async function getLineasBanco() {
   const pool = getPgPool();
   const { rows } = await pool.query(`
-    SELECT lb.*, p.nombre_proveedor, c.nombre_empresa AS nombre_cuenta, a.nombre_completo_agente AS nombre_agente,
+    SELECT lb.*, (SELECT tm.id_liquidacion FROM tesoreria_tarjetas_movimientos tm WHERE tm.id_linea_banco=lb.id_linea_banco) id_liquidacion_tarjeta, p.nombre_proveedor, c.nombre_empresa AS nombre_cuenta, a.nombre_completo_agente AS nombre_agente,
       cr.programacion AS programacion_cargo_recurrente,
       ARRAY(SELECT DISTINCT co.id_remesa FROM tesoreria_aplicaciones_cobro co WHERE co.id_linea_banco=lb.id_linea_banco AND co.id_remesa IS NOT NULL) remesa_ids,
       ARRAY(SELECT co.id_orden FROM tesoreria_aplicaciones_cobro co WHERE co.id_linea_banco=lb.id_linea_banco) ordenes_cobro
@@ -104,7 +106,7 @@ export async function getLineasBanco() {
 export async function getLineaBancoById(idLineaBanco) {
   const pool = getPgPool();
   const { rows } = await pool.query(`
-    SELECT lb.*, p.nombre_proveedor, c.nombre_empresa AS nombre_cuenta, a.nombre_completo_agente AS nombre_agente,
+    SELECT lb.*, (SELECT tm.id_liquidacion FROM tesoreria_tarjetas_movimientos tm WHERE tm.id_linea_banco=lb.id_linea_banco) id_liquidacion_tarjeta, p.nombre_proveedor, c.nombre_empresa AS nombre_cuenta, a.nombre_completo_agente AS nombre_agente,
       ARRAY(SELECT DISTINCT co.id_remesa FROM tesoreria_aplicaciones_cobro co WHERE co.id_linea_banco=lb.id_linea_banco AND co.id_remesa IS NOT NULL) remesa_ids,
       ARRAY(SELECT co.id_orden FROM tesoreria_aplicaciones_cobro co WHERE co.id_linea_banco=lb.id_linea_banco) ordenes_cobro
     FROM tesoreria_movimientos_bancarios lb
@@ -210,9 +212,12 @@ export async function reconcileLineasBanco(banco, sourceLineas = []) {
 }
 
 export async function updateLineaBanco(idLineaBanco, data = {}) {
-  const pool = getPgPool();
-  const before = (await pool.query('SELECT * FROM tesoreria_movimientos_bancarios WHERE id_linea_banco=$1', [idLineaBanco])).rows[0];
+  return supplierTransaction(async pool=>{
+  await pool.query("SELECT pg_advisory_xact_lock(hashtext('laboral:pagos'))");
+  const before = (await pool.query('SELECT * FROM tesoreria_movimientos_bancarios WHERE id_linea_banco=$1 FOR UPDATE', [idLineaBanco])).rows[0];
   if (!before) return null;
+  if(['estado_revision','id_orden','id_cuenta','id_proveedor','id_agente','id_pago','id_cargo_recurrente'].some(key=>data[key]!==undefined&&String(data[key]??'')!==String(before[key]??''))&&(await pool.query('SELECT 1 FROM tesoreria_tarjetas_movimientos WHERE id_linea_banco=$1',[idLineaBanco])).rowCount)throw new ProveedorError('Utiliza la revisión bancaria para reabrir la liquidación de tarjeta.',409);
+  if(data.id_cargo_recurrente&&(await pool.query('SELECT 1 FROM tesoreria_cargos_recurrentes WHERE id_cargo_recurrente=$1 AND id_tarjeta IS NOT NULL',[data.id_cargo_recurrente])).rowCount)throw new ProveedorError('Este cargo se paga con tarjeta. Usa Liquidación tarjeta.',409);
   if (Number(before.importe) > 0 && ['estado_revision','id_orden','id_cuenta','id_proveedor','id_agente','id_pago','id_cargo_recurrente'].some(key=>data[key] !== undefined && String(data[key] ?? '') !== String(before[key] ?? ''))) {
     throw new Error('Utiliza el asistente de revisión bancaria para modificar el estado o los vínculos de un ingreso.');
   }
@@ -239,4 +244,5 @@ export async function updateLineaBanco(idLineaBanco, data = {}) {
   );
 
   return rows[0] ? normalizeLineaBanco(rows[0]) : null;
+  });
 }

@@ -2,9 +2,51 @@
 
 Source: PostgreSQL `public` schema from the configured RDS connection.
 
+## Card settlements
+
+Migration `20260929_0001_tarjetas_liquidaciones.sql` extends `tesoreria_tarjetas` with
+unique `codigo`, `descripcion`, `periodicidad_meses`, the open cycle's `inicio_periodo`,
+`proximo_cierre`, `proxima_liquidacion` and anchored days `dia_cierre` / `dia_liquidacion`.
+Existing cards retain their identity and tickets; their calendar must be configured.
+`tesoreria_cargos_recurrentes.id_tarjeta` associates a subscription with one card.
+`administracion_tickets.id_vencimiento_tarjeta` optionally replaces one projected
+subscription occurrence with its receipt, with a unique constraint to avoid duplicates.
+`tesoreria_tarjetas_liquidaciones` stores immutable expected/actual totals and JSON
+snapshots of each reviewed cycle (or its later cancellation). `tesoreria_tarjetas_movimientos`
+links bank movements uniquely to a reviewed settlement. Confirmation advances the
+calendar atomically; reopening the last settlement restores its period.
+
+## Recurring supplier charge planning
+
+`20260921_0002_recurring_charge_other.sql` extends
+`cargos_recurrentes_destinatario_check` to allow `tipo_cargo = 'otro'` only
+when both `id_proveedor` and `id_agente` are null. These charges use the same
+two-year planning and extension rules as supplier charges.
+
+Migration `20260920_0002_recurring_charge_horizon.sql` adds to `tesoreria_cargos_recurrentes`:
+
+- `termina_planificacion boolean NOT NULL DEFAULT false`: excludes an existing plan from automatic extension when true.
+- `planificado_hasta date`: materialized planning horizon; new supplier plans extend two calendar years from today in Europe/Madrid.
+
+Individual due dates are stored in the existing `tesoreria_cargos_vencimientos` table, uniquely identified by `(id_cargo_recurrente, id_regla, fecha)`. Extension retains existing due dates and applications and starts after the last stored due date of each rule. Payroll planning is unchanged.
+
 Update this file whenever tables, columns, primary keys, indexes, or constraints change. For schema changes, also add a SQL migration file under `database/migrations/`.
 
+## Forecast banks and direct exchanges
+
+Migration `20260922_0001_forecast_bank_direct_exchange.sql` adds:
+
+- `tesoreria_cargos_recurrentes.banco_pago text NULL`, restricted to Sabadell or Santander. Null contributes to the unassigned bank subtotal and the global liquidity forecast.
+- `comercial_contratos.condiciones_intercambio text NOT NULL DEFAULT ''`. Direct nonmonetary exchanges retain service value in `importe_intercambio`, set `es_intercambio`, and create no collection orders or receipts.
+
+Liquidity subtracts unpaid materialized due amounts using `tesoreria_vencimientos_aplicaciones`, and legacy payments net of bank movements linked by `id_pago`. Payroll periods replace recurring payroll estimates for the same employee/month, net of paid advances. Monthly payroll without a start date is estimated at month end. Unapplied movements and incomplete planning horizons are surfaced as warnings rather than guessed allocations.
+
 ## Workflow
+
+`20260921_0001_receipts_optional_invoice.sql` makes
+`tesoreria_recibos_importados.numero_factura` nullable. An order can have a
+planned receipt before an invoice exists. Its `numero_recibo` stays stable;
+`numero_factura` is populated when an invoice is explicitly created or linked.
 
 1. Apply schema changes to RDS with an explicit SQL migration.
 2. Add that SQL file under `database/migrations/`.
@@ -121,6 +163,32 @@ Indexes:
 | 17 | pais_contacto | text | YES |  |
 | 18 | linkedin_cuenta | text | NO | ''::text |
 | 19 | url_contacto | text | NO | ''::text |
+| 20 | saludo | text | YES |  |
+| 21 | tipo_contacto | text | YES |  |
+| 22 | movil | text | YES |  |
+| 23 | medio_contacto | text | YES |  |
+| 24 | red_social | text | YES |  |
+| 25 | modificado_por_crm | text | YES |  |
+| 26 | asignado_a_crm | text | YES |  |
+| 27 | fuente_crm | text | YES |  |
+| 28 | no_enviar_email | boolean | YES |  |
+| 29 | fecha_creacion_crm | text | YES |  |
+| 30 | convertido_de_lead | boolean | YES |  |
+| 31 | fecha_modificacion_crm | text | YES |  |
+| 32 | pais_factura | text | YES |  |
+| 33 | provincia_factura | text | YES |  |
+| 34 | publicaciones_que_recibe | text | YES |  |
+| 35 | robinson | text | YES |  |
+| 36 | origen_precontacto | text | YES |  |
+| 37 | zona | text | YES |  |
+| 38 | que_se_envia | text | YES |  |
+| 39 | origen_base_anexa | text | YES |  |
+| 40 | vidrio | text | YES |  |
+| 41 | carpinteria | text | YES |  |
+| 42 | proteccion_solar | text | YES |  |
+| 43 | puertas_automatismos | text | YES |  |
+| 44 | construccion_arquitectura | text | YES |  |
+| 45 | actividad_empresa | text | YES |  |
 
 Constraints:
 - PRIMARY KEY contactos_db_pkey: PRIMARY KEY (id_contacto)
@@ -173,6 +241,7 @@ Indexes:
 | 16 | cargo_contacto_contrato | text | YES |  |
 | 17 | array_contenidos | jsonb | NO | '[]'::jsonb |
 | 18 | array_id_ordenes | jsonb | NO | '[]'::jsonb |
+| 19 | id_archivo_firmado | uuid | YES |  |
 
 Constraints:
 - PRIMARY KEY contratos_db_pkey: PRIMARY KEY (id_contrato)
@@ -239,7 +308,11 @@ Indexes:
 - cuentas_db_id_agente_idx: CREATE INDEX cuentas_db_id_agente_idx ON public.comercial_cuentas USING btree (id_agente)
 - cuentas_db_nombre_empresa_idx: CREATE INDEX cuentas_db_nombre_empresa_idx ON public.comercial_cuentas USING btree (nombre_empresa)
 
-### administracion_ferias
+### administracion_ferias_ediciones
+
+Desde `20260918_0009_ferias_catalogo_ediciones.sql`, esta tabla conserva las 108 ediciones y las vincula mediante `id_feria_base` a `administracion_ferias_db`. Los diez apartados de gestión son columnas de texto de la edición. `20260918_0010_ferias_ediciones_existing_form_fields.sql` completa los campos del formulario existente.
+
+Las columnas históricas `nombre_feria`, `pais`, `periodicidad` y `tematica` se mantienen como datos de origen para no perder variantes conflictivas de cuatro ferias. Las nuevas ediciones no las escriben; la aplicación lee esos atributos del catálogo vinculado.
 
 | # | Column | Type | Nullable | Default |
 |---:|---|---|---|---|
@@ -273,9 +346,13 @@ Constraints:
 - PRIMARY KEY ferias_db_pkey: PRIMARY KEY (id_feria)
 
 Indexes:
-- ferias_db_fecha_finalizacion_idx: CREATE INDEX ferias_db_fecha_finalizacion_idx ON public.administracion_ferias USING btree (fecha_finalizacion)
-- ferias_db_id_contrato_idx: CREATE INDEX ferias_db_id_contrato_idx ON public.administracion_ferias USING btree (id_contrato)
-- ferias_db_id_cuenta_feria_idx: CREATE INDEX ferias_db_id_cuenta_feria_idx ON public.administracion_ferias USING btree (id_cuenta_feria)
+- ferias_db_fecha_finalizacion_idx: CREATE INDEX ferias_db_fecha_finalizacion_idx ON public.administracion_ferias_ediciones USING btree (fecha_finalizacion)
+- ferias_db_id_contrato_idx: CREATE INDEX ferias_db_id_contrato_idx ON public.administracion_ferias_ediciones USING btree (id_contrato)
+- ferias_db_id_cuenta_feria_idx: CREATE INDEX ferias_db_id_cuenta_feria_idx ON public.administracion_ferias_ediciones USING btree (id_cuenta_feria)
+
+### administracion_ferias_db
+
+Catálogo de ferias (102 registros migrados): `id_feria`, `nombre_feria`, `pais`, `periodicidad`, `tematica`, `descripcion`, `created_at` y `updated_at`. El nombre normalizado es único.
 
 ### administracion_facturas_clientes
 
@@ -351,6 +428,17 @@ Indexes:
 - lineas_contratos_db_array_id_contenidos_idx: CREATE INDEX lineas_contratos_db_array_id_contenidos_idx ON public.comercial_contratos_lineas USING gin (array_id_contenidos)
 
 ### tesoreria_movimientos_bancarios
+
+Memoria de revisión: la migración `20260920_0001_bank_review_memory.sql` añade las siguientes tablas sin cambiar las columnas del movimiento:
+
+| Tabla | Clave y campos principales | Relación |
+|---|---|---|
+| tesoreria_cargos_vencimientos | id text PK; id_cargo_recurrente bigint; id_regla text; fecha date; importe numeric(16,2); descripcion text; programacion jsonb; created_at timestamptz | Única por cargo, regla y fecha; conserva la previsión histórica aplicada. |
+| tesoreria_vencimientos_aplicaciones | PK (id_linea_banco, id_vencimiento); importe numeric(16,2); actor text; created_at timestamptz | FK a movimiento con ON DELETE CASCADE y FK a vencimiento. |
+| tesoreria_revision_decisiones | id text PK; clave, huella, tipo text; movimientos text[]; motivo text; evidencia jsonb; actor text; created_at, revoked_at timestamptz | Evidencia y motivo de cada decisión, incluidos descartes anteriores. |
+| tesoreria_revision_criterios | id text PK; id_decision text FK; condiciones jsonb; actor text; created_at, revoked_at timestamptz | Criterios reutilizables explícitos y revocables. |
+
+La programación JSON de cargos recurrentes conserva `id_regla` y admite `inicio_dia`, `inicio_mes`, `inicio_anio` para identificar el primer vencimiento periódico. Sin esos datos no se inventa un anclaje temporal. Véase `docs/revision-bancaria-memoria.md`.
 
 | # | Column | Type | Nullable | Default |
 |---:|---|---|---|---|
@@ -524,6 +612,18 @@ Constraints:
 Indexes:
 - pagos_db_id_proveedor_idx: CREATE INDEX pagos_db_id_proveedor_idx ON public.tesoreria_pagos_previstos USING btree (id_proveedor)
 
+### comercial_propuestas_plantillas
+
+| # | Column | Type | Nullable | Default |
+|---:|---|---|---|---|
+| 1 | id_plantilla | uuid | NO | gen_random_uuid() |
+| 2 | nombre | text | NO |  |
+| 3 | versiones | jsonb | NO | '{}'::jsonb |
+| 4 | created_at | timestamp with time zone | NO | now() |
+| 5 | updated_at | timestamp with time zone | NO | now() |
+
+Cada versión contiene las líneas de productos de un idioma; `es` es obligatoria.
+
 ### comercial_propuestas_db
 
 | # | Column | Type | Nullable | Default |
@@ -574,6 +674,8 @@ Constraints:
 - PRIMARY KEY proveedores_db_pkey: PRIMARY KEY (id_proveedor)
 
 ### servicios_publicaciones
+
+La migración `20260918_0008_revista_reminder.sql` añade `fecha_recordatorio` (texto, no nulo, por defecto vacío). La interfaz de Revistas guarda esta fecha junto con `fecha_publicacion` y `deadline_materiales`.
 
 | # | Column | Type | Nullable | Default |
 |---:|---|---|---|---|

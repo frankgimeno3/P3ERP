@@ -9,6 +9,7 @@ export async function importAdministrativeOrders(rows, actorId='', pool=getPgPoo
     for(const incoming of [...rows].sort((a,b)=>a.id_orden.localeCompare(b.id_orden))){
       const row={...incoming};
       const before=(await db.query('SELECT * FROM tesoreria_ordenes WHERE id_orden=$1 FOR UPDATE',[row.id_orden])).rows[0];
+      if(before?.cancelada)incomeError('La orden '+row.id_orden+' está cancelada y no se puede sobrescribir.');
       if(!row.id_cuenta && row.datos_importacion?.cliente){
         const matches=(await db.query('SELECT id_cuenta FROM comercial_cuentas WHERE id_cuenta=$1 OR lower(btrim(nombre_empresa))=lower($1) OR lower(btrim(nombre_fiscal))=lower($1)',[row.datos_importacion.cliente])).rows;
         if(matches.length===1)row.id_cuenta=matches[0].id_cuenta;

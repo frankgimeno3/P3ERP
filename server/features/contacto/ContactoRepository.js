@@ -3,8 +3,13 @@ import { randomUUID } from "node:crypto";
 import { addCuentaEvento, addContactoEvento, formatChangeDetail } from "../registroEventos/RegistroEventosRepository.js";
 
 function normalizeContacto(row) {
+  const csvFields = ['saludo','tipo_contacto','movil','medio_contacto','red_social','modificado_por_crm','asignado_a_crm',
+    'fuente_crm','no_enviar_email','fecha_creacion_crm','convertido_de_lead','fecha_modificacion_crm','pais_factura',
+    'provincia_factura','publicaciones_que_recibe','robinson','origen_precontacto','zona','que_se_envia',
+    'origen_base_anexa','vidrio','carpinteria','proteccion_solar','puertas_automatismos','construccion_arquitectura','actividad_empresa'];
   return {
     id_contacto: row.id_contacto,
+    es_principal: Boolean(row.es_principal),
     id_cuenta: row.id_cuenta ?? "",
     nombre_contacto: row.nombre_contacto ?? "",
     apellidos_contacto: row.apellidos_contacto ?? "",
@@ -21,11 +26,28 @@ function normalizeContacto(row) {
     pais_contacto: row.pais_contacto ?? "",
     linkedin_cuenta: row.linkedin_cuenta ?? "",
     url_contacto: row.url_contacto ?? "",
+    ...Object.fromEntries(csvFields.map(field => [field, row[field] ?? null])),
   };
 }
 
 function createContactoId() {
   return `cont_${new Date().getFullYear().toString().slice(-2)}_${randomUUID().slice(0, 8)}`;
+}
+
+async function clearDetachedPrincipal(idContacto,client=getPgPool()) {
+  await client.query("UPDATE comercial_cuentas c SET datos_comerciales=datos_comerciales-'contacto_principal',updated_at=now() WHERE datos_comerciales->>'contacto_principal'=$1 AND NOT EXISTS(SELECT 1 FROM comercial_contactos p WHERE p.id_contacto=$1 AND p.id_cuenta=c.id_cuenta)",[idContacto]);
+}
+
+export async function setContactoPrincipal(idCuenta,idContacto,idAgente='') {
+  const client=await getPgPool().connect();
+  try {
+    await client.query('BEGIN');
+    await client.query('SELECT id_cuenta FROM comercial_cuentas WHERE id_cuenta=$1 FOR UPDATE',[idCuenta]);
+    if(!(await client.query('SELECT 1 FROM comercial_contactos WHERE id_contacto=$1 AND id_cuenta=$2 FOR UPDATE',[idContacto,idCuenta])).rowCount)throw Object.assign(new Error('El contacto no pertenece a esta cuenta.'),{status:400});
+    await client.query("UPDATE comercial_cuentas SET datos_comerciales=jsonb_set(COALESCE(datos_comerciales,'{}'::jsonb),'{contacto_principal}',to_jsonb($2::text)),updated_at=now() WHERE id_cuenta=$1",[idCuenta,idContacto]);
+    await addCuentaEvento({idCuenta,idAgente,eventType:'Cambio por agente',detalles:`ha establecido el contacto principal ${idContacto}`},client);
+    await client.query('COMMIT');return {id_contacto:idContacto};
+  }catch(error){await client.query('ROLLBACK');throw error;}finally{client.release();}
 }
 
 export async function getContactos(filters = {}) {
@@ -40,7 +62,7 @@ export async function getContactos(filters = {}) {
 
   const { rows } = await pool.query(
     `
-      SELECT *
+      SELECT *, EXISTS(SELECT 1 FROM comercial_cuentas c WHERE c.id_cuenta=comercial_contactos.id_cuenta AND c.datos_comerciales->>'contacto_principal'=comercial_contactos.id_contacto) AS es_principal
       FROM comercial_contactos
       ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
       ORDER BY nombre_completo_contacto ASC
@@ -68,6 +90,8 @@ export async function createContacto(data = {}) {
         ADD COLUMN IF NOT EXISTS url_contacto TEXT NOT NULL DEFAULT '';
     `);
 
+    if(idCuenta)await client.query("SELECT id_cuenta FROM comercial_cuentas WHERE id_cuenta=$1 FOR UPDATE",[idCuenta]);
+    const firstContact=idCuenta && !(await client.query("SELECT 1 FROM comercial_contactos WHERE id_cuenta=$1 LIMIT 1",[idCuenta])).rowCount;
     let nombreEmpresa = data.nombre_empresa || "";
     if (idCuenta && !nombreEmpresa) {
       const { rows } = await client.query(`SELECT nombre_empresa FROM comercial_cuentas WHERE id_cuenta = $1 LIMIT 1`, [idCuenta]);
@@ -115,6 +139,7 @@ export async function createContacto(data = {}) {
     );
 
     if (idCuenta) {
+      if(firstContact){await client.query("UPDATE comercial_cuentas SET datos_comerciales=jsonb_set(COALESCE(datos_comerciales,'{}'::jsonb),'{contacto_principal}',to_jsonb($2::text)),updated_at=now() WHERE id_cuenta=$1",[idCuenta,idContacto]);rows[0].es_principal=true;}
       await client.query(
         `
           UPDATE comercial_cuentas
@@ -172,6 +197,7 @@ export async function unlinkContactoFromCuenta(idContacto, idCuenta) {
   );
 
   const contacto = rows[0] ? normalizeContacto(rows[0]) : null;
+  if(contacto)await clearDetachedPrincipal(idContacto);
   if (contacto && idCuenta) {
     await Promise.allSettled([
       addCuentaEvento({
@@ -244,6 +270,7 @@ export async function updateContacto(idContacto, data = {}) {
       values,
     );
     const updated = rows[0];
+    if(before.id_cuenta!==updated.id_cuenta)await clearDetachedPrincipal(idContacto,client);
     const idAgente = data.id_agente || "";
     for (const column of columns) {
       if (JSON.stringify(before[column] ?? "") !== JSON.stringify(updated[column] ?? "")) {
@@ -287,6 +314,7 @@ export async function deleteContacto(idContacto) {
   );
 
   const contacto = rows[0] ? normalizeContacto(rows[0]) : null;
+  if(contacto)await clearDetachedPrincipal(idContacto);
   if (contacto) {
     await Promise.allSettled([
       contacto.id_cuenta ? addCuentaEvento({

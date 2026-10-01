@@ -20,4 +20,7 @@ export class FeriaService {
         const response = await apiClient.patch('/api/v1/admin/ferias/relevancia', { ids });
         return response.data;
     }
+    static async getCatalogo() { return (await apiClient.get('/api/v1/admin/ferias/catalogo')).data; }
+    static async createCatalogo(data) { return (await apiClient.post('/api/v1/admin/ferias/catalogo',data)).data; }
+    static async updateEditionDetails(id,data) { return (await apiClient.patch(`/api/v1/admin/ferias/${encodeURIComponent(id)}`,data)).data; }
 }
