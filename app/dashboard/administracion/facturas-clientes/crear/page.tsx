@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import MiddleNav from "@/app/general_components/componentes_recurrentes/MiddleNav";
 import { FacturaService } from "@/app/service/FacturaService";
@@ -21,6 +21,10 @@ function DateFields({ label, value, onChange }: { label: string; value: string; 
 }
 
 export default function CrearFacturaClientePage() {
+  return <Suspense fallback={<p role="status" className="p-6 text-gray-600">Cargando formulario de factura...</p>}><CrearFacturaClienteForm /></Suspense>;
+}
+
+function CrearFacturaClienteForm() {
   const router=useRouter();
   const pathname=usePathname();
   const searchParams=useSearchParams();

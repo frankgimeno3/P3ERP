@@ -1,4 +1,4 @@
-import XLSX from 'xlsx';
+import * as XLSX from 'xlsx/xlsx.mjs';
 import { bulkImportTypes } from '../../../app/config/bulkImportFields.js';
 import { parseImportDate, parseImportAmount } from '../prevision/ReceiptExcel.js';
 import { paymentMethods } from '../contrato/DirectContract.js';

@@ -1,4 +1,4 @@
-import XLSX from 'xlsx';
+import * as XLSX from 'xlsx/xlsx.mjs';
 export { amount as parseImportAmount, date as parseImportDate };
 
 export const RECEIPT_COLUMNS = ['Número de recibo', 'Número de remesa', 'Remesa en carpeta', 'Cliente', 'Importe recibo', 'Importe remesa', 'Fecha creación', 'Fecha cobro teórica'];

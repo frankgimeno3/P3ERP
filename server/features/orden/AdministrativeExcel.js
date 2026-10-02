@@ -1,4 +1,4 @@
-import XLSX from 'xlsx';
+import * as XLSX from 'xlsx/xlsx.mjs';
 import { administrativeExcelFields } from '../../../app/config/administrativeExcelFields.js';
 import { parseImportAmount, parseImportDate } from '../prevision/ReceiptExcel.js';
 
