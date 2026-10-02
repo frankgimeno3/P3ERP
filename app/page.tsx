@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {loginDestination} from "@/app/config/loginRedirect";
 import AuthenticationService from "@/app/service/AuthenticationService";
@@ -20,7 +19,6 @@ function isInvalidCredentialsError(error: any) {
 }
 
 export default function Home() {
-  const router = useRouter();
   const [employeeNumber, setEmployeeNumber] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -43,29 +41,36 @@ export default function Home() {
   };
 
   const finishLoginRedirect = async () => {
+    await AuthenticationService.checkServerSession();
     const target = getLoginRedirect();
     localStorage.removeItem("redirectAfterLogin");
     await showRedirectLoader();
-    router.replace(target);
+    window.location.replace(target);
   };
 
   useEffect(() => {
     const checkAuth = async () => {
+      const authError = new URLSearchParams(window.location.search).get("auth_error");
+      if (authError) {
+        setError(authError === "service" ? "El servidor no puede comprobar tus permisos. Revisa la conexión a la base de datos en Vercel." : "El servidor no ha aceptado la sesión. Vuelve a identificarte.");
+        return;
+      }
       try {
         const sessionPayload = await AuthenticationService.checkSession();
         if (sessionPayload) {
+          await AuthenticationService.checkServerSession();
           localStorage.setItem("userPayload", JSON.stringify(sessionPayload));
           const target=getLoginRedirect();
           localStorage.removeItem("redirectAfterLogin");
-          router.replace(target);
+          window.location.replace(target);
         } else {localStorage.removeItem("userPayload");}
-      } catch {
-        console.log("No hay sesion activa");
+      } catch (error: any) {
+        setError(error?.message || "No se pudo comprobar la sesión en el servidor.");
       }
     };
 
     checkAuth();
-  }, [router]);
+  }, []);
 
   useEffect(() => {
     if (!redirectLoading) return;
@@ -85,6 +90,7 @@ export default function Home() {
       localStorage.setItem("userPayload", JSON.stringify(payload));
       await finishLoginRedirect();
     } catch (error: any) {
+      setRedirectLoading(false);
       if (isInvalidCredentialsError(error)) {
         setError("La contraseña introducida es incorrecta.");
         setIsLoggingIn(false);
@@ -129,6 +135,7 @@ export default function Home() {
 
           <input
             type="text"
+            autoComplete="username"
             placeholder="Introduzca su email"
             value={employeeNumber}
             onChange={(event) => {
@@ -142,6 +149,7 @@ export default function Home() {
           <div className="relative">
             <input
               type={showPassword ? "text" : "password"}
+              autoComplete="current-password"
               placeholder="Introduzca su contraseña"
               value={password}
               onChange={(event) => {
@@ -154,7 +162,7 @@ export default function Home() {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-2 flex items-center text-gray-400 hover:text-gray-200"
+              className="absolute inset-y-0 right-2 flex cursor-pointer items-center text-gray-400 hover:text-gray-200"
               tabIndex={-1}
               aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
             >

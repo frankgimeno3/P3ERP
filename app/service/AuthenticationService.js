@@ -17,6 +17,29 @@ Amplify.configure({
 });
 
 export default class AuthenticationService {
+    static async checkServerSession() {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
+        try {
+            const response = await fetch('/api/v1/auth/session', {
+                credentials: 'same-origin', cache: 'no-store', signal: controller.signal,
+            });
+            if (response.status === 401) {
+                throw new Error('El servidor no ha aceptado la sesión. Revisa las cookies y la configuración de Cognito en Vercel.');
+            }
+            if (!response.ok) {
+                throw new Error('El servidor no puede comprobar tus permisos. Revisa la conexión a la base de datos en Vercel.');
+            }
+            const session = await response.json();
+            if (session.authenticated !== true) throw new Error('No se pudo comprobar la sesión en el servidor.');
+        } catch (error) {
+            if (error.name === 'AbortError') throw new Error('El servidor ha tardado demasiado en comprobar la sesión. Inténtalo de nuevo.');
+            throw error;
+        } finally {
+            clearTimeout(timeout);
+        }
+    }
+
     static async checkSession() {
         try {
             cognitoUserPoolsTokenProvider.setKeyValueStorage(new CookieStorage());

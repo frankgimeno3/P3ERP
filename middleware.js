@@ -58,6 +58,8 @@ export async function middleware(request) {
   }
   let response = NextResponse.next();
   const isApi = pathname.startsWith("/api/");
+  if ((pathname === "/" || pathname === "/admin") && request.nextUrl.searchParams.has('auth_error')) return response;
+  let tokensVerified = false;
 
   const goToLogin = () => {
     if (pathname === "/" || pathname === "/admin") return response;
@@ -81,6 +83,7 @@ export async function middleware(request) {
 
   try {
     const [, idPayload] = await Promise.all([verifyAccessToken(accessToken), verifyIdToken(idToken)]);
+    tokensVerified = true;
     const email = String(idPayload.email || "").trim();
     const pool = getPgPool();
     const { rows } = email
@@ -157,8 +160,15 @@ export async function middleware(request) {
       );
       return NextResponse.redirect(redirectUrl, 308);
     }
-  } catch {
-    return unauthenticated();
+  } catch (error) {
+    if (tokensVerified) {
+      console.error('Authentication permission lookup failed:', { name: error?.name, code: error?.code });
+      if (isApi) return NextResponse.json({ message: 'No se pudieron comprobar los permisos' }, { status: 503 });
+    }
+    if (isApi) return unauthenticated();
+    const redirectUrl = new URL(loginUrl(pathname + request.nextUrl.search), request.url);
+    redirectUrl.searchParams.set('auth_error', tokensVerified ? 'service' : 'session');
+    return NextResponse.redirect(redirectUrl);
   }
 
   return response;
