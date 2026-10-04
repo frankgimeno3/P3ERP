@@ -53,6 +53,24 @@ try{
   await review('banc_san_26_000.000.003',{incomeType:'transferencia',entityType:'cliente',entityId:'client',orderId:'TRANSFER'});
   assert.equal((await db.query("SELECT * FROM tesoreria_ordenes WHERE id_orden='TRANSFER'")).rows[0].cobrada,true);
   await assert.rejects(updateAdministrativeOrder('TRANSFER',{cobrada:false},'actor'),/revisión bancaria/);
+  await importAdministrativeOrders([
+    {id_orden:'GROUP-A',id_cuenta:'client',forma_cobro:'transferencia',cobro_total:30},
+    {id_orden:'GROUP-B',id_cuenta:'client',forma_cobro:'transferencia',cobro_total:70},
+    {id_orden:'OTHER-CLIENT',id_cuenta:'client2',forma_cobro:'transferencia',cobro_total:70},
+  ],'actor',pool);
+  await db.query("INSERT INTO tesoreria_movimientos_bancarios(id_linea_banco,importe,banco,fecha_valor) VALUES('banc_sab_26_000.000.095',100,'Sabadell','15/09/2026')");
+  await assert.rejects(review('banc_sab_26_000.000.095',{incomeType:'transferencia',entityId:'client',orderIds:['GROUP-A','OTHER-CLIENT']}),/misma cuenta/);
+  await assert.rejects(review('banc_sab_26_000.000.095',{incomeType:'transferencia',entityId:'client',orderIds:['GROUP-A']}),/importe/);
+  await assert.rejects(review('banc_sab_26_000.000.095',{incomeType:'transferencia',entityId:'client',orderIds:['GROUP-A','missing']}),/existentes/);
+  assert.equal((await bank('banc_sab_26_000.000.095')).estado_revision,false);
+  await review('banc_sab_26_000.000.095',{incomeType:'transferencia',entityId:'client',orderIds:['GROUP-A','GROUP-B']});
+  assert.equal((await bank('banc_sab_26_000.000.095')).id_orden,null);
+  assert.equal((await bank('banc_sab_26_000.000.095')).id_cuenta,'client');
+  assert.equal((await db.query("SELECT count(*)::int n FROM tesoreria_aplicaciones_cobro WHERE id_linea_banco='banc_sab_26_000.000.095'")).rows[0].n,2);
+  await saveBankWorkflow({action:'unreview',ids:['banc_sab_26_000.000.095']},'actor');
+  assert((await db.query("SELECT * FROM tesoreria_ordenes WHERE id_orden IN('GROUP-A','GROUP-B')")).rows.every(o=>!o.cobrada));
+  await review('banc_sab_26_000.000.095',{incomeType:'transferencia',entityId:'client',orderIds:['GROUP-A','GROUP-B']});
+  assert((await db.query("SELECT * FROM tesoreria_ordenes WHERE id_orden IN('GROUP-A','GROUP-B')")).rows.every(o=>o.cobrada));
   await importReceipts([receipt('701-001',25,'REM-A'),receipt('702-001',75,'REM-B')],pool,'actor');
   await db.query("INSERT INTO tesoreria_movimientos_bancarios(id_linea_banco,importe,banco,fecha_valor) VALUES('banc_sab_26_000.000.004',100,'Sabadell','15/09/2026')");
   await review('banc_sab_26_000.000.004',{incomeType:'remesa',remesaIds:['REM-A','REM-B']});

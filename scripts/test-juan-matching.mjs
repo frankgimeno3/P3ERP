@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {prepareJuanMatches} from '../server/features/prevision/JuanMatching.js';
+const columns=Array.from({length:15},(_,i)=>({month:i<9?i+1:10+Math.floor((i-9)/2),kind:i<9||(i-9)%2===0?'actual':'forecast'}));
+const row=(id,label,amount,day)=>({id,label,day,values:Array.from({length:15},(_,i)=>i===10?amount:null)});
+const sheets=[{bank:'Sabadell',columns,income:[],payments:[row('a','SOFTLINE',12392,27),row('b','AMARANT',379408,20),row('c','NOMINA FRANK',550000,31),row('d','VISA FRANK SABADELL',150000,5),row('e','SEGURO MINI VISA',null,16)]}];
+const suppliers=[{id_proveedor:'soft',nombre_proveedor:'EDISOFT - SOFTLINE'},{id_proveedor:'amar1',nombre_proveedor:'AMARANT'},{id_proveedor:'amar2',nombre_proveedor:'SERVEIS GRAFICS AMARANT'}];
+const employees=[{id_agente:'frank',nombre_completo_agente:'FRANK'}];
+const charges=[{id_cargo_recurrente:'1',id_proveedor:'soft',banco_pago:null,programacion:[{total_iva:123.92}]},{id_cargo_recurrente:'2',tipo_cargo:'nomina',id_agente:'frank',programacion:[{total_iva:5458}]}];
+const dues=[{id_cargo_recurrente:'1',fecha:'2026-10-20',importe:123.92}];
+const matches=prepareJuanMatches(sheets,suppliers,employees,charges,dues);
+assert.equal(matches[0].providerId,'soft');assert.equal(matches[0].status,'conflict');assert.deepEqual(matches[0].evidence.conflicts,[{type:'day',month:10,juan:27,erp:20}]);
+assert.equal(matches[1].status,'ready_to_create');assert.equal(matches[1].providerId,'amar2');
+assert.equal(matches[2].employeeId,'frank');assert.equal(matches[2].status,'conflict');assert.equal(matches[2].evidence.conflicts[0].erp,545800);
+assert.equal(matches[3].status,'group');assert.equal(matches[4].status,'needs_provider');
+assert.deepEqual(matches[0].chargeIds,['1']);
+assert.equal(charges[1].programacion[0].total_iva,5458);
+console.log('PASS: aliases, supplier/employee identities, day and amount conflicts retained, confirmed Amarant supplier, card group versus insurance, no mutation of forecasts.');

@@ -4,12 +4,15 @@ import React from "react";
 import LoggedNav from "../general_components/componentes_recurrentes/loggedNav";
 import LoggedLeftMenu from "../general_components/componentes_recurrentes/loggedLeftMenu";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export default function RegistroLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  if (pathname === '/dashboard/direccion/tesoreria/prevision-liquidez/vista-juan') return <>{children}</>;
   return (
     <>
       <LoggedNav />

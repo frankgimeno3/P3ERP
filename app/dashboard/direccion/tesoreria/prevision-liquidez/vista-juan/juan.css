@@ -1,0 +1,30 @@
+.juan-page{min-height:100vh;background:white;color:#111;padding:12px;font-family:Arial,sans-serif;overflow-x:auto}
+.juan-toolbar{display:flex;align-items:center;gap:16px;flex-wrap:wrap;font-size:13px;margin-bottom:12px}
+.juan-toolbar a,.juan-toolbar button,.juan-tabs button,.juan-toolbar select{cursor:pointer;border:1px solid #b7c5d6;border-radius:4px;padding:6px 10px;transition:background .15s}
+.juan-toolbar a:hover,.juan-toolbar button:hover,.juan-toolbar select:hover{background:#e9f1fb}
+.juan-toolbar button:disabled,.juan-tabs button:disabled{cursor:default;opacity:.55;background:#eee}
+.juan-tabs{display:flex;gap:3px;border-bottom:1px solid #9daec1}
+.juan-tabs button{padding:8px 20px;background:#edf2f7;border-bottom:0;border-radius:5px 5px 0 0}
+.juan-tabs button.active{background:#c8dfc9;font-weight:bold}.juan-tabs button:hover{background:#dceadc}
+.juan-hint{font-size:12px;color:#4a5565;margin:8px 0 14px}.juan-error{color:#9b1515;background:#fff0f0;padding:12px}
+.juan-sheet h1{border:2px solid #111;width:fit-content;font-size:1.8em;line-height:1.25;margin:8px 0 25px;padding:2px 6px;font-weight:bold}
+.juan-sheet h1 span{font-size:.7em;border-left:2px solid #111;margin-left:25px;padding:4px 15px}
+.juan-grid{width:100%;table-layout:fixed;border-collapse:collapse;margin-bottom:25px;font-size:inherit;line-height:1.25}
+.juan-grid th,.juan-grid td{border:1px solid #333;height:1.9em;padding:1px 3px;vertical-align:middle;font-weight:normal}
+.juan-grid th{font-weight:bold;text-align:left}.juan-grid thead th{text-align:center;font-size:.8em;border-width:2px 1px}
+.juan-grid .concept{width:255px}.juan-grid thead th:nth-child(2){width:25px}.juan-grid thead th:last-child{width:95px}
+.juan-grid .section{font-size:1.4em;text-align:left}.juan-grid td{text-align:right;white-space:nowrap}.juan-grid .day{text-align:center}
+.juan-grid .spacer{width:35px;border:0;background:white!important}
+.juan-grid input{width:100%;padding:1px 0;background:transparent;text-align:right;color:inherit;border:0;outline:0;font:inherit;cursor:pointer}
+.juan-grid input:hover:not(:disabled){background:#fff6c8}.juan-grid input:focus{background:#fff7d0;outline:2px solid #278446;position:relative;z-index:1;cursor:text}
+.juan-grid input:disabled{cursor:default;opacity:.8}.juan-grid .forecast,.juan-grid .negative{color:red}.juan-grid .invalid{outline:2px solid #d11}
+.juan-grid .total th,.juan-grid .total td{font-weight:bold;border-top:2px solid #111;border-bottom:2px solid #111}
+.juan-balances th:first-child{width:280px}.juan-balances td:last-child{width:95px}.juan-balances .total td,.juan-balances .total th{height:3.4em}
+.juan-grid .check{background:#c5d9ef}.juan-grid .erp{background:#eaf1f5}.juan-grid .check th,.juan-grid .erp th{font-size:.9em}
+.juan-review{font-size:13px;padding:12px;border:1px solid #b4c5d7;background:#f5f8fc;margin-bottom:18px;max-width:1100px}.juan-review h2{font-weight:bold;margin-bottom:8px}.juan-review p{margin:6px 0}
+.juan-review summary,.juan-review a{cursor:pointer}.juan-review summary:hover,.juan-review a:hover{color:#215aa0}.juan-review li{margin:6px 0}
+.juan-imports{width:100%;border-collapse:collapse;margin:10px 0}.juan-imports th,.juan-imports td{border:1px solid #b4c5d7;padding:5px;text-align:left}.juan-imports th{background:#e0eaf4}
+.juan-row-detail{display:block;width:100%;text-align:left;cursor:pointer;background:transparent;border:0;padding:0;font:inherit;color:inherit}.juan-row-detail:hover{background:#e1edf9;color:#163c73}
+.juan-row-detail:disabled{cursor:default;opacity:.55;background:transparent}
+.juan-add-row button{cursor:pointer;border:1px solid #b7c5d6;border-radius:4px;padding:2px 12px;font-size:18px;background:white}.juan-add-row button:hover{background:#e1edf9}.juan-add-row button:disabled{cursor:default;opacity:.55;background:#eee}
+.juan-month-review{font-size:13px;max-width:900px;margin:12px 0}.juan-month-review summary{cursor:pointer;padding:6px;border-radius:4px}.juan-month-review summary:hover{background:#e9f1fb}.juan-month-review p{margin:8px 0}.juan-month-review label{display:flex;align-items:center;gap:8px}

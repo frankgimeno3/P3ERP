@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {projectJuanLinkedForecast} from '../server/features/prevision/JuanLinkedForecast.js';
+const sheets=[{bank:'Sabadell',columns:[{month:10,kind:'forecast'}],income:[],payments:[{id:'payroll',values:[550000]},{id:'rent',values:[100]},{id:'unresolved',values:[300]}]}];
+const links=[{cell_key:'Sabadell:payroll:10',status:'matched',target_id:'11'},{cell_key:'Sabadell:rent:10',status:'matched',target_id:'5'},{cell_key:'Sabadell:unresolved:10',status:'conflict',target_id:'5'}];
+const charges=[{id_cargo_recurrente:'11',banco_pago:'Sabadell',tipo_cargo:'nomina',tipo_programacion:'periodicidad',programacion:[{cada:1,unidad:'meses',inicio_dia:31,inicio_mes:10,inicio_anio:2026,total_iva:5458}]},{id_cargo_recurrente:'5',banco_pago:'Sabadell',tipo_cargo:'proveedor',vencimientos:[{fecha:'2026-10-07',importe:916.71}]}];
+const dates=projectJuanLinkedForecast(sheets,links,charges);
+assert.deepEqual(sheets[0].payments.map(r=>r.values[0]),[545800,91671,300]);
+assert.equal(dates.get('Sabadell:rent:10'),'07/10/2026');
+charges[0].programacion[0].total_iva=5460;charges[1].vencimientos[0].importe=920;
+projectJuanLinkedForecast(sheets,links,charges);
+assert.deepEqual(sheets[0].payments.map(r=>r.values[0]),[546000,92000,300]);
+console.log('PASS: linked employee payroll and supplier dues share ERP amounts; ERP edits appear on reload; unresolved budgets are preserved.');

@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import {forecastVat,forecastRuleVat} from '../app/lib/forecastVat.js';
+import {projectJuanIncomeBudgets} from '../server/features/prevision/JuanIncomeBudget.js';
+assert.deepEqual(forecastVat(121,true,21),{total_iva:121,base_imponible:100,importe_iva:21,contains_iva:true,tipo_iva:21});
+assert.equal(forecastVat(121,false).base_imponible,121);
+assert.equal(forecastVat(110,true,10).base_imponible,100);
+assert.throws(()=>forecastVat(121,undefined,21));
+assert.throws(()=>forecastVat(121,true,undefined));
+assert.throws(()=>forecastVat(121,true,0));
+const rule=forecastRuleVat({total_iva:121,base_imponible:999,contains_iva:true,tipo_iva:21,importes_por_fecha:{'2026-12-01':242,'2026-11-01':0}});
+assert.equal(rule.base_imponible,100);assert.equal(rule.bases_por_fecha['2026-12-01'],200);assert.equal(rule.bases_por_fecha['2026-11-01'],0);
+const sheets=[{bank:'BSAB',closedMonths:[11],columns:[{kind:'forecast',month:10},{kind:'forecast',month:11},{kind:'forecast',month:12}],income:[{id:'transfers',label:'TRANSFERENCIAS PREVISTAS DE COBRO',values:[10000,10000,10000]}]}];
+const orders=[{banco_cobro:'BSAB',forma_cobro:'transferencia',fecha_teorica_cobro:'01/10/2026',pending_amount:80},{banco_cobro:'BSAB',forma_cobro:'transferencia',fecha_teorica_cobro:'2026-11-01',pending_amount:200},{banco_cobro:'BSAB',forma_cobro:'transferencia',fecha_teorica_cobro:'2026-12-01',pending_amount:120},{banco_cobro:'BSAN',forma_cobro:'transferencia',fecha_teorica_cobro:'2026-12-01',pending_amount:500},{banco_cobro:'BSAB',forma_cobro:'recibo',fecha_teorica_cobro:'2026-12-01',pending_amount:500}];
+const differences=projectJuanIncomeBudgets(sheets,orders,[{cell_key:'BSAB:transfers:12',estado_revision:true,importe:10},{cell_key:'BSAB:transfers:12',estado_revision:false,importe:20}]);
+assert.deepEqual(sheets[0].income[0].values,[10000,10000,13000]);
+assert.equal(differences.length,1);assert.equal(differences[0].budget,10000);assert.equal(differences[0].orders,12000);
+assert.equal(projectJuanIncomeBudgets(sheets,orders,[{cell_key:'BSAB:transfers:12',estado_revision:true,importe:10}]).length,0);
+console.log('IVA explícito, bases por vencimiento e ingresos compartidos sin duplicación: OK');

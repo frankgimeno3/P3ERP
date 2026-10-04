@@ -84,13 +84,14 @@ export async function reconcileBankIncome(db, line, item, actorId = '') {
     orders = (await db.query(`SELECT o.*,r.id_remesa FROM tesoreria_recibos_importados r JOIN tesoreria_ordenes o ON o.id_orden=r.id_orden
       WHERE r.id_remesa=ANY($1::text[]) ORDER BY o.id_orden FOR UPDATE OF o`, [ids])).rows;
   } else if (item.incomeType === 'transferencia') {
-    if (!item.orderId) incomeError('Selecciona la orden de transferencia.');
-    orders = (await db.query('SELECT * FROM tesoreria_ordenes WHERE id_orden=$1 FOR UPDATE', [item.orderId])).rows;
-    if (!orders.length || !/transf/i.test(orders[0].forma_cobro || '')) incomeError('Selecciona una orden de transferencia, no un recibo.');
-    const owner = (await db.query(`SELECT COALESCE(NULLIF(o.id_cuenta,''),c.id_cuenta_contrato,f.id_cuenta) id_cuenta FROM tesoreria_ordenes o
-      LEFT JOIN comercial_contratos c ON c.id_contrato=o.id_contrato LEFT JOIN administracion_facturas_clientes f ON f.id_factura_cliente=o.id_factura WHERE o.id_orden=$1`, [item.orderId])).rows[0];
-    if (!owner?.id_cuenta || item.entityId !== owner.id_cuenta) incomeError('La transferencia debe corresponder a la cuenta de la orden.');
-  } else if (item.orderId || item.remesaIds?.length) incomeError('Otros ingresos no admiten órdenes ni remesas asociadas.');
+    const ids = [...new Set(Array.isArray(item.orderIds) && item.orderIds.length ? item.orderIds : item.orderId ? [item.orderId] : [])];
+    if (!ids.length) incomeError('Selecciona al menos una orden de transferencia.');
+    orders = (await db.query('SELECT * FROM tesoreria_ordenes WHERE id_orden=ANY($1::text[]) ORDER BY id_orden FOR UPDATE', [ids])).rows;
+    if (orders.length !== ids.length || orders.some(o=>!/transf/i.test(o.forma_cobro || ''))) incomeError('Selecciona órdenes de transferencia existentes, no recibos.');
+    const owners = (await db.query(`SELECT COALESCE(NULLIF(o.id_cuenta,''),c.id_cuenta_contrato,f.id_cuenta) id_cuenta FROM tesoreria_ordenes o
+      LEFT JOIN comercial_contratos c ON c.id_contrato=o.id_contrato LEFT JOIN administracion_facturas_clientes f ON f.id_factura_cliente=o.id_factura WHERE o.id_orden=ANY($1::text[])`, [ids])).rows;
+    if (owners.some(owner=>!owner.id_cuenta || item.entityId !== owner.id_cuenta)) incomeError('Todas las órdenes de la transferencia deben corresponder a la misma cuenta.');
+  } else if (item.orderId || item.orderIds?.length || item.remesaIds?.length) incomeError('Otros ingresos no admiten órdenes ni remesas asociadas.');
   for (const order of orders) {
     if(order.cancelada)incomeError(`La orden ${order.id_orden} está cancelada.`);
     if (!(Number(order.cobro_total) > 0)) incomeError(`La orden ${order.id_orden} no tiene un importe positivo.`);
@@ -103,7 +104,7 @@ export async function reconcileBankIncome(db, line, item, actorId = '') {
   for (const order of orders) await db.query('INSERT INTO tesoreria_aplicaciones_cobro(id_linea_banco,id_orden,id_remesa,importe) VALUES($1,$2,$3,$4)', [line.id_linea_banco,order.id_orden,order.id_remesa || null,order.cobro_total]);
   await db.query(`UPDATE tesoreria_movimientos_bancarios SET tipo_ingreso=$2,id_orden=$3,id_cuenta=$4,id_proveedor=NULL,id_agente=NULL,
     id_pago=NULL,id_cargo_recurrente=NULL,nomina_revision=NULL,estado_revision=TRUE,updated_at=now() WHERE id_linea_banco=$1`,
-  [line.id_linea_banco,item.incomeType,item.incomeType === 'transferencia' ? item.orderId : null,item.incomeType === 'remesa' ? null : item.entityId || null]);
+  [line.id_linea_banco,item.incomeType,item.incomeType === 'transferencia' && orders.length === 1 ? orders[0].id_orden : null,item.incomeType === 'remesa' ? null : item.entityId || null]);
   await syncOrderCollections(db,[...old.map(o=>o.id_orden),...orders.map(o=>o.id_orden)],actorId);
   return (await db.query('SELECT * FROM tesoreria_movimientos_bancarios WHERE id_linea_banco=$1', [line.id_linea_banco])).rows[0];
 }

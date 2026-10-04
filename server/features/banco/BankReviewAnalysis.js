@@ -78,8 +78,12 @@ export function generateOccurrences(charges, from, to) {
           if (next.getTime() / 86400000 >= first) dates.push(next.toISOString().slice(0, 10));
         }
       }
-      for (const fecha of dates.filter(d => day(d) >= first && day(d) <= last)) {
-        result.push({ id: fingerprint([String(charge.id_cargo_recurrente), id, fecha]), id_cargo_recurrente: String(charge.id_cargo_recurrente), id_regla: id, fecha, importe: Number(rule.total_iva), descripcion: rule.descripcion || 'Cargo previsto', programacion: { tipo: charge.tipo_programacion, regla: rule }, id_proveedor: charge.id_proveedor });
+      dates.push(...Object.keys(rule.importes_por_fecha||{}).filter(date=>dateISO(date)));
+      for (const fecha of [...new Set(dates)].filter(d => day(d) >= first && day(d) <= last)) {
+        const importe=Number(rule.importes_por_fecha?.[fecha]??rule.total_iva);
+        if(importe===0)continue;
+        const effectiveRule=rule.bases_por_fecha?.[fecha]===undefined?rule:{...rule,total_iva:importe,base_imponible:rule.bases_por_fecha[fecha]};
+        result.push({ id: fingerprint([String(charge.id_cargo_recurrente), id, fecha]), id_cargo_recurrente: String(charge.id_cargo_recurrente), id_regla: id, fecha, importe, descripcion: rule.descripcion || 'Cargo previsto', programacion: { tipo: charge.tipo_programacion, regla: effectiveRule }, id_proveedor: charge.id_proveedor });
       }
     }
   }

@@ -246,7 +246,7 @@
   "/dashboard/operaciones/agentes": {
     "summary": "Desde Dirección, Laboral, Agentes, administra agentes, altas en Cognito y su asignación segura de roles.",
     "steps": [
-      "Pulsa Crear agente para iniciar el alta guiada y asigna uno de los roles base, administración, operaciones o superadmin.",
+      "Pulsa Crear agente para iniciar el alta guiada y asigna uno de los roles base, administración, operaciones, dirección o superadmin. Dirección permite entrar en su área y sus API; no equivale a superadmin y no permite administrar usuarios ni roles.",
       "En la ficha puedes editar el nombre completo y el email del agente y guardar los cambios. El nombre es obligatorio y el email debe ser válido y no pertenecer a otro agente.",
       "Desde el listado de Agentes, Administrar roles abre /dashboard/operaciones/agentes/roles. Roles pertenece a la gestión de agentes de Dirección, Laboral y no tiene entrada propia en la barra lateral. Las direcciones anteriores redirigen a las nuevas.",
       "La columna Cuenta de empleado corresponde a is_empleado_account, activado por defecto. Modifica esta casilla en la ficha del agente para incluirlo o excluirlo de los listados y altas de Laboral; su histórico se conserva.",
@@ -296,6 +296,7 @@
   "/dashboard/direccion/tesoreria/extractos/conciliacion": {
     "summary": "Revisa, asigna y concilia líneas bancarias individualmente o en bloque.",
     "steps": [
+      "En Identificar cobros puedes a?adir una o varias ?rdenes de transferencia del mismo cliente. Cada orden aparece con su importe y permite retirarla con ?. El total seleccionado debe coincidir exactamente con el ingreso; al confirmar se actualizan todas sus ?rdenes y facturas, sin duplicar el abono bancario.",
       "Liquidación tarjeta aparece al seleccionar líneas. Selecciona cargos sin revisar ni asignar del banco de la tarjeta y pertenecientes a una misma liquidación. Revisa la previsión actual, explica cualquier diferencia y confirma: se guarda el histórico y se abre el siguiente período de la tarjeta.",
       "La ficha y el modal comienzan preguntando cómo quieres revisar: revisión completa o directa. La directa se confirma allí con un comentario. La completa adapta sus fases al caso: ingresos tiene tres (Avisos y comparación, Identificar cobros, Revisión final); proveedores y otros cargos tienen cuatro (Avisos y comparación, Asignado a, Cargo previsto e importes, Revisión final); nóminas tiene cinco (Avisos y comparación, Asignado a, Previsión de nómina, Liquidación de nóminas, Revisión final). Para cargos asignados a clientes se muestra Orden de cobro en lugar de Cargo previsto e importes. La navegación muestra el número y el nombre de cada fase, permite volver atrás y guarda únicamente al confirmar la revisión final.",
       "Las selecciones mixtas incluyen solo las fases necesarias: Destinatarios y cobros reúne la identificación de ingresos y destinatarios de cargos; Previsiones e importes muestra solo cargos; Liquidación de nóminas aparece únicamente si hay nóminas y muestra solo esos movimientos. Cambiar el destinatario recalcula las fases. Asignar a un cargo previsto tiene dos fases (previsión e importes, Confirmar asociación); la asignación directa a proveedor conserva su modal de una pantalla.",
@@ -332,38 +333,22 @@
       "Al confirmar, la suma debe coincidir exactamente con el ingreso. Se actualizan estados y fechas de cobro de las órdenes y recibos vinculados, las remesas y la factura, con comentario del usuario en la cuenta. Desmarcar la revisión recalcula esos estados; un cobro ya conciliado no puede duplicarse.",
       "En Asignado a, Otro aparece al final para revisar cargos sin proveedor, cliente ni empleado. Permite un comentario y asociar un cargo previsto de tipo Otro. Si existe una asignación anterior, confirma su sustitución o conserva ese movimiento omitiéndolo.",
       "Conciliación sustituye al nombre Revisión de líneas. En Otro puedes seleccionar o crear un cargo previsto de tipo Otro sin destinatario, y asociar sus vencimientos mediante el análisis. Las asociaciones se conservan al volver a conciliar.",
-      "La ruta de Conciliación es /dashboard/direccion/tesoreria/extractos/conciliacion. Los detalles de movimientos y Duplicados se abren dentro de esta ruta. La URL se escribe sin tilde; el menú mantiene el nombre Conciliación. Las direcciones antiguas de revision y conciliación redirigen conservando la subruta y los filtros de la URL."
+      "La ruta de Conciliación es /dashboard/direccion/tesoreria/extractos/conciliacion. Los detalles de movimientos y Duplicados se abren dentro de esta ruta. La URL se escribe sin tilde; el menú mantiene el nombre Conciliación. Las direcciones antiguas de revision y conciliación redirigen conservando la subruta y los filtros de la URL.",
+      "Los movimientos revisados y asociados actualizan automáticamente el realizado y el pendiente de la previsión del ERP. Reabrir un movimiento retira su efecto hasta que vuelva a revisarse."
     ]
   },
   "/dashboard/direccion/tesoreria/prevision-liquidez": {
-    "summary": "Proyecta la liquidez a partir de cobros y cargos previstos.",
+    "summary": "Una previsión de liquidez compartida con la Vista Juan.",
     "steps": [
-      "Los cargos asociados a tarjetas se incluyen junto con sus tickets en la fecha de liquidación de la tarjeta, sin sumarse también como pagos directos. Configura las tarjetas y consulta sus próximos cierres en Administración > Tarjetas.",
-      "Indica la fecha con los campos separados de día, mes y año para calcular la liquidez de ambos bancos.",
-      "Usa las pestañas Previsión de ingresos y Previsión de cargos situadas debajo del resumen.",
-      "Los cargos periódicos de proveedores parten por defecto de hoy y guardan sus vencimientos hasta dos años desde hoy. Puedes modificar el primer vencimiento y la periodicidad en Editar. Generar cargos hasta dos años desde hoy amplía desde el último vencimiento guardado y no duplica los existentes.",
-      "Al crear un cargo se pregunta si termina con el último recurrente planificado. La casilla está desmarcada por defecto y también puede cambiarse en la ficha del cargo y en Cargos Pendientes del proveedor. Marcada, conserva los vencimientos existentes y excluye el cargo de futuras ampliaciones. Las fechas explícitas respetan su año y no se convierten en una recurrencia nueva.",
-      "En Cargos previstos registrados consulta fecha, tipo Proveedor o Nómina, destinatario, base imponible, importe total o neto y descripción. Al agregar un cargo elige el tipo: Proveedor muestra su buscador y permite dejarlo sin asignar; Nómina muestra el selector de empleado y su importe neto sin IVA. Solo se admite un cargo previsto activo por empleado, con una o varias reglas. El formulario también se utiliza desde la ficha del proveedor y la revisión bancaria. Con IVA calcula automáticamente la base dividiendo el total entre 1,21; Sin IVA usa el total.",
-      "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape.",
-      "Cada cargo de tipo nómina genera o reutiliza automáticamente la ficha única del empleado en Laboral > Nóminas. Desde esa ficha puedes modificar la programación del cargo y consultar sus movimientos bancarios.",
-      "Cada cargo recurrente tiene acciones Editar y Eliminar con modal de confirmación. Editar permite modificar los datos de su programación; Eliminar desasigna todos los extractos vinculados y conserva los movimientos y nóminas registrados.",
-      "Pulsa una fila para abrir /dashboard/direccion/tesoreria/prevision-liquidez/[id], con fondo blanco, los datos del cargo, los vencimientos planificados y los movimientos del extracto que ya se han asociado a ese cargo recurrente.",
-      "La tabla de cargos previstos presenta Descripción, Tipo y Asignado a como primeras columnas, seguidas de Fecha, Base imponible, Importe y Acciones.",
-      "Todos es la pestaña inicial y reúne recibos y transferencias. Puedes cambiar a Recibos, Transfers o Remesas; cada remesa aparece una sola vez.",
-      "Debajo de las pestañas hay un filtro por cada campo visible, distribuido en dos filas. Los filtros se combinan; las fechas tienen dd, mm y yyyy separados. Limpiar filtros restablece la tabla y cambiar de pestaña reinicia los filtros.",
-      "Agregar ingreso sin contrato solo aparece en Todos y abre el asistente de ingresos adicionales.",
-      "Agregar excel de recibos abre un modal con cierre × y Escape. La primera hoja debe tener en su primera fila: Número de recibo, Número de remesa, Remesa en carpeta, Cliente, Importe recibo, Importe remesa, Fecha creación y Fecha cobro teórica.",
-      "Número de recibo es obligatorio: 526058-004 se interpreta como factura 526058 y recibo 4. Se quitan espacios exteriores. Revisar Excel valida todas las filas y muestra una vista previa antes de Confirmar importación.",
-      "Se aceptan .xlsx y .xls de hasta 10 MB y 5.000 recibos. Los errores indican la fila. Las fechas pueden ser fechas de Excel o dd/mm/yyyy y los importes, numéricos o con coma decimal. Las celdas vacías o con \"-\" conservan los valores anteriores al reimportar.",
-      "Reimportar un recibo actualiza sus datos sin duplicarlo. No se permiten recibos repetidos dentro del mismo archivo. La importación se guarda completa o no se guarda ninguna fila.",
-      "Cada recibo se vincula a una orden por factura y número de cobro; si no existe, se crea. Las coincidencias ambiguas deben resolverse antes de importar. Los importes y fechas se actualizan en la orden sin duplicarla.",
-      "Número de remesa, Remesa en carpeta e Importe remesa solo sustituyen datos anteriores cuando llega un nuevo valor. Las remesas se registran y agrupan sus recibos; su total visible se calcula dinámicamente sumando los importes de sus órdenes.",
-      "La revisión bancaria confirma el cobro y la fecha real de órdenes, recibos y remesas, y actualiza el total cobrado de la factura. Los cambios quedan en los comentarios de la cuenta asociada.",
-      "Los ingresos previstos proceden de las órdenes pendientes: recibos y transferencias, sin recurrencia. Los cambios de importe, fecha y banco realizados al preparar la factura se reflejan en esas órdenes y en liquidez. Agrupar recibos en una remesa no suma un ingreso adicional.",
-      "En la programación periódica de proveedores puedes indicar el primer vencimiento mediante dd, mm y yyyy separados. Esa fecha permite identificar cada obligación futura, incluso trimestral o anual. Sin fecha de inicio no se inventan periodos ni pagos pendientes. Cada regla conserva su identidad al editarla o reordenarla; las asociaciones históricas mantienen el importe previsto que se confirmó.",
-      "Al agregar un cargo previsto, Otro permite planificar sin proveedor ni empleado. Conserva importes, IVA, periodicidad y la ampliación hasta dos años, salvo que marques que termina con los vencimientos planificados.",
-      "Los filtros de ingresos se distribuyen en tres filas. Los de cargos tienen tres filas de dos campos en escritorio y se apilan en pantallas estrechas.",
-      "El total incluye ingresos pendientes, pagos pendientes, vencimientos de proveedor y Otro, y nóminas previstas. Se descuentan los importes ya aplicados y anticipos pagados. Los importes sin banco asignado aparecen aparte y se incluyen en el total; el banco se elige al crear o editar el cargo. Las nóminas mensuales sin fecha se estiman al final de mes. Actualizar previsión recalcula los resultados."
+      "Vista Juan · Excel editable, en la parte superior, abre una presentación alternativa de los mismos datos. No hay escenarios independientes ni botón Actualizar previsión. Los cambios propios actualizan la página al guardarse; para ver cambios externos, recarga.",
+      "Elige la fecha con día, mes y año separados. El resumen corresponde al cierre del mes elegido; los ingresos y cargos muestran previsto, realizado y pendiente. Cada columna tiene un filtro desplegable inicialmente cerrado.",
+      "Añadir ingreso o gasto abre el mismo asistente que el + de la hoja. Pulsa el concepto para consultar los cargos recurrentes asociados, sus proveedores o empleados y sus vencimientos. Editar un importe modifica el mismo vencimiento en ambas vistas; retirar conserva el histórico.",
+      "Al crear o editar una programación de proveedor se pregunta ¿Contiene IVA? No establece base imponible igual al total. Sí exige indicar el porcentaje incluido y calcula base = total / (1 + porcentaje / 100), con redondeo a céntimos. Las nóminas usan importe neto sin IVA. No se presupone un porcentaje para datos antiguos.",
+      "Los ingresos concretos proceden de Control administrativo → Órdenes. Se incluyen dentro del presupuesto de su banco, mes y forma de cobro, sin sumarlos dos veces. Si las órdenes superan el presupuesto, la previsión incluye el importe necesario y señala la diferencia. Las órdenes sin banco requieren asignación.",
+      "Los cargos activos del banco se reutilizan y sus vencimientos se reflejan al cargar. Los cargos de tarjeta pertenecen al desglose de suscripciones; el gasto variable se mantiene separado. Los cargos sin banco no se asignan automáticamente.",
+      "El saldo inicial desconocido y los extractos parciales se señalan: no acreditan un cierre bancario. La revisión de fin de mes se realiza desde la Vista Juan y conserva lo pendiente.",
+      "Los recibos y remesas nuevos sin banco se asignan automáticamente a Sabadell. La asignación es un valor inicial: puedes seleccionar otro banco posteriormente. Los recibos pendientes existentes se han unificado en Sabadell; se conserva el histórico de cobros realizados.",
+      "Existe una sola previsión del ERP: los cargos y órdenes vinculados son su fuente; los grupos y conceptos pendientes tienen presupuestos compartidos. Editar la tabla o Vista Juan cambia el mismo registro. Los detalles cubren el presupuesto del grupo y nunca se suman de nuevo. La conciliación alimenta el realizado sin una aplicación manual adicional."
     ]
   },
   "/dashboard/direccion/tesoreria/prevision-ingresos": {
@@ -427,23 +412,17 @@
     ]
   },
   "/dashboard/direccion/previsiones/prevision-liquidez": {
-    "summary": "Proyecta la liquidez a partir de cobros y pagos previstos.",
+    "summary": "Una previsión de liquidez compartida con la Vista Juan.",
     "steps": [
-      "Selecciona el periodo de análisis.",
-      "Revisa entradas, salidas y saldo acumulado.",
-      "Actualiza previsiones cuando cambien vencimientos o importes.",
-      "Todos es la pestaña inicial y reúne recibos y transferencias. Puedes cambiar a Recibos, Transfers o Remesas; cada remesa aparece una sola vez.",
-      "Debajo de las pestañas hay un filtro por cada campo visible, distribuido en dos filas. Los filtros se combinan; las fechas tienen dd, mm y yyyy separados. Limpiar filtros restablece la tabla y cambiar de pestaña reinicia los filtros.",
-      "Agregar ingreso sin contrato solo aparece en Todos y abre el asistente de ingresos adicionales.",
-      "Agregar excel de recibos abre un modal con cierre × y Escape. La primera hoja debe tener en su primera fila: Número de recibo, Número de remesa, Remesa en carpeta, Cliente, Importe recibo, Importe remesa, Fecha creación y Fecha cobro teórica.",
-      "Número de recibo es obligatorio: 526058-004 se interpreta como factura 526058 y recibo 4. Se quitan espacios exteriores. Revisar Excel valida todas las filas y muestra una vista previa antes de Confirmar importación.",
-      "Se aceptan .xlsx y .xls de hasta 10 MB y 5.000 recibos. Los errores indican la fila. Las fechas pueden ser fechas de Excel o dd/mm/yyyy y los importes, numéricos o con coma decimal. Las celdas vacías o con \"-\" conservan los valores anteriores al reimportar.",
-      "Reimportar un recibo actualiza sus datos sin duplicarlo. No se permiten recibos repetidos dentro del mismo archivo. La importación se guarda completa o no se guarda ninguna fila.",
-      "Cada recibo se vincula a una orden por factura y número de cobro; si no existe, se crea. Las coincidencias ambiguas deben resolverse antes de importar. Los importes y fechas se actualizan en la orden sin duplicarla.",
-      "Número de remesa, Remesa en carpeta e Importe remesa solo sustituyen datos anteriores cuando llega un nuevo valor. Las remesas se registran y agrupan sus recibos; su total visible se calcula dinámicamente sumando los importes de sus órdenes.",
-      "La revisión bancaria confirma el cobro y la fecha real de órdenes, recibos y remesas, y actualiza el total cobrado de la factura. Los cambios quedan en los comentarios de la cuenta asociada.",
-      "Los ingresos previstos proceden de las órdenes pendientes: recibos y transferencias, sin recurrencia. Los cambios de importe, fecha y banco realizados al preparar la factura se reflejan en esas órdenes y en liquidez. Agrupar recibos en una remesa no suma un ingreso adicional.",
-      "El total incluye ingresos pendientes, pagos pendientes, vencimientos de proveedor y Otro, y nóminas previstas. Se descuentan los importes ya aplicados y anticipos pagados. Los importes sin banco asignado aparecen aparte y se incluyen en el total; el banco se elige al crear o editar el cargo. Las nóminas mensuales sin fecha se estiman al final de mes. Actualizar previsión recalcula los resultados."
+      "Vista Juan · Excel editable, en la parte superior, abre una presentación alternativa de los mismos datos. No hay escenarios independientes ni botón Actualizar previsión. Los cambios propios actualizan la página al guardarse; para ver cambios externos, recarga.",
+      "Elige la fecha con día, mes y año separados. El resumen corresponde al cierre del mes elegido; los ingresos y cargos muestran previsto, realizado y pendiente. Cada columna tiene un filtro desplegable inicialmente cerrado.",
+      "Añadir ingreso o gasto abre el mismo asistente que el + de la hoja. Pulsa el concepto para consultar los cargos recurrentes asociados, sus proveedores o empleados y sus vencimientos. Editar un importe modifica el mismo vencimiento en ambas vistas; retirar conserva el histórico.",
+      "Al crear o editar una programación de proveedor se pregunta ¿Contiene IVA? No establece base imponible igual al total. Sí exige indicar el porcentaje incluido y calcula base = total / (1 + porcentaje / 100), con redondeo a céntimos. Las nóminas usan importe neto sin IVA. No se presupone un porcentaje para datos antiguos.",
+      "Los ingresos concretos proceden de Control administrativo → Órdenes. Se incluyen dentro del presupuesto de su banco, mes y forma de cobro, sin sumarlos dos veces. Si las órdenes superan el presupuesto, la previsión incluye el importe necesario y señala la diferencia. Las órdenes sin banco requieren asignación.",
+      "Los cargos activos del banco se reutilizan y sus vencimientos se reflejan al cargar. Los cargos de tarjeta pertenecen al desglose de suscripciones; el gasto variable se mantiene separado. Los cargos sin banco no se asignan automáticamente.",
+      "El saldo inicial desconocido y los extractos parciales se señalan: no acreditan un cierre bancario. La revisión de fin de mes se realiza desde la Vista Juan y conserva lo pendiente.",
+      "Los recibos y remesas nuevos sin banco se asignan automáticamente a Sabadell. La asignación es un valor inicial: puedes seleccionar otro banco posteriormente. Los recibos pendientes existentes se han unificado en Sabadell; se conserva el histórico de cobros realizados.",
+      "Existe una sola previsión del ERP: los cargos y órdenes vinculados son su fuente; los grupos y conceptos pendientes tienen presupuestos compartidos. Editar la tabla o Vista Juan cambia el mismo registro. Los detalles cubren el presupuesto del grupo y nunca se suman de nuevo. La conciliación alimenta el realizado sin una aplicación manual adicional."
     ]
   },
   "/dashboard/direccion/previsiones/prevision-ingresos": {
@@ -602,7 +581,8 @@
       "Factura asociada muestra su referencia previa o definitiva, fecha, líneas e importes, con enlace a la ficha completa y un desplegable para abrir otras órdenes de esa factura.",
       "Cobro permite alternar Con IVA y Sin IVA. Con IVA calcula una base de importe dividido por 1,21, no editable. Forma de cobro y banco son desplegables. Pendiente de cobro oculta la fecha real; Cobrada exige introducirla con día, mes y año. Los cobros de revisión bancaria se gestionan desde esa revisión.",
       "Otros datos de la orden reúne remesa, propuesta de origen, agente y contacto de esa propuesta, contacto de seguimiento de cobro de la cuenta y comentarios. El botón flotante Guardar aparece solo si hay cambios y desaparece al guardar o restablecer los valores originales.",
-      "Cancelar orden avisa primero y después muestra los documentos afectados para confirmar. Retira recibos y transferencias pendientes, elimina la factura pendiente exclusiva y conserva las compartidas. Una factura emitida o contabilizada o un cobro confirmado impiden cancelar hasta resolverlos. La orden y una copia de los documentos eliminados permanecen como historial; deja de sumar en liquidez. El modal se cierra con × o Escape."
+      "Cancelar orden avisa primero y después muestra los documentos afectados para confirmar. Retira recibos y transferencias pendientes, elimina la factura pendiente exclusiva y conserva las compartidas. Una factura emitida o contabilizada o un cobro confirmado impiden cancelar hasta resolverlos. La orden y una copia de los documentos eliminados permanecen como historial; deja de sumar en liquidez. El modal se cierra con × o Escape.",
+      "Los recibos y remesas nuevos sin banco se asignan automáticamente a Sabadell. La asignación es un valor inicial: puedes seleccionar otro banco posteriormente. Los recibos pendientes existentes se han unificado en Sabadell; se conserva el histórico de cobros realizados."
     ]
   },
   "/": {
@@ -633,6 +613,42 @@
     "steps": [
       "Mis tareas pendientes es la primera pestaña y muestra las tareas pendientes o en curso asignadas a tu agente. Ver todas mis tareas abre pendientes y terminadas. Los filtros de Tarea, Estado y Descripción están encima de la tabla, reunidos en un único desplegable Filtros, inicialmente cerrado. Al abrirlo se muestran todos juntos; cerrarlo conserva los filtros aplicados. El filtro Estado es un select con las opciones Todos los estados, Pendiente y En curso.",
       "En Mis tareas pendientes, Agregar tarea abre un modal con nombre y descripción. La tarea se asigna al agente autenticado, queda pendiente y aparece en la lista al guardarla. No permite elegir otro agente."
+    ]
+  },
+  "/dashboard/direccion/tesoreria/prevision-liquidez/vista-juan": {
+    "title": "Vista Juan · Previsión de liquidez",
+    "summary": "Hoja editable de Sabadell y Santander: añadir, vincular y ajustar previsiones recurrentes desde la propia hoja.",
+    "steps": [
+      "Las hojas originales de 2026 aportan el histórico de enero a septiembre y su saldo inicial. Son referencias del contable; no crean movimientos bancarios. El archivo original se conserva.",
+      "Vista Juan · Excel editable, en la parte superior, abre una presentación alternativa de los mismos datos. No hay escenarios independientes ni botón Actualizar previsión. Los cambios propios actualizan la página al guardarse; para ver cambios externos, recarga.",
+      "Al crear o editar una programación de proveedor se pregunta ¿Contiene IVA? No establece base imponible igual al total. Sí exige indicar el porcentaje incluido y calcula base = total / (1 + porcentaje / 100), con redondeo a céntimos. Las nóminas usan importe neto sin IVA. No se presupone un porcentaje para datos antiguos.",
+      "Las pestañas contienen Sabadell y Santander del año actual y del siguiente. Desde el 1 de octubre, al abrir o recargar la página, se prepara automáticamente la base revisable del siguiente año. En 2026 están BSAB 2026, BSAN 2026, BSAB 2027 y BSAN 2027. Cada año nuevo tiene realizado y previsto para los doce meses; no se inventan realizados ni saldo inicial.",
+      "Anteriores contiene una subpestaña por año anterior con datos. Está vacío porque no se importó 2025. El cambio de año archiva las pestañas sin borrar sus datos.",
+      "No hay botones Actualizar, Zoom, Conciliación ni Aplicar movimiento en esta vista. Cada cambio propio actualiza los datos y totales al guardar. Para ver cambios de otras personas, recarga la página. El tamaño se controla con Ctrl + y Ctrl − del navegador.",
+      "Antes de TOTAL INGRESOS y TOTAL PAGOS hay una fila vacía con +. El modal tiene tres pasos: concepto y destinatario, importe y frecuencia, revisión y guardado. Puedes vincular un cargo existente del mismo banco o crear un gasto con proveedor o nómina de empleado. Se comprueban cargos ya vinculados para evitar duplicados. Las recurrencias nuevas aparecen también en los años futuros preparados.",
+      "El proveedor se busca, crea o modifica dentro del mismo modal por fases. Guardar ficha modifica el proveedor compartido del ERP; asociarlo a la previsión del ERP es un paso separado. NIF y razón social pueden quedar pendientes. Las nóminas conservan su empleado y no admiten proveedor. No se cambia el destinatario de un cargo existente al elegir un proveedor diferente para la fila.",
+      "Pulsa un concepto para ver los cargos recurrentes asociados: destinatario, banco, concepto, importe, frecuencia, primer vencimiento y lista de vencimientos del año. No hay selector de mes en el desglose. Las diferencias sin resolver permanecen visibles.",
+      "Editar un importe previsto vinculado ajusta ese vencimiento también en el ERP, conservando frecuencia, importe habitual y demás meses. Borrar o poner cero retira únicamente ese vencimiento; escribir de nuevo lo restaura. Escribir en un mes vacío añade un vencimiento puntual al mismo cargo cuando su regla es inequívoca. No se permite reducir el importe por debajo de sus pagos asociados. Una celda con varios vencimientos requiere desglosarlos antes de modificarla.",
+      "Retirar previsiones de esta fila abre una revisión dentro del modal. Quita importes previstos de meses abiertos del año y sus vencimientos asociados, conserva realizados, meses cerrados y ficha del cargo, y no elimina movimientos bancarios. La retirada afecta a ese año, sin cancelar la recurrencia de años posteriores.",
+      "Los ingresos concretos proceden de Control administrativo → Órdenes. Se incluyen dentro del presupuesto de su banco, mes y forma de cobro, sin sumarlos dos veces. Si las órdenes superan el presupuesto, la previsión incluye el importe necesario y señala la diferencia. Las órdenes sin banco requieren asignación. El + crea un presupuesto recurrente, sin generar órdenes ficticias.",
+      "Las tarjetas separan SUSCRIPCIONES y GASTO VARIABLE. Los cargos de tarjeta identificados se agregan por vencimiento. Inicialmente se descuentan del presupuesto variable original para evitar duplicados; cuando se edita el variable pasa a ser gasto adicional explícito. Sin servicios configurados no se inventan suscripciones. Efectivo y traspasos conservan sus grupos.",
+      "Revisión de fin de mes está inicialmente plegada. Un cierre de 200 € previstos y 150 € aplicados deja 150 € realizados y 50 € pendientes: no da por pagado lo pendiente. Solo se consolida un mes terminado con extracto y asociaciones revisadas. Los meses futuros y el histórico sin columna prevista no admiten este cierre. Reabrir permite revisar otra vez; cerrar no acredita por sí solo el saldo bancario.",
+      "Enter o salir de la celda guarda el importe; Escape cancela la edición. Se admiten coma o punto decimal. Los totales y diferencias se recalculan en céntimos. Si otra persona ha cambiado la hoja, recarga antes de guardar.",
+      "Las nóminas se vinculan a empleados: Charly es Carlos Lamiel, Paco es Gimeno, Frank queda en 5.458 € y Melanie en 1.100,95 €. Víctor Joven Castillo es empleado activo y tiene previsión mensual de 1.200 €; se conserva su primer mes parcial.",
+      "Se reutilizan los alquileres de Pedro Brillas y los cargos de Softline, Bitavis y DAE. Securitas se separa en Llúria 49,78 €, Breda 58,95 € y Bruc 57,60 €. PIXUP añade hosting 252,26 € el 24/11/2026 y soporte 414,23 € el 29/12/2026 con sus cargos existentes.",
+      "Las comisiones son Sabadell 3/2/1 € para octubre–diciembre y Santander 15 €/mes el día 26 estimado. Las antiguas recurrencias de Sabadell de 20 y 1.300 € están desactivadas con histórico conservado. El servicio de información anual queda separado en 48,40 €, con siguiente fecha estimada el 2 de enero.",
+      "Saldo último extracto ERP y su fecha muestran el último movimiento disponible de cada mes. Un extracto parcial no acredita el cierre. Diferencia con comprobación usa el saldo escrito por Juan; diferencia Excel − extracto ERP usa el del extracto. El saldo inicial del año siguiente permanece pendiente hasta disponer del cierre real.",
+      "Todos los modales tienen × y Escape. Previsión liquidez vuelve a la página principal.",
+      "Los recibos y remesas nuevos sin banco se asignan automáticamente a Sabadell. La asignación es un valor inicial: puedes seleccionar otro banco posteriormente. Los recibos pendientes existentes se han unificado en Sabadell; se conserva el histórico de cobros realizados.",
+      "Existe una sola previsión del ERP: los cargos y órdenes vinculados son su fuente; los grupos y conceptos pendientes tienen presupuestos compartidos. Editar la tabla o Vista Juan cambia el mismo registro. Los detalles cubren el presupuesto del grupo y nunca se suman de nuevo. La conciliación alimenta el realizado sin una aplicación manual adicional."
+    ]
+  },
+  "/dashboard/direccion/tesoreria/conciliacion": {
+    "title": "Conciliación",
+    "summary": "Acceso directo a la misma conciliación bancaria de Tesorería.",
+    "steps": [
+      "Esta dirección abre la misma pantalla que /dashboard/direccion/tesoreria/extractos/conciliacion. Los detalles de movimientos y los enlaces internos conservan esa ruta principal.",
+      "Los movimientos revisados y asociados actualizan automáticamente el realizado y el pendiente de la previsión del ERP. Reabrir un movimiento retira su efecto hasta que vuelva a revisarse."
     ]
   }
 }

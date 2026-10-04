@@ -30,6 +30,8 @@ Migration `20260920_0002_recurring_charge_horizon.sql` adds to `tesoreria_cargos
 
 Individual due dates are stored in the existing `tesoreria_cargos_vencimientos` table, uniquely identified by `(id_cargo_recurrente, id_regla, fecha)`. Extension retains existing due dates and applications and starts after the last stored due date of each rule. Payroll planning is unchanged.
 
+Rules may include `importes_por_fecha`, an ISO-date-to-euro-amount JSON map used by edits in Vista Juan. It overrides a single due amount without changing the recurring base; zero cancels that date. An explicitly entered date outside the regular calendar adds one due. Supplier edits update the existing materialized due and protect payments/tickets; payroll estimates use the same exceptions when generating occurrences. Extension preserves the recurring anchor and exceptions. New income budget rows store their recurrence in the workbook row's `recurring` JSON field and do not create administrative orders. New rows are carried to prepared future workbooks with separate realized/forecast columns.
+
 Update this file whenever tables, columns, primary keys, indexes, or constraints change. For schema changes, also add a SQL migration file under `database/migrations/`.
 
 ## Forecast banks and direct exchanges
@@ -440,6 +442,10 @@ Memoria de revisión: la migración `20260920_0001_bank_review_memory.sql` añad
 
 La programación JSON de cargos recurrentes conserva `id_regla` y admite `inicio_dia`, `inicio_mes`, `inicio_anio` para identificar el primer vencimiento periódico. Sin esos datos no se inventa un anclaje temporal. Véase `docs/revision-bancaria-memoria.md`.
 
+Las nuevas reglas de previsión guardan `contains_iva`, `tipo_iva`, `base_imponible` e `importe_iva`. Sin IVA, la base es el total; con IVA se exige porcentaje y se deduce del total. `bases_por_fecha` conserva la base recalculada de excepciones en `importes_por_fecha`. No se infiere un porcentaje para reglas antiguas sin respuesta explícita. Las nóminas conservan importe neto y no usan esta base fiscal.
+
+La página principal de liquidez y Vista Juan consultan el mismo libro anual. `syncJuanOperationalRows` incorpora una fila de presentación por cargo activo y banco, sin crear otro cargo, y amplía las recurrencias vigentes al horizonte operativo. Las órdenes pendientes se desglosan dentro del presupuesto de banco, mes y forma de cobro: el total toma el mayor entre presupuesto y órdenes más aplicaciones válidas, sin sumarlos dos veces. Se conserva el presupuesto original para informar diferencias; las órdenes sin banco requieren asignación.
+
 | # | Column | Type | Nullable | Default |
 |---:|---|---|---|---|
 | 1 | id_linea_banco | text | NO |  |
@@ -564,6 +570,8 @@ Indexes:
 - cobros_propuestas_db_id_propuesta_idx: CREATE INDEX cobros_propuestas_db_id_propuesta_idx ON public.comercial_propuestas_cobros USING btree (id_propuesta)
 
 ### tesoreria_ordenes
+
+`receipt_default_bank` asigna Sabadell al insertar o editar una orden de recibo/remesa cuyo banco esté vacío. No sustituye una selección explícita: el usuario puede cambiar después el banco. Las transferencias no reciben este valor inicial. Véase `20261003_0004_receipt_default_bank.sql`.
 
 | # | Column | Type | Nullable | Default |
 |---:|---|---|---|---|
@@ -729,6 +737,8 @@ Constraints:
 - PRIMARY KEY grupos_servicios_pkey: PRIMARY KEY (id_medio)
 
 ### agentes_roles
+
+La migración `20261003_0003_direction_role.sql` registra `direccion` como rol propio. `app/config/roleAccess.ts` permite el área Dirección y sus API, sin convertirlo en superadmin ni permitir administración de usuarios/roles.
 
 | # | Column | Type | Nullable | Default |
 |---:|---|---|---|---|
@@ -1113,3 +1123,34 @@ Indexes:
 - documentos_laborales_nomina_idx: CREATE INDEX documentos_laborales_nomina_idx ON public.laboral_documentos USING btree (id_nomina)
 - documentos_laborales_pkey: CREATE UNIQUE INDEX documentos_laborales_pkey ON public.laboral_documentos USING btree (id)
 - documentos_laborales_s3_key_key: CREATE UNIQUE INDEX documentos_laborales_s3_key_key ON public.laboral_documentos USING btree (s3_key)
+
+### tesoreria_prevision_juan
+
+Previsión mensual independiente del Excel del contable. Migración `20261003_0001_juan_liquidity.sql`.
+
+| Column | Type | Description |
+|---|---|---|
+| id | text PRIMARY KEY | Identificador anual de la presentaci?n (`juan-2026`, `juan-2027`, etc.). |
+| source_name | text NOT NULL | Nombre del archivo de origen. |
+| sheets | jsonb NOT NULL | Hojas editables: ingresos, pagos, días habituales, columnas mensuales y comprobaciones. El original 2026 conserva 15 columnas; los siguientes años usan 24 (realizado/previsto por mes). Importes en céntimos enteros; null conserva ausencia de dato. `closedMonths`, `closingBudget`, `priorActual` y `priorForecast` conservan cierres reversibles; `cardPart` distingue suscripciones y variable, y `budgetIsEnvelope` mantiene el presupuesto inicial sin duplicar suscripciones. |
+| original_sheets | jsonb NOT NULL | Copia original de las hojas, conservada al editar y reimportar. |
+| version | integer NOT NULL DEFAULT 1 | Control de concurrencia de ediciones y aplicaciones. |
+| updated_at | timestamptz NOT NULL DEFAULT now() | Última modificación. |
+
+### tesoreria_prevision_juan_enlaces
+
+Asociaciones explícitas de celdas previstas con cargos recurrentes. No se deducen asociaciones solo por importe ni se suman presupuestos a las órdenes existentes. PK `(workbook_id, cell_key)`; `workbook_id` referencia `tesoreria_prevision_juan(id)`. Columnas: `section` (income/payments), `target_id` nullable (id del cargo recurrente), `status` (matched/integrated cuando el vínculo está confirmado) y `note`. Los conflictos se conservan en las asociaciones de filas antes de generar vínculos efectivos.
+
+### tesoreria_prevision_juan_aplicaciones
+
+Aplicaciones hist?ricas parciales de movimientos revisados a presupuestos del ERP. La conciliaci?n ordinaria genera ahora las aplicaciones autom?ticamente al consultar la previsi?n. PK `(workbook_id, cell_key, id_linea_banco)`; FK a `tesoreria_prevision_juan(id)` y `tesoreria_movimientos_bancarios(id_linea_banco)`. `importe numeric(14,2)` positivo en euros y `created_at timestamptz`. Los movimientos reabiertos o descartados no reducen lo pendiente. La aplicación no modifica órdenes, nóminas ni asociaciones contables existentes.
+
+### tesoreria_prevision_juan_asociaciones
+
+Cruce y preparación por concepto del Excel. Migración `20261003_0002_juan_matching.sql`. PK `(workbook_id, bank, row_id)`; FK a `tesoreria_prevision_juan(id)`. `provider_id` y `employee_id` son opcionales y referencian proveedores y agentes existentes; `charge_ids jsonb` identifica los cargos candidatos o asociados. `status` distingue asociación coincidente, cargo integrado, conflicto, ambigüedad, pendiente de proveedor/empleado y grupo. `evidence jsonb` conserva candidatos, explicación y discrepancias por mes sin alterar el importe original ni elegir unilateralmente el valor correcto. `updated_at timestamptz` registra la preparación.
+
+`projected` identifica bases estimadas del año siguiente sin crear vencimientos nuevos en el ERP. Desde el 1 de octubre, `ensureJuanYears` prepara el siguiente año al consultar la vista y conserva los anteriores por su id anual. Solo las asociaciones con programación vigente generan vínculos efectivos. El saldo inicial nuevo queda pendiente del cierre anterior; no se copia un saldo previsto como real.
+
+### tesoreria_presupuestos_liquidez
+
+Fuente compartida de los presupuestos mensuales del ERP, migraci?n `20261004_0001_unified_liquidity_budgets.sql`. Clave primaria `(anio, banco, seccion, concepto_id, mes)`. `importe numeric(14,2)` nullable contiene euros; `concepto text` conserva la etiqueta y `updated_at timestamptz` registra la edici?n. Ambas vistas consultan esta tabla; los cargos y ?rdenes vinculados sustituyen el presupuesto correspondiente sin volver a sumarlo. Las hojas JSON conservan la presentaci?n y los cierres hist?ricos, no una previsi?n financiera independiente.

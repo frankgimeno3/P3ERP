@@ -1,7 +1,8 @@
 import { getPgPool } from '../../database/pgClient.js';
 import { extendCharge, withStart, todayInSpain, horizon } from './RecurringChargePlanning.js';
 import { randomUUID } from 'node:crypto';
-import { withRuleIds, ruleStart } from '../banco/BankReviewAnalysis.js';
+import { withRuleIds, ruleStart,dateISO } from '../banco/BankReviewAnalysis.js';
+import {forecastRuleVat} from '../../../app/lib/forecastVat.js';
 
 export class RecurringChargeError extends Error {
   constructor(message, status = 400) { super(message); this.status = status; }
@@ -12,6 +13,8 @@ export function validateRecurringCharge(body) {
   if (!['proveedor', 'nomina', 'otro'].includes(tipo) || (tipo === 'nomina' ? !body.id_agente || body.id_proveedor : body.id_agente) || tipo === 'otro' && body.id_proveedor) throw new RecurringChargeError('Selecciona el tipo y su proveedor o empleado correspondiente. Otro no admite destinatario.');
   if (!['fechas', 'periodicidad'].includes(body.tipo_programacion) || !Array.isArray(body.programacion) || !body.programacion.length) throw new RecurringChargeError('Completa la programación.');
   const programacion = body.programacion.map(row => {
+    if(tipo!=='nomina'&&(typeof row?.contains_iva==='boolean'||body.requires_vat_confirmation))row=forecastRuleVat(row);
+    if(row?.importes_por_fecha&&Object.entries(row.importes_por_fecha).some(([date,value])=>!dateISO(date)||!Number.isFinite(Number(value))||Number(value)<0||Number(value)>9999999999.99))throw new RecurringChargeError('Revisa los importes de las excepciones por fecha.');
     if (!row || !Number.isFinite(Number(row.total_iva)) || Number(row.total_iva) <= 0 || Number(row.total_iva) > 9999999999.99 || !Number.isFinite(Number(row.base_imponible ?? 0)) || Number(row.base_imponible ?? 0) < 0) throw new RecurringChargeError('Revisa los importes de todas las filas.');
     if (body.tipo_programacion === 'fechas') {
       const year = row.anio === undefined ? 2000 : Number(row.anio), month = Number(row.mes), day = Number(row.dia);

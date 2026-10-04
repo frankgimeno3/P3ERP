@@ -1,0 +1,35 @@
+import assert from 'node:assert/strict';import {randomUUID} from 'node:crypto';import env from '@next/env';
+import {getPgPool} from '../server/database/pgClient.js';import {getJuanWorkbook,editJuanCell,getJuanLiquidity} from '../server/features/prevision/JuanRepository.js';import {projectLiquidityApplications} from '../server/features/prevision/LiquidityForecastApplications.js';
+env.loadEnvConfig(process.cwd());
+const sheet={bank:'Sabadell',payments:[{id:'fee'},{id:'cards',cardPart:'variable'}],income:[{id:'receipt',label:'REMESAS RECIBOS PREVISTAS DE COBRO'}]};
+const line={id_linea_banco:'expense',banco:'Sabadell',importe:-20,fecha_operativa:'02/10/2026',estado_revision:true,id_cargo_recurrente:'7'};
+const associations=[{bank:'Sabadell',row_id:'fee',charge_ids:['7']}];
+let apps=projectLiquidityApplications([sheet],associations,[line],[],2026);assert.equal(apps[0].cell_key,'Sabadell:fee:10');assert.equal(apps[0].importe,20);
+assert.equal(projectLiquidityApplications([sheet],associations,[{...line,estado_revision:false}],[],2026).length,0);
+assert.equal(projectLiquidityApplications([sheet],associations,[line],apps,2026).length,1,'A manual/derived association must not count a bank movement twice');
+assert.equal(projectLiquidityApplications([sheet],associations,[{...line,id_linea_banco:'card',concepto:'TARJETA CREDITO'}],[],2026)[0].cell_key,'Sabadell:cards:10');
+const pool=getPgPool(),db=await pool.connect();
+try{
+ await db.query('BEGIN');const schema='test_liquidity_source_'+randomUUID().replaceAll('-','');await db.query('CREATE SCHEMA '+schema);await db.query('SET LOCAL search_path TO '+schema+',public');
+ for(const table of ['tesoreria_presupuestos_liquidez','tesoreria_prevision_juan','tesoreria_prevision_juan_enlaces','tesoreria_prevision_juan_asociaciones','tesoreria_prevision_juan_aplicaciones','tesoreria_movimientos_bancarios','tesoreria_cargos_recurrentes','tesoreria_cargos_vencimientos'])await db.query(`CREATE TABLE ${schema}.${table} (LIKE public.${table} INCLUDING ALL)`);
+ for(const table of ['tesoreria_presupuestos_liquidez','tesoreria_prevision_juan'])await db.query(`INSERT INTO ${schema}.${table} SELECT * FROM public.${table}`);
+ const query=(sql,...args)=>['BEGIN','COMMIT','ROLLBACK'].includes(sql)?Promise.resolve({rows:[],rowCount:0}):db.query(sql,...args),adapter={query,connect:async()=>({query,release(){}})};
+ let book=await getJuanWorkbook(adapter,2026),row=book.sheets[0].payments.find(r=>/FINCAS SERRA/.test(r.label)),column=book.sheets[0].columns.findIndex(c=>c.month===10&&c.kind==='forecast');
+ const before=await getJuanLiquidity('31/10/2026',adapter);
+ book=await editJuanCell({year:2026,version:book.version,bank:'Sabadell',section:'payments',rowId:row.id,column,value:10000},adapter);
+ assert.equal(Number((await db.query("SELECT importe FROM tesoreria_presupuestos_liquidez WHERE anio=2026 AND banco='Sabadell' AND concepto_id=$1 AND mes=10",[row.id])).rows[0].importe),100);
+ const after=await getJuanLiquidity('31/10/2026',adapter);assert.equal(Math.round((before.Sabadell-after.Sabadell)*100),1098,'Editing the worksheet changes the ERP liquidity total');
+ await db.query("UPDATE tesoreria_presupuestos_liquidez SET importe=120 WHERE anio=2026 AND banco='Sabadell' AND concepto_id=$1 AND mes=10",[row.id]);
+ book=await getJuanWorkbook(adapter,2026);assert.equal(book.sheets[0].payments.find(r=>r.id===row.id).values[column],12000,'ERP budget edits override the presentation cache');
+ const afterErp=await getJuanLiquidity('31/10/2026',adapter);assert.equal(Math.round((after.Sabadell-afterErp.Sabadell)*100),2000);
+ await db.query("INSERT INTO tesoreria_prevision_juan_asociaciones(workbook_id,bank,row_id,status,charge_ids) VALUES('juan-2026','Sabadell',$1,'matched','[\"990070\"]')",[row.id]);
+ await db.query("INSERT INTO tesoreria_cargos_recurrentes(id_cargo_recurrente,tipo_cargo,banco_pago,tipo_programacion,programacion) VALUES(990070,'otro','Sabadell','fechas','[{\"id_regla\":\"one\",\"dia\":2,\"mes\":10,\"anio\":2026,\"base_imponible\":80,\"total_iva\":80}]')");
+ await db.query("INSERT INTO tesoreria_prevision_juan_enlaces(workbook_id,cell_key,section,target_id,status) VALUES('juan-2026',$1,'payments','990070','matched')",[`Sabadell:${row.id}:10`]);
+ await db.query("INSERT INTO tesoreria_cargos_vencimientos(id,id_cargo_recurrente,id_regla,fecha,importe,programacion) VALUES('unique-due',990070,'one','2026-10-02',80,'{}')");
+ book=await getJuanWorkbook(adapter,2026);assert.equal(book.planned.find(c=>c.key===`Sabadell:${row.id}:10`).amount,8000,'A linked charge replaces its envelope instead of adding to it');
+ await db.query("INSERT INTO tesoreria_movimientos_bancarios(id_linea_banco,banco,importe,fecha_operativa,fecha_valor,estado_revision,id_cargo_recurrente,concepto) VALUES('banc_sab_26_000.999.070','Sabadell',-30,'02/10/2026','02/10/2026',true,990070,'Servicio')");
+ book=await getJuanWorkbook(adapter,2026);const cell=book.planned.find(c=>c.key===`Sabadell:${row.id}:10`);assert.equal(cell.applied,3000);assert.equal(cell.pending,5000);
+ await assert.rejects(editJuanCell({year:2026,version:book.version,bank:'Sabadell',section:'payments',rowId:row.id,column,value:2000},adapter),/inferior al importe aplicado/);
+ await db.query("UPDATE tesoreria_movimientos_bancarios SET estado_revision=false WHERE id_linea_banco='banc_sab_26_000.999.070'");book=await getJuanWorkbook(adapter,2026);assert.equal(book.planned.find(c=>c.key===cell.key).applied,0,'Reopening reconciliation restores the pending forecast');
+ console.log('PASS: shared budgets in both directions, linked charge replaces envelope, automatic reconciliation, reopen and duplicate protection. Isolated changes rolled back.');
+}finally{await db.query('ROLLBACK');db.release();await pool.end();}

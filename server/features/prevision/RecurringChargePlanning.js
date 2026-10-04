@@ -16,7 +16,7 @@ export function planNext(charge, existing, today, until = horizon(today)) {
   if (charge.tipo_programacion === 'fechas') return generateOccurrences([charge], today, until).occurrences.filter(o => !existing.some(e => e.id === o.id));
   const result = [];
   for (const rule of charge.programacion) {
-    const prior = existing.filter(o => o.id_regla === rule.id_regla).sort((a, b) => a.fecha.localeCompare(b.fecha)).at(-1);
+    const prior = existing.filter(o => o.id_regla === rule.id_regla && rule.importes_por_fecha?.[o.fecha]===undefined).sort((a, b) => a.fecha.localeCompare(b.fecha)).at(-1);
     const start = ruleStart(rule);
     let date = prior?.fecha || start;
     if (!date) throw new Error('La periodicidad necesita una fecha de primer vencimiento.');
@@ -32,10 +32,12 @@ export function planNext(charge, existing, today, until = horizon(today)) {
     if (prior) date = advance(date);
     for (let count = 0; date <= until; count++, date = advance(date)) {
       if (count > 40000) throw new Error('La programación excede el límite de vencimientos.');
-      result.push({ id: fingerprint([String(charge.id_cargo_recurrente), rule.id_regla, date]), id_cargo_recurrente: String(charge.id_cargo_recurrente), id_regla: rule.id_regla, fecha: date, importe: Number(rule.total_iva), descripcion: rule.descripcion || 'Cargo previsto', programacion: { tipo: charge.tipo_programacion, regla: rule } });
+      const importe=Number(rule.importes_por_fecha?.[date]??rule.total_iva);
+      if(importe>0)result.push({ id: fingerprint([String(charge.id_cargo_recurrente), rule.id_regla, date]), id_cargo_recurrente: String(charge.id_cargo_recurrente), id_regla: rule.id_regla, fecha: date, importe, descripcion: rule.descripcion || 'Cargo previsto', programacion: { tipo: charge.tipo_programacion, regla: rule } });
     }
+    for(const [extra,amount] of Object.entries(rule.importes_por_fecha||{}))if(extra<=until&&Number(amount)>0&&!result.some(d=>d.id_regla===rule.id_regla&&d.fecha===extra)&&!existing.some(d=>d.id_regla===rule.id_regla&&d.fecha===extra))result.push({id:fingerprint([String(charge.id_cargo_recurrente),rule.id_regla,extra]),id_cargo_recurrente:String(charge.id_cargo_recurrente),id_regla:rule.id_regla,fecha:extra,importe:Number(amount),descripcion:rule.descripcion||'Cargo previsto',programacion:{tipo:charge.tipo_programacion,regla:rule}});
   }
-  return result;
+  return result.filter(d=>!existing.some(e=>e.id===d.id));
 }
 export async function extendCharge(db, charge, today = todayInSpain(), rebuild = false, until = horizon(today)) {
   if (!['proveedor','otro'].includes(charge.tipo_cargo) || charge.termina_planificacion && charge.planificado_hasta) return 0;

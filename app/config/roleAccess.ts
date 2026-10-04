@@ -1,7 +1,8 @@
-export type AppRole = "base" | "administracion" | "operaciones" | "superadmin";
+export type AppRole = "base" | "direccion" | "administracion" | "operaciones" | "superadmin";
 
 export const roleRank: Record<AppRole, number> = {
   base: 0,
+  direccion: 0,
   administracion: 1,
   operaciones: 2,
   superadmin: 3,
@@ -9,14 +10,14 @@ export const roleRank: Record<AppRole, number> = {
 
 export function normalizeRole(role: unknown): AppRole {
   const value = String(role || "").trim().toLowerCase();
-  if (value === "direccion" || value === "dirección") return "superadmin";
+  if (value === "direccion" || value === "dirección") return "direccion";
   if (value === "administracion" || value === "operaciones" || value === "superadmin") return value;
   return "base";
 }
 
 export function canViewModule(role: unknown, moduleId: string) {
   const normalized = normalizeRole(role);
-  if (moduleId === "direccion") return normalized === "superadmin";
+  if (moduleId === "direccion") return normalized === "superadmin" || normalized === "direccion";
   if (moduleId === "operaciones") return roleRank[normalized] >= roleRank.operaciones;
   if (moduleId === "administracion") return roleRank[normalized] >= roleRank.administracion;
   return true;
@@ -33,10 +34,10 @@ export function canAccessDashboardPath(role: unknown, pathname: string) {
 export function canAccessApiPath(role: unknown, pathname: string, method: string) {
   const normalized = normalizeRole(role);
   if (method === 'POST' && /^\/api\/v1\/tareas\/propias\/?$/.test(pathname)) return true;
-  if (pathname.startsWith('/api/v1/tareas') && (method !== 'GET' || pathname === '/api/v1/tareas/agentes')) return roleRank[normalized] >= roleRank.operaciones;
+  if (pathname.startsWith('/api/v1/tareas') && (method !== 'GET' || pathname === '/api/v1/tareas/agentes')) return normalized === 'direccion' || roleRank[normalized] >= roleRank.operaciones;
   if (method !== 'GET' && pathname.startsWith('/api/v1/comercial/contratos/crear')) return roleRank[normalized] >= roleRank.administracion;
-  if (/^\/api\/v1\/direccion\/laboral\/tareas-agentes(?:\/[^/]+)?\/?$/.test(pathname)) return roleRank[normalized] >= roleRank.operaciones;
-  if (pathname.startsWith("/api/v1/direccion")) return normalized === "superadmin";
+  if (/^\/api\/v1\/direccion\/laboral\/tareas-agentes(?:\/[^/]+)?\/?$/.test(pathname)) return normalized === 'direccion' || roleRank[normalized] >= roleRank.operaciones;
+  if (pathname.startsWith("/api/v1/direccion")) return normalized === "superadmin" || normalized === "direccion";
   if (pathname.startsWith("/api/v1/operaciones")) return roleRank[normalized] >= roleRank.operaciones;
   if (method !== "GET" && pathname.startsWith("/api/v1/produccion/servicios")) return roleRank[normalized] >= roleRank.operaciones;
   const sharedAdminRead = method === "GET" && /^\/api\/v1\/admin\/(agentes|ferias|proveedores)(?:\/[^/]+)?\/?$/.test(pathname);
