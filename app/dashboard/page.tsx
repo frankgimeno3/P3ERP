@@ -1,4 +1,5 @@
 "use client";
+import TableFilters from '@/app/components/TableFilters';
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -306,7 +307,7 @@ export default function DashboardPage() {
 
             {cuentasError && <div className="mb-4 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{cuentasError}</div>}
 
-            <div className="mb-5 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <TableFilters>
               {[
                 ["id_cuenta", "Codigo"],
                 ["nombre_empresa", "Empresa"],
@@ -323,7 +324,7 @@ export default function DashboardPage() {
                   />
                 </label>
               ))}
-            </div>
+            </TableFilters>
 
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm">

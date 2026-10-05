@@ -1,0 +1,35 @@
+import assert from 'node:assert/strict';
+import {randomUUID} from 'node:crypto';
+import env from '@next/env';
+import {getPgPool} from '../server/database/pgClient.js';
+import {getPreliminaryFlatplan,updatePreliminaryFlatplan} from '../server/features/produccion/PreliminaryFlatplanRepository.js';
+env.loadEnvConfig(process.cwd());
+const pool=getPgPool(),db=await pool.connect();
+try {
+ await db.query('BEGIN');const schema='test_flatplan_'+randomUUID().replaceAll('-','');
+ await db.query(`CREATE SCHEMA ${schema}`);await db.query(`SET LOCAL search_path TO ${schema},public`);
+ await db.query(`CREATE TABLE ${schema}.produccion_planillos_previos (LIKE public.produccion_planillos_previos INCLUDING ALL)`);
+ const query=(sql,...args)=>['BEGIN','COMMIT','ROLLBACK'].includes(sql)?Promise.resolve({rows:[]}):db.query(sql,...args);
+ const adapter={query,connect:async()=>({query,release(){}})};
+ const load=async()=>({revista:{num_paginas:8},sources:[{id:'a',type:'Anuncio',account:'Cuenta A',detail:'Doble',pages:2}]});
+ let book=await getPreliminaryFlatplan('test',adapter,load);const version=book.version;
+ assert.equal(book.plan.slots.filter(id=>id==='a').length,2);
+ book=await updatePreliminaryFlatplan('test',{version,action:{type:'remove',blockId:'a',compact:false}},adapter,load);
+ assert.equal(book.version,version+1);assert.equal(book.plan.slots[2],null);assert.ok(book.plan.excluded.includes('a'));
+ await assert.rejects(updatePreliminaryFlatplan('test',{version,action:{type:'insert-empty',target:2}},adapter,load),/ha cambiado/);
+ book=await updatePreliminaryFlatplan('test',{version:book.version,action:{type:'add',sourceId:'a',target:3,count:2}},adapter,load);
+ assert.equal(book.plan.slots.filter(id=>id==='a').length,2);assert.ok(!book.plan.excluded.includes('a'));
+ await assert.rejects(updatePreliminaryFlatplan('test',{version:book.version,action:{type:'add',sourceId:'invented',target:2,count:1}},adapter,load),/contenido válido/);
+ await assert.rejects(updatePreliminaryFlatplan('test',{version:book.version,action:{type:'insert-empty',target:4}},adapter,load),/parte intermedia/);
+ assert.equal((await getPreliminaryFlatplan('test',adapter,load)).version,book.version,'Failed operations must not change the saved plan');
+ const singles=async()=>({revista:{num_paginas:10},sources:['one','two'].map(id=>({id,type:'Anuncio',account:id,detail:id,pages:1}))});
+ const original=await getPreliminaryFlatplan('swap-test',adapter,singles);
+ const onePosition=original.plan.slots.indexOf('one'),twoPosition=original.plan.slots.indexOf('two');
+ const swap=await updatePreliminaryFlatplan('swap-test',{version:original.version,action:{type:'swap',blockId:'one',otherId:'two'}},adapter,singles);
+ assert.equal(swap.plan.slots[onePosition],'two');assert.equal(swap.plan.slots[twoPosition],'one');
+ assert.equal(swap.plan.slots.filter((id,i)=>id!==original.plan.slots[i]).length,2);
+ const hole=swap.plan.slots.findIndex((id,i)=>!id&&i>0);
+ const fill=await updatePreliminaryFlatplan('swap-test',{version:swap.version,action:{type:'fill-hole',blockId:'one',target:hole,compact:false}},adapter,singles);
+ assert.equal(fill.plan.slots[hole],'one');assert.equal(fill.plan.slots[twoPosition],null);
+ console.log('PASS: persistent draft, whole-block removal/reinsertion, optimistic concurrency, source validation, atomic rejected edits. Isolated changes rolled back.');
+}finally{await db.query('ROLLBACK');db.release();await pool.end();}

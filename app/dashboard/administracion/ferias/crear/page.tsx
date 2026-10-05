@@ -1,4 +1,5 @@
 "use client";
+import TableFilters from '@/app/components/TableFilters';
 import SearchableSelect from "@/app/components/SearchableSelect";
 
 import { useEffect, useMemo, useState } from "react";
@@ -144,7 +145,7 @@ export default function CrearFeriaPage() {
               <p className="text-lg font-semibold text-blue-950">Seleccionar</p>
               <button type="button" aria-label="Cerrar" onClick={() => { setModal(null); setQuery(""); }} className="cursor-pointer text-3xl leading-none transition hover:text-blue-700">×</button>
             </div>
-            {modal === 'feria' ? <><input value={query} onChange={event=>setQuery(event.target.value)} placeholder="Filtrar ferias" className="mb-3 w-full rounded border p-2"/><div className="max-h-[55vh] overflow-auto"><table className="w-full text-left text-sm"><thead><tr>{['Feria','País','Periodicidad','Temática'].map(label=><th key={label} className="p-2">{label}</th>)}</tr></thead><tbody>{filtered(catalogo).map(item=><tr key={item.id_feria} onClick={()=>{setForm({...form,id_feria_base:item.id_feria,nombre_feria:item.nombre_feria,pais:item.pais,periodicidad:item.periodicidad,tematica:item.tematica});setModal(null);setQuery('');}} className="cursor-pointer border-t hover:bg-blue-50"><td className="p-2">{item.nombre_feria}</td><td className="p-2">{item.pais}</td><td className="p-2">{item.periodicidad}</td><td className="p-2">{item.tematica}</td></tr>)}</tbody></table></div></> : modal === "intercambio" ? (
+            {modal === 'feria' ? <><TableFilters><label className="block text-xs text-gray-600"><span className="mb-1 block">Buscar feria</span><input value={query} onChange={event=>setQuery(event.target.value)} placeholder="Filtrar ferias" className="mb-3 w-full rounded border p-2"/></label></TableFilters><div className="max-h-[55vh] overflow-auto"><table className="w-full text-left text-sm"><thead><tr>{['Feria','País','Periodicidad','Temática'].map(label=><th key={label} className="p-2">{label}</th>)}</tr></thead><tbody>{filtered(catalogo).map(item=><tr key={item.id_feria} onClick={()=>{setForm({...form,id_feria_base:item.id_feria,nombre_feria:item.nombre_feria,pais:item.pais,periodicidad:item.periodicidad,tematica:item.tematica});setModal(null);setQuery('');}} className="cursor-pointer border-t hover:bg-blue-50"><td className="p-2">{item.nombre_feria}</td><td className="p-2">{item.pais}</td><td className="p-2">{item.periodicidad}</td><td className="p-2">{item.tematica}</td></tr>)}</tbody></table></div></> : modal === "intercambio" ? (
               <div className="space-y-2">
                 {intercambioOptions.map(([value, label]) => (
                   <button key={value} type="button" onClick={() => {

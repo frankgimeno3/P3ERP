@@ -1,6 +1,7 @@
 'use client';
 
 import React, { FC } from 'react';
+import TableFilters from '@/app/components/TableFilters';
 import DatePartsInput from '@/app/components/DatePartsInput';
 
 interface Agente {
@@ -26,6 +27,7 @@ interface FiltrosPropuestasProps {
   pestana: 'miasenproceso' | 'todasporcliente';
   agenteActual: string;
   agentes: Agente[];
+  children?: React.ReactNode;
 }
 
 const getNombreAgente = (agente: Agente) =>
@@ -49,6 +51,7 @@ const FiltrosPropuestas: FC<FiltrosPropuestasProps> = ({
   pestana,
   agenteActual,
   agentes,
+  children,
 }) => {
   const bloqueaAgente = pestana === 'miasenproceso';
   const bloqueaFechas = false;
@@ -58,11 +61,11 @@ const FiltrosPropuestas: FC<FiltrosPropuestasProps> = ({
 
   return (
     <div className="flex w-full flex-col bg-white">
-      <details><summary className="mb-3 cursor-pointer rounded p-2 text-sm font-semibold text-gray-700 hover:bg-blue-50">Filtros de propuestas</summary>
-      <div className="w-full space-y-3">
-        <div className="grid w-full grid-cols-1 gap-3 md:grid-cols-3">
+      <TableFilters>
+      <div className="contents">
+        <div className="contents">
           <div className="flex flex-col">
-            <label className="mb-1 block text-xs text-gray-600">Nombre cliente</label>
+            <label className="mb-1 block text-xs font-extralight text-gray-600">Nombre cliente</label>
             <input
               type="text"
               value={clienteFiltro}
@@ -73,7 +76,7 @@ const FiltrosPropuestas: FC<FiltrosPropuestasProps> = ({
           </div>
 
           <div className="flex flex-col">
-            <label className="mb-1 block text-xs text-gray-600">C&oacute;digo CRM</label>
+            <label className="mb-1 block text-xs font-extralight text-gray-600">C&oacute;digo CRM</label>
             <input
               type="text"
               value={codigoCRMFiltro}
@@ -84,7 +87,7 @@ const FiltrosPropuestas: FC<FiltrosPropuestasProps> = ({
           </div>
 
           <div className="flex flex-col">
-            <label className="mb-1 block text-xs text-gray-600">Agente</label>
+            <label className="mb-1 block text-xs font-extralight text-gray-600">Agente</label>
             <select
               value={bloqueaAgente ? agenteActual : agenteFiltro}
               onChange={(e) => !bloqueaAgente && setAgenteFiltro(e.target.value)}
@@ -101,11 +104,11 @@ const FiltrosPropuestas: FC<FiltrosPropuestasProps> = ({
           </div>
 
         </div>
-        <div className="grid w-full grid-cols-1 gap-3 md:grid-cols-3">
+        <div className="contents">
           <DatePartsInput label="Desde" value={fechaInicio} onChange={setFechaInicio} disabled={bloqueaFechas} />
           <DatePartsInput label="Hasta" value={fechaFin} onChange={setFechaFin} disabled={bloqueaFechas} />
           <div className="flex flex-col">
-            <label className="mb-1 block text-xs text-gray-600">Estado</label>
+            <label className="mb-1 block text-xs font-extralight text-gray-600">Estado</label>
             <select
               value={bloqueaEstado ? 'Pendiente' : estadoFiltro}
               onChange={(e) => !bloqueaEstado && setEstadoFiltro(e.target.value)}
@@ -124,7 +127,7 @@ const FiltrosPropuestas: FC<FiltrosPropuestasProps> = ({
           </div>
         </div>
       </div>
-    </details></div>
+    {children}</TableFilters></div>
   );
 };
 

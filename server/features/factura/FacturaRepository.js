@@ -1,4 +1,6 @@
 import { getPgPool } from "../../database/pgClient.js";
+import { randomUUID } from 'node:crypto';
+import { validateSupplierInvoice,validateSupplierInvoiceValues } from './SupplierInvoiceValidation.js';
 
 function numberOrZero(value) {
   return value === null || value === undefined ? 0 : Number(value);
@@ -85,6 +87,7 @@ export async function getFacturaProveedorById(idFactura) {
 }
 
 export async function createFacturaProveedor(data = {}) {
+  validateSupplierInvoiceValues(data);
   const pool = getPgPool();
   const idFactura = data.id_factura_proveedor || data.orden_compra_p3;
   const baseImponible = nullableNumber(data.base_imponible);
@@ -129,27 +132,39 @@ export async function createFacturaProveedor(data = {}) {
   return normalizeFacturaProveedor(rows[0]);
 }
 
-export async function createFacturaProveedorCompleta(data = {}) {
+export async function createFacturaProveedorCompleta(data = {}, actor = '') {
+    validateSupplierInvoice(data);
   const pool = getPgPool();
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
+    if(data.upload_id){
+      const staged=(await client.query("SELECT * FROM administracion_facturas_subidas WHERE id=$1 AND state='pending' AND actor=$2 FOR UPDATE",[data.upload_id,actor])).rows[0];
+      if(!staged||staged.url!==data.documento_src)throw Object.assign(new Error('La subida no está disponible. Adjunta de nuevo el PDF.'),{status:409});
+      const {assertObjectExistsInS3}=await import('../mediateca/S3Service.js');
+      await assertObjectExistsInS3(staged.s3_key);
+    }
     const total = nullableNumber(data.importe_total);
     const pagos = Array.isArray(data.pagos) ? data.pagos : [];
     const suma = pagos.reduce((sum, pago) => sum + Number(pago.importe || 0), 0);
     if (!data.id_proveedor || !data.numero_factura_proveedor || !data.fecha_factura || !data.documento_src || total === null) throw new Error("Completa los datos de la factura");
     if (!pagos.length || pagos.some(p => !p.forma || !p.fecha || p.importe === "")) throw new Error("Completa todos los pagos");
     if (Math.abs(suma - total) > 0.005) throw new Error("Los pagos deben cuadrar exactamente con el total");
-    const idFactura = `FP-${Date.now()}`;
+    const idFactura = `FP-${randomUUID()}`;
     const { rows } = await client.query(`
       INSERT INTO administracion_facturas_proveedores (id_factura_proveedor,id_proveedor,numero_factura_proveedor,codigo_factura,fecha_factura,base_imponible,importe_total,forma_pago,estado,comentarios,documento_src)
       VALUES ($1,$2,$3,$3,$4,$5,$6,$7,'registrada',$8,$9) RETURNING *
     `,[idFactura,data.id_proveedor,data.numero_factura_proveedor,data.fecha_factura,nullableNumber(data.base_imponible),total,pagos.map(p=>p.forma).join(", "),data.comentarios||"",data.documento_src]);
     for (let index=0; index<pagos.length; index++) {
       const pago=pagos[index];
-      await client.query(`INSERT INTO tesoreria_pagos_previstos (id_pago,id_factura_proveedor,id_proveedor,fecha_pago,total_pago,forma_pago,comentarios,nombre_planificacion,descripcion_planificacion)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,[`${idFactura}-P${index+1}`,idFactura,data.id_proveedor,pago.fecha,Number(pago.importe),pago.forma,data.comentarios||"",`Pago ${index+1} · ${data.numero_factura_proveedor}`,data.comentarios||""]);
+      if (pago.id_vencimiento) {
+        const due = (await client.query(`SELECT v.id FROM tesoreria_cargos_vencimientos v JOIN tesoreria_cargos_recurrentes c ON c.id_cargo_recurrente=v.id_cargo_recurrente WHERE v.id=$1 AND c.id_proveedor=$2 AND c.banco_pago=$3 FOR UPDATE OF v`, [pago.id_vencimiento, data.id_proveedor, pago.banco])).rows[0];
+        if (!due) { const error = new Error('El vencimiento debe pertenecer a este proveedor y banco.'); error.status = 400; throw error; }
+      }
+      await client.query(`INSERT INTO tesoreria_pagos_previstos (id_pago,id_factura_proveedor,id_proveedor,fecha_pago,total_pago,forma_pago,comentarios,nombre_planificacion,descripcion_planificacion,cuenta_pago,id_vencimiento)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,[`${idFactura}-P${index+1}`,idFactura,data.id_proveedor,pago.fecha,Number(pago.importe),pago.forma,data.comentarios||"",`Pago ${index+1} · ${data.numero_factura_proveedor}`,data.comentarios||"",pago.banco,pago.id_vencimiento||null]);
     }
+    if(data.upload_id)await client.query("UPDATE administracion_facturas_subidas SET state='consumed',invoice_id=$2 WHERE id=$1",[data.upload_id,idFactura]);
     await client.query("COMMIT");
     return normalizeFacturaProveedor(rows[0]);
   } catch(error) { await client.query("ROLLBACK"); throw error; }
@@ -157,6 +172,7 @@ export async function createFacturaProveedorCompleta(data = {}) {
 }
 
 export async function updateFacturaProveedor(idFactura, data = {}) {
+  validateSupplierInvoiceValues(data);
   const pool = getPgPool();
   const baseImponible = nullableNumber(data.base_imponible);
   const importeTotal = nullableNumber(data.importe_total);

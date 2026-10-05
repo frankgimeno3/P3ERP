@@ -1,6 +1,7 @@
 'use client'
 import React, { FC, useEffect, useState } from 'react';
 import { AgenteService } from '@/app/service/AgenteService';
+import TableFilters from '@/app/components/TableFilters';
 import TableColumnFilter from '@/app/components/TableColumnFilter';
 
 interface Agente {
@@ -55,16 +56,16 @@ const Filtroscuentas: FC<FiltroscuentasProps> = ({
   }, []);
 
   return (
-    <div className="flex w-full flex-col justify-left rounded bg-white p-5">
-      <p className="mb-2 text-lg font-semibold">Buscador de cuentas</p>
+    <TableFilters>
 
-      <div className="grid w-full grid-cols-1 items-start gap-4 sm:grid-cols-2 xl:grid-cols-6">
+
+      <div className="contents">
         <TableColumnFilter label="Nombre empresa" value={clienteFiltro} onChange={setClienteFiltro} />
         <TableColumnFilter label="ID cuenta (Tiger)" value={codigoCrmFiltro} onChange={setCodigoCrmFiltro} />
         <TableColumnFilter label="Código Edisoft" value={codigoEdisoftFiltro} onChange={setCodigoEdisoftFiltro} />
-        <details>
-          <summary className="cursor-pointer rounded p-1 hover:bg-blue-100 hover:text-blue-950">Agente asignado{agenteFiltro ? ' · Filtro activo' : ''}</summary>
-          <select aria-label="Filtrar agente asignado" value={agenteFiltro} onChange={(e) => setAgenteFiltro(e.target.value)} className="mt-2 w-full cursor-pointer rounded border bg-white p-2 hover:border-blue-400">
+        <label className="block text-xs font-extralight text-gray-600">
+          <span className="mb-1 block">Agente asignado</span>
+          <select aria-label="Filtrar agente asignado" value={agenteFiltro} onChange={(e) => setAgenteFiltro(e.target.value)} className="w-full cursor-pointer rounded border bg-white p-2 hover:border-blue-400">
             <option value="">Todos los agentes</option>
             {agentes.map((agente) => (
               <option key={agente.id_agente} value={agente.id_agente}>
@@ -72,11 +73,11 @@ const Filtroscuentas: FC<FiltroscuentasProps> = ({
               </option>
             ))}
           </select>
-        </details>
+        </label>
         <TableColumnFilter label="País" value={paisFiltro} onChange={setPaisFiltro} />
         <TableColumnFilter label="Tel principal" value={telFiltro} onChange={setTelFiltro} />
       </div>
-    </div>
+    </TableFilters>
   );
 };
 

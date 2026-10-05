@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { DeleteObjectCommand, GetObjectCommand, HeadObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { DeleteObjectCommand, GetObjectCommand, HeadObjectCommand, PutObjectCommand, ListObjectsV2Command, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const region =
@@ -11,6 +11,7 @@ const bucket = process.env.AWS_S3_BUCKET || process.env.S3_BUCKET || "";
 const cloudFrontUrl = process.env.NEXT_PUBLIC_CLOUDFRONT_URL || "";
 
 let client;
+export function isDocumentStorageConfigured(){return Boolean(bucket);}
 
 function getCredentials() {
   const accessKeyId = process.env.IAM_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID;
@@ -28,6 +29,19 @@ function getClient() {
     });
   }
   return client;
+}
+
+export async function* backupObjects() {
+  if (!bucket) throw new Error('El almacenamiento documental no está configurado.');
+  let ContinuationToken;
+  do {
+    const page=await getClient().send(new ListObjectsV2Command({Bucket:bucket,ContinuationToken}));
+    for(const item of page.Contents||[]) {
+      const object=await getClient().send(new GetObjectCommand({Bucket:bucket,Key:item.Key,IfMatch:item.ETag}));
+      yield {key:item.Key,etag:item.ETag,contentType:object.ContentType,body:object.Body};
+    }
+    ContinuationToken=page.IsTruncated?page.NextContinuationToken:undefined;
+  }while(ContinuationToken);
 }
 
 function cleanFilename(filename) {

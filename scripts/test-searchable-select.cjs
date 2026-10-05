@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const Module = require('node:module');
 const ts = require('typescript');
-const { JSDOM } = require(path.join(process.env.P3_SELECTOR_TEST_MODULES, 'jsdom'));
+const { JSDOM } = require(process.env.P3_SELECTOR_TEST_MODULES ? path.join(process.env.P3_SELECTOR_TEST_MODULES,'jsdom') : 'jsdom');
 const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>', { url:'http://localhost' });
 Object.assign(global, {window:dom.window,document:dom.window.document,navigator:dom.window.navigator,HTMLElement:dom.window.HTMLElement,IS_REACT_ACT_ENVIRONMENT:true});
 dom.window.HTMLElement.prototype.scrollIntoView = function() {};

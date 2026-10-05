@@ -1,4 +1,5 @@
 "use client";
+import TableFilters from '@/app/components/TableFilters';
 
 import React, { FC, useEffect, useState } from "react";
 import Link from "next/link";
@@ -119,12 +120,12 @@ const Materiales: FC = () => {
             </div>
           </div>
 
-          <details className="group mb-5 border border-gray-200 bg-white p-4">
-            <summary className="cursor-pointer rounded text-[13px] font-semibold uppercase text-gray-500 hover:bg-gray-50 hover:text-blue-950 group-open:mb-3">Filtros</summary>
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-3 xl:grid-cols-5">
+          <TableFilters>
+
+            <div className="contents">
               {columns.map(([field, label]) => (
                 <label key={field} className="text-[13px]">
-                  <span className="mb-1 block text-[11px] font-semibold uppercase text-gray-500">{label}</span>
+                  <span className="mb-1 block text-[11px] font-extralight text-gray-500">{label}</span>
                   {["agente", "estado", "tipo", "anuncio", "articulo"].includes(field) ? (
                     <select value={filters[field] || ""} onChange={(event) => setFilters({ ...filters, [field]: event.target.value })} className="cursor-pointer hover:border-blue-950 w-full rounded border border-gray-300 bg-white px-3 py-2 text-[13px] outline-none focus:border-blue-950">
                       <option value="">Todos</option>
@@ -158,7 +159,7 @@ const Materiales: FC = () => {
                 </div>
               </div>
             </div>
-          </details>
+          </TableFilters>
 
           <div className="overflow-x-auto text-[11px]">
             <table className="min-w-full">

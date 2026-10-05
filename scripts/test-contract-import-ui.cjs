@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-require-imports -- Browser test harness for TSX. */
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),ts=require('typescript');
-const {JSDOM}=require(path.join(process.env.P3_SELECTOR_TEST_MODULES,'jsdom'));
+const {JSDOM}=require(process.env.P3_SELECTOR_TEST_MODULES ? path.join(process.env.P3_SELECTOR_TEST_MODULES,'jsdom') : 'jsdom');
 const dom=new JSDOM('<div id="root"></div>',{url:'http://localhost'});
 Object.assign(global,{window:dom.window,document:dom.window.document,navigator:dom.window.navigator,HTMLElement:dom.window.HTMLElement,FormData:dom.window.FormData,IS_REACT_ACT_ENVIRONMENT:true});
 dom.window.HTMLElement.prototype.scrollIntoView=function(){};
@@ -24,7 +24,7 @@ function load(file){
     if(id==='@/app/apiClient')return {__esModule:true,default:api};
     if(id.includes('ServicioService'))return {ServicioService:{getServicios:async()=>[{id_servicio:'srv',id_medio:'web',nombre_medio:'Web',nombre_servicio_es:'Servicio',precio_tarifa:100}]}};
     if(id.includes('RevistaService'))return {RevistaService:{getRevistas:async()=>[]}};
-    if(id.includes('CuentaService'))return {CuentaService:{getCuentas:async()=>[{id_cuenta:'client',nombre_empresa:'Cliente',id_agente:'agent'}]}};
+    if(id.includes('CuentaService'))return {CuentaService:{getCuentas:async()=>({rows:[{id_cuenta:'client',nombre_empresa:'Cliente',id_agente:'agent'}],total:1})}};
     if(id.includes('AgenteService'))return {AgenteService:{getAgentes:async()=>[{id_agente:'agent',nombre_completo_agente:'Agente asignado'}]}};
     if(id.includes('ContactoService'))return {ContactoService:{getContactos:async()=>[]}};
     if(id==='xlsx')return {...require('xlsx'),writeFile:book=>{template=book;}};
@@ -41,6 +41,7 @@ const select=async(node,value)=>React.act(async()=>{node.value=value;node.dispat
 (async()=>{
   const Direct=load('app/dashboard/administracion/control-administrativo/nuevo-contrato/page.tsx').default;
   await React.act(async()=>root.render(React.createElement(Direct)));
+  await React.act(async()=>await new Promise(resolve=>setTimeout(resolve,300)));
   await click('Continuar');assert.match(document.querySelector('[role="alert"]').textContent,/cuenta/);
   await React.act(async()=>document.querySelector('[aria-label="Cuenta"]').focus());await React.act(async()=>document.querySelector('[role="option"]').click());
   assert.equal(document.querySelector('[aria-label="Agente"]').value,'Agente asignado');
@@ -55,6 +56,7 @@ const select=async(node,value)=>React.act(async()=>{node.value=value;node.dispat
   await input(label('Importe EUR'),'121');await click('Continuar');assert.equal(calls.length,0);
   await click('Crear contrato');assert.equal(calls.length,1);assert(!calls[0].data.id_factura);assert.equal(calls[0].data.cobros[0].fecha_cobro,'30/12/2099');assert.equal(navigations[0],'/dashboard/comercial/contratos/C-CREATED');
   await React.act(async()=>root.render(React.createElement(Direct,{key:'exchange'})));
+  await React.act(async()=>await new Promise(resolve=>setTimeout(resolve,300)));
   await React.act(async()=>document.querySelector('[aria-label="Cuenta"]').focus());await React.act(async()=>document.querySelector('[role="option"]').click());
   await input(label('Nombre del contrato'),'Intercambio');await click('Continuar');
   await React.act(async()=>[...document.querySelectorAll('button')].find(b=>b.textContent.startsWith('+ Agregar servicio')).click());

@@ -1,4 +1,5 @@
 'use client';
+import TableFilters from '@/app/components/TableFilters';
 
 import Link from 'next/link';
 import React, { FC, useEffect, useMemo, useState } from 'react';
@@ -97,12 +98,12 @@ const ContenidoPorCliente: FC<ContenidoPorClienteProps> = ({ estado = 'curso' })
 
   return (
     <div className="mt-8 flex flex-col gap-4 rounded-xl">
-      <div className="flex flex-wrap gap-3 rounded bg-white p-4 shadow-sm">
-        <input value={clienteFiltro} onChange={(event) => setClienteFiltro(event.target.value)} placeholder="Filtrar cliente" className={inputClass} />
-        <select aria-label="Filtrar por agente" value={agenteFiltro} onChange={(event) => setAgenteFiltro(event.target.value)} className={`${inputClass} bg-white`}><option value="">Todos los agentes</option>{agentes.map((agente) => <option key={agente.id_agente} value={agente.id_agente}>{agente.nombre_completo_agente || `${agente.nombre_agente || ''} ${agente.apellidos_agente || ''}`.trim()}</option>)}</select>
-        <input value={contactoFiltro} onChange={(event) => setContactoFiltro(event.target.value)} placeholder="Filtrar contacto" className={inputClass} />
-        <input value={propuestaFiltro} onChange={(event) => setPropuestaFiltro(event.target.value)} placeholder="Filtrar propuesta" className={inputClass} />
-      </div>
+      <TableFilters>
+        <label className="block text-xs text-gray-600"><span className="mb-1 block">Cliente</span><input value={clienteFiltro} onChange={(event) => setClienteFiltro(event.target.value)} placeholder="Filtrar cliente" className={inputClass} /></label>
+        <label className="block text-xs text-gray-600"><span className="mb-1 block">Agente</span><select aria-label="Filtrar por agente" value={agenteFiltro} onChange={(event) => setAgenteFiltro(event.target.value)} className={`${inputClass} bg-white`}><option value="">Todos los agentes</option>{agentes.map((agente) => <option key={agente.id_agente} value={agente.id_agente}>{agente.nombre_completo_agente || `${agente.nombre_agente || ''} ${agente.apellidos_agente || ''}`.trim()}</option>)}</select></label>
+        <label className="block text-xs text-gray-600"><span className="mb-1 block">Contacto</span><input value={contactoFiltro} onChange={(event) => setContactoFiltro(event.target.value)} placeholder="Filtrar contacto" className={inputClass} /></label>
+        <label className="block text-xs text-gray-600"><span className="mb-1 block">Propuesta</span><input value={propuestaFiltro} onChange={(event) => setPropuestaFiltro(event.target.value)} placeholder="Filtrar propuesta" className={inputClass} /></label>
+      </TableFilters>
 
       {error && <div className="rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
 

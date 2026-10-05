@@ -93,12 +93,12 @@ export async function generateBackup({ nombre, detalles, selecciones }) {
 
     const generatedAt = new Date().toISOString();
     const backup = {
-      formato: 'p3erp-backup-v1',
+      formato: 'p3erp-data-export-v1',
       nombre: cleanName,
       generado_en: generatedAt,
       tablas: contents,
     };
-    await saveRegistry({ nombre: cleanName, detalles: String(detalles || ''), estado: 'correcta', tablas: normalized.map((item) => item.tabla) });
+    await saveRegistry({ nombre: cleanName, detalles: 'EXPORTACION DE DATOS (sin esquema ni documentos): '+String(detalles || ''), estado: 'correcta', tablas: normalized.map((item) => item.tabla) });
     return backup;
   } catch (error) {
     try { await client.query('ROLLBACK'); } catch {}

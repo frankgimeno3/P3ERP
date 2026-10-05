@@ -1,0 +1,3 @@
+import {getInvoicePayments,saveInvoicePayments} from '@/server/features/factura/InvoicePaymentsRepository.js';
+export async function GET(request,{params}){try{return Response.json(await getInvoicePayments((await params).id));}catch(error){return Response.json({message:error.message},{status:error.status||500});}}
+export async function PUT(request,{params}){try{return Response.json(await saveInvoicePayments((await params).id,await request.json()));}catch(error){return Response.json({message:error.code==='23505'?'Este vencimiento estimado ya está vinculado a otra factura.':error.message},{status:error.status||(error.code==='23505'?409:500)});}}

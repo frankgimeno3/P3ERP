@@ -1,5 +1,5 @@
 "use client";
-
+import TableFilters from '@/app/components/TableFilters';
 import { useEffect, useMemo, useState } from "react";
 import MiddleNav from "@/app/general_components/componentes_recurrentes/MiddleNav";
 import { CuentaService } from "@/app/service/CuentaService";
@@ -62,12 +62,12 @@ export default function GestionCuentasPage() {
 
         <section className="bg-white p-6 shadow-sm">
           {error && <div className="mb-4 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
-          <div className="mb-5 grid gap-3 md:grid-cols-4">
+          <TableFilters>
             <Filter label="ID cuenta" value={filters.id} onChange={(value) => setFilters({ ...filters, id: value })} />
             <Filter label="Empresa" value={filters.nombre} onChange={(value) => setFilters({ ...filters, nombre: value })} />
             <Filter label="Pais" value={filters.pais} onChange={(value) => setFilters({ ...filters, pais: value })} />
-            <label className="text-sm"><span className="mb-1 block text-xs font-semibold uppercase text-gray-500">Agente</span><select value={filters.agente} onChange={(event) => setFilters({ ...filters, agente: event.target.value })} className="w-full rounded border border-gray-300 bg-white px-3 py-2"><option value="">Todos los agentes</option>{agentes.map((agente) => <option key={agente.id_agente} value={agente.id_agente}>{agente.nombre_completo_agente || `${agente.nombre_agente || ""} ${agente.apellidos_agente || ""}`.trim()}</option>)}</select></label>
-          </div>
+            <label className="text-sm"><span className="mb-1 block text-xs font-extralight text-gray-500">Agente</span><select value={filters.agente} onChange={(event) => setFilters({ ...filters, agente: event.target.value })} className="w-full rounded border border-gray-300 bg-white px-3 py-2"><option value="">Todos los agentes</option>{agentes.map((agente) => <option key={agente.id_agente} value={agente.id_agente}>{agente.nombre_completo_agente || `${agente.nombre_agente || ""} ${agente.apellidos_agente || ""}`.trim()}</option>)}</select></label>
+          </TableFilters>
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead className="bg-blue-950 text-white">
@@ -114,7 +114,7 @@ export default function GestionCuentasPage() {
 function Filter({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
   return (
     <label className="text-sm">
-      <span className="mb-1 block text-xs font-semibold uppercase text-gray-500">{label}</span>
+      <span className="mb-1 block text-xs font-extralight text-gray-500">{label}</span>
       <input value={value} onChange={(event) => onChange(event.target.value)} className="w-full rounded border border-gray-300 px-3 py-2 outline-none focus:border-blue-950" />
     </label>
   );

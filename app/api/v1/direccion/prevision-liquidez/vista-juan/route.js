@@ -3,10 +3,9 @@ import {getJuanWorkbook,editJuanCell,applyJuanMovement} from '../../../../../../
 import {ensureJuanYears,juanYear} from '../../../../../../server/features/prevision/JuanAnnual.js';
 import {getPgPool} from '../../../../../../server/database/pgClient.js';
 import {closeJuanMonth,monthlyJuanReview} from '../../../../../../server/features/prevision/JuanMonthly.js';
-import {syncJuanOperationalRows} from '../../../../../../server/features/prevision/JuanOperationalSync.js';
 export const runtime='nodejs';
 export async function GET(request) {
-  try{const year=juanYear(new URL(request.url).searchParams.get('year'));const years=await ensureJuanYears(getPgPool());await syncJuanOperationalRows(year);const book=await getJuanWorkbook(getPgPool(),year);return NextResponse.json({...book,years,currentYear:juanYear(),monthlyReview:monthlyJuanReview(book)});}
+  try{const year=juanYear(new URL(request.url).searchParams.get('year'));const years=await ensureJuanYears(getPgPool());const book=await getJuanWorkbook(getPgPool(),year);return NextResponse.json({...book,years,currentYear:juanYear(),monthlyReview:monthlyJuanReview(book)});}
   catch(error){return NextResponse.json({message:error.message},{status:error.status || 500});}
 }
 export async function PATCH(request) {

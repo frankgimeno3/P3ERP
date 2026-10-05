@@ -1,4 +1,6 @@
 "use client";
+import SubscriptionRenewalModal from "./SubscriptionRenewalModal";
+import apiClient from "@/app/apiClient";
 import SearchableSelect from "@/app/components/SearchableSelect";
 
 import Link from "next/link";
@@ -11,9 +13,10 @@ const tabs = [
   { key: "pendiente_renovar", label: "Pendiente renovar" },
   { key: "en_curso", label: "En curso" },
   { key: "anteriores", label: "Anteriores" },
+  {key:"sin_configurar",label:"Revisar coleccion"},
 ];
 
-function SuscripcionCard({ suscripcion }: { suscripcion: any }) {
+function SuscripcionCard({ suscripcion,onChanged }: { suscripcion: any;onChanged:()=>void }) {
   const [open, setOpen] = useState(false);
   const [renewalModalOpen, setRenewalModalOpen] = useState(false);
 
@@ -71,6 +74,7 @@ function SuscripcionCard({ suscripcion }: { suscripcion: any }) {
                   </Link>
                 ) : "Pendiente de crear"}
               </p>
+              {suscripcion.renovacion_propuesta_id&&<p><span className="font-medium">Renovacion:</span> <Link className="cursor-pointer text-blue-950 underline hover:text-blue-700" href={`/dashboard/comercial/propuestas/${suscripcion.renovacion_propuesta_id}`}>{suscripcion.renovacion_propuesta_id}</Link></p>}
               <p>
                 <span className="font-medium">Contrato:</span>{" "}
                 {suscripcion.id_contrato ? (
@@ -94,30 +98,18 @@ function SuscripcionCard({ suscripcion }: { suscripcion: any }) {
         </div>
       )}
 
-      {renewalModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" role="dialog" aria-modal="true" aria-label="Generar renovación automática">
-          <div className="min-h-64 w-full max-w-2xl rounded bg-white p-6 shadow-xl">
-            <div className="flex justify-end">
-              <button
-                type="button"
-                aria-label="Cerrar modal"
-                onClick={() => setRenewalModalOpen(false)}
-                className="cursor-pointer rounded px-2 py-1 text-2xl leading-none text-gray-500 transition hover:bg-gray-100 hover:text-gray-900"
-              >
-                ×
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {renewalModalOpen && <SubscriptionRenewalModal subscription={suscripcion} onSaved={onChanged} onClose={()=>setRenewalModalOpen(false)}/>}
     </div>
   );
 }
 
 export default function SuscripcionesAdministracionPage() {
+  const [revision,setRevision]=useState(0);
   const [activeTab, setActiveTab] = useState("pendiente_renovar");
   const [suscripciones, setSuscripciones] = useState<any[]>([]);
   const [cuentas, setCuentas] = useState<any[]>([]);
+  const [collections,setCollections]=useState<any[]>([]),[collection,setCollection]=useState(''),[creating,setCreating]=useState(false);
+  const [firstNumber,setFirstNumber]=useState(''),[lastNumber,setLastNumber]=useState('');
   const [cuentaQuery, setCuentaQuery] = useState("");
   const [selectedCuenta, setSelectedCuenta] = useState<any | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -134,32 +126,38 @@ export default function SuscripcionesAdministracionPage() {
   }, [showCreateModal]);
 
   useEffect(() => {
+    const controller=new AbortController();
     setLoading(true);
     setError("");
-    SuscripcionService.getSuscripciones({ estado: activeTab })
-      .then((data) => setSuscripciones(Array.isArray(data) ? data : []))
+    SuscripcionService.getSuscripciones({ estado: activeTab }, {signal:controller.signal})
+      .then((data) => {if(!controller.signal.aborted)setSuscripciones(Array.isArray(data) ? data : []);})
       .catch((error) => {
-        console.error("Error fetching suscripciones:", error);
+        if(controller.signal.aborted)return;
         setError(error?.message || "No se han podido cargar las suscripciones.");
-        setSuscripciones([]);
+
       })
-      .finally(() => setLoading(false));
-  }, [activeTab]);
+      .finally(() => {if(!controller.signal.aborted)setLoading(false);});
+    return()=>controller.abort();
+  }, [activeTab,revision]);
 
   useEffect(() => {
     if (!showCreateModal) return;
-    CuentaService.getCuentas({ clienteFiltro: cuentaQuery })
-      .then((data) => setCuentas(Array.isArray(data) ? data : []))
-      .catch(() => setCuentas([]));
+    const controller=new AbortController();const timer=setTimeout(()=>{CuentaService.getCuentas({ clienteFiltro: cuentaQuery,limit:25 },{signal:controller.signal})
+      .then((data) => {if(!controller.signal.aborted)setCuentas(data.rows||[]);})
+      .catch(() => {if(!controller.signal.aborted)setCuentas([]);});},250);return()=>{clearTimeout(timer);controller.abort();};
   }, [cuentaQuery, showCreateModal]);
 
+  useEffect(()=>{if(showCreateModal)apiClient.get("/api/v1/admin/suscripciones/colecciones").then(r=>setCollections(r.data)).catch(e=>setError(e.message));},[showCreateModal]);
   const createSuscripcion = async () => {
+    if(!collection)return;
+    setCreating(true);setError('');try{
     if (!selectedCuenta?.id_cuenta) return;
-    const created = await SuscripcionService.createSuscripcion({ id_cuenta: selectedCuenta.id_cuenta });
+    const created = await SuscripcionService.createSuscripcion({ id_cuenta: selectedCuenta.id_cuenta,num_inicial:Number(firstNumber),num_final:Number(lastNumber),...JSON.parse(collection) });
     setSuscripciones((current) => [created, ...current]);
     setShowCreateModal(false);
     setSelectedCuenta(null);
     setCuentaQuery("");
+    }catch(e:any){setError(e.message);}finally{setCreating(false);}
   };
 
   return (
@@ -193,8 +191,8 @@ export default function SuscripcionesAdministracionPage() {
           {!loading && suscripciones.length === 0 && (
             <div className="bg-white p-6 text-sm text-gray-500">No hay suscripciones en esta pestaña.</div>
           )}
-          {!loading && suscripciones.map((suscripcion) => (
-            <SuscripcionCard key={suscripcion.id_suscripcion} suscripcion={suscripcion} />
+          {suscripciones.map((suscripcion) => (
+            <SuscripcionCard key={suscripcion.id_suscripcion} suscripcion={suscripcion} onChanged={()=>setRevision(v=>v+1)} />
           ))}
         </div>
       </div>
@@ -205,10 +203,13 @@ export default function SuscripcionesAdministracionPage() {
               <p className="text-lg font-semibold text-blue-950">Agregar suscriptor</p>
               <button type="button" aria-label="Cerrar modal" onClick={() => setShowCreateModal(false)} className="cursor-pointer rounded px-2 py-1 text-2xl leading-none transition hover:bg-gray-100">×</button>
             </div>
-            <SearchableSelect label="Cuenta" required value={selectedCuenta?.id_cuenta||''} onChange={id=>setSelectedCuenta(cuentas.find(c=>c.id_cuenta===id)||null)} options={cuentas.map(c=>({value:c.id_cuenta,label:[c.nombre_empresa,c.id_cuenta,c.pais_cuenta].filter(Boolean).join(' · ')}))} />
+            <SearchableSelect label="Revista y edicion" required value={collection} onChange={setCollection} options={collections.map(c=>({value:JSON.stringify({revista:c.revista,edicion:c.edicion}),label:`${c.revista} / ${c.edicion}`}))}/>
+            <div className="my-3 grid grid-cols-2 gap-3"><label>Primer número<input type="number" min="1" step="1" value={firstNumber} onChange={e=>setFirstNumber(e.target.value)} className="block w-full rounded border p-2"/></label><label>Último número<input type="number" min={Number(firstNumber)||1} step="1" value={lastNumber} onChange={e=>setLastNumber(e.target.value)} className="block w-full rounded border p-2"/></label></div>
+            {error&&<p role="alert" className="my-3 text-red-700">{error}</p>}
+            <SearchableSelect label="Cuenta" onSearchChange={setCuentaQuery} required value={selectedCuenta?.id_cuenta||''} onChange={id=>setSelectedCuenta(cuentas.find(c=>c.id_cuenta===id)||null)} options={cuentas.map(c=>({value:c.id_cuenta,label:[c.nombre_empresa,c.id_cuenta,c.pais_cuenta].filter(Boolean).join(' · ')}))} />
             <div className="mt-5 flex justify-end gap-2">
               <button type="button" onClick={() => setShowCreateModal(false)} className="rounded border border-gray-300 px-4 py-2 text-sm">Cancelar</button>
-              <button type="button" onClick={createSuscripcion} disabled={!selectedCuenta} className="rounded bg-blue-950 px-4 py-2 text-sm font-medium text-white hover:bg-blue-900 disabled:bg-gray-400">Crear</button>
+              <button type="button" onClick={createSuscripcion} disabled={!selectedCuenta||!collection||!Number.isInteger(Number(firstNumber))||Number(firstNumber)<1||!Number.isInteger(Number(lastNumber))||Number(lastNumber)<Number(firstNumber)||creating} className="rounded bg-blue-950 px-4 py-2 text-sm font-medium text-white enabled:cursor-pointer enabled:hover:bg-blue-900 disabled:cursor-not-allowed disabled:bg-gray-400">Crear</button>
             </div>
           </div>
         </div>

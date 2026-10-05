@@ -162,16 +162,23 @@ export async function getCuentas(filters = {}) {
     values.push(`%${filters.paisFiltro}%`);
     where.push(`pais_cuenta ILIKE $${values.length}`);
   }
+  if(filters.correoFiltro){values.push(`%${filters.correoFiltro}%`);where.push(`correo_principal ILIKE $${values.length}`);}
 
+  const paged = Number.isInteger(filters.limit) && filters.limit > 0;
+  const condition = where.length ? `WHERE ${where.join(' AND ')}` : '';
+  const count = paged ? Number((await pool.query(`SELECT count(*) total FROM ${tableName} ${condition}`, values)).rows[0].total) : null;
+  let pagination = '';
+  if (paged) { values.push(filters.limit, ((filters.page || 1) - 1) * filters.limit); pagination = `LIMIT $${values.length - 1} OFFSET $${values.length}`; }
   const query = `
     SELECT *
     FROM ${tableName}
     ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
-    ORDER BY created_at DESC
+    ORDER BY created_at DESC, id_cuenta ASC
+    ${pagination}
   `;
 
   const { rows } = await pool.query(query, values);
-  return rows.map(normalizeCuenta);
+  return paged ? { rows: rows.map(normalizeCuenta), total: count, page: filters.page || 1, limit: filters.limit } : rows.map(normalizeCuenta);
 }
 
 export async function getCuentaById(idCuenta) {

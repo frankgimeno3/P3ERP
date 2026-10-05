@@ -17,7 +17,7 @@ const adapter={release(){},async query(sql,values){
 try {
   await db.query('BEGIN');await db.query(`CREATE SCHEMA ${schema}`);await db.query(`SET LOCAL search_path TO ${schema}`);
   await db.query(`CREATE TABLE agentes_db(id_agente TEXT PRIMARY KEY,is_empleado_account BOOLEAN);
-    CREATE TABLE tesoreria_cargos_recurrentes(id_cargo_recurrente BIGSERIAL PRIMARY KEY,tipo_cargo TEXT,id_proveedor TEXT,id_agente TEXT,tipo_programacion TEXT,programacion JSONB,activo BOOLEAN DEFAULT TRUE,updated_at TIMESTAMPTZ DEFAULT NOW());
+    CREATE TABLE tesoreria_cargos_recurrentes(id_cargo_recurrente BIGSERIAL PRIMARY KEY,tipo_cargo TEXT,id_proveedor TEXT,id_agente TEXT,tipo_programacion TEXT,programacion JSONB,termina_planificacion BOOLEAN DEFAULT FALSE,planificado_hasta DATE,banco_pago TEXT,activo BOOLEAN DEFAULT TRUE,updated_at TIMESTAMPTZ DEFAULT NOW());
     CREATE UNIQUE INDEX active_employee ON tesoreria_cargos_recurrentes(id_agente) WHERE activo;
     CREATE TABLE tesoreria_movimientos_bancarios(id_linea_banco TEXT PRIMARY KEY,importe NUMERIC,id_agente TEXT,id_proveedor TEXT,id_cuenta TEXT,id_pago TEXT,id_orden TEXT,id_cargo_recurrente BIGINT,estado_revision BOOLEAN DEFAULT FALSE,comentarios TEXT DEFAULT '',nomina_revision JSONB,updated_at TIMESTAMPTZ DEFAULT NOW());
     CREATE TABLE laboral_nominas(id_empleado TEXT,id_transferencia TEXT);CREATE TABLE laboral_anticipos(id_empleado TEXT,id_transferencia TEXT);

@@ -1,4 +1,5 @@
 "use client";
+import TableFilters from '@/app/components/TableFilters';
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import MiddleNav from "@/app/general_components/componentes_recurrentes/MiddleNav";
@@ -124,13 +125,13 @@ export default function TicketsProveedoresPage() {
 
         {/* Search and Action Buttons */}
         <div className="mb-6 flex flex-wrap justify-between gap-3">
-          <input
+          <TableFilters><label className="block text-xs text-gray-600"><span className="mb-1 block">Buscar ticket</span><input
             type="search"
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             placeholder="Filtrar tickets..."
             className="w-full rounded border bg-white px-3 py-2 sm:w-96"
-          />
+          /></label></TableFilters>
           <div className="flex gap-2">
             <Link
               href="/dashboard/administracion/tarjetas"

@@ -8,6 +8,9 @@ export async function GET(request) {
     const params = new URL(request.url).searchParams;
     const contactos = await getContactos({
       idCuenta: params.get("id_cuenta")?.trim() || "",
+      search: params.get('search')?.trim() || '',
+      ...Object.fromEntries(['nombre_contacto','apellidos_contacto','id_contacto','nombre_empresa','telefono_contacto','email_contacto','pais_contacto'].map(field=>[field,params.get(field)?.trim()||''])),
+      ...(params.has('limit') ? { limit: Math.min(100, Math.max(1, Number(params.get('limit')) || 25)), page: Math.max(1, Number(params.get('page')) || 1) } : {}),
     });
 
     return NextResponse.json(contactos);

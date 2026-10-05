@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { PropuestaService } from "@/app/service/PropuestaService";
 
 interface MisPendientesProps {
+  columnFilters?: Record<string, string>;
   clienteFiltro: string;
   codigoCRMFiltro: string;
   agenteActual: string;
@@ -14,6 +15,7 @@ interface MisPendientesProps {
 }
 
 const MisPendientes: FC<MisPendientesProps> = ({
+  columnFilters: filters = {},
   clienteFiltro,
   codigoCRMFiltro,
   agenteActual,
@@ -23,7 +25,6 @@ const MisPendientes: FC<MisPendientesProps> = ({
   const router = useRouter();
   const [propuestas, setPropuestas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState<Record<string, string>>({});
 
   useEffect(() => {
     setLoading(true);
@@ -55,9 +56,6 @@ const MisPendientes: FC<MisPendientesProps> = ({
 
   return (
     <div className="h-full">
-      <div className="mb-5 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-        {[["id_propuesta","ID propuesta"],["empresa","Empresa"],["precio","Precio"],["fecha","Fecha de envío"]].map(([field,label]) => <label key={field} className="text-sm"><span className="mb-1 block text-xs font-semibold uppercase text-gray-500">{label}</span><input type="search" value={filters[field] || ""} onChange={event => setFilters(current => ({...current,[field]:event.target.value}))} className="w-full rounded border border-gray-300 px-3 py-2 text-sm text-gray-800 outline-none focus:border-blue-950" /></label>)}
-      </div>
       <div className="overflow-x-auto">
       <table className="min-w-full text-sm">
         <thead className="bg-blue-950 text-white">

@@ -21,7 +21,7 @@ export async function POST(request) {
     const body = await request.json();
 
     if (body?.pagos) {
-      return NextResponse.json(await createFacturaProveedorCompleta(body), { status: 201 });
+      return NextResponse.json(await createFacturaProveedorCompleta(body,request.headers.get('x-p3-actor-id')||''), { status: 201 });
     }
     if (!body?.id_factura_proveedor && !body?.orden_compra_p3) {
       return NextResponse.json({ message: "id_factura_proveedor u orden_compra_p3 es obligatorio" }, { status: 400 });
@@ -32,8 +32,8 @@ export async function POST(request) {
   } catch (error) {
     console.error("Error in POST /api/v1/admin/facturas-proveedores:", error);
     return NextResponse.json(
-      { message: "Error al crear la factura de proveedor", detail: process.env.NODE_ENV === "development" ? error.message : undefined },
-      { status: 500 },
+      { message: error.status ? error.message : "Error al crear la factura de proveedor", detail: process.env.NODE_ENV === "development" ? error.message : undefined },
+      { status: error.status || (error.code==='23505'?409:500) },
     );
   }
 }

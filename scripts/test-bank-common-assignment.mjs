@@ -19,7 +19,7 @@ async function run({ line = {}, linked = false, entity = true, action = 'assign'
     if (sql.startsWith('INSERT INTO tesoreria_cargos_recurrentes')) return { rows: [{ id_cargo_recurrente: 2 }] };
     return { rows: [] };
   } };
-  const context = vm.createContext({ randomUUID, ruleStart, withRuleIds, NextResponse: { json: (body, options) => ({ body, status: options?.status || 200 }) }, getPgPool: () => ({ connect: async () => db }) });
+  const context = vm.createContext({ extendCharge: async () => {}, randomUUID, ruleStart, withRuleIds, NextResponse: { json: (body, options) => ({ body, status: options?.status || 200 }) }, getPgPool: () => ({ connect: async () => db }) });
   vm.runInContext(repository + '\n' + source, context);
   const response = await context.PUT({ json: async () => ({ ids: ['bank-1'], action, entityType, entityId: 'person-1', ...extra }) });
   return { response, calls };

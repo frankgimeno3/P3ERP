@@ -17,7 +17,6 @@ const endpoint = "/api/v1/admin/user-wizard";
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const roleOrder = ["base", "administracion", "operaciones", "superadmin"];
 const roleLabels: Record<string, string> = { base: "base", administracion: "administración", operaciones: "operaciones", superadmin: "superadmin" };
-const wait = (milliseconds: number) => new Promise((resolve) => window.setTimeout(resolve, milliseconds));
 
 async function request(body: Record<string, unknown>) {
   const response = await fetch(endpoint, {
@@ -83,7 +82,7 @@ export default function CreateUserWizard({ roles, onClose, onCreated }: { roles:
   const checkEmail = async () => {
     setEmailStatus("checking"); setError("");
     try {
-      const [data] = await Promise.all([request({ action: "check-email", email, draftId }), wait(2000)]);
+      const data = await request({ action: "check-email", email, draftId });
       setEmailStatus(data.exists ? "exists" : "available");
     } catch (cause) { setEmailStatus("idle"); setError(cause instanceof Error ? cause.message : "No se pudo comprobar el email"); }
   };
@@ -105,7 +104,7 @@ export default function CreateUserWizard({ roles, onClose, onCreated }: { roles:
   const checkName = async () => {
     setNameStatus("checking"); setError("");
     try {
-      const [data] = await Promise.all([request({ action: "check-name", name, draftId }), wait(2000)]);
+      const data = await request({ action: "check-name", name, draftId });
       setNameStatus(data.exists ? "exists" : "available");
     } catch (cause) { setNameStatus("idle"); setError(cause instanceof Error ? cause.message : "No se pudo comprobar el nombre"); }
   };

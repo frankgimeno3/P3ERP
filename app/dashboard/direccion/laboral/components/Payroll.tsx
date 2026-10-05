@@ -1,4 +1,5 @@
 'use client';
+import TableFilters from '@/app/components/TableFilters';
 import SearchableSelect from "@/app/components/SearchableSelect";
 
 import Link from 'next/link';
@@ -21,7 +22,7 @@ export function PayrollList() {
   const visible=(advances.data||[]).filter(r=>(r.empleado+' '+periodLabel(r.mes,r.anio)).toLocaleLowerCase().includes(filter.toLocaleLowerCase()));
   return <><Header title="Nóminas">{tab!=='empleados'&&<button className="laboral-button" onClick={()=>setAdding(true)}>{tab==='nominas'?'Establecer nómina recurrente':'Agregar anticipo'}</button>}</Header>
     <div className="mb-4 flex gap-2" role="tablist">{(['nominas','anticipos','empleados'] as const).map(k=><button key={k} role="tab" aria-selected={tab===k} className={tab===k?'laboral-button':'laboral-secondary'} onClick={()=>{setAdding(false);setTab(k);}}>{k==='nominas'?'Nóminas':k==='anticipos'?'Anticipos':'Empleados'}</button>)}</div>
-    {tab==='empleados'?<EmployeeList/>:tab==='nominas'?<EmployeePayrollList version={version}/>:<section className="laboral-card"><Field label="Buscar empleado o mes"><input value={filter} onChange={e=>setFilter(e.target.value)}/></Field><Notice error={advances.error}/><table><thead><tr><th>Empleado</th><th>Mes</th><th>Importe neto</th><th>Estado</th><th>Comentarios</th></tr></thead><tbody>{visible.map(r=><tr key={r.id}><td><Link className="cursor-pointer hover:underline" href={`${root}/anticipos/${r.id}`}>{r.empleado}</Link></td><td>{periodLabel(r.mes,r.anio)}</td><td>{money(r.importe_neto)}</td><td>{r.estado}</td><td>{r.comentarios}</td></tr>)}</tbody></table>{advances.loading?<p>Cargando...</p>:!visible.length&&!advances.error&&<p>No hay anticipos para mostrar.</p>}</section>}
+    {tab==='empleados'?<EmployeeList/>:tab==='nominas'?<EmployeePayrollList version={version}/>:<section className="laboral-card"><TableFilters><Field label="Buscar empleado o mes"><input value={filter} onChange={e=>setFilter(e.target.value)}/></Field></TableFilters><Notice error={advances.error}/><table><thead><tr><th>Empleado</th><th>Mes</th><th>Importe neto</th><th>Estado</th><th>Comentarios</th></tr></thead><tbody>{visible.map(r=><tr key={r.id}><td><Link className="cursor-pointer hover:underline" href={`${root}/anticipos/${r.id}`}>{r.empleado}</Link></td><td>{periodLabel(r.mes,r.anio)}</td><td>{money(r.importe_neto)}</td><td>{r.estado}</td><td>{r.comentarios}</td></tr>)}</tbody></table>{advances.loading?<p>Cargando...</p>:!visible.length&&!advances.error&&<p>No hay anticipos para mostrar.</p>}</section>}
     {adding&&tab==='nominas'&&<RecurringChargeModal initialKind="nomina" providers={[]} employees={employees.data||[]} close={()=>setAdding(false)} done={()=>{setAdding(false);setVersion(v=>v+1);}}/>}
     {adding&&tab==='anticipos'&&<Modal title="Agregar anticipo" onClose={()=>setAdding(false)}><PaymentForm kind="anticipos" onSaved={()=>{setAdding(false);advances.reload();}}/></Modal>}
   </>;

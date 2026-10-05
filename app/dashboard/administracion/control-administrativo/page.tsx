@@ -1,4 +1,5 @@
 "use client";
+import TableFilters from '@/app/components/TableFilters';
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -7,6 +8,8 @@ import MiddleNav from "@/app/general_components/componentes_recurrentes/MiddleNa
 import { OrdenService } from "@/app/service/OrdenService";
 import { AgenteService } from "@/app/service/AgenteService";
 import AdministrativeExcelModal from "./AdministrativeExcelModal";
+import {useUrlState} from '@/app/lib/useUrlState';
+import TableColumnFilter from '@/app/components/TableColumnFilter';
 import DatePartsInput from '@/app/components/DatePartsInput';
 import { administrativeOrderTab } from '@/app/lib/administrativeOrderTabs';
 
@@ -22,7 +25,7 @@ export default function ControlAdministrativoPage() {
   const router = useRouter();
   const [ordenes, setOrdenes] = useState<any[]>([]);
   const [agentes, setAgentes] = useState<any[]>([]);
-  const [filtros, setFiltros] = useState({
+  const [filtros, setFiltros] = useUrlState('orders.filters',{
     orden: "",
     cliente: "",
     agente: "",
@@ -32,10 +35,11 @@ export default function ControlAdministrativoPage() {
     estado_cobro: "",
     fecha_cobro: "",
     base_imponible: "",
+    importe_total: "",
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [tab,setTab]=useState<'vigentes'|'anteriores'|'canceladas'>('vigentes');
+  const [tab,setTab]=useUrlState<'vigentes'|'anteriores'|'canceladas'>('orders.tab','vigentes');
   const currentYear = new Date().getFullYear();
   const [showExcel,setShowExcel]=useState(false),[reloadKey,setReloadKey]=useState(0),[notice,setNotice]=useState('');
 
@@ -71,6 +75,7 @@ export default function ControlAdministrativoPage() {
       && matches(orden.forma_cobro, filtros.forma_cobro)
       && (!filtros.estado_cobro || (filtros.estado_cobro==='cobrada')===Boolean(orden.cobrada))
       && (!filtros.fecha_cobro || matchesDate(orden.fecha_real_cobro,filtros.fecha_cobro))
+      && (!filtros.importe_total||String(Number(orden.cobro_total||0)).includes(filtros.importe_total.replace(',','.')))
       && (!filtros.base_imponible || String(Number(orden.base_imponible||0)).includes(filtros.base_imponible.replace(',','.'))),
     );
   }, [filtros, ordenes, tab, currentYear]);
@@ -87,17 +92,7 @@ export default function ControlAdministrativoPage() {
           <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-semibold text-blue-950">Ordenes</h2><button type="button" onClick={()=>setShowExcel(true)} className="cursor-pointer rounded bg-blue-950 px-4 py-2 text-sm text-white transition hover:bg-blue-900">Subir excel de control administrativo</button></div>
           <div className="flex flex-wrap gap-3"><Link href="/dashboard/comercial/contratos/crear" className="cursor-pointer rounded bg-blue-950 px-4 py-2 text-sm text-white transition hover:bg-blue-900">Agregar contrato</Link><Link href="/dashboard/administracion/control-administrativo/importacion-masiva" className="cursor-pointer rounded border border-blue-950 px-4 py-2 text-sm text-blue-950 transition hover:bg-blue-50">Importación masiva</Link></div>
           {notice && <p role="status" className="rounded bg-green-50 p-3 text-green-800">{notice}</p>}
-          <details className="rounded border border-gray-300 bg-white p-3"><summary className="cursor-pointer rounded p-2 font-medium text-blue-950 hover:bg-blue-50">Filtros{Object.values(filtros).filter(Boolean).length ? ` (${Object.values(filtros).filter(Boolean).length} activos)` : ""}</summary><div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3 xl:grid-cols-6">
-            <input type="search" value={filtros.orden} onChange={(event) => handleFiltroChange("orden", event.target.value)} placeholder="Orden" className={inputClass} />
-            <input type="search" value={filtros.cliente} onChange={(event) => handleFiltroChange("cliente", event.target.value)} placeholder="Cliente" className={inputClass} />
-            <select aria-label="Filtrar por agente" value={filtros.agente} onChange={(event) => handleFiltroChange("agente", event.target.value)} className={`${inputClass} cursor-pointer hover:border-blue-950`}><option value="">Todos los agentes</option>{agentes.map((agente) => <option key={agente.id_agente} value={agente.id_agente}>{agente.nombre_completo_agente || `${agente.nombre_agente || ""} ${agente.apellidos_agente || ""}`.trim()}</option>)}</select>
-            <input type="search" value={filtros.contrato} onChange={(event) => handleFiltroChange("contrato", event.target.value)} placeholder="Contrato" className={inputClass} />
-            <input type="search" value={filtros.factura} onChange={(event) => handleFiltroChange("factura", event.target.value)} placeholder="Factura" className={inputClass} />
-            <input type="search" value={filtros.forma_cobro} onChange={(event) => handleFiltroChange("forma_cobro", event.target.value)} placeholder="Forma de cobro" className={inputClass} />
-            <select aria-label="Estado de cobro" value={filtros.estado_cobro} onChange={event=>handleFiltroChange('estado_cobro',event.target.value)} className={`${inputClass} cursor-pointer hover:border-blue-950`}><option value="">Todos los estados de cobro</option><option value="cobrada">Cobrada</option><option value="pendiente">Pendiente</option></select>
-            <DatePartsInput label="Fecha de cobro" value={filtros.fecha_cobro} onChange={value=>handleFiltroChange('fecha_cobro',value)}/>
-            <input aria-label="Base imponible" inputMode="decimal" value={filtros.base_imponible} onChange={event=>handleFiltroChange('base_imponible',event.target.value)} placeholder="Base imponible" className={inputClass}/>
-          </div></details>
+
         </div>
 
         {error && (
@@ -108,7 +103,7 @@ export default function ControlAdministrativoPage() {
 
         <div role="tablist" aria-label="Estado de las órdenes" className="mb-4 flex gap-2">{(['vigentes','anteriores','canceladas'] as const).map(value=><button type="button" key={value} role="tab" aria-selected={tab===value} onClick={()=>setTab(value)} className={`cursor-pointer rounded px-4 py-2 transition ${tab===value?'bg-blue-950 text-white hover:bg-blue-800':'bg-white hover:bg-blue-50'}`}>{value==='vigentes'?'Órdenes':value==='anteriores'?'Órdenes años anteriores':'Canceladas'} ({ordenes.filter(o=>administrativeOrderTab(o,currentYear)===value).length})</button>)}</div>
         <div role="tabpanel" className="overflow-x-auto bg-white">
-          <table className="min-w-full">
+          <TableFilters><div><TableColumnFilter label="Orden" value={filtros.orden} onChange={value=>handleFiltroChange('orden',value)}/></div><div><TableColumnFilter label="Cliente" value={filtros.cliente} onChange={value=>handleFiltroChange('cliente',value)}/></div><div><label className="block text-xs font-extralight text-gray-600"><span className="mb-1 block">Agente</span><select aria-label="Filtrar por agente" value={filtros.agente} onChange={event=>handleFiltroChange('agente',event.target.value)} className={inputClass+' text-gray-900 cursor-pointer'}><option value="">Todos</option>{agentes.map(agente=><option key={agente.id_agente} value={agente.id_agente}>{agente.nombre_completo_agente||agente.id_agente}</option>)}</select></label></div><div><TableColumnFilter label="Contrato" value={filtros.contrato} onChange={value=>handleFiltroChange('contrato',value)}/></div><div><TableColumnFilter label="Factura" value={filtros.factura} onChange={value=>handleFiltroChange('factura',value)}/></div><div><TableColumnFilter label="Base imponible" value={filtros.base_imponible} onChange={value=>handleFiltroChange('base_imponible',value)}/></div><div><TableColumnFilter label="Forma de cobro" value={filtros.forma_cobro} onChange={value=>handleFiltroChange('forma_cobro',value)}/></div><div><TableColumnFilter label="Importe total" value={filtros.importe_total} onChange={value=>handleFiltroChange('importe_total',value)}/></div><div><div className="text-xs font-extralight text-gray-600"><DatePartsInput label="Fecha de cobro" value={filtros.fecha_cobro} onChange={value=>handleFiltroChange('fecha_cobro',value)}/></div></div><div><label className="block text-xs font-extralight text-gray-600"><span className="mb-1 block">Estado de cobro</span><select aria-label="Filtrar estado" value={filtros.estado_cobro} onChange={event=>handleFiltroChange('estado_cobro',event.target.value)} className={inputClass+' text-gray-900 cursor-pointer'}><option value="">Todos</option><option value="cobrada">Cobrada</option><option value="pendiente">Pendiente</option></select></label></div></TableFilters><table className="min-w-full">
             <thead className="bg-blue-950 text-white">
               <tr>
                 <th className="p-2 pl-6 text-left font-light">Orden</th>

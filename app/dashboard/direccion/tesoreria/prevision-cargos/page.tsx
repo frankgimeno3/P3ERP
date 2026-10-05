@@ -1,4 +1,5 @@
 "use client";
+import TableFilters from '@/app/components/TableFilters';
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {useRouter} from 'next/navigation';
 import RecurringChargeManageModal from '../RecurringChargeManageModal';
@@ -185,14 +186,14 @@ export default function Page() {
 
 function Filters({ f, setF }: { f: any; setF: (x: any) => void }) {
   return (
-    <div className="mb-4 grid gap-3 rounded bg-white p-4 shadow md:grid-cols-2 md:grid-rows-3">
-      <label className="text-sm font-medium">Tipo<select value={f.kind} onChange={event => setF({ ...f, kind: event.target.value })} className="mt-1 w-full cursor-pointer rounded border bg-white p-2 hover:border-blue-950"><option value="">Todos</option><option value="proveedor">Proveedor</option><option value="nomina">Nómina</option><option value="otro">Otro</option></select></label>
+    <TableFilters>
+      <label className="text-xs font-extralight">Tipo<select value={f.kind} onChange={event => setF({ ...f, kind: event.target.value })} className="mt-1 w-full cursor-pointer rounded border bg-white p-2 hover:border-blue-950"><option value="">Todos</option><option value="proveedor">Proveedor</option><option value="nomina">Nómina</option><option value="otro">Otro</option></select></label>
       {[
         ["bi", "Base imponible"],
         ["total", "Importe total / neto"],
         ["provider", "Proveedor / empleado"],
       ].map(([k, l]) => (
-        <label key={k} className="text-sm font-medium">
+        <label key={k} className="text-xs font-extralight">
           {l}
           <input
             value={f[k]}
@@ -202,7 +203,7 @@ function Filters({ f, setF }: { f: any; setF: (x: any) => void }) {
         </label>
       ))}
       <fieldset>
-        <legend className="text-sm font-medium">Fecha</legend>
+        <legend className="text-xs font-extralight">Fecha</legend>
         <div className="mt-1 flex gap-1">
           <input
             aria-label="Día"
@@ -239,7 +240,7 @@ function Filters({ f, setF }: { f: any; setF: (x: any) => void }) {
           />
         </div>
       </fieldset>
-      <label className="text-sm font-medium">
+      <label className="text-xs font-extralight">
         Descripción
         <input
           value={f.description}
@@ -247,6 +248,6 @@ function Filters({ f, setF }: { f: any; setF: (x: any) => void }) {
           className="mt-1 w-full rounded border p-2"
         />
       </label>
-    </div>
+    </TableFilters>
   );
 }

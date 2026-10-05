@@ -6,6 +6,9 @@ import Link from 'next/link';
 import TodasPropuestas from './componentesPropuestas/tablaspropuestas/TodasPropuestas';
 import MisPendientes from './componentesPropuestas/tablaspropuestas/MisPendientes';
 import { AgenteService } from '@/app/service/AgenteService';
+import { useCurrentUser } from '@/app/lib/currentUser';
+import TableColumnFilter from '@/app/components/TableColumnFilter';
+import DatePartsInput from '@/app/components/DatePartsInput';
 
 const Propuestas: FC = () => {
   const [pestana, setPestana] = useState<'miasenproceso' | 'todasporcliente'>('todasporcliente');
@@ -15,7 +18,9 @@ const Propuestas: FC = () => {
   const [fechaFin, setFechaFin] = useState('');
   const [agenteFiltro, setAgenteFiltro] = useState('');
   const [estadoFiltro, setEstadoFiltro] = useState('');
-  const [agenteActual] = useState('ag_25_0004');
+  const [columnFilters, setColumnFilters] = useState<Record<string, string>>({});
+  const { user, error: sessionError } = useCurrentUser();
+  const agenteActual = user?.id_agente || '';
   const [agentes, setAgentes] = useState<any[]>([]);
 
   useEffect(() => {
@@ -32,6 +37,7 @@ const Propuestas: FC = () => {
       setAgenteFiltro(agenteActual);
       setEstadoFiltro('Pendiente');
     } else if (pestana === 'todasporcliente') {
+      setAgenteFiltro('');
       setFechaInicio('');
       setFechaFin('');
       setEstadoFiltro('');
@@ -41,7 +47,7 @@ const Propuestas: FC = () => {
   return (
     <div className="flex h-full min-h-screen flex-col bg-white text-gray-700">
       <MiddleNav
-        tituloprincipal={`Propuestas para el agente ${agentes.find(a => a.id_agente === agenteActual)?.nombre_completo_agente || agenteActual}`}
+        tituloprincipal="Propuestas"
       />
       <div className="content-main min-h-screen bg-white px-4 text-sm text-gray-700 md:px-6">
         <div className="flex flex-row justify-end gap-2 py-5">
@@ -99,11 +105,19 @@ const Propuestas: FC = () => {
               pestana={pestana}
               agenteActual={agenteActual}
               agentes={agentes}
-            />
+            >
+              {pestana === 'miasenproceso' && <>
+                <TableColumnFilter label="ID propuesta" value={columnFilters.id_propuesta || ''} onChange={value => setColumnFilters(previous => ({...previous, id_propuesta: value}))} />
+                <TableColumnFilter label="Precio" value={columnFilters.precio || ''} onChange={value => setColumnFilters(previous => ({...previous, precio: value}))} />
+                <DatePartsInput label="Fecha de envío" value={columnFilters.fecha || ''} onChange={value => setColumnFilters(previous => ({...previous, fecha: value}))} />
+              </>}
+            </FiltrosPropuestas>
           </div>
 
-          {pestana === 'miasenproceso' && (
+          {pestana === 'miasenproceso' && !agenteActual && <p role="status">{sessionError || (user ? 'Tu sesión no está asociada a un agente comercial.' : 'Cargando agente…')}</p>}
+          {pestana === 'miasenproceso' && !!agenteActual && (
             <MisPendientes
+              columnFilters={columnFilters}
               clienteFiltro={clienteFiltro}
               codigoCRMFiltro={codigoCRMFiltro}
               agenteActual={agenteActual}

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { dashboardMenu, type DashboardMenuEntry } from "@/app/config/dashboardMenu";
 import { canViewModule } from "@/app/config/roleAccess";
+import { useCurrentUser } from '@/app/lib/currentUser';
 
 function ArrowIcon({ isOpen }: { isOpen: boolean }) {
   return (
@@ -24,16 +25,8 @@ export default function LoggedLeftMenu() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [open, setOpen] = useState<Record<string, boolean>>({});
-  const [role, setRole] = useState<string | null>(null);
-
-  useEffect(() => {
-    let active = true;
-    fetch("/api/validate-token", { method: "POST", credentials: "include" })
-      .then((response) => response.ok ? response.json() : null)
-      .then((profile) => { if (active) setRole(profile?.role || "base"); })
-      .catch(() => { if (active) setRole("base"); });
-    return () => { active = false; };
-  }, []);
+  const { user, error } = useCurrentUser();
+  const role = user?.role || (error ? 'base' : null);
 
   useEffect(() => {
     const active: Record<string, boolean> = {};

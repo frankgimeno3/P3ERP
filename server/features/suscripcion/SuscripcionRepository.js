@@ -10,6 +10,7 @@ function inferEstado(row, ultimoNumeroPublicado) {
   const numFinal = numberOrNull(row.num_final) ?? 0;
   const tieneContrato = Boolean(row.id_contrato);
 
+  if (tieneContrato && (!row.revista || !row.edicion || ultimoNumeroPublicado === null)) return "sin_configurar";
   if (tieneContrato && ultimoNumeroPublicado >= numFinal) return "pendiente_renovar";
   if (tieneContrato) return "en_curso";
   return "anteriores";
@@ -19,7 +20,7 @@ function normalizeSuscripcion(row, ultimoNumeroPublicado) {
   const estado = inferEstado(row, ultimoNumeroPublicado);
 
   return {
-    id_suscripcion: row.id_suscripcion,
+    id_suscripcion: row.id_suscripcion,revista:row.revista||"",edicion:row.edicion||"",renovacion_propuesta_id:row.renovacion_propuesta_id||"",
     id_cuenta: row.id_cuenta ?? "",
     nombre_empresa: row.nombre_empresa ?? "",
     id_propuesta: row.id_propuesta ?? "",
@@ -51,30 +52,14 @@ function buildCarta(row, estado) {
   return `Estimado ${nombre}, la suscripción anterior para los números ${rango} ha finalizado.`;
 }
 
-async function getUltimoNumeroPublicado(pool) {
-  const { rows } = await pool.query(`
-    WITH revistas AS (
-      SELECT
-        (regexp_match(concat_ws(' ', nombre_publicacion, edicion_publicacion), '\\d+'))[1]::int AS numero,
-        lower(coalesce(estado_publicacion, '')) AS estado
-      FROM servicios_publicaciones
-      WHERE lower(coalesce(medio_publicacion, '')) LIKE '%revista%'
-        AND regexp_match(concat_ws(' ', nombre_publicacion, edicion_publicacion), '\\d+') IS NOT NULL
-    )
-    SELECT coalesce(
-      max(numero) FILTER (WHERE estado LIKE '%public%'),
-      max(numero),
-      0
-    ) AS ultimo
-    FROM revistas
-  `);
-
-  return numberOrNull(rows[0]?.ultimo) ?? 0;
+export async function getSubscriptionCollections(pool=getPgPool()) {
+ const {rows}=await pool.query(`SELECT r.revista,r.edicion,MAX(CASE WHEN lower(trim(p.estado_publicacion)) IN ('publicada','publicado','published') AND p.numero_publicacion ~ '^[0-9]+$' THEN p.numero_publicacion::int END) ultimo FROM servicios_revistas r LEFT JOIN servicios_publicaciones p ON p.revista_id=r.id_revista GROUP BY r.revista,r.edicion ORDER BY r.revista,r.edicion`);return rows;
 }
+async function getUltimoNumeroPublicado(pool,revista,edicion) {const collections=await getSubscriptionCollections(pool);return collections.find(c=>c.revista===revista&&c.edicion===edicion)?.ultimo??null;}
 
 export async function getSuscripciones(filters = {}) {
   const pool = getPgPool();
-  const ultimoNumeroPublicado = await getUltimoNumeroPublicado(pool);
+  const collections = await getSubscriptionCollections(pool);
   const values = [];
   const where = [];
 
@@ -106,7 +91,7 @@ export async function getSuscripciones(filters = {}) {
     values,
   );
 
-  const suscripciones = rows.map((row) => normalizeSuscripcion(row, ultimoNumeroPublicado));
+  const suscripciones = rows.map((row) => normalizeSuscripcion(row, collections.find(c=>c.revista===row.revista&&c.edicion===row.edicion)?.ultimo??null));
 
   if (filters.estado) {
     return suscripciones.filter((suscripcion) => suscripcion.estado === filters.estado);
@@ -117,6 +102,10 @@ export async function getSuscripciones(filters = {}) {
 
 export async function createSuscripcion(data = {}) {
   const pool = getPgPool();
+  const first=Number(data.num_inicial),last=Number(data.num_final);
+  if(!Number.isInteger(first)||!Number.isInteger(last)||first<1||last<first)throw Object.assign(new Error('Indica un primer y último número válidos para la suscripción.'),{status:400});
+  if(!data.id_cuenta)throw Object.assign(new Error('Selecciona la cuenta del suscriptor.'),{status:400});
+  if(!data.revista||!data.edicion||!(await getSubscriptionCollections(pool)).some(c=>c.revista===data.revista&&c.edicion===data.edicion))throw Object.assign(new Error("Selecciona una revista y edicion validas."),{status:400});
   const idSuscripcion = data.id_suscripcion?.trim() || `sus_${Date.now()}`;
   const { rows } = await pool.query(
     `
@@ -126,9 +115,9 @@ export async function createSuscripcion(data = {}) {
         id_propuesta,
         id_contrato,
         num_inicial,
-        num_final
+        num_final,revista,edicion
       )
-      VALUES ($1, $2, $3, $4, $5, $6)
+      VALUES ($1, $2, $3, $4, $5, $6,$7,$8)
       RETURNING *
     `,
     [
@@ -137,11 +126,11 @@ export async function createSuscripcion(data = {}) {
       data.id_propuesta || "",
       data.id_contrato || "",
       numberOrNull(data.num_inicial),
-      numberOrNull(data.num_final),
+      numberOrNull(data.num_final),data.revista,data.edicion,
     ],
   );
 
-  const ultimoNumeroPublicado = await getUltimoNumeroPublicado(pool);
+  const ultimoNumeroPublicado = await getUltimoNumeroPublicado(pool,data.revista,data.edicion);
   const { rows: joinedRows } = await pool.query(
     `
       SELECT s.*, c.nombre_empresa, p.nombre_propuesta, '' AS id_factura
@@ -153,5 +142,5 @@ export async function createSuscripcion(data = {}) {
     [rows[0].id_suscripcion],
   );
 
-  return normalizeSuscripcion(joinedRows[0], ultimoNumeroPublicado);
+  return normalizeSuscripcion(joinedRows[0],ultimoNumeroPublicado);
 }

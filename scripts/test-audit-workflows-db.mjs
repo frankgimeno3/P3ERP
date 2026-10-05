@@ -1,0 +1,56 @@
+import assert from 'node:assert/strict';
+import {randomUUID} from 'node:crypto';
+import env from '@next/env';
+import {getPgPool} from '../server/database/pgClient.js';
+import {importEntityExcel} from '../server/features/importacion/EntityExcelImport.js';
+import {getInvoicePayments,saveInvoicePayments} from '../server/features/factura/InvoicePaymentsRepository.js';
+import {archiveMediaDeletion,restoreMediaTrash} from '../server/features/mediateca/MediatecaTrashRepository.js';
+import {createFlatplan} from '../app/lib/preliminaryFlatplan.js';
+import {publishFlatplan} from '../server/features/produccion/FlatplanPublication.js';
+import {deleteRecurringCharge} from '../server/features/prevision/RecurringChargeRepository.js';
+env.loadEnvConfig(process.cwd());
+const pool=getPgPool(),db=await pool.connect(),schema='audit_test_'+randomUUID().replaceAll('-','');
+let depth=0;const query=async(sql,values)=>{
+  if(sql==='BEGIN')return db.query(`SAVEPOINT audit_${++depth}`);
+  if(sql==='COMMIT')return db.query(`RELEASE SAVEPOINT audit_${depth--}`);
+  if(sql==='ROLLBACK'){await db.query(`ROLLBACK TO SAVEPOINT audit_${depth}`);return db.query(`RELEASE SAVEPOINT audit_${depth--}`);}
+  return db.query(sql,values);
+};const adapter={query,connect:async()=>({query,release(){}})};
+try{
+  await db.query('BEGIN');await db.query(`CREATE SCHEMA ${schema}`);await db.query(`SET LOCAL search_path TO ${schema}`);
+  for(const table of ['comercial_cuentas','comercial_contactos','operaciones_importaciones_aplicadas','tesoreria_pagos_previstos','administracion_facturas_proveedores','tesoreria_cargos_vencimientos','tesoreria_cargos_recurrentes','tesoreria_movimientos_bancarios','mediateca_papelera','produccion_planillos_previos','produccion_planillos_publicaciones','contenidos_revistas_db'])await db.query(`CREATE TABLE ${table}(LIKE public.${table} INCLUDING ALL)`);
+  const input={entity:'cuentas',rows:[{id_cuenta:'test-account',nombre_empresa:'First account'}],mode:'sustituir_todo'};
+  const preview=await importEntityExcel(input,adapter);assert.equal(preview.plan[0].operation,'crear');
+  const applied=await importEntityExcel({...input,action:'apply',fingerprint:preview.fingerprint},adapter);assert(applied.applied);
+  assert.deepEqual(await importEntityExcel({...input,action:'apply',fingerprint:preview.fingerprint},adapter),applied);
+  const change={...input,rows:[{...input.rows[0],nombre_empresa:'Changed account'}]};const stale=await importEntityExcel(change,adapter);
+  await db.query("UPDATE comercial_cuentas SET nombre_empresa='Concurrent edit' WHERE id_cuenta='test-account'");
+  await assert.rejects(importEntityExcel({...change,action:'apply',fingerprint:stale.fingerprint},adapter),error=>error.status===409);
+  const contacts={entity:'contactos',rows:[{id_contacto:'test-contact',id_cuenta:'test-account',nombre_contacto:'Name',email_contacto:'test@example.com'}]};
+  const contactPreview=await importEntityExcel(contacts,adapter);await importEntityExcel({...contacts,action:'apply',fingerprint:contactPreview.fingerprint},adapter);
+  assert.equal((await db.query("SELECT array_contactos_cuenta FROM comercial_cuentas WHERE id_cuenta='test-account'")).rows[0].array_contactos_cuenta[0].id_contacto,'test-contact');
+  await db.query("INSERT INTO administracion_facturas_proveedores(id_factura_proveedor,importe_total) VALUES('test-invoice',121)");
+  await db.query("INSERT INTO tesoreria_pagos_previstos(id_pago,id_factura_proveedor,id_proveedor,total_pago,fecha_pago,forma_pago,cuenta_pago) VALUES('test-payment','test-invoice','supplier',121,'27/10/2026','transferencia','Sabadell')");
+  const book=await getInvoicePayments('test-payment',adapter),version=book.version;
+  await saveInvoicePayments('test-payment',{version,payments:[{id_pago:'test-payment',importe:121,fecha:'03/11/2026',forma:'transferencia',banco:'Sabadell'}]},adapter);
+  assert.equal((await getInvoicePayments('test-payment',adapter)).payments[0].fecha_pago,'03/11/2026');
+  await assert.rejects(saveInvoicePayments('test-payment',{version,payments:[]},adapter),error=>error.status===409);
+  const current=await getInvoicePayments('test-payment',adapter);await db.query("INSERT INTO tesoreria_movimientos_bancarios(id_linea_banco,id_pago,importe,banco) VALUES('banc_sab_26_999.999.999','test-payment',-121,'Sabadell')");
+  await assert.rejects(saveInvoicePayments('test-payment',{version:current.version,payments:[{id_pago:'test-payment',importe:121,fecha:'04/11/2026',forma:'transferencia',banco:'Sabadell'}]},adapter),error=>error.status===409);
+  await db.query('CREATE TABLE mediateca_carpetas(id text primary key);CREATE TABLE mediateca_archivos(id text primary key,folder text references mediateca_carpetas(id))');
+  const trash=await archiveMediaDeletion(db,[{id:'folder'}],[{id:'file',folder:'folder'}]);
+  await assert.rejects(restoreMediaTrash(trash,false,adapter),error=>error.status===403);await restoreMediaTrash(trash,true,adapter);
+  assert.equal((await db.query('SELECT count(*) FROM mediateca_archivos')).rows[0].count,'1');
+  const plan=createFlatplan([{id:'block',type:'Anuncio',contentId:'content',account:'Account',pages:1}],8);
+  await db.query("INSERT INTO produccion_planillos_previos(id_revista,version,plan) VALUES('magazine',1,$1::jsonb)",[JSON.stringify(plan)]);
+  const publication=await publishFlatplan('magazine',1,false,adapter);assert(publication.after.length>0);assert.equal((await db.query('SELECT count(*) FROM contenidos_revistas_db')).rows[0].count,'0');
+  await publishFlatplan('magazine',1,true,adapter);const ids=(await db.query('SELECT contenido_revista_id FROM contenidos_revistas_db')).rows;
+  await publishFlatplan('magazine',1,true,adapter);assert.deepEqual((await db.query('SELECT contenido_revista_id FROM contenidos_revistas_db')).rows,ids);
+  await assert.rejects(publishFlatplan('magazine',0,true,adapter),error=>error.status===409);
+  const charge=(await db.query("INSERT INTO tesoreria_cargos_recurrentes(id_cargo_recurrente,id_proveedor,tipo_cargo,tipo_programacion,programacion,banco_pago) VALUES(999999991,'supplier','proveedor','periodicidad','[]','Sabadell') RETURNING *")).rows[0];
+  await db.query("INSERT INTO tesoreria_cargos_vencimientos(id,id_cargo_recurrente,id_regla,fecha,importe,programacion) VALUES('protected-due',999999991,'rule','2026-11-03',121,'{}')");
+  await db.query("UPDATE tesoreria_pagos_previstos SET id_vencimiento='protected-due' WHERE id_pago='test-payment'");
+  await assert.rejects(deleteRecurringCharge(charge.id_cargo_recurrente,{confirm:true,version:charge.updated_at},adapter),error=>error.status===409&&/facturas/.test(error.message));
+  assert.equal((await db.query("SELECT 1 FROM tesoreria_cargos_recurrentes WHERE id_cargo_recurrente=999999991")).rowCount,1);
+  console.log('PASS isolated workflows: real imports, replay, concurrent edits, contact links, invoice payments, reconciled-payment and linked-charge protection, media restore permissions and atomic/idempotent publication.');
+}finally{await db.query('ROLLBACK');db.release();await pool.end();}

@@ -1,5 +1,6 @@
 'use client';
 
+import {useUrlState} from '@/app/lib/useUrlState';
 import React, { FC, useState, useEffect } from 'react';
 import FiltrosContactos from './componentesContactos/FiltrosContactos';
 import TablaContactos from './componentesContactos/TablaContactos';
@@ -10,28 +11,34 @@ import { ContactoService } from '@/app/service/ContactoService';
 import LastTigerUpdate from '../LastTigerUpdate';
 
 const Contactos: FC = () => {
-  const [contactoFiltro, setContactoFiltro] = useState('');
-  const [apellidosFiltro, setApellidosFiltro] = useState('');
-  const [codigoContactoFiltro, setCodigoContactoFiltro] = useState('');
-  const [empresaAsociadaFiltro, setEmpresaAsociadaFiltro] = useState('');
-  const [telFiltro, setTelFiltro] = useState('');
-  const [emailFiltro, setEmailFiltro] = useState('');
-  const [paisFiltro, setPaisFiltro] = useState('');
+  const [tableState,setTableState]=useUrlState('contacts.table',{contactoFiltro:'',apellidosFiltro:'',codigoContactoFiltro:'',empresaAsociadaFiltro:'',telFiltro:'',emailFiltro:'',paisFiltro:'',currentPage:1});
+  const {contactoFiltro,apellidosFiltro,codigoContactoFiltro,empresaAsociadaFiltro,telFiltro,emailFiltro,paisFiltro}=tableState;
+  const currentPage=Math.max(1,Math.trunc(tableState.currentPage));
+  const setCurrentPage:React.Dispatch<React.SetStateAction<number>>=value=>setTableState(previous=>({...previous,currentPage:typeof value==='function'?value(previous.currentPage):value}));
+  const setContactoFiltro:React.Dispatch<React.SetStateAction<string>>=value=>setTableState(previous=>({...previous,contactoFiltro:typeof value==='function'?value(previous.contactoFiltro):value,currentPage:1}));
+  const setApellidosFiltro:React.Dispatch<React.SetStateAction<string>>=value=>setTableState(previous=>({...previous,apellidosFiltro:typeof value==='function'?value(previous.apellidosFiltro):value,currentPage:1}));
+  const setCodigoContactoFiltro:React.Dispatch<React.SetStateAction<string>>=value=>setTableState(previous=>({...previous,codigoContactoFiltro:typeof value==='function'?value(previous.codigoContactoFiltro):value,currentPage:1}));
+  const setEmpresaAsociadaFiltro:React.Dispatch<React.SetStateAction<string>>=value=>setTableState(previous=>({...previous,empresaAsociadaFiltro:typeof value==='function'?value(previous.empresaAsociadaFiltro):value,currentPage:1}));
+  const setTelFiltro:React.Dispatch<React.SetStateAction<string>>=value=>setTableState(previous=>({...previous,telFiltro:typeof value==='function'?value(previous.telFiltro):value,currentPage:1}));
+  const setEmailFiltro:React.Dispatch<React.SetStateAction<string>>=value=>setTableState(previous=>({...previous,emailFiltro:typeof value==='function'?value(previous.emailFiltro):value,currentPage:1}));
+  const setPaisFiltro:React.Dispatch<React.SetStateAction<string>>=value=>setTableState(previous=>({...previous,paisFiltro:typeof value==='function'?value(previous.paisFiltro):value,currentPage:1}));
 
-  const [currentPage, setCurrentPage] = useState(1);
+
   const itemsPerPage = 15;
 
+  const [totalResults,setTotalResults]=useState(0);
   const [allContactos, setAllContactos] = useState<InterfazContacto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
  useEffect(() => {
+  const controller=new AbortController();
   const fetchContactos = async () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await ContactoService.getContactos();
-      const mapeados: InterfazContacto[] = (Array.isArray(data) ? data : []).map((c) => ({
+      const data = await ContactoService.getContactos({limit:itemsPerPage,page:currentPage,nombre_contacto:contactoFiltro,apellidos_contacto:apellidosFiltro,id_contacto:codigoContactoFiltro,nombre_empresa:empresaAsociadaFiltro,telefono_contacto:telFiltro,email_contacto:emailFiltro,pais_contacto:paisFiltro},{signal:controller.signal});
+      const mapeados: InterfazContacto[] = (data.rows||[]).map((c: InterfazContacto) => ({
         ...c,
         nombre_contacto: c.nombre_contacto ?? '',
         apellidos_contacto: c.apellidos_contacto ?? '',
@@ -48,18 +55,19 @@ const Contactos: FC = () => {
         pais_contacto: c.pais_contacto ?? '',
       }));
 
-      setAllContactos(mapeados);
+      if(!controller.signal.aborted){setAllContactos(mapeados);setTotalResults(data.total||0);}
     } catch (error: any) {
-      console.error('Error fetching contactos:', error);
+      if(controller.signal.aborted)return;
       setError(error?.message || 'No se han podido cargar los contactos.');
       setAllContactos([]);
     } finally {
-      setLoading(false);
+      if(!controller.signal.aborted)setLoading(false);
     }
   };
 
-  fetchContactos();
-}, []);
+  const timer=setTimeout(fetchContactos,250);return()=>{clearTimeout(timer);controller.abort();};
+}, [currentPage,contactoFiltro,apellidosFiltro,codigoContactoFiltro,empresaAsociadaFiltro,telFiltro,emailFiltro,paisFiltro]);
+
 
   const filteredContactos = allContactos.filter((c) =>
     (c.nombre_contacto || '').toLowerCase().includes(contactoFiltro.toLowerCase()) &&
@@ -71,15 +79,14 @@ const Contactos: FC = () => {
     (c.pais_contacto || '').toLowerCase().includes(paisFiltro.toLowerCase())
   );
 
-  const startIdx = (currentPage - 1) * itemsPerPage;
-  const contactosFiltrados = filteredContactos.slice(startIdx, startIdx + itemsPerPage);
-  const totalPages = Math.max(1, Math.ceil(filteredContactos.length / itemsPerPage));
+  const contactosFiltrados = filteredContactos;
+  const totalPages = Math.max(1, Math.ceil(totalResults / itemsPerPage));
 
   return (
     <div className="flex flex-col bg-gray-200 h-full min-h-screen text-gray-600">
       <MiddleNav tituloprincipal="Contactos" />
       <div className="bg-gray-100 min-h-screen px-8 text-gray-600">
-        <p role="status" className="pt-4 text-sm font-semibold">{loading ? 'Cargando total…' : error ? 'No se ha podido cargar el total de contactos.' : `Total de contactos: ${allContactos.length.toLocaleString('es-ES')}`}</p>
+        <p role="status" className="pt-4 text-sm font-semibold">{loading ? 'Cargando total…' : error ? 'No se ha podido cargar el total de contactos.' : `Total de contactos: ${totalResults.toLocaleString('es-ES')}`}</p>
         <div className="flex flex-row justify-end py-4">
           <Link
             href="/dashboard/comercial/contactos/crear"
@@ -106,8 +113,9 @@ const Contactos: FC = () => {
           setPaisFiltro={setPaisFiltro}  
         />
 
+        {loading && allContactos.length>0 && <p role="status">Actualizando contactos...</p>}
         {error && <div className="mt-4 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
-        {loading ? (
+        {loading && !allContactos.length ? (
           <div className="mt-5 rounded bg-white p-6 text-sm text-gray-500 shadow-xl">Cargando contactos...</div>
         ) : (
           <TablaContactos contactosFiltrados={contactosFiltrados} />

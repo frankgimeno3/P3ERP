@@ -13,6 +13,8 @@ function getFilters(request) {
     agenteFiltro: params.get("agenteFiltro")?.trim() || "",
     telFiltro: params.get("telFiltro")?.trim() || "",
     paisFiltro: params.get("paisFiltro")?.trim() || "",
+    correoFiltro: params.get('correoFiltro')?.trim() || '',
+    ...(params.has('limit') ? { limit: Math.min(100, Math.max(1, Number(params.get('limit')) || 25)), page: Math.max(1, Number(params.get('page')) || 1) } : {}),
   };
 }
 

@@ -17,12 +17,13 @@ try {
   await db.query(`SET LOCAL search_path TO ${schema}`);
   await db.query(`CREATE TABLE agentes_db(id_agente TEXT PRIMARY KEY,is_empleado_account BOOLEAN);
     CREATE TABLE administracion_proveedores(id_proveedor TEXT PRIMARY KEY);
-    CREATE TABLE tesoreria_cargos_recurrentes(id_cargo_recurrente BIGSERIAL PRIMARY KEY,id_proveedor TEXT REFERENCES administracion_proveedores(id_proveedor),tipo_programacion TEXT,programacion JSONB,activo BOOLEAN DEFAULT TRUE,created_at TIMESTAMPTZ DEFAULT NOW(),updated_at TIMESTAMPTZ DEFAULT NOW());
+    CREATE TABLE tesoreria_cargos_recurrentes(id_cargo_recurrente BIGSERIAL PRIMARY KEY,id_proveedor TEXT REFERENCES administracion_proveedores(id_proveedor),tipo_programacion TEXT,programacion JSONB,banco_pago TEXT,termina_planificacion BOOLEAN DEFAULT FALSE,planificado_hasta DATE,activo BOOLEAN DEFAULT TRUE,created_at TIMESTAMPTZ DEFAULT NOW(),updated_at TIMESTAMPTZ DEFAULT NOW());
     INSERT INTO agentes_db VALUES ('employee',true),('not-employee',false);
     INSERT INTO administracion_proveedores VALUES ('supplier');`);
   const migration = readLegacyMigrationSql('database/migrations/20260907_0001_payroll_recurring_charges.sql');
   await db.query(migration);
   await db.query(migration);
+  await db.query(`CREATE TABLE tesoreria_cargos_vencimientos(id TEXT PRIMARY KEY,id_cargo_recurrente BIGINT,id_regla TEXT,fecha DATE,importe NUMERIC,descripcion TEXT,programacion JSONB);`);
   assert.equal(await findPayrollCharge(db, 'employee'), null);
   const created = await insertRecurringCharge(db, draft);
   assert.equal(created.id_agente, 'employee');

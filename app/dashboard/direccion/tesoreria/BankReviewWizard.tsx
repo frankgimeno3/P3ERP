@@ -1,4 +1,5 @@
 'use client';
+import {request} from '@/app/lib/request';
 import IncomeReviewFields from './IncomeReviewFields';
 import ReviewRecipientTable from './ReviewRecipientTable';
 import BankReviewInsights, { type ReviewMemoryPlan } from './BankReviewInsights';
@@ -44,8 +45,8 @@ export default function BankReviewWizard({ lines, mode = 'review', onSaved, onCl
   })));
   useEffect(() => {
     const controller = new AbortController();
-    const urls = ['/api/v1/admin/proveedores','/api/v1/comercial/cuentas','/api/v1/direccion/laboral/empleados','/api/v1/direccion/cargos-recurrentes','/api/v1/direccion/laboral/nominas','/api/v1/direccion/laboral/anticipos','/api/v1/admin/control-administrativo/ordenes','/api/v1/direccion/prevision-gastos','/api/v1/direccion/prevision-ingresos?tipo=remesas'];
-    Promise.all(urls.map(url => fetch(url, { signal: controller.signal, cache: 'no-store' }).then(async r => { const d = await r.json(); if (!r.ok || !Array.isArray(d)) throw new Error(d.message || 'No se pudieron cargar los datos de revisión.'); return d; })))
+    const urls = ['/api/v1/admin/proveedores','/api/v1/comercial/cuentas','/api/v1/direccion/laboral/empleados','/api/v1/direccion/cargos-recurrentes','/api/v1/direccion/laboral/nominas','/api/v1/direccion/laboral/anticipos','/api/v1/direccion/ordenes-cobro','/api/v1/direccion/prevision-gastos','/api/v1/direccion/prevision-ingresos?tipo=remesas'];
+    Promise.all(urls.map(url => request(url, { signal: controller.signal, cache: 'no-store' }).then(async r => { const d = await r.json(); if (!r.ok || !Array.isArray(d)) throw new Error(d.message || 'No se pudieron cargar los datos de revisión.'); return d; })))
       .then(([providers, clients, employees, charges, payrolls, advances, orders, forecasts, remesas]) => {setData({ providers, clients, employees, charges, payrolls, advances, orders, forecasts, remesas });setDrafts((current:any)=>Object.fromEntries(Object.entries(current).map(([id,d]:any)=>[id,!d.entityId && charges.some((c:any)=>String(c.id_cargo_recurrente)===d.chargeId&&c.tipo_cargo==='otro')?{...d,entityType:'otro'}:d])));setReady(true);})
       .catch(e => { if (e.name !== 'AbortError') setError(e.message); }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
@@ -142,7 +143,7 @@ export default function BankReviewWizard({ lines, mode = 'review', onSaved, onCl
     setSaving(true); setError('');
     try {
       const items = lines.map(l => { const d = drafts[l.id_linea_banco], c = calculation(l, d); return { ...d, newCharge: d.create ? preparedCharge(d) : undefined, expectedSchedule: c.charge?.programacion, expectedPayroll: c.expected, expectedAdvances: c.paid, payrollId: c.payroll?.id }; });
-      const r = await fetch('/api/v1/direccion/bancos/revision', { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ action:forced?'force-review':'workflow', forcedComment:forced?forcedComment:undefined, mode, memory: !forced && (memory.allocations.length || memory.decisions.length) ? memory : undefined, ids:lines.map(l => l.id_linea_banco), items }) });
+      const r = await request('/api/v1/direccion/bancos/revision', { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ action:forced?'force-review':'workflow', forcedComment:forced?forcedComment:undefined, mode, memory: !forced && (memory.allocations.length || memory.decisions.length) ? memory : undefined, ids:lines.map(l => l.id_linea_banco), items }) });
       const result = await r.json(); if (!r.ok) throw new Error(result.message); onSaved();
     } catch (e: any) { setError(e.message || 'No se pudo guardar.'); } finally { setSaving(false); }
   };

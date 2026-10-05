@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCurrentUser, clearCurrentUser } from '@/app/lib/currentUser';
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import AuthenticationService from "@/app/service/AuthenticationService";
@@ -6,22 +6,13 @@ import AuthenticationService from "@/app/service/AuthenticationService";
 const LoggedNav = () => {
   const router = useRouter();
   const pathname = usePathname();
-  const [currentUser, setCurrentUser] = useState({ name: "usuario", role: "sin rol" });
-
-  useEffect(() => {
-    let active = true;
-    fetch("/api/validate-token", { method: "POST", credentials: "include" })
-      .then((response) => response.ok ? response.json() : null)
-      .then((profile) => {
-        if (!active || !profile) return;
-        setCurrentUser({ name: String(profile.name || "usuario"), role: String(profile.role || "sin rol") });
-      });
-    return () => { active = false; };
-  }, []);
+  const { user } = useCurrentUser();
+  const currentUser = user || { name: 'cargando…', role: 'cargando…' };
 
  
   const handleLogout = async () => {
     await AuthenticationService.logout();
+    clearCurrentUser();
     router.replace('/');
   };
 

@@ -1,5 +1,5 @@
 <!-- BEGIN:nextjs-agent-rules -->
-En tablas con filtros, salvo petición explícita en contrario, debe haber un filtro por columna, cada uno desplegable e inicialmente cerrado.
+En tablas con filtros, salvo petición explícita en contrario, los filtros de todas las columnas deben estar reunidos en una única tarjeta desplegable, inicialmente cerrada. Al abrirla se muestran todos juntos, con su etiqueta en letra fina justo encima de cada campo. Usar app/components/TableFilters.tsx; no crear desplegables individuales por columna.
 # This is NOT the Next.js you know
 
 Consulta la guía pertinente en `node_modules/next/dist/docs/` antes de escribir código Next.js. Si no existe (instalación 15.5.19 revisada), no recorras dependencias buscándola: consulta la documentación oficial de esa versión cuando sea necesario.

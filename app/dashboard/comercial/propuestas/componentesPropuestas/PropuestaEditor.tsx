@@ -423,11 +423,12 @@ export default function PropuestaEditor({
   useEffect(() => setSaved(false), [form]);
 
   useEffect(() => {
-    CuentaService.getCuentas().then((data) => setCuentas(Array.isArray(data) ? data : [])).catch(() => setCuentas([]));
     ServicioService.getServicios().then((data) => setServicios(Array.isArray(data) ? data.filter((item) => item.disponibilidad !== "Oculto") : [])).catch(() => setServicios([]));
     AgenteService.getAgentes().then((data) => setAgentes(Array.isArray(data) ? data : [])).catch(() => setAgentes([]));
     RevistaService.getRevistas().then((data) => setRevistas(Array.isArray(data) ? data : [])).catch(() => setRevistas([]));
   }, []);
+
+  useEffect(()=>{let active=true;if(form.id_cuenta_propuesta)CuentaService.getCuentaById(form.id_cuenta_propuesta).then(account=>{if(active)setCuentas([account]);}).catch(reason=>{if(active)setError(reason.message);});else setCuentas([]);return()=>{active=false;};},[form.id_cuenta_propuesta]);
 
   useEffect(() => {
     if (!form.id_cuenta_propuesta) {

@@ -27,6 +27,7 @@ export async function POST(request) {
         const agent = email ? await getAgenteByEmail(email) : null;
 
         return Response.json({
+            id_agente: agent?.id_agente || null,
             name: agent?.nombre_completo_agente || idPayload.name || email || username,
             email,
             role: agent?.rol_agente || (Array.isArray(idPayload["cognito:groups"]) ? idPayload["cognito:groups"][0] : "") || "sin rol",

@@ -25,6 +25,7 @@ export async function closeJuanMonth(body,pool=getPgPool(),now=new Date()) {
   const book=await getJuanWorkbook({query:db.query.bind(db)},year);
   const sheet=stored.sheets.find(s=>s.bank===body.bank),effective=book.sheets.find(s=>s.bank===body.bank);
   if(!sheet)throw Error('Banco no válido.');
+  for(const section of ['income','payments'])for(const row of effective[section])if(!sheet[section].some(existing=>existing.id===row.id))sheet[section].push(structuredClone(row));
   const forecast=sheet.columns.findIndex(c=>c.month===month&&c.kind==='forecast'),actual=sheet.columns.findIndex(c=>c.month===month&&c.kind==='actual');
   if(forecast<0||actual<0)throw Error('Este mes solo contiene el histórico importado; conserva su comprobación.');
   sheet.closedMonths=sheet.closedMonths||[];

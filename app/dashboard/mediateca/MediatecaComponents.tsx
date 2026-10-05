@@ -1,6 +1,7 @@
 "use client";
+import TableFilters from '@/app/components/TableFilters';
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { MediatecaService } from "@/app/service/MediatecaService";
 import apiClient from '@/app/apiClient';
@@ -352,7 +353,7 @@ export function MediatecaBrowser({
   const [folders, setFolders] = useState<MediatecaFolder[]>([]);
   const [media, setMedia] = useState<MediatecaMedia[]>([]);
   const [selectedId, setSelectedId] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [folderSearch, setFolderSearch] = useState("");
@@ -362,6 +363,14 @@ export function MediatecaBrowser({
   const [moveTarget, setMoveTarget] = useState<MediatecaMedia | null>(null);
   const [editingFolder, setEditingFolder] = useState<MediatecaFolder | null>(null);
   const [canManageFolders, setCanManageFolders] = useState(false);
+  const [trashId, setTrashId] = useState('');
+  const [trashOpen,setTrashOpen]=useState(false);
+  const [trashRows,setTrashRows]=useState<{id:string;deleted_at:string;folders_count:number;media_count:number}[]>([]);
+  const [trashLoading,setTrashLoading]=useState(false),[restoring,setRestoring]=useState('');
+  const loadVersion=useRef({version:0});
+
+  async function openTrash(){setTrashOpen(true);setTrashLoading(true);try{const response=await apiClient.get('/api/v1/mediateca/papelera');setTrashRows(response.data);}catch(cause:any){setError(cause.message);}finally{setTrashLoading(false);}}
+  async function restoreTrash(id:string){if(restoring)return;setRestoring(id);try{await apiClient.post('/api/v1/mediateca/papelera',{id});setTrashRows(rows=>rows.filter(row=>row.id!==id));if(id===trashId)setTrashId('');await load();}catch(cause:any){setError(cause.message);}finally{setRestoring('');}}
 
   useEffect(() => { apiClient.get('/api/v1/mediateca/access').then(response => setCanManageFolders(Boolean(response.data.canManageFolders))).catch(() => setCanManageFolders(false)); }, []);
 
@@ -379,7 +388,8 @@ export function MediatecaBrowser({
     return q ? folders.filter((folder) => folder.name.toLowerCase().includes(q) || folder.path.toLowerCase().includes(q)) : folders;
   }, [folders, folderSearch]);
 
-  async function load() {
+  const load=useCallback(async () => {
+    const version=++loadVersion.current.version;
     setLoading(true);
     setError("");
     try {
@@ -387,39 +397,41 @@ export function MediatecaBrowser({
         MediatecaService.getFolders(currentPath),
         MediatecaService.getMedia({ folderPath: currentPath }),
       ]);
+      if(version!==loadVersion.current.version)return;
       setFolders(Array.isArray(folderData) ? folderData : []);
       setMedia(Array.isArray(mediaData) ? mediaData : []);
       setSelectedId("");
     } catch (err: any) {
-      setError(err?.response?.data?.message || "No se ha podido cargar la mediateca.");
-      setFolders([]);
-      setMedia([]);
+      if(version!==loadVersion.current.version)return;
+      setError(err?.message || "No se ha podido cargar la mediateca.");
     } finally {
-      setLoading(false);
+      if(version===loadVersion.current.version)setLoading(false);
     }
-  }
+  },[currentPath]);
 
   useEffect(() => {
+    const counter=loadVersion.current;
     void load();
-  }, [currentPath]);
+    return()=>{counter.version++;};
+  }, [load]);
 
   async function deleteFolder(folder: MediatecaFolder) {
     if (!window.confirm(`Eliminar la carpeta "${folder.name}" y todo su contenido?`)) return;
-    await MediatecaService.deleteFolder(folder.id);
-    await load();
+    try { const result=await MediatecaService.deleteFolder(folder.id);setTrashId(result.trashId);await load(); } catch (cause:any) {setError(cause.message);}
   }
 
   async function deleteMedia(item: MediatecaMedia) {
-    if (!window.confirm(`Eliminar "${item.name}" de la mediateca y de S3?`)) return;
-    await MediatecaService.deleteMedia(item.id);
-    await load();
+    if (!window.confirm(`Mover "${item.name}" a la papelera? El archivo se conserva y se puede restaurar.`)) return;
+    try {const result=await MediatecaService.deleteMedia(item.id);setTrashId(result.trashId);await load();}catch(cause:any){setError(cause.message);}
   }
 
   const canUseSelection = selected && (selected.type === "image" || allowPdfSelection);
 
   return (
     <div className="space-y-5">
-      {error && <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+      {loading&&<p role="status" className="text-sm text-blue-950">Cargando mediateca…</p>}
+      {error && <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error} <button type="button" disabled={loading} onClick={()=>void load()} className="rounded px-2 underline enabled:cursor-pointer enabled:hover:bg-red-100 disabled:opacity-50">Reintentar</button></div>}
+      {trashId && <div role="status" className="rounded border bg-blue-50 p-3">Contenido conservado en la papelera. <button type="button" className="cursor-pointer underline hover:text-blue-950" onClick={async()=>{try{await apiClient.post('/api/v1/mediateca/papelera',{id:trashId});setTrashId('');await load();}catch(cause:any){setError(cause.message);}}}>Deshacer eliminación</button></div>}
 
       <div className="rounded-lg border bg-gray-50 p-3">
         <div className="mb-2 flex items-center justify-between gap-3">
@@ -440,21 +452,22 @@ export function MediatecaBrowser({
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex gap-2">
+          <button type="button" onClick={()=>void openTrash()} className="cursor-pointer rounded-lg border px-4 py-2 text-sm hover:bg-blue-50">Papelera</button>
           {canManageFolders && <button type="button" onClick={() => setCreateOpen(true)} className="cursor-pointer rounded-lg bg-blue-950 px-4 py-2 text-sm text-white hover:bg-blue-900">Crear carpeta</button>}
           <button type="button" onClick={() => setAddOpen(true)} className="rounded-lg border border-blue-950 px-4 py-2 text-sm text-blue-950">Añadir archivo</button>
         </div>
-        <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar archivo..." className="w-64 rounded-lg border p-2 text-sm" />
+        <TableFilters><label className="block text-xs text-gray-600"><span className="mb-1 block">Buscar archivo</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar archivo..." className="w-64 rounded-lg border p-2 text-sm" /></label></TableFilters>
       </div>
 
       <section>
         <h2 className="mb-3 font-semibold">Sub-carpetas dentro de la carpeta actual ({currentFolderName})</h2>
         <div className="mb-3">
-          <input
+          <TableFilters><label className="block text-xs text-gray-600"><span className="mb-1 block">Buscar carpeta</span><input
             value={folderSearch}
             onChange={(event) => setFolderSearch(event.target.value)}
             placeholder="Buscar carpetas..."
             className="w-full rounded-lg border p-2 text-sm"
-          />
+          /></label></TableFilters>
         </div>
         <div className="overflow-x-auto rounded-lg border">
           <table className="min-w-full text-sm">
@@ -555,6 +568,7 @@ export function MediatecaBrowser({
       )}
 
       {!picker && <div className="pt-2"><Link href="/dashboard" className="text-sm text-blue-800 hover:underline">Volver al dashboard</Link></div>}
+      {trashOpen&&<ModalFrame title="Papelera recuperable" onClose={()=>setTrashOpen(false)}><div className="max-h-96 space-y-3 overflow-auto">{trashLoading?<p role="status">Cargando papelera…</p>:trashRows.length?trashRows.map(row=><div key={row.id} className="rounded border p-3"><p>{new Date(row.deleted_at).toLocaleString('es-ES')} · {row.media_count} archivos · {row.folders_count} carpetas</p><button type="button" disabled={Boolean(restoring)||(!canManageFolders&&row.folders_count>0)} onClick={()=>void restoreTrash(row.id)} className="mt-2 rounded border px-3 py-1 enabled:cursor-pointer enabled:hover:bg-blue-100 disabled:cursor-default disabled:opacity-50">{restoring===row.id?'Restaurando…':'Restaurar'}</button>{!canManageFolders&&row.folders_count>0&&<p className="text-sm">La restauración de carpetas requiere permiso de operaciones.</p>}</div>):<p>No hay eliminaciones pendientes.</p>}</div></ModalFrame>}
       {createOpen && <CreateFolderModal parentPath={currentPath} onClose={() => setCreateOpen(false)} onDone={() => { setCreateOpen(false); void load(); }} />}
       {addOpen && <AddFileModal folderPath={currentPath} onClose={() => setAddOpen(false)} onDone={() => { setAddOpen(false); void load(); }} />}
       {renameTarget && <RenameModal item={renameTarget} onClose={() => setRenameTarget(null)} onDone={() => { setRenameTarget(null); void load(); }} />}

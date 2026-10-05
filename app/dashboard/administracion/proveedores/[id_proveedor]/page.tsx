@@ -1,4 +1,5 @@
 "use client";
+import TableFilters from '@/app/components/TableFilters';
 import { use, useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import SupplierBankCharges from '../SupplierBankCharges';
@@ -151,19 +152,19 @@ export default function ProveedorPage({
         </div>
 
         {tab !== "datos" && <SupplierActions supplier={proveedor} tab={tab} onChargesChange={setRecurringCharges} onEditCharge={setEditingCharge} refreshVersion={chargesVersion} />}
-        {editingCharge && <RecurringChargeManageModal id={editingCharge} action="edit" onClose={()=>setEditingCharge(null)} onSaved={()=>{setEditingCharge(null);setChargesVersion(value=>value+1);}} />}
+        {editingCharge && proveedor && <RecurringChargeManageModal endpoint={`/api/v1/admin/proveedores/${encodeURIComponent(proveedor.id_proveedor)}/cargos-recurrentes/${editingCharge}`} id={editingCharge} action="edit" onClose={()=>setEditingCharge(null)} onSaved={()=>{setEditingCharge(null);setChargesVersion(value=>value+1);}} />}
         {/* Content */}
         {tab === "movimientos" ? <SupplierBankCharges rows={bankCharges}/> : tab === "cargos-pendientes" ? <SupplierPendingCharges pending={cargos} recurring={recurringCharges} onEdit={setEditingCharge}/> : tab !== "datos" ? (
           <>
             {/* Filter input */}
             <div className="mb-4">
-              <input
+              <TableFilters><label className="block text-xs text-gray-600"><span className="mb-1 block">Buscar en la tabla</span><input
                 type="text"
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
                 placeholder={`Filtrar por campo...`}
                 className="w-full rounded border px-3 py-2 sm:w-96 text-gray-700"
-              />
+              /></label></TableFilters>
             </div>
 
             {/* Data table */}

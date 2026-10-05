@@ -6,15 +6,15 @@ export class CuentaService {
         return response.data;
     }
 
-    static async getCuentas(filters = {}) {
+    static async getCuentas(filters = {}, options = {}) {
         const response = await apiClient.get('/api/v1/comercial/cuentas', {
-            params: filters
+            params: filters, signal: options.signal
         });
         return response.data;
     }
 
-    static async getCuentaById(idCuenta) {
-        const response = await apiClient.get(`/api/v1/comercial/cuentas/${idCuenta}`);
+    static async getCuentaById(idCuenta, options = {}) {
+        const response = await apiClient.get(`/api/v1/comercial/cuentas/${encodeURIComponent(idCuenta)}`, {signal:options.signal});
         return response.data;
     }
 

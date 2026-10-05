@@ -1,4 +1,6 @@
 "use client";
+import TableFilters from '@/app/components/TableFilters';
+import {request} from '@/app/lib/request';
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -29,11 +31,12 @@ type Linea = {
 const formatMoney = (v: number) => Number(v).toLocaleString('es-ES', {style:'currency',currency:'EUR'});
 export default function RevisionLineasPage() {
   const router = useRouter();
+  const [loading,setLoading]=useState(true);
   const [recurring,setRecurring] = useState('');
   const [cardSettlement,setCardSettlement]=useState(false);
   const [rows,setRows] = useState<Linea[]>([]), [bank,setBank] = useState<Banco>('Sabadell'), [selected,setSelected] = useState<string[]>([]), [query,setQuery] = useState(''), [type,setType] = useState(''), [assigned,setAssigned] = useState(''), [error,setError] = useState('');
   const [mode,setMode] = useState<'review'|'assign'|'charge'|null>(null), [unreview,setUnreview] = useState(false), [saving,setSaving] = useState(false);
-  const load = useCallback(async () => {try {const r=await fetch('/api/v1/direccion/bancos',{cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error(d.message);setRows(d);setSelected(current=>current.filter(id=>d.some((row:Linea)=>row.id_linea_banco===id&&!row.estado_revision)));}catch(e:any){setError(e.message);}},[]);
+  const load = useCallback(async () => {setLoading(true);setError('');try {const r=await request('/api/v1/direccion/bancos',{cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error(d.message);setRows(d);setSelected(current=>current.filter(id=>d.some((row:Linea)=>row.id_linea_banco===id&&!row.estado_revision)));}catch(e:any){setError(e.message);}finally{setLoading(false);}},[]);
   useEffect(() => {void load();},[load]);
   useEffect(() => {const close=(e:KeyboardEvent)=>{if(e.key==='Escape')setUnreview(false);};window.addEventListener('keydown',close);return()=>window.removeEventListener('keydown',close);},[]);
   const selectedRows=rows.filter(r=>!r.estado_revision&&selected.includes(r.id_linea_banco));
@@ -53,7 +56,7 @@ export default function RevisionLineasPage() {
   const shown=useMemo(()=>rows.filter(r=>!r.estado_revision&&r.banco===bank&&(!query.trim()||r.concepto.toLowerCase().includes(query.toLowerCase()))&&(!type||(type==='ingreso'?r.importe>0:r.importe<0))&&(!assigned||(assigned==='none'?!r.id_proveedor&&!r.id_cuenta&&!r.id_agente&&!r.remesa_ids?.length:assigned==='proveedor'?!!r.id_proveedor:assigned==='cliente'?(!!r.id_cuenta||!!r.remesa_ids?.length):!!r.id_agente))&&(!recurring||(r.importe<0&&(recurring==='yes'?!!r.id_cargo_recurrente:!r.id_cargo_recurrente)))),[rows,bank,query,type,assigned,recurring]);
   const toggle=(id:string)=>setSelected(s=>s.includes(id)?s.filter(x=>x!==id):[...s,id]);
   const saved=()=>{setMode(null);setSelected([]);void load();};
-  const markUnreviewed=async()=>{setSaving(true);try{const r=await fetch('/api/v1/direccion/bancos/revision',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'unreview',ids:selected})});const d=await r.json();if(!r.ok)throw new Error(d.message);setUnreview(false);saved();}catch(e:any){setError(e.message);}finally{setSaving(false);}};
+  const markUnreviewed=async()=>{setSaving(true);try{const r=await request('/api/v1/direccion/bancos/revision',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'unreview',ids:selected})});const d=await r.json();if(!r.ok)throw new Error(d.message);setUnreview(false);saved();}catch(e:any){setError(e.message);}finally{setSaving(false);}};
   return (
     <main className="min-h-screen bg-gray-100 px-6 py-8 text-slate-900 lg:px-12">
       <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
@@ -89,6 +92,7 @@ export default function RevisionLineasPage() {
           </button>
         </div>
       </div>
+      {loading&&<p role="status" className="my-3">Cargando movimientos bancarios...</p>}
       {error && (
         <p className="mb-4 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">
           {error}
@@ -109,14 +113,14 @@ export default function RevisionLineasPage() {
           </button>
         ))}
       </div>
-      <div className="space-y-3 bg-white p-4 text-slate-900">
+      <TableFilters>
         <label className="block">Concepto<input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Filtrar por concepto" className="mt-1 block w-full rounded border px-3 py-2" /></label>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="contents">
           <label className="min-w-0">Movimiento<select value={type} onChange={e=>setType(e.target.value)} className="mt-1 block w-full cursor-pointer rounded border bg-white px-3 py-2 hover:border-blue-950"><option value="">Ingresos y cargos</option><option value="ingreso">Ingresos</option><option value="cargo">Cargos</option></select></label>
           <label className="min-w-0">Asignado a<select value={assigned} onChange={e=>setAssigned(e.target.value)} className="mt-1 block w-full cursor-pointer rounded border bg-white px-3 py-2 hover:border-blue-950"><option value="">Todos</option><option value="none">Ninguno</option><option value="proveedor">Proveedor</option><option value="cliente">Cliente</option><option value="nomina">Nómina</option></select></label>
           <label className="min-w-0">Cargo recurrente<select value={recurring} onChange={e=>setRecurring(e.target.value)} className="mt-1 block w-full cursor-pointer rounded border bg-white px-3 py-2 hover:border-blue-950"><option value="">Todos</option><option value="yes">Con cargo recurrente</option><option value="no">Sin cargo recurrente</option></select></label>
         </div>
-      </div>
+      </TableFilters>
       <p className="bg-white px-4 pb-3 text-sm text-gray-600"><span className="mr-2 inline-block h-3 w-3 rounded border border-rose-200 bg-rose-50" aria-hidden="true" />Rosa suave: posible duplicado por misma fecha operativa e importe, también entre bancos y con movimientos ya revisados. Compruébalo en Detectar duplicados.</p>
       <div className="overflow-x-auto rounded-b bg-white text-slate-900 shadow">
         <table className="w-full min-w-[1000px] table-fixed text-sm">
@@ -164,7 +168,7 @@ export default function RevisionLineasPage() {
                 <td className="break-words p-3">{row.id_cargo_recurrente ? <span>{row.descripcion_cargo_recurrente || `Cargo ${row.id_cargo_recurrente} (sin descripción)`}</span> : <span className="text-gray-500">{row.importe<0?'Sin cargo recurrente':'No aplica'}</span>}</td>
               </tr>
             ))}
-            {!shown.length && (
+            {!loading && !error && !shown.length && (
               <tr>
                 <td colSpan={6} className="p-10 text-center text-gray-500">
                   No hay líneas para mostrar.

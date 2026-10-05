@@ -6,9 +6,9 @@ export class ContactoService {
         return response.data;
     }
 
-    static async getContactos(filters = {}) {
+    static async getContactos(filters = {}, options = {}) {
         const response = await apiClient.get('/api/v1/comercial/contactos', {
-            params: filters
+            params: filters, signal: options.signal
         });
         return response.data;
     }

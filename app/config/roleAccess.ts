@@ -33,6 +33,7 @@ export function canAccessDashboardPath(role: unknown, pathname: string) {
 
 export function canAccessApiPath(role: unknown, pathname: string, method: string) {
   const normalized = normalizeRole(role);
+  if (/^\/api\/v1\/admin\/proveedores\/[^/]+\/(benchmark|cargos-recurrentes)(?:\/[^/]+)?\/?$/.test(pathname)) return normalized === 'direccion' || roleRank[normalized] >= roleRank.administracion;
   if (method === 'POST' && /^\/api\/v1\/tareas\/propias\/?$/.test(pathname)) return true;
   if (pathname.startsWith('/api/v1/tareas') && (method !== 'GET' || pathname === '/api/v1/tareas/agentes')) return normalized === 'direccion' || roleRank[normalized] >= roleRank.operaciones;
   if (method !== 'GET' && pathname.startsWith('/api/v1/comercial/contratos/crear')) return roleRank[normalized] >= roleRank.administracion;

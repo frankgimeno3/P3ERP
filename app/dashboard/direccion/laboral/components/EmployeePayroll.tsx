@@ -1,4 +1,5 @@
 'use client';
+import TableFilters from '@/app/components/TableFilters';
 import Link from 'next/link';
 import { useState } from 'react';
 import { Header, Notice, money, periodLabel, root, useResource } from './ui';
@@ -6,7 +7,7 @@ export function EmployeePayrollList({employee,version=0}:{employee?:string;versi
   const {data,loading,error}=useResource<any[]>(`nominas-empleados?${new URLSearchParams({...(employee?{empleado:employee}:{}),v:String(version)})}`);
   const [filter,setFilter]=useState('');
   const rows=(data||[]).filter(r=>`${r.id} ${r.empleado}`.toLocaleLowerCase().includes(filter.toLocaleLowerCase()));
-  return <section className="laboral-card"><label className="mb-4 block">Buscar empleado o ID<input className="mt-1 block rounded border p-2" value={filter} onChange={e=>setFilter(e.target.value)}/></label><Notice error={error}/><table><thead><tr><th>Nómina</th><th>Cargos recurrentes</th></tr></thead><tbody>{rows.map(r=><tr key={r.id} data-interactive tabIndex={0} onClick={()=>window.location.assign(`${root}/nominas/${r.id}`)} onKeyDown={e=>{if(e.key==='Enter')window.location.assign(`${root}/nominas/${r.id}`);}}><td><Link className="cursor-pointer hover:underline" href={`${root}/nominas/${r.id}`}>Nómina {r.empleado}</Link></td><td>{r.cargos || 'Sin cargo recurrente'}</td></tr>)}</tbody></table>{loading?<p>Cargando nóminas…</p>:!rows.length&&!error&&<p>No hay nóminas registradas.</p>}</section>;
+  return <section className="laboral-card"><TableFilters><label className="mb-4 block">Buscar empleado o ID<input className="mt-1 block rounded border p-2" value={filter} onChange={e=>setFilter(e.target.value)}/></label></TableFilters><Notice error={error}/><table><thead><tr><th>Nómina</th><th>Cargos recurrentes</th></tr></thead><tbody>{rows.map(r=><tr key={r.id} data-interactive tabIndex={0} onClick={()=>window.location.assign(`${root}/nominas/${r.id}`)} onKeyDown={e=>{if(e.key==='Enter')window.location.assign(`${root}/nominas/${r.id}`);}}><td><Link className="cursor-pointer hover:underline" href={`${root}/nominas/${r.id}`}>Nómina {r.empleado}</Link></td><td>{r.cargos || 'Sin cargo recurrente'}</td></tr>)}</tbody></table>{loading?<p>Cargando nóminas…</p>:!rows.length&&!error&&<p>No hay nóminas registradas.</p>}</section>;
 }
 export function EmployeePayrollDetail({id}:{id:string}) {
   const {data,loading,error}=useResource<any>(`nominas-empleados/${id}`);

@@ -19,6 +19,8 @@ interface Cuenta {
 }
 
 interface TablacuentasProps {
+  page?:number;
+  onPageChange?:React.Dispatch<React.SetStateAction<number>>;
   clienteFiltro: string;
   codigoCrmFiltro: string;
   codigoEdisoftFiltro: string;
@@ -38,14 +40,17 @@ const Tablacuentas: FC<TablacuentasProps> = ({
   codigoEdisoftFiltro,
   agenteFiltro,
   telFiltro,
-  paisFiltro,
+  paisFiltro,page,onPageChange,
 }) => {
   const router = useRouter();
-  const [currentPage, setCurrentPage] = useState(1);
+  const [localPage,setLocalPage]=useState(1);
+  const currentPage=page??localPage,setCurrentPage=onPageChange??setLocalPage;
+  const [totalResults,setTotalResults]=useState(0);
   const [resultados, setResultados] = useState<Cuenta[]>([]);
   const [agentes, setAgentes] = useState<Agente[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [attempt,setAttempt]=useState(0);
   const itemsPerPage = 15;
 
   useEffect(() => {
@@ -67,6 +72,7 @@ const Tablacuentas: FC<TablacuentasProps> = ({
 
   // Fetch cuentas from API
   useEffect(() => {
+    const controller=new AbortController();setLoading(true);setError(null);
     const fetchCuentas = async () => {
       try {
         setLoading(true);
@@ -77,26 +83,26 @@ const Tablacuentas: FC<TablacuentasProps> = ({
           codigoEdisoftFiltro: codigoEdisoftFiltro || '',
           agenteFiltro: agenteFiltro || '',
           telFiltro: telFiltro || '',
-          paisFiltro: paisFiltro || '',
+          paisFiltro: paisFiltro || '',limit:itemsPerPage,page:currentPage,
         };
-        const data = await CuentaService.getCuentas(filters);
-        setResultados(Array.isArray(data) ? data : []);
+        const data = await CuentaService.getCuentas(filters,{signal:controller.signal});
+        if(!controller.signal.aborted){setResultados(data.rows || []);setTotalResults(data.total || 0);}
       } catch (err: any) {
-        console.error('Error fetching cuentas:', err);
+        if(controller.signal.aborted)return;
         // Si es un error 400, podría ser un problema de autenticación o validación
         if (err?.response?.status === 400) {
           setError('Error de autenticación o validación. Por favor, verifica tu sesión.');
         } else {
           setError(err?.message || 'Error al cargar las cuentas');
         }
-        setResultados([]);
       } finally {
-        setLoading(false);
+        if(!controller.signal.aborted)setLoading(false);
       }
     };
 
-    fetchCuentas();
-  }, [clienteFiltro, codigoCrmFiltro, codigoEdisoftFiltro, agenteFiltro, telFiltro, paisFiltro]);
+    const timer=setTimeout(fetchCuentas,250);
+    return()=>{clearTimeout(timer);controller.abort();};
+  }, [clienteFiltro, codigoCrmFiltro, codigoEdisoftFiltro, agenteFiltro, telFiltro, paisFiltro,currentPage,attempt]);
 
   const resultadosFiltrados = useMemo(() => {
     // Server-side filtering is already done, but we can do additional client-side filtering if needed
@@ -105,13 +111,11 @@ const Tablacuentas: FC<TablacuentasProps> = ({
 
   // Reset to page 1 when filters change
   React.useEffect(() => {
-    setCurrentPage(1);
-  }, [clienteFiltro, codigoCrmFiltro, codigoEdisoftFiltro, agenteFiltro, telFiltro, paisFiltro]);
+    if(!onPageChange)setLocalPage(1);
+  }, [clienteFiltro, codigoCrmFiltro, codigoEdisoftFiltro, agenteFiltro, telFiltro, paisFiltro,onPageChange]);
 
-  const totalPages = Math.ceil(resultadosFiltrados.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const resultadosPaginados = resultadosFiltrados.slice(startIndex, endIndex);
+  const totalPages = Math.max(1, Math.ceil(totalResults / itemsPerPage));
+  const resultadosPaginados = resultadosFiltrados;
 
   const getNombreCompletoAgente = (idAgente: string) => {
     const agente = agentes.find((a) => a.id_agente === idAgente);
@@ -127,7 +131,7 @@ const Tablacuentas: FC<TablacuentasProps> = ({
     }
   };
 
-  if (loading) {
+  if (loading && !resultados.length) {
     return (
       <div className="mt-5 flex justify-center items-center py-12">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
@@ -140,6 +144,7 @@ const Tablacuentas: FC<TablacuentasProps> = ({
     return (
       <div className="mt-5 p-4 bg-red-100 border border-red-300 text-red-700 rounded-lg">
         <p className="text-center">{error}</p>
+        <button type="button" onClick={()=>setAttempt(value=>value+1)} className="cursor-pointer rounded border px-3 py-2 hover:bg-red-50">Reintentar</button>
       </div>
     );
   }
@@ -154,6 +159,7 @@ const Tablacuentas: FC<TablacuentasProps> = ({
 
   return (
         <div className="">
+      {loading&&<p role="status" className="mt-4 text-sm text-blue-950">Actualizando cuentas…</p>}
       <table className="mt-5  rounded-lg shadow-xl bg-white min-w-full">
         <thead className="bg-blue-950/80 text-white rounded-lg">
           <tr>

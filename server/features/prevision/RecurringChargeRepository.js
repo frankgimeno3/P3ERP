@@ -67,26 +67,28 @@ export async function getRecurringCharge(id) {
   row.movimientos=(await getPgPool().query('SELECT * FROM tesoreria_movimientos_bancarios WHERE id_cargo_recurrente=$1 ORDER BY created_at DESC,id_linea_banco',[id])).rows;
   return withRuleIds(row);
 }
-export async function deleteRecurringCharge(id,body) {
-  const db=await getPgPool().connect();
+export async function deleteRecurringCharge(id,body,pool=getPgPool()) {
+  const db=await pool.connect();
   try {
     await db.query('BEGIN');
     await db.query("SELECT pg_advisory_xact_lock(hashtext('laboral:pagos'))");
     const row=(await db.query("SELECT *,to_char(planificado_hasta,'YYYY-MM-DD') AS planificado_hasta FROM tesoreria_cargos_recurrentes WHERE id_cargo_recurrente=$1 FOR UPDATE",[id])).rows[0];
     if(!row)throw new RecurringChargeError('Cargo previsto no encontrado.',404);
     if(!body.confirm || new Date(body.version).getTime()!==new Date(row.updated_at).getTime())throw new RecurringChargeError('Confirma la eliminación con los datos actualizados.',409);
+    if((await db.query('SELECT 1 FROM tesoreria_pagos_previstos p JOIN tesoreria_cargos_vencimientos v ON v.id::text=p.id_vencimiento WHERE v.id_cargo_recurrente=$1 LIMIT 1',[id])).rowCount)throw new RecurringChargeError('Este cargo tiene vencimientos vinculados a facturas. Finaliza su planificación para conservar esos pagos; no se puede eliminar.',409);
     const detached=await db.query("UPDATE tesoreria_movimientos_bancarios SET id_cargo_recurrente=NULL,nomina_revision=CASE WHEN jsonb_typeof(nomina_revision)='object' THEN nomina_revision-'id_cargo_recurrente' ELSE nomina_revision END,updated_at=now() WHERE id_cargo_recurrente=$1 RETURNING id_linea_banco",[id]);
     await db.query('DELETE FROM tesoreria_cargos_recurrentes WHERE id_cargo_recurrente=$1',[id]);
     await db.query('COMMIT');return {ok:true,desasignados:detached.rowCount};
   }catch(e){await db.query('ROLLBACK');throw e;}finally{db.release();}
 }
-export async function updateRecurringCharge(id,body,requiredCard=null) {
+export async function updateRecurringCharge(id,body,requiredCard=null,requiredSupplier=null) {
   const db=await getPgPool().connect();
   try {
     await db.query('BEGIN');
     await db.query("SELECT pg_advisory_xact_lock(hashtext('laboral:pagos'))");
     const row=(await db.query("SELECT *,to_char(planificado_hasta,'YYYY-MM-DD') AS planificado_hasta FROM tesoreria_cargos_recurrentes WHERE id_cargo_recurrente=$1 FOR UPDATE",[id])).rows[0];
     if(!row)throw new RecurringChargeError('Cargo previsto no encontrado.',404);
+    if(requiredSupplier&&(row.id_proveedor!==requiredSupplier||row.tipo_cargo!=='proveedor'))throw new RecurringChargeError('El cargo no pertenece a este proveedor.',404);
     if(requiredCard&&row.id_tarjeta!==requiredCard)throw new RecurringChargeError('La suscripción no pertenece a esta tarjeta.',409);
     if(body.expectedVersion && new Date(body.expectedVersion).getTime()!==new Date(row.updated_at).getTime())throw new RecurringChargeError('La previsi\u00f3n ha cambiado. Recarga antes de guardar.',409);
     const canonical=value=>JSON.stringify(value,(_,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.keys(v).sort().map(k=>[k,v[k]])):v);
@@ -94,7 +96,7 @@ export async function updateRecurringCharge(id,body,requiredCard=null) {
     const data=validateRecurringCharge({...row,banco_pago:body.banco_pago === undefined ? row.banco_pago : body.banco_pago,tipo_programacion:body.tipo_programacion,programacion:body.programacion,termina_planificacion:body.termina_planificacion ?? row.termina_planificacion});
     const result=(await db.query('UPDATE tesoreria_cargos_recurrentes SET tipo_programacion=$2,programacion=$3::jsonb,termina_planificacion=$4,updated_at=now() WHERE id_cargo_recurrente=$1 RETURNING *',[id,data.tipo_programacion,JSON.stringify(data.programacion),data.termina_planificacion])).rows[0];
     if (canonical(data.programacion)!==canonical(withRuleIds(row).programacion)||data.tipo_programacion!==row.tipo_programacion) {
-      await db.query("DELETE FROM tesoreria_cargos_vencimientos v WHERE id_cargo_recurrente=$1 AND NOT EXISTS(SELECT 1 FROM tesoreria_vencimientos_aplicaciones a WHERE a.id_vencimiento=v.id) AND NOT EXISTS(SELECT 1 FROM administracion_tickets t WHERE t.id_vencimiento_tarjeta=v.id)",[id]);
+      await db.query("DELETE FROM tesoreria_cargos_vencimientos v WHERE id_cargo_recurrente=$1 AND NOT EXISTS(SELECT 1 FROM tesoreria_vencimientos_aplicaciones a WHERE a.id_vencimiento=v.id) AND NOT EXISTS(SELECT 1 FROM administracion_tickets t WHERE t.id_vencimiento_tarjeta=v.id) AND NOT EXISTS(SELECT 1 FROM tesoreria_pagos_previstos p WHERE p.id_vencimiento=v.id)",[id]);
       await extendCharge(db,{...result,planificado_hasta:null},todayInSpain(),true,result.termina_planificacion && row.planificado_hasta ? new Date(row.planificado_hasta).toISOString().slice(0,10) : horizon(todayInSpain()));
     }
     await db.query('UPDATE tesoreria_cargos_recurrentes SET banco_pago=$2 WHERE id_cargo_recurrente=$1',[id,data.banco_pago]);

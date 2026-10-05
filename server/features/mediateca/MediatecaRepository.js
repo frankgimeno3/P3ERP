@@ -1,6 +1,7 @@
+import { archiveMediaDeletion } from './MediatecaTrashRepository.js';
 import crypto from "node:crypto";
 import { getPgPool } from "../../database/pgClient.js";
-import { createPresignedUpload, deleteObjectFromS3 } from "./S3Service.js";
+import { createPresignedUpload } from "./S3Service.js";
 
 export function normalizeMediatecaRouteSegment(value) {
   return String(value || "")
@@ -233,22 +234,15 @@ export async function deleteFolder(folderId) {
       [folderIds, ['contratos_firmados','documentos_administracion','documentos_direccion','documentos_produccion']]);
     if (protectedFound.rowCount) throw new Error('No se puede eliminar una carpeta principal protegida');
     const media = await client.query(
-      "SELECT mediateca_content_id, mediateca_s3_key FROM mediateca_archivos WHERE mediateca_folder_id = ANY($1::uuid[])",
+      "SELECT * FROM mediateca_archivos WHERE mediateca_folder_id = ANY($1::uuid[]) FOR UPDATE",
       [folderIds],
     );
-    for (const row of media.rows) {
-      if (row.mediateca_s3_key) {
-        try {
-          await deleteObjectFromS3(row.mediateca_s3_key);
-        } catch (error) {
-          console.warn("Mediateca delete folder S3 warning:", error?.message || error);
-        }
-      }
-    }
+    const folders=(await client.query('SELECT * FROM mediateca_carpetas WHERE mediateca_folder_id=ANY($1::uuid[]) FOR UPDATE',[folderIds])).rows;
+    const trashId=await archiveMediaDeletion(client,folders,media.rows);
     await client.query("DELETE FROM mediateca_archivos WHERE mediateca_folder_id = ANY($1::uuid[])", [folderIds]);
     await client.query("DELETE FROM mediateca_carpetas WHERE mediateca_folder_id = ANY($1::uuid[])", [folderIds]);
     await client.query("COMMIT");
-    return { deleted: true };
+    return { deleted: true, trashId };
   } catch (error) {
     await client.query("ROLLBACK");
     throw error;
@@ -368,16 +362,13 @@ export async function updateMedia(mediaId, data) {
 }
 
 export async function deleteMedia(mediaId) {
-  const pool = getPgPool();
-  const current = await getMediaById(mediaId);
-  if (!current) throw new Error("Media not found");
-  if (current.s3Key) {
-    try {
-      await deleteObjectFromS3(current.s3Key);
-    } catch (error) {
-      console.warn("Mediateca delete media S3 warning:", error?.message || error);
-    }
-  }
-  await pool.query("DELETE FROM mediateca_archivos WHERE mediateca_content_id = $1", [mediaId]);
-  return { deleted: true };
+  const db=await getPgPool().connect();
+  try {
+    await db.query('BEGIN');
+    const row=(await db.query('SELECT * FROM mediateca_archivos WHERE mediateca_content_id=$1 FOR UPDATE',[mediaId])).rows[0];
+    if(!row)throw new Error('Media not found');
+    const trashId=await archiveMediaDeletion(db,[],[row]);
+    await db.query('DELETE FROM mediateca_archivos WHERE mediateca_content_id=$1',[mediaId]);
+    await db.query('COMMIT');return {deleted:true,trashId};
+  }catch(error){await db.query('ROLLBACK');throw error;}finally{db.release();}
 }

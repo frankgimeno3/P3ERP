@@ -8,6 +8,8 @@ import {generateOccurrences} from '../banco/BankReviewAnalysis.js';
 import {projectJuanIncomeBudgets,incomeRowMode} from './JuanIncomeBudget.js';
 import {readLiquidityBudgets,writeLiquidityBudget} from './LiquidityForecastBudgets.js';
 import {projectLiquidityApplications} from './LiquidityForecastApplications.js';
+import {projectInvoicePayments} from './InvoicePaymentProjection.js';
+import {projectOperationalForecast} from './OperationalForecastProjection.js';
 
 const fail=(message,status=400)=>{const error=Error(message);error.status=status;throw error;};
 
@@ -30,7 +32,6 @@ export async function getJuanWorkbook(pool=getPgPool(),year=2026) {
     to_char(COALESCE(p3_income_date(m.fecha_operativa),p3_income_date(m.fecha_valor)),'DD/MM/YYYY') date
     FROM tesoreria_prevision_juan_aplicaciones a JOIN tesoreria_movimientos_bancarios m USING(id_linea_banco) WHERE a.workbook_id=$1`,[ID])).rows;
   const bankMovements=(await pool.query(`SELECT * FROM tesoreria_movimientos_bancarios WHERE COALESCE(p3_income_date(fecha_operativa),p3_income_date(fecha_valor)) BETWEEN $1::date AND $2::date`,[year===2026?'2026-10-01':from,until])).rows;
-  const applications=projectLiquidityApplications(workbook.sheets,associations,bankMovements,manualApplications,year);
   await readLiquidityBudgets(pool,year,workbook.sheets);
   const orders=(await pool.query(`SELECT o.id_orden,o.etiqueta_cobro,o.cobro_total,o.banco_cobro,o.fecha_teorica_cobro,o.forma_cobro,o.datos_importacion,
     GREATEST(0,COALESCE(o.cobro_total,0)-COALESCE((SELECT sum(a.importe) FROM tesoreria_aplicaciones_cobro a JOIN tesoreria_movimientos_bancarios m USING(id_linea_banco) WHERE a.id_orden=o.id_orden AND m.estado_revision),0)) AS pending_amount
@@ -42,9 +43,18 @@ export async function getJuanWorkbook(pool=getPgPool(),year=2026) {
     FROM tesoreria_cargos_recurrentes cr LEFT JOIN administracion_proveedores p USING(id_proveedor)
     LEFT JOIN agentes_db a ON a.id_agente=cr.id_agente WHERE cr.activo`,[year===2026?'2026-10-01':from,until])).rows;
   for(const charge of charges)if(charge.tipo_cargo==='nomina')charge.vencimientos=generateOccurrences([{...charge,tipo_cargo:'otro'}],year===2026?'2026-10-01':from,until).occurrences.map(d=>({...d,id:d.id}));
+  projectOperationalForecast(workbook.sheets,associations,links,charges,orders,year);
+  const applications=projectLiquidityApplications(workbook.sheets,associations,bankMovements,manualApplications,year);
   const linkedDates=projectJuanLinkedForecast(workbook.sheets,links,charges);
   projectJuanCardBudgets(workbook.sheets,charges);
   const incomeDifferences=projectJuanIncomeBudgets(workbook.sheets,orders,applications);
+  const invoicePayments=(await pool.query(`SELECT p.*,to_char(p3_income_date(p.fecha_pago),'YYYY-MM-DD') date FROM tesoreria_pagos_previstos p WHERE p3_income_date(p.fecha_pago) BETWEEN $1::date AND $2::date OR EXISTS(SELECT 1 FROM tesoreria_cargos_vencimientos v WHERE v.id=p.id_vencimiento AND v.fecha BETWEEN $1::date AND $2::date)`,[year===2026?'2026-10-01':from,until])).rows;
+  const unassignedPayments=projectInvoicePayments(workbook.sheets,invoicePayments,charges,links);
+  for (const payment of invoicePayments) for (const movement of bankMovements.filter(m => m.id_pago === payment.id_pago && Number(m.importe) < 0)) {
+    for(let index=applications.length-1;index>=0;index--)if(applications[index].id_linea_banco===movement.id_linea_banco)applications.splice(index,1);
+    const cell_key = `${payment.cuenta_pago}:payments:invoice:${payment.id_pago}:${Number(payment.date.slice(5,7))}`;
+    applications.push({ ...movement, cell_key, importe: Math.abs(Number(movement.importe)) });
+  }
   const planned=plannedJuanCells(workbook.sheets);
   // Keep applied cells accessible if an ERP change removes their forecast amount,
   // so the accountant can see the inconsistency and withdraw the application.
@@ -56,7 +66,7 @@ export async function getJuanWorkbook(pool=getPgPool(),year=2026) {
     const day=Math.min(row.day||31,new Date(Date.UTC(year,month,0)).getUTCDate());
     planned.push({key:a.cell_key,bank:sheet.bank,section,rowId,label:row.label,month,amount:0,date:`${String(day).padStart(2,'0')}/${String(month).padStart(2,'0')}/${year}`,estimatedDate:!row.day});
   }
-  return {...workbook,balances,links,associations,orders,charges,applications,bankMovements,incomeDifferences,totals:workbook.sheets.map(juanTotals),planned:planned.map(cell=>{
+  return {...workbook,balances,links,associations,orders,charges,applications,bankMovements,incomeDifferences,invoicePayments,unassignedPayments,totals:workbook.sheets.map(juanTotals),planned:planned.map(cell=>{
     const sheet=workbook.sheets.find(s=>s.bank===cell.bank),row=sheet[cell.section].find(r=>r.id===cell.rowId);
     const amount=sheet.closedMonths?.includes(cell.month)?row.closingBudget?.[cell.month]??cell.amount:cell.amount;
     const applied=applications.filter(a=>a.cell_key===cell.key && a.estado_revision && !a.duplicado_descartado).reduce((sum,a)=>sum+Math.round(Number(a.importe)*100),0);
@@ -81,8 +91,10 @@ export async function editJuanCell(body,pool=getPgPool()) {
     if(body.section==='checks')sheet.checks[body.column]=body.value;
     else {
       if(!['income','payments'].includes(body.section))fail('Sección o importe no válido');
-      const row=sheet[body.section].find(r=>r.id===body.rowId);
+      let row=sheet[body.section].find(r=>r.id===body.rowId);
+      if(!row){const projected=await getJuanWorkbook({query:db.query.bind(db)},year);row=projected.sheets.find(s=>s.bank===body.bank)?.[body.section]?.find(r=>r.id===body.rowId);if(row)sheet[body.section].push(row);}
       if(!row)fail('Fila no encontrada');
+      if(row.invoicePaymentId)fail('Este importe procede de una factura registrada. Modifica sus vencimientos desde la factura para conservar el documento y el total.',409);
       if(row.opening&&(sheet.columns[body.column].month!==1||sheet.columns[body.column].kind!=='actual'))fail('El saldo inicial se introduce una sola vez, en enero realizado.');
       if(!row.opening&&body.value<0)fail('El importe de un ingreso o gasto no puede ser negativo.');
       if(row.cardPart==='subscriptions'&&sheet.columns[body.column].kind==='forecast')fail('Las suscripciones se calculan desde los cargos asociados a las tarjetas del ERP. Configúralas allí y actualiza la hoja.',409);
@@ -96,6 +108,7 @@ export async function editJuanCell(body,pool=getPgPool()) {
       }
       const link=(await db.query('SELECT * FROM tesoreria_prevision_juan_enlaces WHERE workbook_id=$1 AND cell_key=$2',[ID,key])).rows[0];
       let target=link&&['matched','integrated'].includes(link.status)?link.target_id:null;
+      if(!target&&row.id.startsWith('payments:erp:'))target=row.id.slice('payments:erp:'.length);
       if(sheet.columns[body.column].kind==='forecast'&&!target) {
        const association=(await db.query('SELECT * FROM tesoreria_prevision_juan_asociaciones WHERE workbook_id=$1 AND bank=$2 AND row_id=$3',[ID,sheet.bank,row.id])).rows[0];
        if(['matched','integrated'].includes(association?.status)&&association.charge_ids?.length===1)target=association.charge_ids[0];
@@ -158,8 +171,9 @@ export async function getJuanLiquidity(date,pool=getPgPool()) {
   const workbook=await getJuanWorkbook(pool,year);
   const month=Number(until.slice(3,5));
   const unassigned=workbook.orders.filter(o=>!['Sabadell','Santander'].includes(o.banco_cobro));
+  const unassignedPayments=workbook.unassignedPayments.filter(p=>Number(p.date.slice(5,7))<=month);
   const unresolved=workbook.associations.filter(a=>!['matched','integrated','group','historical','opening'].includes(a.status)&&workbook.planned.some(c=>c.bank===a.bank&&c.rowId===a.row_id));
-  return {source:'Previsión de liquidez',date:until,...Object.fromEntries(workbook.sheets.map(sheet=> {
+  return {source:'Previsión de liquidez',date:until,unassignedPayments,...Object.fromEntries(workbook.sheets.map(sheet=> {
     // Both presentations use these monthly totals and the same canonical links.
     const totals=juanTotals(sheet);
     const index=sheet.columns.findLastIndex(c=>c.month===month);

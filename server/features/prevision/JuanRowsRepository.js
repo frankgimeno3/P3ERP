@@ -19,6 +19,12 @@ export async function saveJuanRow(body,pool=getPgPool()) {
   if(body.version!==book.version)throw new RecurringChargeError('La hoja ha cambiado. Recarga antes de guardar.',409);
   const sheet=book.sheets.find(s=>s.bank===body.bank);
   if(!sheet||!['payments','income'].includes(body.section))throw new RecurringChargeError('Sección o banco no válido.');
+  if(body.rowId&&!sheet[body.section].some(row=>row.id===body.rowId)){
+   const projected=await getJuanWorkbook({query:db.query.bind(db)},year);
+   const row=projected.sheets.find(s=>s.bank===sheet.bank)?.[body.section].find(r=>r.id===body.rowId);
+   if(row?.invoicePaymentId)throw new RecurringChargeError('Modifica este pago desde los vencimientos de la factura.',409);
+   if(row)sheet[body.section].push(structuredClone(row));
+  }
   if(body.action==='remove-row') {
    const row=sheet[body.section].find(r=>r.id===body.rowId);
    if(!row||row.opening||row.cardPart)throw new RecurringChargeError('Esta fila no admite retirar sus previsiones desde aquí.');
@@ -28,7 +34,8 @@ export async function saveJuanRow(body,pool=getPgPool()) {
     const key=`${sheet.bank}:${row.id}:${column.month}`;
     if((await db.query('SELECT 1 FROM tesoreria_prevision_juan_aplicaciones WHERE workbook_id=$1 AND cell_key=$2 LIMIT 1',[id,key])).rowCount)throw new RecurringChargeError('Hay movimientos bancarios asociados. Retira o corrige esas asociaciones antes de quitar la previsión.',409);
     const link=(await db.query('SELECT * FROM tesoreria_prevision_juan_enlaces WHERE workbook_id=$1 AND cell_key=$2',[id,key])).rows[0];
-    if(link?.target_id&&['matched','integrated'].includes(link.status)&&effective.values[index])await editJuanChargeMonth(db,link.target_id,year,column.month,0,sheet.bank);
+    const target=link&&['matched','integrated'].includes(link.status)?link.target_id:row.id.startsWith('payments:erp:')?row.id.slice('payments:erp:'.length):null;
+    if(target&&effective.values[index])await editJuanChargeMonth(db,target,year,column.month,0,sheet.bank);
     row.values[index]=null;
     await writeLiquidityBudget(db,{year,bank:sheet.bank,section:body.section,row,month:column.month,value:null});
    }
@@ -38,6 +45,7 @@ export async function saveJuanRow(body,pool=getPgPool()) {
    if(!label||label.length>300)throw new RecurringChargeError('Indica un concepto de hasta 300 caracteres.');
    if(sheet[body.section].some(r=>r.id!==body.rowId&&r.label.trim().toLocaleLowerCase('es')===label.toLocaleLowerCase('es')))throw new RecurringChargeError('Ya hay una fila con ese concepto. Abre su desglose para evitar duplicarla.',409);
    const previous=body.rowId?sheet[body.section].find(r=>r.id===body.rowId):null;
+   if(previous?.id.startsWith('payments:erp:'))throw new RecurringChargeError('Esta fila ya procede de un cargo recurrente. Edita ese cargo; no vincules otro.',409);
    if(body.rowId&&(!previous||body.section!=='payments'||previous.opening||previous.cardPart||/^(?:VISAS?\b|TARJETAS?\b|TRASPASOS?\b)|\bEFECTIVO\b/i.test(previous.label)))throw new RecurringChargeError('Esta fila no admite vincular un cargo individual.');
    if(previous&&(await db.query('SELECT 1 FROM tesoreria_prevision_juan_asociaciones WHERE workbook_id=$1 AND bank=$2 AND row_id=$3 AND jsonb_array_length(charge_ids)>0',[id,sheet.bank,previous.id])).rowCount)throw new RecurringChargeError('La fila ya tiene cargos asociados. Edítalos en la hoja; no se crea otro cargo.',409);
    const row=previous||{id:`${body.section}:user:${randomUUID()}`,label,day:null,opening:false,values:sheet.columns.map(()=>null)};

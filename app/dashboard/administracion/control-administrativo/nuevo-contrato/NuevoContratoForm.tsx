@@ -21,6 +21,7 @@ const newPayment=(previous='',bank='Sabadell')=>({fecha_cobro:addCalendarMonths(
 
 export default function NuevoContratoPage({commercial=false}:{commercial?:boolean}) {
   const router=useRouter(),[phase,setPhase]=useState(0),[busy,setBusy]=useState(false),[loading,setLoading]=useState(true),[error,setError]=useState('');
+  const [accountQuery,setAccountQuery]=useState(''),[accountsLoading,setAccountsLoading]=useState(false);
   const [accounts,setAccounts]=useState<any[]>([]),[agents,setAgents]=useState<any[]>([]),[contacts,setContacts]=useState<any[]>([]);
   const [data,setData]=useState({id_cuenta_contrato:'',id_agente_contrato:'',id_contacto_contrato:'',nombre_contrato:'',fecha_firma_contrato:'',fecha_fin_contrato:'',comentarios_adicionales:'',es_intercambio:false,condiciones_intercambio:''});
   const [insertAt,setInsertAt]=useState<number|null>(null),[vat,setVat]=useState(21);
@@ -31,7 +32,9 @@ export default function NuevoContratoPage({commercial=false}:{commercial?:boolea
   const bases=lines.map(line=>Math.round(serviceLineBase(line)*100)/100);
   const total=lines.reduce((sum,line,index)=>sum+Math.round(bases[index]*(1+Number(line.iva_porcentaje)/100)*100),0)/100;
   const paidTotal=payments.reduce((sum,payment)=>sum+Math.round(Number(payment.importe_cobro)*100),0)/100;
-  useEffect(()=>{let active=true;Promise.all([CuentaService.getCuentas(),AgenteService.getAgentes(),ContactoService.getContactos()]).then(([a,b,c])=>{if(active){setAccounts(a);setAgents(b);setContacts(c);}}).catch(e=>{if(active)setError(e?.message || 'No se pudieron cargar las opciones.');}).finally(()=>{if(active)setLoading(false);});return()=>{active=false;};},[]);
+  useEffect(()=>{let active=true;AgenteService.getAgentes().then(rows=>{if(active)setAgents(rows);}).catch(e=>{if(active)setError(e.message);}).finally(()=>{if(active)setLoading(false);});return()=>{active=false;};},[]);
+  useEffect(()=>{const controller=new AbortController();const timer=setTimeout(()=>{setAccountsLoading(true);CuentaService.getCuentas({clienteFiltro:accountQuery,limit:25},{signal:controller.signal}).then(result=>{if(!controller.signal.aborted)setAccounts(result.rows||[]);}).catch(e=>{if(!controller.signal.aborted)setError(e.message);}).finally(()=>{if(!controller.signal.aborted)setAccountsLoading(false);});},250);return()=>{clearTimeout(timer);controller.abort();};},[accountQuery]);
+  useEffect(()=>{const controller=new AbortController();setContacts([]);if(data.id_cuenta_contrato)ContactoService.getContactos({id_cuenta:data.id_cuenta_contrato},{signal:controller.signal}).then(rows=>{if(!controller.signal.aborted)setContacts(Array.isArray(rows)?rows:rows.rows||[]);}).catch(e=>{if(!controller.signal.aborted)setError(e.message);});return()=>controller.abort();},[data.id_cuenta_contrato]);
   const next=()=>{
     setError('');
     if(phase===0&&(!data.id_cuenta_contrato||!data.nombre_contrato.trim())){setError('Selecciona una cuenta e indica el nombre del contrato.');return;}
@@ -47,7 +50,7 @@ export default function NuevoContratoPage({commercial=false}:{commercial?:boolea
     {error&&<p role="alert" className="rounded bg-red-50 p-3 text-red-700">{error}</p>}
     <section className="space-y-4 rounded bg-white p-6">
       {phase===0&&<><h2 className="text-xl font-semibold">Cuenta y contrato</h2><div className="grid gap-4 md:grid-cols-2">
-        <div><p>Cuenta *</p><SearchableSelect label="Cuenta" value={data.id_cuenta_contrato} required disabled={loading} options={accounts.map(account=>({value:account.id_cuenta,label:account.nombre_empresa+' · '+account.id_cuenta}))} onChange={value=>setData({...data,id_cuenta_contrato:value,id_contacto_contrato:'',id_agente_contrato:accounts.find(account=>account.id_cuenta===value)?.id_agente || ''})}/></div>
+        <div><p>Cuenta *</p>{accountsLoading&&<p role="status" className="text-sm">Buscando cuentas?</p>}<SearchableSelect label="Cuenta" onSearchChange={setAccountQuery} value={data.id_cuenta_contrato} required disabled={loading} options={accounts.map(account=>({value:account.id_cuenta,label:account.nombre_empresa+' · '+account.id_cuenta}))} onChange={value=>setData({...data,id_cuenta_contrato:value,id_contacto_contrato:'',id_agente_contrato:accounts.find(account=>account.id_cuenta===value)?.id_agente || ''})}/></div>
         <label>Nombre del contrato *<input value={data.nombre_contrato} onChange={e=>setData({...data,nombre_contrato:e.target.value})} className={input}/></label>
         <div><p>Agente</p><SearchableSelect label="Agente" value={data.id_agente_contrato} options={agents.map(agent=>({value:agent.id_agente,label:agent.nombre_completo_agente || agent.id_agente}))} onChange={value=>setData({...data,id_agente_contrato:value})}/></div>
         <div><p>Contacto</p><SearchableSelect label="Contacto" value={data.id_contacto_contrato} options={contacts.filter(contact=>contact.id_cuenta===data.id_cuenta_contrato).map(contact=>({value:contact.id_contacto,label:contact.nombre_completo_contacto || contact.id_contacto}))} onChange={value=>setData({...data,id_contacto_contrato:value})}/></div>

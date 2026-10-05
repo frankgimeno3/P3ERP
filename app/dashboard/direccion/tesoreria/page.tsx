@@ -1,4 +1,5 @@
 'use client';
+import TableFilters from '@/app/components/TableFilters';
 
 import { ChangeEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -169,7 +170,6 @@ export default function TesoreriaPage() {
   const [filterRevision, setFilterRevision] = useState('');
   const [filterTipo, setFilterTipo] = useState('');
   const [filterAssociated, setFilterAssociated] = useState('');
-  const [filtersOpen, setFiltersOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [phase, setPhase] = useState(1);
   const [selectedBank, setSelectedBank] = useState<Banco>('Sabadell');
@@ -475,10 +475,10 @@ export default function TesoreriaPage() {
           </button>
         ))}
       </div>
-      <div className="mb-4 rounded-b bg-white shadow-sm"><button type="button" onClick={() => setFiltersOpen(current => !current)} aria-expanded={filtersOpen} className="flex w-full cursor-pointer items-center justify-between px-4 py-3 text-left font-semibold text-blue-950 transition hover:bg-blue-50"><span>Filtros</span><span>{filtersOpen ? 'Ocultar −' : 'Mostrar +'}</span></button>{filtersOpen && <div className="border-t border-slate-200 p-4"><div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+      <TableFilters><div className="contents">
         <div>
           <div className="mb-2 flex items-center gap-3">
-            <span className="text-sm font-medium text-gray-700">{dateFilterMode === 'fecha' ? 'Fecha' : 'Rango fechas'}</span>
+            <span className="text-xs font-extralight text-gray-700">{dateFilterMode === 'fecha' ? 'Fecha' : 'Rango fechas'}</span>
             <button type="button" role="switch" aria-checked={dateFilterMode === 'rango'} onClick={() => setDateFilterMode((current) => current === 'fecha' ? 'rango' : 'fecha')} className={`relative h-6 w-11 cursor-pointer rounded-full transition-colors hover:ring-2 hover:ring-blue-200 ${dateFilterMode === 'rango' ? 'bg-blue-950' : 'bg-gray-300'}`}>
               <span className={`absolute left-1 top-1 h-4 w-4 rounded-full bg-white shadow transition-transform ${dateFilterMode === 'rango' ? 'translate-x-5' : 'translate-x-0'}`} />
             </button>
@@ -493,16 +493,16 @@ export default function TesoreriaPage() {
             <div><span className="mb-1 block text-xs text-gray-500">Hasta</span><div className="flex gap-1"><input aria-label="Día hasta" value={filterFechaHasta.day} onChange={(event) => setFilterFechaHasta((current) => updateDateParts(current, 'day', event.target.value))} placeholder="dd" className="w-12 rounded border border-gray-300 px-2 py-2 text-sm" /><input aria-label="Mes hasta" value={filterFechaHasta.month} onChange={(event) => setFilterFechaHasta((current) => updateDateParts(current, 'month', event.target.value))} placeholder="mm" className="w-12 rounded border border-gray-300 px-2 py-2 text-sm" /><input aria-label="Año hasta" value={filterFechaHasta.year} onChange={(event) => setFilterFechaHasta((current) => updateDateParts(current, 'year', event.target.value))} placeholder="yyyy" className="w-20 rounded border border-gray-300 px-2 py-2 text-sm" /></div></div>
           </div>}
         </div>
-        <label className="flex flex-col text-sm font-medium text-gray-700">Tipo<select value={filterTipo} onChange={(event) => setFilterTipo(event.target.value)} className="mt-2 cursor-pointer rounded border border-gray-300 px-3 py-2 text-sm font-normal transition hover:border-blue-950"><option value="">Ingresos y gastos</option><option value="ingreso">Ingresos</option><option value="cargo">Gastos</option></select></label>
-        <label className="flex flex-col text-sm font-medium text-gray-700">Concepto<textarea value={filterConcepto} onChange={(event) => setFilterConcepto(event.target.value)} placeholder="Buscar concepto" rows={2} className="mt-2 resize-y rounded border border-gray-300 px-3 py-2 text-sm font-normal" /></label>
-      </div><div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-3">
-        <label className="flex flex-col text-sm font-medium text-gray-700">Importe<input value={filterImporte} onChange={(event) => setFilterImporte(event.target.value)} placeholder="Importe" className="mt-2 rounded border border-gray-300 px-3 py-2 text-sm font-normal" /></label>
-        <label className="flex flex-col text-sm font-medium text-gray-700">Estado<select value={filterRevision} onChange={(event) => setFilterRevision(event.target.value)} className="mt-2 cursor-pointer rounded border border-gray-300 px-3 py-2 text-sm font-normal transition hover:border-blue-950">
+        <label className="flex flex-col text-xs font-extralight text-gray-700">Tipo<select value={filterTipo} onChange={(event) => setFilterTipo(event.target.value)} className="mt-2 cursor-pointer rounded border border-gray-300 px-3 py-2 text-sm font-normal transition hover:border-blue-950"><option value="">Ingresos y gastos</option><option value="ingreso">Ingresos</option><option value="cargo">Gastos</option></select></label>
+        <label className="flex flex-col text-xs font-extralight text-gray-700">Concepto<textarea value={filterConcepto} onChange={(event) => setFilterConcepto(event.target.value)} placeholder="Buscar concepto" rows={2} className="mt-2 resize-y rounded border border-gray-300 px-3 py-2 text-sm font-normal" /></label>
+      </div><div className="contents">
+        <label className="flex flex-col text-xs font-extralight text-gray-700">Importe<input value={filterImporte} onChange={(event) => setFilterImporte(event.target.value)} placeholder="Importe" className="mt-2 rounded border border-gray-300 px-3 py-2 text-sm font-normal" /></label>
+        <label className="flex flex-col text-xs font-extralight text-gray-700">Estado<select value={filterRevision} onChange={(event) => setFilterRevision(event.target.value)} className="mt-2 cursor-pointer rounded border border-gray-300 px-3 py-2 text-sm font-normal transition hover:border-blue-950">
           <option value="">Todos los estados</option>
           <option value="revisado">Revisado</option>
           <option value="pendiente">Pendiente</option>
-        </select></label><label className="flex flex-col text-sm font-medium text-gray-700">Asociado a<select value={filterAssociated} onChange={(event) => setFilterAssociated(event.target.value)} className="mt-2 cursor-pointer rounded border border-gray-300 px-3 py-2 text-sm font-normal transition hover:border-blue-950"><option value="">Todos</option><option value="nomina">Nómina</option><option value="cliente">Cliente</option><option value="proveedor">Proveedor</option><option value="ninguno">Ninguno</option></select></label>
-      </div></div>}</div>
+        </select></label><label className="flex flex-col text-xs font-extralight text-gray-700">Asociado a<select value={filterAssociated} onChange={(event) => setFilterAssociated(event.target.value)} className="mt-2 cursor-pointer rounded border border-gray-300 px-3 py-2 text-sm font-normal transition hover:border-blue-950"><option value="">Todos</option><option value="nomina">Nómina</option><option value="cliente">Cliente</option><option value="proveedor">Proveedor</option><option value="ninguno">Ninguno</option></select></label>
+      </div></TableFilters>
 
       {error && <div className="mb-4 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
 

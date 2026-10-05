@@ -1,4 +1,5 @@
 'use client';
+import TableFilters from '@/app/components/TableFilters';
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -99,7 +100,7 @@ const ContenidoCuenta: FC<ContenidoCuentaProps> = ({ id_cuenta }) => {
         ))}
       </div>
 
-      <div className="flex flex-wrap items-end gap-4 rounded bg-gray-50 p-4 text-sm">
+      <TableFilters>
         <label className="flex flex-col gap-1">
           <span className="font-medium">Buscar</span>
           <input value={query} onChange={(event) => setQuery(event.target.value)} className="rounded border border-gray-300 px-3 py-2" />
@@ -113,7 +114,7 @@ const ContenidoCuenta: FC<ContenidoCuentaProps> = ({ id_cuenta }) => {
             <option value="vidrioperfil">Vidrioperfil</option>
           </select>
         </label>
-      </div>
+      </TableFilters>
 
       <div className="flex">
         {valorTabs.map((tab, index) => (

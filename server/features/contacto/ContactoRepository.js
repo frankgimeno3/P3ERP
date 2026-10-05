@@ -59,18 +59,25 @@ export async function getContactos(filters = {}) {
     values.push(filters.idCuenta);
     where.push(`id_cuenta = $${values.length}`);
   }
+  if (filters.search) { values.push(`%${filters.search}%`); where.push(`concat_ws(' ',nombre_completo_contacto,nombre_empresa,email_contacto) ILIKE $${values.length}`); }
+  for(const field of ['nombre_contacto','apellidos_contacto','id_contacto','nombre_empresa','telefono_contacto','email_contacto','pais_contacto'])if(filters[field]){values.push(`%${filters[field]}%`);where.push(`${field} ILIKE $${values.length}`);}
+  const paged = Number.isInteger(filters.limit) && filters.limit > 0;
+  const total = paged ? Number((await pool.query(`SELECT count(*) total FROM comercial_contactos ${where.length ? `WHERE ${where.join(' AND ')}` : ''}`, values)).rows[0].total) : null;
+  let pagination = '';
+  if (paged) { values.push(filters.limit, ((filters.page || 1) - 1) * filters.limit); pagination = `LIMIT $${values.length - 1} OFFSET $${values.length}`; }
 
   const { rows } = await pool.query(
     `
       SELECT *, EXISTS(SELECT 1 FROM comercial_cuentas c WHERE c.id_cuenta=comercial_contactos.id_cuenta AND c.datos_comerciales->>'contacto_principal'=comercial_contactos.id_contacto) AS es_principal
       FROM comercial_contactos
       ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
-      ORDER BY nombre_completo_contacto ASC
+      ORDER BY nombre_completo_contacto ASC, id_contacto ASC
+      ${pagination}
     `,
     values,
   );
 
-  return rows.map(normalizeContacto);
+  return paged ? { rows: rows.map(normalizeContacto), total, page: filters.page || 1, limit: filters.limit } : rows.map(normalizeContacto);
 }
 
 export async function createContacto(data = {}) {

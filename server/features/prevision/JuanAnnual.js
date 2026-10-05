@@ -44,6 +44,8 @@ export function nextJuanSheets(previous,year,charges=[],associations=[]) {
 }
 export async function ensureJuanYears(pool,now=new Date()) {
  const today=new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Madrid'}).format(now),current=Number(today.slice(0,4)),last=current+(Number(today.slice(5,7))>=10?1:0);
+ const existing=(await pool.query("SELECT substring(id from '[0-9]+')::int AS year FROM tesoreria_prevision_juan WHERE id ~ '^juan-[0-9]{4}$' ORDER BY 1")).rows.map(r=>r.year);
+ if(existing.includes(last))return existing;
  const db=await pool.connect();
  try {
   await db.query('BEGIN');await db.query("SELECT pg_advisory_xact_lock(hashtext('juan:annual'))");

@@ -1,0 +1,20 @@
+import assert from 'node:assert/strict';
+import {projectInvoicePayments} from '../server/features/prevision/InvoicePaymentProjection.js';
+import {validateSupplierInvoice} from '../server/features/factura/SupplierInvoiceValidation.js';
+
+const sheet=()=>({bank:'Sabadell',columns:[{kind:'forecast',month:10},{kind:'forecast',month:11}],payments:[{id:'estimate',values:[12100,null]}]});
+const charge={id_cargo_recurrente:7,vencimientos:[{id:9,fecha:'2026-10-27',importe:121}]};
+const payment={id_pago:'invoice',cuenta_pago:'Sabadell',date:'2026-11-03',id_vencimiento:9,total_pago:125,nombre_planificacion:'Documented invoice'};
+let sheets=[sheet()];
+assert.deepEqual(projectInvoicePayments(sheets,[payment],[charge],[{target_id:'7',cell_key:'Sabadell:estimate:10'}]),[]);
+assert.equal(sheets[0].payments[0].values[0],0);
+assert.equal(sheets[0].payments[1].values[1],12500);
+assert.equal(sheets[0].payments[1].invoicePaymentId,'invoice');
+sheets=[sheet()];
+projectInvoicePayments(sheets,[{...payment,id_vencimiento:null}],[charge],[]);
+assert.equal(sheets[0].payments[0].values[0],12100);
+assert.equal(projectInvoicePayments([sheet()],[{...payment,cuenta_pago:null}],[charge],[]).length,1);
+const invoice={id_proveedor:'supplier',numero_factura_proveedor:'123',fecha_factura:'05/10/2026',documento_src:'document.pdf',importe_total:121,base_imponible:100,pagos:[{forma:'Transferencia',fecha:'27/10/2026',importe:121,banco:'Sabadell'}]};
+assert.equal(validateSupplierInvoice(invoice),invoice);
+for(const invalid of [{...invoice,fecha_factura:'31/02/2026'},{...invoice,base_imponible:122},{...invoice,pagos:[{...invoice.pagos[0],banco:''}]},{...invoice,pagos:[{...invoice.pagos[0],importe:120.99}]}])assert.throws(()=>validateSupplierInvoice(invalid),error=>error.status===400);
+console.log('PASS invoice projections: explicit replacement across months, independent obligations, canonical identity and missing-bank reporting.');

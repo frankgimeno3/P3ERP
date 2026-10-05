@@ -1,9 +1,9 @@
 import apiClient from "../apiClient.js";
 
 export class SuscripcionService {
-    static async getSuscripciones(filters = {}) {
+    static async getSuscripciones(filters = {}, options = {}) {
         const response = await apiClient.get('/api/v1/admin/suscripciones', {
-            params: filters
+            params: filters, signal: options.signal
         });
         return response.data;
     }

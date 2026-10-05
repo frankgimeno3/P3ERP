@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "node .\\.next\\standalone\\server.js",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:regression": "node scripts/run-regression-tests.mjs",
+    "test:integration": "node scripts/run-regression-tests.mjs --integration"
   },
   "dependencies": {
     "@aws-amplify/core": "^6.11.4",
@@ -37,6 +39,7 @@
     "eslint": "^9",
     "eslint-config-next": "^15.5.19",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "jsdom": "26.1.0"
   }
 }

@@ -30,8 +30,8 @@ export async function POST(request) {
   } catch (error) {
     console.error("Error in POST /api/v1/admin/suscripciones:", error);
     return NextResponse.json(
-      { message: "Error al crear la suscripcion", detail: process.env.NODE_ENV === "development" ? error.message : undefined },
-      { status: 500 },
+      { message: error.status === 400 ? error.message : "Error al crear la suscripcion", detail: process.env.NODE_ENV === "development" ? error.message : undefined },
+      { status: error.status || 500 },
     );
   }
 }

@@ -198,6 +198,10 @@ Constraints:
 Indexes:
 - contactos_db_id_cuenta_idx: CREATE INDEX contactos_db_id_cuenta_idx ON public.comercial_contactos USING btree (id_cuenta)
 
+### produccion_planillos_previos
+
+Planillo previo editable por revista, migración `20261005_0001_preliminary_flatplans.sql`. `id_revista text` es clave primaria y referencia `servicios_revistas`. `plan jsonb` contiene posiciones físicas, bloques indivisibles, sus datos de origen y contenidos retirados. `version integer` protege frente a ediciones simultáneas; `updated_at timestamptz` registra el guardado. La posición 0 es portada, la 1 interior portada y la 2 corresponde a página impresa 1; la numeración visible es Portada, Interior portada, 1, 2, 3... No existe contraportada y solo la portada permanece fija al inicio, el total es par y los bloques son consecutivos. No altera el planillo definitivo ni los registros originales de producción o redacción.
+
 ### produccion_contenidos
 
 | # | Column | Type | Nullable | Default |
@@ -1154,3 +1158,17 @@ Cruce y preparación por concepto del Excel. Migración `20261003_0002_juan_matc
 ### tesoreria_presupuestos_liquidez
 
 Fuente compartida de los presupuestos mensuales del ERP, migraci?n `20261004_0001_unified_liquidity_budgets.sql`. Clave primaria `(anio, banco, seccion, concepto_id, mes)`. `importe numeric(14,2)` nullable contiene euros; `concepto text` conserva la etiqueta y `updated_at timestamptz` registra la edici?n. Ambas vistas consultan esta tabla; los cargos y ?rdenes vinculados sustituyen el presupuesto correspondiente sin volver a sumarlo. Las hojas JSON conservan la presentaci?n y los cierres hist?ricos, no una previsi?n financiera independiente.
+
+### Obligaciones y recuperación de documentos
+
+`20261005_0002_invoice_payment_obligations.sql` añade `tesoreria_pagos_previstos.id_vencimiento text`, con índice único parcial para la sustitución explícita de un vencimiento estimado. Los pagos documentados se proyectan al consultar; no se duplican mediante sincronización en GET. Los pagos sin banco se muestran en una bandeja. No se elimina un cargo cuyo vencimiento esté vinculado a una factura.
+
+`20261005_0003_mediateca_trash.sql` crea `mediateca_papelera`: `id uuid`, `deleted_at`, `folders jsonb`, `media jsonb` y `restored_at`. La eliminación conserva los objetos S3; la restauración de los registros es transaccional y no sobrescribe identidades existentes.
+
+`20261005_0005_invoice_uploads.sql` crea `administracion_facturas_subidas`: `id uuid`, `s3_key`, `url`, `actor`, `state`, `created_at` e `invoice_id`. Los estados son `pending`, `consumed`, `deleting` y `removed`; la factura consume la subida provisional del mismo actor.
+
+### Importaciones, suscripciones y publicación de planillos
+
+`20261005_0004_workflow_revisions.sql` crea `operaciones_importaciones_aplicadas` con `fingerprint` como PK, `payload_hash`, `result jsonb` y `created_at`. Permite repetir un lote sin duplicar registros. Añade `revista`, `edicion` y `renovacion_propuesta_id` a `comercial_suscripciones`.
+
+La misma migración crea `produccion_planillos_publicaciones`, PK `(id_revista,version)`, `plan jsonb` y `published_at`, para archivar versiones publicadas. `20261005_0006_final_flatplan_assignments.sql` crea `contenidos_revistas_db`: PK `contenido_revista_id`, FK `revista_id` a `servicios_revistas`, FK `contenido_id` a `produccion_contenidos`, `numero_pagina`, `tipo_pagina`, `pagina_del_contenido` y marcas temporales. La posición es única por revista; `-1` representa portada, `0` interior portada y los positivos son páginas de revista. La publicación valida la versión y sustituye todas las asignaciones en una transacción.

@@ -1,4 +1,5 @@
 "use client";
+import TableFilters from '@/app/components/TableFilters';
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import MiddleNav from "@/app/general_components/componentes_recurrentes/MiddleNav";
@@ -106,14 +107,14 @@ export default function PrevisionIngresosPage() {
             <button type="button" onClick={() => setShowReceiptExcel(true)} className="cursor-pointer rounded border border-blue-950 bg-white px-4 py-2 text-sm font-semibold text-blue-950 transition hover:bg-blue-50 hover:shadow-md">Agregar excel de recibos</button>
           </div>
         </div>
-        <div className="overflow-x-auto rounded border border-gray-200 bg-white p-4">
-          <div className="grid gap-3" style={{ gridTemplateRows: "repeat(3, auto)", minWidth: Math.ceil(columns.length / 3) * 140 }}>
-            {filterRows.map((row, index) => <div key={index} className="grid gap-3" style={{ gridTemplateColumns: "repeat(" + row.length + ", minmax(0, 1fr))" }}>
-              {row.map(column => column.date ? <fieldset key={column.key} className="min-w-0"><legend className="mb-1 text-xs font-medium text-slate-600">{column.label}</legend><div className="flex gap-1">{["dd", "mm", "yyyy"].map(part => <input key={part} aria-label={column.label + ": " + part} inputMode="numeric" maxLength={part === "yyyy" ? 4 : 2} placeholder={part} value={filters[column.key + "_" + part] || ""} onChange={e => setFilters(current => ({ ...current, [column.key + "_" + part]: e.target.value.replace(/\D/g, "") }))} className="min-w-0 w-full rounded border border-gray-300 px-1 py-2 text-sm outline-none focus:border-blue-950" />)}</div></fieldset> : <label key={column.key} className="min-w-0 text-xs font-medium text-slate-600">{column.label}<input type="search" value={filters[column.key] || ""} onChange={e => setFilters(current => ({ ...current, [column.key]: e.target.value }))} placeholder={"Filtrar " + column.label.toLowerCase()} className="mt-1 w-full rounded border border-gray-300 px-2 py-2 text-sm font-normal outline-none focus:border-blue-950" /></label>)}
+        <TableFilters>
+          <div className="contents">
+            {filterRows.map((row, index) => <div key={index} className="contents">
+              {row.map(column => column.date ? <fieldset key={column.key} className="min-w-0"><legend className="mb-1 text-xs font-extralight text-slate-600">{column.label}</legend><div className="flex gap-1">{["dd", "mm", "yyyy"].map(part => <input key={part} aria-label={column.label + ": " + part} inputMode="numeric" maxLength={part === "yyyy" ? 4 : 2} placeholder={part} value={filters[column.key + "_" + part] || ""} onChange={e => setFilters(current => ({ ...current, [column.key + "_" + part]: e.target.value.replace(/\D/g, "") }))} className="min-w-0 w-full rounded border border-gray-300 px-1 py-2 text-sm outline-none focus:border-blue-950" />)}</div></fieldset> : <label key={column.key} className="min-w-0 text-xs font-extralight text-slate-600">{column.label}<input type="search" value={filters[column.key] || ""} onChange={e => setFilters(current => ({ ...current, [column.key]: e.target.value }))} placeholder={"Filtrar " + column.label.toLowerCase()} className="mt-1 w-full rounded border border-gray-300 px-2 py-2 text-sm font-normal outline-none focus:border-blue-950" /></label>)}
             </div>)}
           </div>
-          <button type="button" onClick={() => setFilters({})} disabled={!Object.values(filters).some(Boolean)} className="mt-3 cursor-pointer rounded px-2 py-1 text-sm text-blue-950 transition enabled:hover:bg-blue-50 disabled:cursor-default disabled:text-gray-400">Limpiar filtros</button>
-        </div>
+          <button type="button" onClick={() => setFilters({})} disabled={!Object.values(filters).some(Boolean)} className="col-span-full mt-3 cursor-pointer rounded px-2 py-1 text-sm text-blue-950 transition enabled:hover:bg-blue-50 disabled:cursor-default disabled:text-gray-400">Limpiar filtros</button>
+        </TableFilters>
       </div>
       {notice && <p role="status" className="mb-4 rounded border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">{notice}</p>}
       {error && <p role="alert" className="mb-4 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</p>}

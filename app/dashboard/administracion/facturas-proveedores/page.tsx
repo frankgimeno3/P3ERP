@@ -1,4 +1,5 @@
 "use client";
+import TableFilters from '@/app/components/TableFilters';
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -98,18 +99,14 @@ export default function FacturasProveedoresPage() {
         {error && <div className="mb-4 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
 
         <div className="overflow-x-auto bg-white">
-          <table className="min-w-full text-xs">
+          <TableFilters>{columns.map(([field, label]) => (
+                  <label key={field} className="block text-xs font-extralight text-gray-600"><span className="mb-1 block">{label}</span><input aria-label={`Filtrar ${label}`} value={filters[field] || ""} onChange={(event) => setFilters({ ...filters, [field]: event.target.value })} className="w-full rounded border border-blue-200 px-2 py-1 text-xs outline-none focus:border-blue-950" /></label>
+                ))}</TableFilters><table className="min-w-full text-xs">
             <thead className="bg-blue-950 text-white">
               <tr>
                 {columns.map(([field, label], index) => <th key={field} className={`p-2 text-left font-light ${index === 0 ? "pl-6" : ""}`}>{label}</th>)}
               </tr>
-              <tr className="bg-white text-gray-700">
-                {columns.map(([field]) => (
-                  <th key={field} className="p-2">
-                    <input value={filters[field] || ""} onChange={(event) => setFilters({ ...filters, [field]: event.target.value })} className="w-full rounded border border-blue-200 px-2 py-1 text-xs outline-none focus:border-blue-950" />
-                  </th>
-                ))}
-              </tr>
+
             </thead>
             <tbody>
               {loading && <tr><td colSpan={columns.length} className="p-6 text-center text-gray-500">Cargando facturas...</td></tr>}

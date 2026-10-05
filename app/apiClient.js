@@ -1,7 +1,7 @@
 import axios from "axios";
 import {loginUrl,safeLoginTarget} from "./config/loginRedirect.js";
 
-const apiClient = axios.create();
+const apiClient = axios.create({ timeout: 30000 });
 
 apiClient.interceptors.request.use((config) => {
   config.withCredentials = true;
@@ -19,18 +19,21 @@ apiClient.interceptors.response.use(
           window.location.replace(loginUrl(currentUrl));
         }
       }
-      throw {
-        status: error.response.status,
-        message: error.response.data?.message || error.response.data || error.response.statusText,
-        data: error.response.data,
-      };
+      const normalized = new Error(error.response.data?.message || (typeof error.response.data === 'string' ? error.response.data : error.response.statusText));
+      normalized.status = error.response.status;
+      normalized.data = error.response.data;
+      // Keep existing form-level validation/detail consumers compatible.
+      normalized.response = error.response;
+      normalized.cause = error;
+      throw normalized;
     }
 
     if (error.request) {
-      throw { message: "No se recibió respuesta del servidor" };
+      if (axios.isCancel(error)) throw error;
+      throw new Error(error.code === 'ECONNABORTED' ? 'El servidor está tardando demasiado. Vuelve a intentarlo.' : 'No se recibió respuesta del servidor', { cause: error });
     }
 
-    throw { message: error.message };
+    throw new Error(error.message, { cause: error });
   },
 );
 
