@@ -1,0 +1,152 @@
+[
+  {
+    "id": 1,
+    "title": "Conciliación bloqueada para Dirección",
+    "status": "corrected",
+    "notes": "Endpoint de ordenes de cobro para Direccion. Prueba de los nueve recursos del asistente y restricciones de cada rol."
+  },
+  {
+    "id": 2,
+    "title": "Pagos de facturas fuera de la previsión compartida",
+    "status": "corrected",
+    "notes": "Pagos documentados proyectados una sola vez; vinculo explicito con estimaciones, editor de vencimientos, bandeja sin banco y proteccion de pagos conciliados y cargos vinculados a factura. Integracion transaccional aislada verificada."
+  },
+  {
+    "id": 3,
+    "title": "Excel de cuentas y contactos simula una importación",
+    "status": "corrected",
+    "notes": "Importacion real: validacion, diferencias, huella del lote, transaccion, repeticion sin duplicados y conflicto concurrente. Actualiza relaciones cuenta-contacto. Integracion aislada verificada."
+  },
+  {
+    "id": 4,
+    "title": "Renovación automática sin contenido ni operación",
+    "status": "corrected",
+    "notes": "Renovacion con periodo y servicios anteriores, propuesta reutilizable y bloqueo de otra renovacion activa; cuenta, coleccion y numeros obligatorios al crear."
+  },
+  {
+    "id": 5,
+    "title": "Órdenes canceladas pueden aparecer como pendientes",
+    "status": "corrected",
+    "notes": "Excluye canceladas e intercambios sin cobro; descuenta cobros parciales y clasifica fechas ISO. Filtros por columna."
+  },
+  {
+    "id": 6,
+    "title": "Secciones de proveedor fallan con roles administrativos",
+    "status": "corrected",
+    "notes": "Endpoints de proveedor por capacidad y propiedad del cargo; cargas independientes y errores visibles. Roles verificados."
+  },
+  {
+    "id": 7,
+    "title": "Mis propuestas pertenece a un agente fijo",
+    "status": "corrected",
+    "notes": "Mis propuestas usa el agente de la sesion; sin agente no muestra propuestas ajenas."
+  },
+  {
+    "id": 8,
+    "title": "Cambios de esquema durante consultas normales",
+    "status": "excluded",
+    "notes": "Excluido expresamente: no se han cambiado los DDL que se ejecutan en consultas normales."
+  },
+  {
+    "id": 9,
+    "title": "Leer una previsión toma bloqueos globales y sincroniza datos",
+    "status": "corrected",
+    "notes": "Consultas de prevision proyectan cargos, ordenes y facturas sin sincronizacion global por lectura. Las filas derivadas se guardan al modificarse."
+  },
+  {
+    "id": 10,
+    "title": "Descarga completa para paginar solo 15 filas",
+    "status": "corrected",
+    "notes": "Cuentas y contactos paginan en servidor; propuesta y contrato buscan cuentas de forma acotada y cargan solo los contactos de la cuenta. Segunda pagina y recarga verificadas en Chrome."
+  },
+  {
+    "id": 11,
+    "title": "Respuestas antiguas pueden reemplazar el filtro actual",
+    "status": "corrected",
+    "notes": "Debounce, cancelacion y proteccion contra respuestas anteriores en listas, selectores, suscripciones y mediateca; conserva datos durante actualizaciones."
+  },
+  {
+    "id": 12,
+    "title": "Vacío aparente mientras carga y sin recuperación común",
+    "status": "corrected",
+    "notes": "Loading y error de dashboard, indicadores de consulta, guardado y recuperacion con Reintentar. Chrome verifico carga y recuperacion de mediateca."
+  },
+  {
+    "id": 13,
+    "title": "Borrado de S3 y de base de datos no es atómico",
+    "status": "corrected",
+    "notes": "Papelera SQL transaccional que conserva S3, restauracion con permisos y sin sobrescribir. UI de papelera persistente. Integracion aislada y modal en Chrome verificados."
+  },
+  {
+    "id": 14,
+    "title": "Registro fiscal local y envío externo no completan el mismo flujo",
+    "status": "standby",
+    "notes": "VERI*FACTU en standby por instruccion del usuario. No se ha activado el envio."
+  },
+  {
+    "id": 15,
+    "title": "Ir a cuentas lleva un espacio final en la URL",
+    "status": "corrected",
+    "notes": "El enlace de cuenta elimina el espacio final."
+  },
+  {
+    "id": 16,
+    "title": "Consultas duplicadas del perfil autenticado",
+    "status": "corrected",
+    "notes": "Consulta de identidad compartida, timeout, cache de cinco minutos y actualizacion al volver a la ventana."
+  },
+  {
+    "id": 17,
+    "title": "Espera artificial al comprobar email y nombre",
+    "status": "corrected",
+    "notes": "Eliminada espera artificial del asistente de usuarios."
+  },
+  {
+    "id": 18,
+    "title": "Abrir Contenidos depende de dos listas completas",
+    "status": "corrected",
+    "notes": "Consultas de contenidos acotadas por revista; carpetas se crean al escribir materiales, no al consultar gestion de revista."
+  },
+  {
+    "id": 19,
+    "title": "Planillo previo y colocación final son modelos separados",
+    "status": "corrected",
+    "notes": "Publicacion atomica con version y archivo; comparacion antes/despues y paginas definitivas compartidas por las fichas. Repeticion y concurrencia verificadas en integracion aislada."
+  },
+  {
+    "id": 20,
+    "title": "Estado inferido con el último número global de revistas",
+    "status": "corrected",
+    "notes": "Ultimo numero publicado calculado por revista y edicion; colecciones sin configurar se identifican."
+  },
+  {
+    "id": 21,
+    "title": "Formulario de alta y backend validan de forma incompleta",
+    "status": "implemented_pending_storage",
+    "notes": "Validacion compartida de fechas e importes, banco y vencimientos, subida provisional con actor y consumo transaccional. Limpieza de pendientes preparada. Falta configurar S3 para validar subida y limpieza documental reales."
+  },
+  {
+    "id": 22,
+    "title": "Copia descargable no equivale a restauración probada",
+    "status": "awaiting_configuration",
+    "notes": "Copia recuperable con pg_dump, documentos, manifiesto, hashes y descarga persistente; exportacion selectiva diferenciada. Volcado real y catalogo pg_restore verificados. Generacion documental bloqueada: falta AWS_S3_BUCKET/S3_BUCKET; tampoco hay conexion local de restauracion configurada. No se ofrece descargar una copia incompleta."
+  },
+  {
+    "id": 23,
+    "title": "Filtros y tablas no siguen el mismo patrón",
+    "status": "corrected",
+    "notes": "Filtros por columna cerrados, celdas reales, filtros y pagina en URL en cuentas/contactos, filtros/pestana en contenidos/control administrativo/pendientes. Recarga de segunda pagina de cuentas verificada."
+  },
+  {
+    "id": 24,
+    "title": "Cliente HTTP y fetch directos tienen comportamientos distintos",
+    "status": "corrected",
+    "notes": "HTTP normalizado con status/data/response compatibles, timeout y cancelacion; fetch de los flujos revisados usa el mismo transporte."
+  },
+  {
+    "id": 25,
+    "title": "La suite no reproduce bien el esquema vigente",
+    "status": "corrected",
+    "notes": "Dependencia jsdom declarada, comando unico de 27 pruebas, fixtures actualizados, roles, factura-prevision, concurrencia, proteccion de pagos y restauracion de papelera verificados."
+  }
+]

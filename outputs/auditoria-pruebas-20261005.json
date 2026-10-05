@@ -1,0 +1,82 @@
+[
+  {
+    "name": "test-bank-import.mjs",
+    "code": 0,
+    "output": "Bank import passed: stable IDs and payroll metadata, backfill, repeat imports, multiplicity, yearly counters and rollback for both banks.\n"
+  },
+  {
+    "name": "test-bank-common-assignment.mjs",
+    "code": 1,
+    "output": "node:internal/process/esm_loader:40\r\n      internalBinding('errors').triggerUncaughtException(\r\n                                ^\r\n\r\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\r\n\r\n500 !== 200\r\n\r\n    at file:///C:/Users/frank/OneDrive/Escritorio/dev/proyectosFuncionales/p3/p3erp/scripts/test-bank-common-assignment.mjs:53:8 {\r\n  generatedMessage: true,\r\n  code: 'ERR_ASSERTION',\r\n  actual: 500,\r\n  expected: 200,\r\n  operator: 'strictEqual'\r\n}\r\n\r\nNode.js v20.10.0\r\n"
+  },
+  {
+    "name": "test-administrative-excel.mjs",
+    "code": 0,
+    "output": "PASS: column interpretation, additional fields, typed dates/amounts/states, omitted blank values and mandatory unique order IDs.\n"
+  },
+  {
+    "name": "test-bank-review-analysis.mjs",
+    "code": 0,
+    "output": "PASS: selected groups, quarterly/annual history, references, equal amounts, concrete memory, legacy decisions, third receipt, allocations, price changes, missing anchors, calendar boundaries and reusable criteria.\n"
+  },
+  {
+    "name": "test-bank-reconciliation-routing.cjs",
+    "code": 0,
+    "output": "PASS: accented and encoded legacy URLs, subroutes, query preservation, canonical authentication, no loops and route files.\n"
+  },
+  {
+    "name": "test-business-document-pdf.cjs",
+    "code": 0,
+    "output": "PASS: Spanish GM, original language, unitemized prices, cancelled orders, PDF generation and multiple pages\n"
+  },
+  {
+    "name": "test-juan-cards.mjs",
+    "code": 0,
+    "output": "PASS: monthly/annual subscriptions deducted from initial card envelope once; explicitly edited variable adds separately; closed months retain their snapshot.\n"
+  },
+  {
+    "name": "test-forecast-receipts.mjs",
+    "code": 0,
+    "output": "PASS: Excel parsing, hyphen placeholders, required receipt numbers, dates, amounts, duplicate detection and canonical order/remittance values.\n"
+  },
+  {
+    "name": "test-invoice-document.cjs",
+    "code": 0,
+    "output": "PASS: document amounts, missing fields, fiscal snapshot, draft status, escaping and active due dates\n"
+  },
+  {
+    "name": "test-juan-linked-forecast.mjs",
+    "code": 0,
+    "output": "PASS: linked employee payroll and supplier dues share ERP amounts; ERP edits appear on reload; unresolved budgets are preserved.\n"
+  },
+  {
+    "name": "test-juan-matching.mjs",
+    "code": 0,
+    "output": "PASS: aliases, supplier/employee identities, day and amount conflicts retained, confirmed Amarant supplier, card group versus insurance, no mutation of forecasts.\n"
+  },
+  {
+    "name": "test-juan-liquidity.mjs",
+    "code": 0,
+    "output": "PASS: 94 unique forecasts, opening balances excluded, monthly source controls, all 18 closing checks, year/month/day boundaries and recalculation after edits.\n"
+  },
+  {
+    "name": "test-recurring-charge-planning.mjs",
+    "code": 0,
+    "output": "OK: two-year horizon, idempotence, extension, stopped plans, month ends and last stored due date\n"
+  },
+  {
+    "name": "test-preliminary-flatplan.mjs",
+    "code": 0,
+    "output": "PASS: indivisible blocks, destination boundaries, holes, insertion, both removals, resizing, parity, covers, numbering and source deduplication.\n"
+  },
+  {
+    "name": "test-supplier-creation.mjs",
+    "code": 0,
+    "output": "8 supplier-creation scenarios passed (optional VAT, duplicate rollback, required catalog country and invalid fields).\n"
+  },
+  {
+    "name": "test-unified-forecast.mjs",
+    "code": 0,
+    "output": "IVA explícito, bases por vencimiento e ingresos compartidos sin duplicación: OK\n"
+  }
+]

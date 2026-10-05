@@ -1,0 +1,128 @@
+{
+  "counts": [
+    {
+      "relname": "administracion_facturas_clientes",
+      "n_live_tup": "448"
+    },
+    {
+      "relname": "administracion_facturas_proveedores",
+      "n_live_tup": "511"
+    },
+    {
+      "relname": "comercial_contactos",
+      "n_live_tup": "13259"
+    },
+    {
+      "relname": "comercial_contratos",
+      "n_live_tup": "377"
+    },
+    {
+      "relname": "comercial_cuentas",
+      "n_live_tup": "6688"
+    },
+    {
+      "relname": "comercial_propuestas_db",
+      "n_live_tup": "2"
+    },
+    {
+      "relname": "produccion_contenidos",
+      "n_live_tup": "1720"
+    },
+    {
+      "relname": "produccion_control_redaccion",
+      "n_live_tup": "107"
+    },
+    {
+      "relname": "tesoreria_cargos_recurrentes",
+      "n_live_tup": "40"
+    },
+    {
+      "relname": "tesoreria_movimientos_bancarios",
+      "n_live_tup": "617"
+    },
+    {
+      "relname": "tesoreria_ordenes",
+      "n_live_tup": "695"
+    }
+  ],
+  "orders": {
+    "total": 695,
+    "cancelled_unpaid": 4,
+    "unpaid_iso_dates": 0,
+    "unpaid_slash_dates": 33
+  },
+  "verifactu": [],
+  "indexes": [
+    {
+      "tablename": "agentes_db",
+      "indexname": "agentes_db_pkey"
+    },
+    {
+      "tablename": "produccion_contenidos",
+      "indexname": "contenidos_db_hoja_prod_idx"
+    },
+    {
+      "tablename": "produccion_contenidos",
+      "indexname": "contenidos_db_id_contrato_idx"
+    },
+    {
+      "tablename": "produccion_contenidos",
+      "indexname": "contenidos_db_id_publicacion_idx"
+    },
+    {
+      "tablename": "produccion_contenidos",
+      "indexname": "contenidos_db_pkey"
+    },
+    {
+      "tablename": "tesoreria_aplicaciones_cobro",
+      "indexname": "banco_cobros_orden_idx"
+    },
+    {
+      "tablename": "tesoreria_aplicaciones_cobro",
+      "indexname": "banco_cobros_ordenes_pkey"
+    },
+    {
+      "tablename": "tesoreria_ordenes",
+      "indexname": "ordenes_db_fecha_teorica_cobro_idx"
+    },
+    {
+      "tablename": "tesoreria_ordenes",
+      "indexname": "ordenes_db_forma_cobro_idx"
+    },
+    {
+      "tablename": "tesoreria_ordenes",
+      "indexname": "ordenes_db_id_cobro_contrato_idx"
+    },
+    {
+      "tablename": "tesoreria_ordenes",
+      "indexname": "ordenes_db_id_cobro_propuesta_idx"
+    },
+    {
+      "tablename": "tesoreria_ordenes",
+      "indexname": "ordenes_db_id_contrato_idx"
+    },
+    {
+      "tablename": "tesoreria_ordenes",
+      "indexname": "ordenes_db_id_factura_idx"
+    },
+    {
+      "tablename": "tesoreria_ordenes",
+      "indexname": "ordenes_db_pkey"
+    }
+  ],
+  "schema": [
+    {
+      "column_name": "termina_planificacion"
+    },
+    {
+      "column_name": "planificado_hasta"
+    },
+    {
+      "column_name": "banco_pago"
+    }
+  ],
+  "pending": {
+    "cancelled_overdue": 0,
+    "active_overdue": 7
+  }
+}

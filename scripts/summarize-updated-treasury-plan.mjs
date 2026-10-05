@@ -1,0 +1,12 @@
+import fs from 'node:fs';import path from 'node:path';
+const folder=path.join(process.env.USERPROFILE,'Downloads/updates/revision-tesoreria-20261003'),read=n=>JSON.parse(fs.readFileSync(path.join(folder,n+'.json'),'utf8')),p=read('update-plan'),b=read('before');
+const norm=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
+const old=JSON.parse(fs.readFileSync(path.join(process.env.USERPROFILE,'OneDrive/Escritorio/importacion-administracion-produccion-20260920/user-decisions.json'),'utf8'));
+console.log('OLD_DECISION_KEYS',Object.keys(old));console.log('EXCLUSIONS',JSON.stringify(old.omitIncidentOrdersStartingWith));
+const previous=JSON.parse(fs.readFileSync(path.join(process.env.USERPROFILE,'OneDrive/Escritorio/importacion-administracion-produccion-20260920/prepared-import.json'),'utf8'));console.log('PREVIOUS_EXCLUDED',JSON.stringify(previous.excludedOrders));
+console.log('NEW_ORDERS',JSON.stringify(p.orderPlans.filter(o=>!o.existing).map(o=>({id:o.id,client:o.data.raw.CLIENTE,total:o.data.cobro_total,state:o.data.raw.ESTADO,contract:o.data.id_contrato}))));
+console.log('MATERIAL_CHANGES',JSON.stringify(p.orderPlans.filter(o=>o.changes.some(k=>k!=='banco_cobro')).map(o=>({id:o.id,client:o.data.raw.CLIENTE,fields:o.changes,total:o.data.cobro_total,date:o.data.fecha_teorica_cobro,state:o.data.raw.ESTADO}))));
+console.log('ACCOUNT_ISSUES',JSON.stringify(p.issues.filter(i=>i.type==='account').map(i=>({...i,candidates:b.comercial_cuentas.filter(a=>norm(a.nombre_empresa).includes(norm(i.client))||norm(i.client).includes(norm(a.nombre_empresa))&&norm(a.nombre_empresa).length>4).slice(0,8).map(a=>({id:a.id_cuenta,name:a.nombre_empresa,crm:a.id_edisoft}))}))));
+console.log('SUPPLIER_PROOF',JSON.stringify(p.suppliers.filter(r=>/serra|tradis|cosva|mini|mutua/i.test(r.PROVEEDOR||'')).map(r=>({sheet:r.sheet,row:r.sourceRow,name:r.PROVEEDOR,total:r['IMPORTE TOTAL'],base:r['BASE IMPONIBLE'],invoice:r['CODIGO FACTURA'],comment:r.Comentario}))));
+console.log('SUPPLIER_SAMPLE',JSON.stringify(b.administracion_facturas_proveedores.slice(0,2)));
+console.log('CONTENT_CHANGES',JSON.stringify(p.contentPlans.filter(c=>c.changes.length).slice(0,8).map(c=>({id:c.id,fields:c.changes,raw:c.data.raw}))));
