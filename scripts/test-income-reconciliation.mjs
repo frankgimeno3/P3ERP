@@ -8,7 +8,7 @@ import {importReceipts,getRemesas} from '../server/features/prevision/ReceiptImp
 import {saveBankWorkflow} from '../server/features/banco/BankReviewWorkflow.js';
 import {importAdministrativeOrders} from '../server/features/orden/AdministrativeImportRepository.js';
 import {getLiquidityForecast} from "../server/features/prevision/LiquidityRepository.js";
-import {getPrevisionIngresosOrdenes} from "../server/features/orden/OrdenRepository.js";
+import {getPrevisionIngresosOrdenes,getOrdenesAdministrativas} from "../server/features/orden/OrdenRepository.js";
 import {updateAdministrativeOrder,updateCustomerInvoice,createInvoiceDraft,getEligibleContracts} from '../server/features/factura/FacturaClienteRepository.js';
 import {createPropuesta,updatePropuesta,deletePropuesta} from '../server/features/propuesta/PropuestaRepository.js';
 
@@ -23,6 +23,7 @@ try{
   await db.query(readLegacyMigrationSql('database/migrations/20260914_0002_income_reconciliation.sql'));
   pool.connect=async()=>({query:(...args)=>db.query(...args),release(){}});pool.query=(...args)=>db.query(...args);
   await db.query("INSERT INTO comercial_cuentas(id_cuenta,nombre_empresa) VALUES('client','Cliente prueba'),('client2','Cliente dos'); INSERT INTO agentes_db(id_agente,nombre_completo_agente) VALUES('actor','Usuario real'),('owner','Agente propietario')");
+  await db.query("UPDATE agentes_db SET rol_agente='comercial' WHERE id_agente='owner'");
   const receipt=(number,amount,remesa='REM-1')=>({numero_recibo:number,numero_factura:number.split('-')[0],numero_cobro:Number(number.split('-')[1]),numero_remesa:remesa,remesa_en_carpeta:'Carpeta',cliente:'Cliente prueba',importe_recibo:amount,importe_remesa:999,fecha_creacion:'14/09/2026',fecha_teorica:'15/09/2026'});
   await importReceipts([receipt('526058-001',100),receipt('526058-002',200)],pool,'actor');
   assert.equal((await getRemesas()).length,1);assert.equal(Number((await getRemesas())[0].importe_total),300);
@@ -36,12 +37,14 @@ try{
   await assert.rejects(review('banc_sab_26_000.000.002',{incomeType:'remesa',remesaIds:['REM-1']}),/importe/);
   assert.equal((await bank('banc_sab_26_000.000.002')).estado_revision,false);
   await review('banc_sab_26_000.000.001',{incomeType:'remesa',remesaIds:['REM-1']});
+  assert((await getOrdenesAdministrativas()).every(order => order.cobrada && order.importe_pendiente === 0), 'Reconciled orders must leave the pending collection list');
   assert.equal((await getRemesas())[0].cobrada,true);
   assert.equal((await getRemesas())[0].fecha_real_cobro,'15/09/2026');
   assert((await db.query('SELECT * FROM tesoreria_ordenes')).rows.every(o=>o.cobrada && o.fecha_real_cobro==='15/09/2026'));
   assert.equal((await db.query('SELECT * FROM administracion_facturas_clientes')).rows[0].cobrada,true);
   await assert.rejects(review('banc_sab_26_000.000.002',{incomeType:'remesa',remesaIds:['REM-1']}),/ya está cobrada/);
   await saveBankWorkflow({action:'unreview',ids:['banc_sab_26_000.000.001']},'actor');
+  assert((await getOrdenesAdministrativas()).every(order => !order.cobrada && order.importe_pendiente > 0), 'Undoing reconciliation must restore pending collection');
   assert.equal((await getRemesas())[0].cobrada,false);
   assert.equal((await db.query('SELECT * FROM administracion_facturas_clientes')).rows[0].cobrada,false);
   await review('banc_sab_26_000.000.001',{incomeType:'remesa',remesaIds:['REM-1']});

@@ -1,4 +1,6 @@
 "use client";
+import { matchesTableFilter } from "@/app/lib/dateFilters";
+import TableFilterInput from "@/app/components/TableFilterInput";
 import TableFilters from '@/app/components/TableFilters';
 
 import { useEffect, useMemo, useState } from "react";
@@ -16,7 +18,7 @@ export default function VerifactuRecordsPage() {
   const [error, setError] = useState("");
   useEffect(() => { FacturaService.getVerifactuRecords().then(v => setRecords(Array.isArray(v) ? v : [])).catch(() => setError("No se pudieron cargar los registros.")); }, []);
   const visibleColumns = useMemo(() => complete ? columns : columns.slice(0, 2), [complete]);
-  const filtered = useMemo(() => records.filter(record => visibleColumns.every(column => !filters[column]?.trim() || text(record[column]).toLowerCase().includes(filters[column].trim().toLowerCase()))), [records, filters, visibleColumns]);
+  const filtered = useMemo(() => records.filter(record => visibleColumns.every(column => !filters[column]?.trim() || matchesTableFilter(text(record[column]).toLowerCase(), filters[column].trim().toLowerCase()))), [records, filters, visibleColumns]);
 
   return <div className="min-h-screen bg-gray-100 text-gray-700">
     <MiddleNav tituloprincipal="Registros VERI*FACTU" />
@@ -29,7 +31,7 @@ export default function VerifactuRecordsPage() {
       </div>
       <div className="mb-4 flex justify-end"><Link href="/dashboard/administracion/facturas-clientes" className="cursor-pointer rounded border border-blue-950 px-4 py-2 text-sm text-blue-950 transition hover:bg-blue-50">Volver a facturas</Link></div>
       {error && <p className="mb-4 rounded bg-red-50 p-3 text-red-700">{error}</p>}
-      <div className="overflow-x-auto rounded-xl bg-white shadow"><TableFilters>{visibleColumns.map(column => <label key={column} className="block text-xs font-extralight text-gray-600"><span className="mb-1 block">{column}</span><input aria-label={`Filtrar ${column}`} value={filters[column] || ""} onChange={event => setFilters(current => ({...current, [column]: event.target.value}))} className="w-full min-w-40 rounded border border-blue-200 px-2 py-1.5 outline-none transition focus:border-blue-950" placeholder={`Filtrar ${column}`} /></label>)}</TableFilters><table className="min-w-full text-xs">
+      <div className="overflow-x-auto rounded-xl bg-white shadow"><TableFilters>{visibleColumns.map(column => <label key={column} className="block text-xs font-extralight text-gray-600"><span className="mb-1 block">{column}</span><TableFilterInput label={column} field={column} value={filters[column] || ""} className="w-full min-w-40 rounded border border-blue-200 px-2 py-1.5 outline-none transition focus:border-blue-950" placeholder={`Filtrar ${column}`} onChange={nextValue => setFilters(current => ({...current, [column]: nextValue}))} /></label>)}</TableFilters><table className="min-w-full text-xs">
         <thead className="bg-blue-950 text-white"><tr>{visibleColumns.map(column => <th key={column} className="p-3 text-left font-medium">{column}</th>)}</tr>
 
         </thead>

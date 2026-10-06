@@ -1172,3 +1172,14 @@ Fuente compartida de los presupuestos mensuales del ERP, migraci?n `20261004_000
 `20261005_0004_workflow_revisions.sql` crea `operaciones_importaciones_aplicadas` con `fingerprint` como PK, `payload_hash`, `result jsonb` y `created_at`. Permite repetir un lote sin duplicar registros. Añade `revista`, `edicion` y `renovacion_propuesta_id` a `comercial_suscripciones`.
 
 La misma migración crea `produccion_planillos_publicaciones`, PK `(id_revista,version)`, `plan jsonb` y `published_at`, para archivar versiones publicadas. `20261005_0006_final_flatplan_assignments.sql` crea `contenidos_revistas_db`: PK `contenido_revista_id`, FK `revista_id` a `servicios_revistas`, FK `contenido_id` a `produccion_contenidos`, `numero_pagina`, `tipo_pagina`, `pagina_del_contenido` y marcas temporales. La posición es única por revista; `-1` representa portada, `0` interior portada y los positivos son páginas de revista. La publicación valida la versión y sustituye todas las asignaciones en una transacción.
+# Tareas comerciales de cuentas
+
+Migración `20261006_0002_account_tasks.sql`:
+
+- `comercial_cuenta_tareas`: `id` (PK texto, prefijo `cta_`), `id_cuenta`
+  (FK a `comercial_cuentas`), nombre, tipo, descripción, referencia,
+  fecha límite opcional, estado y fechas de creación/actualización.
+- `comercial_cuenta_tarea_agentes`: PK (`id_tarea`, `id_agente`), FK a la tarea
+  y a `agentes_db`. Una tarea tiene uno o más responsables y se consulta también
+  en sus listas personales. Un trigger diferido exige al menos una asignación.
+  Borrar una cuenta o un agente con tareas asignadas está restringido.

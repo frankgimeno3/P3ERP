@@ -61,7 +61,7 @@ export const DELETE = createEndpoint(async (request, _body, { params }) => {
       deleted_task_lists: deleted.deleted_task_lists,
     });
   } catch (error) {
-    if (error?.code === "EMPLOYEE_HISTORY") {
+    if (error?.code === "EMPLOYEE_HISTORY" || error?.code === 'ACCOUNT_TASK_ASSIGNMENTS') {
       return NextResponse.json({ message: error.message }, { status: 409 });
     }
     if (error?.name === "AccessDeniedException") {

@@ -7,7 +7,7 @@ env.loadEnvConfig(process.cwd());
 const pool=getPgPool(),db=await pool.connect(),schema='test_tasks_'+randomUUID().replaceAll('-',''),query=pool.query.bind(pool);
 try{
  await db.query('CREATE SCHEMA '+schema);await db.query('SET search_path TO '+schema+',public');
- for(const table of ['agentes_db','laboral_tareas_empleado'])await db.query('CREATE TABLE '+schema+'.'+table+' (LIKE public.'+table+' INCLUDING ALL)');
+ for(const table of ['agentes_db','laboral_tareas_empleado','comercial_cuentas','comercial_cuenta_tareas','comercial_cuenta_tarea_agentes'])await db.query('CREATE TABLE '+schema+'.'+table+' (LIKE public.'+table+' INCLUDING ALL)');
  pool.query=(...args)=>db.query(...args);
  await db.query("INSERT INTO agentes_db(id_agente,nombre_completo_agente,is_empleado_account) VALUES('owner','Propietario',true),('other','Otro',true),('external','Externo',false)");
  const manager={id:'manager',role:'operaciones'},owner={id:'owner',role:'base'},other={id:'other',role:'administracion'};

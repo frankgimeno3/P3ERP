@@ -19,9 +19,11 @@ export async function getRoles() {
     FROM agentes_roles
     ORDER BY CASE id_rol
       WHEN 'base' THEN 1
-      WHEN 'administracion' THEN 2
-      WHEN 'operaciones' THEN 3
-      WHEN 'superadmin' THEN 4
+      WHEN 'comercial' THEN 2
+      WHEN 'administracion' THEN 3
+      WHEN 'operaciones' THEN 4
+      WHEN 'direccion' THEN 5
+      WHEN 'superadmin' THEN 6
       ELSE 99
     END, nombre_rol ASC, id_rol ASC
   `);

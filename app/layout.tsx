@@ -26,7 +26,7 @@ export default function RootLayout({
     return (
     <html lang="en">
       <body
-        className={`${ubuntu.variable} ${geistMono.variable} antialiased`}
+        className={`${ubuntu.variable} ${geistMono.variable} antialiased pb-8`}
       >
         <ModalDismissManager />
         {children}

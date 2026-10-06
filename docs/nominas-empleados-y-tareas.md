@@ -32,3 +32,17 @@ verificar propiedad, permisos, creación y cambios de estado;
 Aplicación: `node --experimental-default-type=module scripts/migrate-employee-payroll-tasks.mjs`.
 
 Verificación: `node --experimental-default-type=module scripts/test-bank-review-workflow.mjs`. Usa un esquema aislado que se revierte al terminar: comprueba nóminas, anticipos, asociación sin liquidación, exclusión de movimientos sin cargo asociado, migración repetida, tareas y edición de previsiones con detección de cambios concurrentes.
+# Tareas asociadas a cuentas
+
+La pestaña Tareas de la ficha comercial guarda una única tarea en
+`comercial_cuenta_tareas` y sus responsables en `comercial_cuenta_tarea_agentes`.
+Debe existir al menos un agente activo con cuenta de empleado; la API y un
+constraint trigger diferido impiden guardar tareas sin responsables.
+Comercial, Administración, Operaciones, Dirección y Superadmin gestionan estas
+tareas. Los agentes asignados pueden cambiar su estado desde `/tareas/{id}`.
+Las listas personales y los contadores de Operaciones consultan la misma tarea,
+sin copiarla por agente. Las tareas laborales existentes conservan sus permisos.
+Las actualizaciones usan `updated_at` como versión para detectar cambios concurrentes
+y registran el cambio en el historial de la cuenta. La migración es
+`20261006_0002_account_tasks.sql`; `scripts/test-account-tasks.mjs` verifica el
+flujo en un esquema aislado.

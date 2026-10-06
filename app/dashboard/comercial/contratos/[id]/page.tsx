@@ -1,4 +1,5 @@
 "use client";
+import { isCommercialAgent } from "@/app/config/commercialAgents";
 import React, { FC, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
@@ -144,7 +145,7 @@ const ResumenContrato: FC = () => {
               <span className="text-xs uppercase text-gray-400">Agente</span>
               <select value={contrato.id_agente_contrato || ""} onChange={(event) => setContrato({ ...contrato, id_agente_contrato: event.target.value })} className="mt-1 w-full cursor-pointer rounded border bg-white px-3 py-2 text-sm transition hover:border-blue-950">
                 <option value="">Sin agente</option>
-                {agentes.map((agente) => <option key={agente.id_agente} value={agente.id_agente}>{agente.nombre_completo_agente || agente.nombre_agente || agente.id_agente}</option>)}
+                {agentes.filter(isCommercialAgent).map((agente) => <option key={agente.id_agente} value={agente.id_agente}>{agente.nombre_completo_agente || agente.nombre_agente || agente.id_agente}</option>)}
               </select>
             </label>
             <Field label="Propuesta de origen" value={contrato.id_propuesta ? <Link href={`/dashboard/comercial/propuestas/${encodeURIComponent(contrato.id_propuesta)}`} className="cursor-pointer font-medium text-blue-950 underline decoration-blue-300 underline-offset-2 transition hover:text-blue-700">{contrato.id_propuesta}</Link> : "-"} />

@@ -1,5 +1,6 @@
 'use client';
 
+import { isCommercialAgent } from "@/app/config/commercialAgents";
 import React, { FC } from 'react';
 import TableFilters from '@/app/components/TableFilters';
 import DatePartsInput from '@/app/components/DatePartsInput';
@@ -95,7 +96,7 @@ const FiltrosPropuestas: FC<FiltrosPropuestasProps> = ({
               className={`${inputClass} ${bloqueaAgente ? disabledControlClass : 'cursor-pointer hover:border-blue-950'}`}
             >
               {!bloqueaAgente && <option value="">Todos</option>}
-              {agentes.map((agente) => (
+              {agentes.filter(isCommercialAgent).map((agente) => (
                 <option key={agente.id_agente} value={agente.id_agente}>
                   {getNombreAgente(agente)}
                 </option>

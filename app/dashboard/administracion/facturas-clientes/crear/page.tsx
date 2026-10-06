@@ -1,5 +1,6 @@
 "use client";
 
+import DateInputRow from "@/app/components/DateInputRow";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import MiddleNav from "@/app/general_components/componentes_recurrentes/MiddleNav";
@@ -17,7 +18,7 @@ function DateFields({ label, value, onChange }: { label: string; value: string; 
     const values = { day, month, year, [part]: next.replace(/\D/g,"").slice(0,part==="year"?4:2) };
     onChange(`${values.year}-${values.month}-${values.day}`);
   };
-  return <fieldset><legend className="mb-2 text-sm font-medium">{label}</legend><div className="grid max-w-xs grid-cols-[65px_65px_90px] gap-2"><input aria-label={`${label}: día`} inputMode="numeric" placeholder="dd" value={day} onChange={(e)=>set("day",e.target.value)} className={input}/><input aria-label={`${label}: mes`} inputMode="numeric" placeholder="mm" value={month} onChange={(e)=>set("month",e.target.value)} className={input}/><input aria-label={`${label}: año`} inputMode="numeric" placeholder="yyyy" value={year} onChange={(e)=>set("year",e.target.value)} className={input}/></div></fieldset>;
+  return <fieldset><legend className="mb-2 text-sm font-medium">{label}</legend><DateInputRow className="grid max-w-xs grid-cols-[65px_65px_90px] gap-2"><input aria-label={`${label}: día`} inputMode="numeric" placeholder="dd" value={day} onChange={(e)=>set("day",e.target.value)} className={input}/><input aria-label={`${label}: mes`} inputMode="numeric" placeholder="mm" value={month} onChange={(e)=>set("month",e.target.value)} className={input}/><input aria-label={`${label}: año`} inputMode="numeric" placeholder="yyyy" value={year} onChange={(e)=>set("year",e.target.value)} className={input}/></DateInputRow></fieldset>;
 }
 
 export default function CrearFacturaClientePage() {

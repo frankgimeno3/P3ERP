@@ -1,10 +1,11 @@
 'use client';
+import DateInputRow from "@/app/components/DateInputRow";
 import {useEffect,useMemo,useState} from 'react';
 import apiClient from '@/app/apiClient';
 
 const cents=(v:any)=>Math.round(Number(v||0)*100);
 const empty=()=>({importe:'',fecha:'',forma_cobro:'transferencia',banco_cobro:'Santander'});
-function DateInputs({value,onChange}:{value:string;onChange:(v:string)=>void}){const [y='',m='',d='']=String(value||'').split('-');const set=(i:number,v:string)=>{const p=[d,m,y];p[i]=v.replace(/\D/g,'').slice(0,i===2?4:2);onChange(`${p[2]}-${p[1]}-${p[0]}`)};return <div className="flex gap-1">{['dd','mm','yyyy'].map((p,i)=><input key={p} aria-label={`Fecha ${p}`} inputMode="numeric" placeholder={p} value={[d,m,y][i]} onChange={e=>set(i,e.target.value)} className="w-16 rounded border p-2 text-sm last:w-20"/>)}</div>}
+function DateInputs({value,onChange}:{value:string;onChange:(v:string)=>void}){const [y='',m='',d='']=String(value||'').split('-');const set=(i:number,v:string)=>{const p=[d,m,y];p[i]=v.replace(/\D/g,'').slice(0,i===2?4:2);onChange(`${p[2]}-${p[1]}-${p[0]}`)};return <DateInputRow className="flex gap-1">{['dd','mm','yyyy'].map((p,i)=><input key={p} aria-label={`Fecha ${p}`} inputMode="numeric" placeholder={p} value={[d,m,y][i]} onChange={e=>set(i,e.target.value)} className="w-16 rounded border p-2 text-sm last:w-20"/>)}</DateInputRow>}
 export default function ContractOrdersModal({contractId,orders,onClose,onDone}:{contractId:string;orders:any[];onClose:()=>void;onDone:()=>Promise<void>}){
   const [tab,setTab]=useState<'pendientes'|'pagadas'>('pendientes'),[selected,setSelected]=useState<string[]>([]),[phase,setPhase]=useState(1),[rows,setRows]=useState([empty()]),[busy,setBusy]=useState(false),[error,setError]=useState('');
   useEffect(()=>{const esc=(e:KeyboardEvent)=>{if(e.key==='Escape')onClose()};window.addEventListener('keydown',esc);return()=>window.removeEventListener('keydown',esc)},[onClose]);

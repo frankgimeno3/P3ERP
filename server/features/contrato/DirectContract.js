@@ -1,3 +1,4 @@
+import { assertCommercialAgent } from "../agente/CommercialAgent.js";
 import { randomUUID } from 'node:crypto';
 import { getPgPool } from '../../database/pgClient.js';
 import { accountActivity } from '../comentario/AccountActivity.js';
@@ -45,7 +46,7 @@ export async function createDirectContract(data, actorId='', pool=getPgPool()) {
   try {
     await db.query('BEGIN');await lockIncome(db);
     if (!(await db.query('SELECT 1 FROM comercial_cuentas WHERE id_cuenta=$1',[data.id_cuenta_contrato])).rowCount) fail('La cuenta no existe.');
-    if (data.id_agente_contrato && !(await db.query('SELECT 1 FROM agentes_db WHERE id_agente=$1',[data.id_agente_contrato])).rowCount) fail('El agente no existe.');
+    await assertCommercialAgent(db, data.id_agente_contrato);
     if (data.id_contacto_contrato && !(await db.query('SELECT 1 FROM comercial_contactos WHERE id_contacto=$1 AND id_cuenta=$2',[data.id_contacto_contrato,data.id_cuenta_contrato])).rowCount) fail('El contacto no pertenece a la cuenta.');
     const contractId=id('con');
     await db.query(`INSERT INTO comercial_contratos(id_contrato,nombre_contrato,id_cuenta_contrato,id_agente_contrato,id_contacto_contrato,

@@ -1,4 +1,6 @@
 "use client";
+import { matchesTableFilter } from "@/app/lib/dateFilters";
+import TableFilterInput from "@/app/components/TableFilterInput";
 import TableFilters from '@/app/components/TableFilters';
 import {useUrlState} from '@/app/lib/useUrlState';
 import {request} from '@/app/lib/request';
@@ -18,13 +20,20 @@ export default function PendienteCobroPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [version, setVersion] = useState(0);
-  useEffect(() => { const controller = new AbortController(); setLoading(true); setError(''); request("/api/v1/admin/control-administrativo/ordenes", { signal: controller.signal }).then(r => { if (!r.ok) throw new Error(); return r.json(); }).then(setRows).catch(e => { if (e.name !== 'AbortError') setError("No se pudieron cargar las órdenes."); }).finally(() => { if (!controller.signal.aborted) setLoading(false); }); return () => controller.abort(); }, [version]);
-  const shown = useMemo(() => rows.filter(row => !row.cobrada && !row.cancelada && !row.datos_importacion?.sin_cobro_monetario && Number(row.importe_pendiente ?? row.cobro_total) > 0).filter(row => tab === "todas" || parseDate(row.fecha_teorica_cobro) < new Date().setHours(0,0,0,0)).filter(row=>columns.every(([key])=>String(key==='importe'?amount(row):row[key]||'').toLocaleLowerCase('es').includes((filters[key]||'').trim().toLocaleLowerCase('es')))).sort((a,b) => parseDate(a.fecha_teorica_cobro) - parseDate(b.fecha_teorica_cobro)), [rows, tab, filters]);
+  useEffect(() => { const controller = new AbortController(); setLoading(true); setError(''); request("/api/v1/admin/control-administrativo/ordenes", { signal: controller.signal, cache: 'no-store' }).then(r => { if (!r.ok) throw new Error(); return r.json(); }).then(data => { if (!controller.signal.aborted) setRows(data); }).catch(e => { if (e.name !== 'AbortError') setError("No se pudieron cargar las órdenes."); }).finally(() => { if (!controller.signal.aborted) setLoading(false); }); return () => controller.abort(); }, [version]);
+  useEffect(() => {
+    const refresh = () => setVersion(value => value + 1);
+    const visible = () => { if (document.visibilityState === 'visible') refresh(); };
+    window.addEventListener('focus', refresh);
+    document.addEventListener('visibilitychange', visible);
+    return () => { window.removeEventListener('focus', refresh); document.removeEventListener('visibilitychange', visible); };
+  }, []);
+  const shown = useMemo(() => rows.filter(row => !row.cobrada && !row.cancelada && !row.datos_importacion?.sin_cobro_monetario && Number(row.importe_pendiente ?? row.cobro_total) > 0).filter(row => tab === "todas" || parseDate(row.fecha_teorica_cobro) < new Date().setHours(0,0,0,0)).filter(row=>columns.every(([key])=>matchesTableFilter(String(key==='importe'?amount(row):row[key]||'').toLocaleLowerCase('es'), (filters[key]||'').trim().toLocaleLowerCase('es')))).sort((a,b) => parseDate(a.fecha_teorica_cobro) - parseDate(b.fecha_teorica_cobro)), [rows, tab, filters]);
   return <div className="min-h-screen bg-gray-100 text-gray-700"><MiddleNav tituloprincipal="Pendiente de cobro" /><main className="p-6 lg:p-12">
     <div className="mb-4 flex flex-wrap items-end justify-between gap-3"><div className="flex gap-1">{(["reclamables","todas"] as const).map(item => <button key={item} type="button" onClick={() => setTab(item)} className={`cursor-pointer rounded-t px-5 py-2 capitalize transition hover:bg-blue-800 hover:text-white ${tab === item ? "bg-blue-950 text-white" : "bg-white"}`}>{item}</button>)}</div></div>
     {loading && <p role="status" className="mb-4">Cargando órdenes…</p>}
     {error && <p role="alert" className="mb-4 rounded bg-red-50 p-3 text-red-700">{error} <button type="button" onClick={() => setVersion(v => v + 1)} className="cursor-pointer underline hover:text-red-950">Reintentar</button></p>}
-    <div className="overflow-x-auto bg-white shadow-sm"><TableFilters>{columns.map(([key,label])=><div key={key}><label className="block text-xs font-extralight text-gray-600"><span className="mb-1 block">{label}</span><input aria-label={label} type="search" value={filters[key]} onChange={e=>setFilters({...filters,[key]:e.target.value})} className="mt-1 rounded border bg-white p-2 text-black"/></label></div>)}</TableFilters><table className="min-w-full text-sm"><thead className="bg-blue-950 text-white"><tr>{columns.map(([key,label])=><th key={key} className="p-3 text-left font-medium">{label}</th>)}</tr></thead><tbody>
+    <div className="overflow-x-auto bg-white shadow-sm"><TableFilters>{columns.map(([key,label])=><div key={key}><label className="block text-xs font-extralight text-gray-600"><span className="mb-1 block">{label}</span><TableFilterInput label={label} field={key} value={filters[key]} className="mt-1 rounded border bg-white p-2 text-black" onChange={nextValue => setFilters({...filters,[key]:nextValue})} /></label></div>)}</TableFilters><table className="min-w-full text-sm"><thead className="bg-blue-950 text-white"><tr>{columns.map(([key,label])=><th key={key} className="p-3 text-left font-medium">{label}</th>)}</tr></thead><tbody>
       {shown.map(row => <tr key={row.id_orden} onClick={() => router.push(`/dashboard/administracion/control-administrativo/${encodeURIComponent(row.id_orden)}`)} className="cursor-pointer border-b transition hover:bg-blue-50"><td className="p-3 font-medium text-blue-950">{row.id_orden}</td><td className="p-3">{row.cliente || "—"}</td><td className="p-3">{row.id_factura || "—"}</td><td className="p-3">{row.fecha_teorica_cobro || "—"}</td><td className="p-3">{row.forma_cobro || "—"}</td><td className="p-3">{Number(row.importe_pendiente ?? row.cobro_total ?? 0).toLocaleString("es-ES",{style:"currency",currency:"EUR"})}</td></tr>)}
       {!loading && !error && !shown.length && <tr><td colSpan={6} className="p-8 text-center text-gray-500">No hay órdenes pendientes en esta vista.</td></tr>}
     </tbody></table></div>

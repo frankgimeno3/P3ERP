@@ -1,4 +1,6 @@
 "use client";
+import { matchesTableFilter } from "@/app/lib/dateFilters";
+import TableFilterInput from "@/app/components/TableFilterInput";
 import TableFilters from '@/app/components/TableFilters';
 
 import { useEffect, useMemo, useState } from "react";
@@ -71,7 +73,7 @@ export default function FacturasProveedoresPage() {
     return facturas.filter((factura) => {
       if (getYear(factura.fecha_factura) !== activeYear) return false;
       if (getQuarter(factura.fecha_factura) !== activeQuarter) return false;
-      return columns.every(([field]) => !filters[field]?.trim() || String(factura[field] ?? "").toLowerCase().includes(filters[field].trim().toLowerCase()));
+      return columns.every(([field]) => !filters[field]?.trim() || matchesTableFilter(String(factura[field] ?? "").toLowerCase(), filters[field].trim().toLowerCase()));
     });
   }, [activeQuarter, activeYear, facturas, filters]);
 
@@ -100,7 +102,7 @@ export default function FacturasProveedoresPage() {
 
         <div className="overflow-x-auto bg-white">
           <TableFilters>{columns.map(([field, label]) => (
-                  <label key={field} className="block text-xs font-extralight text-gray-600"><span className="mb-1 block">{label}</span><input aria-label={`Filtrar ${label}`} value={filters[field] || ""} onChange={(event) => setFilters({ ...filters, [field]: event.target.value })} className="w-full rounded border border-blue-200 px-2 py-1 text-xs outline-none focus:border-blue-950" /></label>
+                  <label key={field} className="block text-xs font-extralight text-gray-600"><span className="mb-1 block">{label}</span><TableFilterInput label={label} field={field} value={filters[field] || ""} className="w-full rounded border border-blue-200 px-2 py-1 text-xs outline-none focus:border-blue-950" onChange={nextValue => setFilters({ ...filters, [field]: nextValue })} /></label>
                 ))}</TableFilters><table className="min-w-full text-xs">
             <thead className="bg-blue-950 text-white">
               <tr>

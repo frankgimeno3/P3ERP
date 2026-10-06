@@ -1,4 +1,5 @@
 'use client';
+import { matchesTableFilter } from "@/app/lib/dateFilters";
 import TableFilters from '@/app/components/TableFilters';
 import { useEffect, useState, type ReactNode } from 'react';
 import DatePartsInput from '@/app/components/DatePartsInput';
@@ -15,7 +16,7 @@ export async function api(url:string,body?:any,method='POST') {
 }
 export function CardTable({columns,rows}:{columns:{key:string;label:string;render?:(row:any)=>ReactNode}[];rows:any[]}) {
   const [filters,setFilters]=useState<Record<string,string>>({});
-  const shown=rows.filter(row=>columns.every(c=>String(row[c.key]??'').toLocaleLowerCase('es').includes((filters[c.key]||'').trim().toLocaleLowerCase('es'))));
+  const shown=rows.filter(row=>columns.every(c=>matchesTableFilter(row[c.key], filters[c.key]||'')));
   return <div className="overflow-x-auto rounded border border-gray-200"><TableFilters>{columns.map(c=><div key={c.key}><TableColumnFilter label={c.label} value={filters[c.key]||''} onChange={v=>setFilters(f=>({...f,[c.key]:v}))}/></div>)}</TableFilters><table className="w-full text-left text-sm"><thead className="bg-gray-50"><tr>{columns.map(c=><th key={c.key} className="p-3">{c.label}</th>)}</tr></thead><tbody>{shown.map((row,i)=><tr key={row.id||row.id_ticket||row.id_tarjeta||i} className="border-t">{columns.map(c=><td key={c.key} className="p-3">{c.render?c.render(row):row[c.key]}</td>)}</tr>)}{!shown.length&&<tr><td colSpan={columns.length} className="p-5 text-gray-500">No hay registros.</td></tr>}</tbody></table></div>;
 }
 export function ForecastItems({items}:{items:any[]}) {

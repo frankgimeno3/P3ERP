@@ -1,5 +1,6 @@
 'use client';
 
+import DateInputRow from "@/app/components/DateInputRow";
 import Link from 'next/link';
 import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 'react';
 
@@ -47,11 +48,11 @@ export function PeriodFields({ mes, anio, onChange, disabled = false }: { mes: n
 }
 export function DateFields({ value, onChange, label, required = true }: { value: string; onChange: (value: string) => void; label: string; required?: boolean }) {
   const [year = '', month = '', day = ''] = value.split('-');
-  return <fieldset><legend className="mb-1 font-medium text-slate-600">{label}</legend><div className="grid grid-cols-[1fr_1fr_1.5fr] gap-2">{[{ key: 'dd', val: day, max: 2 }, { key: 'mm', val: month, max: 2 }, { key: 'yyyy', val: year, max: 4 }].map(part => <input key={part.key} aria-label={`${label} ${part.key}`} placeholder={part.key} inputMode="numeric" pattern={part.max === 4 ? '[0-9]{4}' : '[0-9]{1,2}'} maxLength={part.max} required={required} value={part.val} onChange={e => {
+  return <fieldset><legend className="mb-1 font-medium text-slate-600">{label}</legend><DateInputRow className="grid grid-cols-[1fr_1fr_1.5fr] gap-2">{[{ key: 'dd', val: day, max: 2 }, { key: 'mm', val: month, max: 2 }, { key: 'yyyy', val: year, max: 4 }].map(part => <input key={part.key} aria-label={`${label} ${part.key}`} placeholder={part.key} inputMode="numeric" pattern={part.max === 4 ? '[0-9]{4}' : '[0-9]{1,2}'} maxLength={part.max} required={required} value={part.val} onChange={e => {
     const text = e.target.value.replace(/\D/g, '');
     const y = part.key === 'yyyy' ? text : year, m = part.key === 'mm' ? text : month, d = part.key === 'dd' ? text : day;
     onChange(y || m || d ? `${y}-${m}-${d}` : '');
-  }} />)}</div></fieldset>;
+  }} />)}</DateInputRow></fieldset>;
 }
 export function isoDate(value: string) {
   const [year, month, day] = value.split('-');

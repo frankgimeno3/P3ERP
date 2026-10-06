@@ -1,4 +1,6 @@
 "use client";
+import DateInputRow from "@/app/components/DateInputRow";
+import { isCommercialAgent } from "@/app/config/commercialAgents";
 import {PageChoice,ProposalLineRow,ServiceWizardBody,emptyLinea,type Linea} from "@/app/components/ProposalServices";
 import AccountSearchModal from "@/app/components/AccountSearchModal";
 
@@ -126,7 +128,7 @@ function DatePartsInput({
   return (
     <div className="flex flex-col gap-1 text-sm">
       <span>{label}{required && <RequiredBadge complete={complete} />}</span>
-      <div className="grid grid-cols-[64px_64px_90px] gap-2">
+      <DateInputRow className="grid grid-cols-[64px_64px_90px] gap-2">
         <input
           inputMode="numeric"
           placeholder="dd"
@@ -148,7 +150,7 @@ function DatePartsInput({
           onChange={(event) => onChange(setDatePart(value, "yyyy", event.target.value))}
           className="rounded-lg border p-2"
         />
-      </div>
+      </DateInputRow>
     </div>
   );
 }
@@ -510,7 +512,7 @@ export default function PropuestaEditor({
       return {
         ...prev,
         nombre_propuesta: nombre,
-        id_agente_propuesta: prev.id_agente_propuesta || cuenta.id_agente || "",
+        id_agente_propuesta: prev.id_agente_propuesta || agentes.find((agent) => agent.id_agente === cuenta.id_agente && isCommercialAgent(agent))?.id_agente || "",
         datos_facturacion: {
           nombre_fiscal: cuenta.nombre_fiscal || cuenta.nombre_empresa || "",
           vat_code: cuenta.vat_code || "",
@@ -522,7 +524,7 @@ export default function PropuestaEditor({
         },
       };
     });
-  }, [cuenta, mode]);
+  }, [cuenta, mode, agentes]);
 
   const lineTotal = (line: Linea) => {
     if (line.modo_precio === "gratis" || line.modo_precio === "tachado") return 0;
@@ -833,7 +835,7 @@ export default function PropuestaEditor({
                     className="rounded-lg border p-2"
                   >
                     <option value="">Selecciona agente</option>
-                    {agentes.map((agente) => (
+                    {agentes.filter(isCommercialAgent).map((agente) => (
                       <option key={agente.id_agente} value={agente.id_agente}>
                         {agente.nombre_completo_agente || `${agente.nombre_agente || ""} ${agente.apellidos_agente || ""}`.trim() || agente.id_agente}
                       </option>

@@ -5,6 +5,17 @@ import { useRouter } from 'next/navigation';
 import {CuentaService} from '@/app/service/CuentaService';
 import { AgenteService } from '@/app/service/AgenteService';
 import LastTigerUpdate from '../LastTigerUpdate';
+import { ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
+import { useUrlState } from '@/app/lib/useUrlState';
+
+const columns = [
+  { key: 'nombre_empresa', label: 'Nombre Empresa' },
+  { key: 'id_cuenta', label: 'ID cuenta (Tiger)' },
+  { key: 'id_edisoft', label: 'Código Edisoft' },
+  { key: 'id_agente', label: 'Agente Asignado' },
+  { key: 'pais_cuenta', label: 'País' },
+  { key: 'telefono', label: 'Tel principal' },
+];
 
 interface Cuenta {
   id_cuenta: string;
@@ -45,6 +56,11 @@ const Tablacuentas: FC<TablacuentasProps> = ({
   const router = useRouter();
   const [localPage,setLocalPage]=useState(1);
   const currentPage=page??localPage,setCurrentPage=onPageChange??setLocalPage;
+  const [sort, setSort] = useUrlState('accounts.sort', { column: '', direction: 'asc' });
+  const sortBy = (column: string) => {
+    setSort(previous => ({ column, direction: previous.column === column && previous.direction === 'asc' ? 'desc' : 'asc' }));
+    setCurrentPage(1);
+  };
   const [totalResults,setTotalResults]=useState(0);
   const [resultados, setResultados] = useState<Cuenta[]>([]);
   const [agentes, setAgentes] = useState<Agente[]>([]);
@@ -83,7 +99,7 @@ const Tablacuentas: FC<TablacuentasProps> = ({
           codigoEdisoftFiltro: codigoEdisoftFiltro || '',
           agenteFiltro: agenteFiltro || '',
           telFiltro: telFiltro || '',
-          paisFiltro: paisFiltro || '',limit:itemsPerPage,page:currentPage,
+          paisFiltro: paisFiltro || '', paisExacto: true, sortBy: sort.column, sortDirection: sort.direction, limit:itemsPerPage,page:currentPage,
         };
         const data = await CuentaService.getCuentas(filters,{signal:controller.signal});
         if(!controller.signal.aborted){setResultados(data.rows || []);setTotalResults(data.total || 0);}
@@ -102,7 +118,7 @@ const Tablacuentas: FC<TablacuentasProps> = ({
 
     const timer=setTimeout(fetchCuentas,250);
     return()=>{clearTimeout(timer);controller.abort();};
-  }, [clienteFiltro, codigoCrmFiltro, codigoEdisoftFiltro, agenteFiltro, telFiltro, paisFiltro,currentPage,attempt]);
+  }, [clienteFiltro, codigoCrmFiltro, codigoEdisoftFiltro, agenteFiltro, telFiltro, paisFiltro,currentPage,attempt,sort.column,sort.direction]);
 
   const resultadosFiltrados = useMemo(() => {
     // Server-side filtering is already done, but we can do additional client-side filtering if needed
@@ -163,12 +179,15 @@ const Tablacuentas: FC<TablacuentasProps> = ({
       <table className="mt-5  rounded-lg shadow-xl bg-white min-w-full">
         <thead className="bg-blue-950/80 text-white rounded-lg">
           <tr>
-            <th className="text-left p-2 font-light pl-6">Nombre Empresa </th>
-            <th className="text-left p-2 font-light">ID cuenta (Tiger)</th>
-            <th className="text-left p-2 font-light">Código Edisoft</th>
-            <th className="text-left p-2 font-light">Agente Asignado</th>
-            <th className="text-left p-2 font-light">País</th>
-            <th className="text-left p-2 font-light">Tel principal</th>
+            {columns.map((column, index) => {
+              const active = sort.column === column.key;
+              const Icon = active ? (sort.direction === 'asc' ? ArrowUp : ArrowDown) : ArrowUpDown;
+              return <th key={column.key} aria-sort={active ? (sort.direction === 'asc' ? 'ascending' : 'descending') : 'none'} className={`p-2 text-left font-light ${index === 0 ? 'pl-6' : ''}`}>
+                <button type="button" onClick={() => sortBy(column.key)} aria-label={`Ordenar por ${column.label} ${active && sort.direction === 'asc' ? 'descendente' : 'ascendente'}`} className="flex w-full cursor-pointer items-center justify-between gap-2 rounded px-1 py-2 text-left transition hover:bg-white/15 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white">
+                  {column.label}<Icon size={16} aria-hidden="true" className={`shrink-0 ${active ? 'opacity-100' : 'opacity-60'}`} />
+                </button>
+              </th>;
+            })}
            </tr>
         </thead>
         <tbody>

@@ -1,4 +1,5 @@
 "use client";
+import DateInputRow from "@/app/components/DateInputRow";
 import TableFilters from '@/app/components/TableFilters';
 import SearchableSelect from "@/app/components/SearchableSelect";
 
@@ -112,11 +113,11 @@ export default function CrearFeriaPage() {
             ].map(([kind, parts, label]: any) => (
               <div key={kind}>
                 <p className="mb-1 text-xs font-semibold uppercase text-gray-500">{label}</p>
-                <div className="flex gap-2">
+                <DateInputRow className="flex gap-2">
                   <input value={parts.dd || ""} onChange={(event) => updateDate(kind, "dd", event.target.value.slice(0, 2))} placeholder="dd" className="w-16 rounded border px-2 py-2" />
                   <input value={parts.mm || ""} onChange={(event) => updateDate(kind, "mm", event.target.value.slice(0, 2))} placeholder="mm" className="w-16 rounded border px-2 py-2" />
                   <input value={parts.yyyy || ""} onChange={(event) => updateDate(kind, "yyyy", event.target.value.slice(0, 4))} placeholder="yyyy" className="w-24 rounded border px-2 py-2" />
-                </div>
+                </DateInputRow>
               </div>
             ))}
             <label className="flex items-center gap-2 rounded border px-3 py-2 text-sm">

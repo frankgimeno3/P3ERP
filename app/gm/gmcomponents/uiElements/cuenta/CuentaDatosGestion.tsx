@@ -1,3 +1,4 @@
+import DateInputRow from "@/app/components/DateInputRow";
 import type { Account } from "./types";
 
 type CuentaDatosGestionProps = {
@@ -55,11 +56,11 @@ function GestionDateField({ label, value, onChange, readOnly = false }: Omit<Ges
   return (
     <label className="flex min-w-0 items-center justify-start gap-2 text-left">
       <span className="w-44 shrink-0 text-left text-sm font-medium text-slate-700">{label}</span>
-      <div className="flex min-w-0 flex-1 gap-2">
+      <DateInputRow className="flex min-w-0 flex-1 gap-2">
         <input value={parts.dd || ""} readOnly={readOnly} onChange={(event) => update("dd", event.target.value.slice(0, 2))} placeholder="dd" className={`w-16 rounded-md border border-gray-300 px-2 py-1 text-sm outline-none ${readOnly ? "bg-slate-100 text-slate-500" : "bg-white text-slate-700"}`} />
         <input value={parts.mm || ""} readOnly={readOnly} onChange={(event) => update("mm", event.target.value.slice(0, 2))} placeholder="mm" className={`w-16 rounded-md border border-gray-300 px-2 py-1 text-sm outline-none ${readOnly ? "bg-slate-100 text-slate-500" : "bg-white text-slate-700"}`} />
         <input value={parts.yyyy || ""} readOnly={readOnly} onChange={(event) => update("yyyy", event.target.value.slice(0, 4))} placeholder="yyyy" className={`w-24 rounded-md border border-gray-300 px-2 py-1 text-sm outline-none ${readOnly ? "bg-slate-100 text-slate-500" : "bg-white text-slate-700"}`} />
-      </div>
+      </DateInputRow>
     </label>
   );
 }

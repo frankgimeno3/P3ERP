@@ -54,6 +54,7 @@ const dashboardRoutes = [
 
 const roleSections: Record<string, string[]> = {
   base: ["dashboard", "comercial", "produccion"],
+  comercial: ["dashboard", "comercial", "produccion"],
   administracion: ["dashboard", "comercial", "produccion", "administracion"],
   operaciones: ["dashboard", "comercial", "produccion", "administracion", "operaciones"],
   superadmin: ["dashboard", "comercial", "produccion", "administracion", "operaciones", "direccion"],

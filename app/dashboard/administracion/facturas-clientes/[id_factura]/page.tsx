@@ -1,5 +1,6 @@
 "use client";
 
+import DateInputRow from "@/app/components/DateInputRow";
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import {useRouter} from 'next/navigation';
@@ -11,7 +12,7 @@ import DownloadDocumentButton from '@/app/components/DownloadDocumentButton';
 import {invoiceDocumentModel} from '@/app/lib/businessDocumentPdf';
 
 const field="w-full rounded border border-gray-300 p-2 outline-none focus:border-blue-950 disabled:bg-gray-100";
-function FiscalDate({value,onChange}:{value:string;onChange:(value:string)=>void}){const [year="",month="",day=""]=String(value||"").split("-");const set=(key:string,next:string)=>{const data:{[key:string]:string}={day,month,year,[key]:next.replace(/\D/g,"").slice(0,key==="year"?4:2)};onChange(data.day&&data.month&&data.year?`${data.year}-${data.month}-${data.day}`:"");};return <div className="grid grid-cols-[65px_65px_90px] gap-2"><input aria-label="Fecha expedición: día" inputMode="numeric" placeholder="dd" value={day} onChange={e=>set("day",e.target.value)} className={field}/><input aria-label="Fecha expedición: mes" inputMode="numeric" placeholder="mm" value={month} onChange={e=>set("month",e.target.value)} className={field}/><input aria-label="Fecha expedición: año" inputMode="numeric" placeholder="yyyy" value={year} onChange={e=>set("year",e.target.value)} className={field}/></div>}
+function FiscalDate({value,onChange}:{value:string;onChange:(value:string)=>void}){const [year="",month="",day=""]=String(value||"").split("-");const set=(key:string,next:string)=>{const data:{[key:string]:string}={day,month,year,[key]:next.replace(/\D/g,"").slice(0,key==="year"?4:2)};onChange(data.day&&data.month&&data.year?`${data.year}-${data.month}-${data.day}`:"");};return <DateInputRow className="grid grid-cols-[65px_65px_90px] gap-2"><input aria-label="Fecha expedición: día" inputMode="numeric" placeholder="dd" value={day} onChange={e=>set("day",e.target.value)} className={field}/><input aria-label="Fecha expedición: mes" inputMode="numeric" placeholder="mm" value={month} onChange={e=>set("month",e.target.value)} className={field}/><input aria-label="Fecha expedición: año" inputMode="numeric" placeholder="yyyy" value={year} onChange={e=>set("year",e.target.value)} className={field}/></DateInputRow>}
 export default function FacturaClientePage({params}:{params:Promise<{id_factura:string}>}) {
   const {id_factura}=use(params); const [invoice,setInvoice]=useState<any>(null); const [error,setError]=useState(""); const [saving,setSaving]=useState(false);
   const [emitModal,setEmitModal]=useState(false);

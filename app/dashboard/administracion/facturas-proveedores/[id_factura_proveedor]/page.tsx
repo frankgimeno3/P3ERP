@@ -1,4 +1,5 @@
 "use client";
+import DateInputRow from "@/app/components/DateInputRow";
 import SearchableSelect from "@/app/components/SearchableSelect";
 
 import { useEffect, useMemo, useState } from "react";
@@ -133,11 +134,11 @@ export default function FacturaProveedorDetallePage() {
               </label>
               <div>
                 <p className="mb-1 text-xs font-semibold uppercase text-gray-500">Fecha factura</p>
-                <div className="flex gap-2">
+                <DateInputRow className="flex gap-2">
                   <input value={dateParts.dd || ""} onChange={(event) => updateDate("dd", event.target.value.slice(0, 2))} placeholder="dd" className="w-16 rounded border px-2 py-2" />
                   <input value={dateParts.mm || ""} onChange={(event) => updateDate("mm", event.target.value.slice(0, 2))} placeholder="mm" className="w-16 rounded border px-2 py-2" />
                   <input value={dateParts.yyyy || ""} onChange={(event) => updateDate("yyyy", event.target.value.slice(0, 4))} placeholder="yyyy" className="w-24 rounded border px-2 py-2" />
-                </div>
+                </DateInputRow>
               </div>
               <div>
                 <p className="mb-1 text-xs font-semibold uppercase text-gray-500">Proveedor</p>

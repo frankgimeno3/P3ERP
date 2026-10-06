@@ -1,3 +1,5 @@
+import { assertCommercialAgent } from "../agente/CommercialAgent.js";
+import { cuentaOrderBy } from './CuentaSorting.js';
 import { getPgPool } from "../../database/pgClient.js";
 import { addCuentaEvento, formatChangeDetail } from "../registroEventos/RegistroEventosRepository.js";
 
@@ -159,8 +161,8 @@ export async function getCuentas(filters = {}) {
   }
 
   if (filters.paisFiltro) {
-    values.push(`%${filters.paisFiltro}%`);
-    where.push(`pais_cuenta ILIKE $${values.length}`);
+    values.push(filters.paisExacto ? filters.paisFiltro : `%${filters.paisFiltro}%`);
+    where.push(`pais_cuenta ${filters.paisExacto ? '=' : 'ILIKE'} $${values.length}`);
   }
   if(filters.correoFiltro){values.push(`%${filters.correoFiltro}%`);where.push(`correo_principal ILIKE $${values.length}`);}
 
@@ -173,12 +175,17 @@ export async function getCuentas(filters = {}) {
     SELECT *
     FROM ${tableName}
     ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
-    ORDER BY created_at DESC, id_cuenta ASC
+    ORDER BY ${cuentaOrderBy(filters.sortBy, filters.sortDirection)}
     ${pagination}
   `;
 
   const { rows } = await pool.query(query, values);
   return paged ? { rows: rows.map(normalizeCuenta), total: count, page: filters.page || 1, limit: filters.limit } : rows.map(normalizeCuenta);
+}
+
+export async function getCuentaCountries() {
+  const { rows } = await getPgPool().query(`SELECT DISTINCT pais_cuenta FROM ${tableName} WHERE pais_cuenta IS NOT NULL AND btrim(pais_cuenta) <> '' ORDER BY pais_cuenta ASC`);
+  return rows.map(row => row.pais_cuenta);
 }
 
 export async function getCuentaById(idCuenta) {
@@ -193,6 +200,7 @@ export async function getCuentaById(idCuenta) {
 
 export async function createCuenta(cuentaData) {
   const pool = getPgPool();
+  await assertCommercialAgent(pool, cuentaData.id_agente);
   const columns = writableColumns.filter((column) => cuentaData[column] !== undefined);
   const values = columns.map((column) => normalizeValue(column, cuentaData[column]));
   const placeholders = columns.map((column, index) => {
@@ -234,6 +242,7 @@ export async function createCuenta(cuentaData) {
 export async function updateCuenta(idCuenta, cuentaData) {
   const pool = getPgPool();
   const before = await getCuentaById(idCuenta);
+  if (cuentaData.id_agente !== undefined) await assertCommercialAgent(pool, cuentaData.id_agente, before?.id_agente);
   const columns = writableColumns.filter((column) => column !== "id_cuenta" && cuentaData[column] !== undefined);
   const values = columns.map((column) => normalizeValue(column, cuentaData[column]));
 

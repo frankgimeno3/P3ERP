@@ -1,4 +1,5 @@
 'use client';
+import DateInputRow from "@/app/components/DateInputRow";
 import {use,useEffect,useState} from 'react';
 import Link from 'next/link';
 import {useRouter} from 'next/navigation';
@@ -25,7 +26,7 @@ const formatDate=(value:any)=>{const text=String(value||'');return /^\d{4}-\d{2}
 function DateParts({label,value,onChange,disabled=false}:{label:string;value:string;onChange:(value:string)=>void;disabled?:boolean}){
   const raw=String(value||'').slice(0,10),parts=raw.includes('/')?raw.split('/'):raw.split('-').reverse();
   const set=(index:number,next:string)=>{const values=[parts[0]||'',parts[1]||'',parts[2]||''];values[index]=next.replace(/\D/g,'').slice(0,index===2?4:2);onChange(values.join('/'));};
-  return <fieldset disabled={disabled}><legend className="mb-2">{label}</legend><div className="grid grid-cols-[65px_65px_90px] gap-2">{['día','mes','año'].map((name,i)=><input key={name} aria-label={`${label}: ${name}`} inputMode="numeric" placeholder={['dd','mm','yyyy'][i]} value={parts[i]||''} onChange={e=>set(i,e.target.value)} className={field}/>)}</div></fieldset>;
+  return <fieldset disabled={disabled}><legend className="mb-2">{label}</legend><DateInputRow className="grid grid-cols-[65px_65px_90px] gap-2">{['día','mes','año'].map((name,i)=><input key={name} aria-label={`${label}: ${name}`} inputMode="numeric" placeholder={['dd','mm','yyyy'][i]} value={parts[i]||''} onChange={e=>set(i,e.target.value)} className={field}/>)}</DateInputRow></fieldset>;
 }
 function Toggle({label,checked,off,on,onChange,disabled=false}:{label:string;checked:boolean;off:string;on:string;onChange:(value:boolean)=>void;disabled?:boolean}){
   return <div className="flex flex-wrap items-center gap-3"><span className={!checked?'font-medium text-blue-950':'text-gray-500'}>{off}</span><button type="button" role="switch" aria-label={label} aria-checked={checked} disabled={disabled} onClick={()=>onChange(!checked)} className={`relative h-7 w-12 rounded-full transition enabled:cursor-pointer enabled:hover:ring-2 enabled:hover:ring-blue-300 disabled:opacity-50 ${checked?'bg-blue-950':'bg-gray-400'}`}><span className={`absolute top-1 h-5 w-5 rounded-full bg-white transition ${checked?'left-6':'left-1'}`}/></button><span className={checked?'font-medium text-blue-950':'text-gray-500'}>{on}</span></div>;

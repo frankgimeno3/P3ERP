@@ -14,6 +14,7 @@ import BotonFlotante from '@/app/general_components/componentes_recurrentes/Boto
 import { InterfazCuenta } from '@/app/interfaces/interfaces';
 import { CuentaService } from '@/app/service/CuentaService';
 import { AgenteService } from '@/app/service/AgenteService';
+import AccountTasks from '@/app/components/tasks/AccountTasks';
 
 interface Comentario {
   id_comentario: string;
@@ -22,7 +23,7 @@ interface Comentario {
   contenido: string;
 }
 
-type PestanaCuenta = 'general' | 'comentarios' | 'contactos' | 'propuestas' | 'contratos' | 'contenidos' | 'datos_administrativos' | 'general_eventos';
+type PestanaCuenta = 'general' | 'comentarios' | 'contactos' | 'propuestas' | 'contratos' | 'contenidos' | 'tareas' | 'datos_administrativos' | 'general_eventos';
 
 const datosComercialesDefault = {
   ciudad_principal_cuenta: '',
@@ -248,6 +249,7 @@ const FichaCliente = () => {
               { key: 'propuestas', label: 'Propuestas' },
               { key: 'contratos', label: 'Contratos' },
               { key: 'contenidos', label: 'Contenidos' },
+              { key: 'tareas', label: 'Tareas' },
               { key: 'datos_administrativos', label: 'Datos administrativos' },
               { key: 'general_eventos', label: 'Registro de eventos' },
             ].map(({ key, label }, index) => (
@@ -268,6 +270,7 @@ const FichaCliente = () => {
         </div>
 
         <div className="bg-white p-12 shadow-xl rounded-b-lg">
+          {pestana === 'tareas' && <AccountTasks accountId={id_cuenta} />}
           {pestana === 'general' && cuentaEditable && (
             <ContenidoGeneral
               cuentaEditable={cuentaEditable}

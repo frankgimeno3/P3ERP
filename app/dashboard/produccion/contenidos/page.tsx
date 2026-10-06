@@ -1,4 +1,5 @@
 'use client';
+import { matchesTableFilter } from "@/app/lib/dateFilters";
 import TableFilters from '@/app/components/TableFilters';
 import {useUrlState} from '@/app/lib/useUrlState';
 import Link from 'next/link';
@@ -17,7 +18,7 @@ export default function ContenidosPage(){
   useEffect(()=>{let active=true;setLoading(true);setError('');const request=tab==='revista'?apiClient.get('/api/v1/produccion/gestiones-produccion').then(r=>r.data):ContenidoService.getContenidos();request.then(data=>{if(!active)return;if(tab==='revista')setMagazines(Array.isArray(data)?data:[]);else setContents(Array.isArray(data)?data:[]);}).catch(reason=>{if(active)setError(reason.message);}).finally(()=>{if(active)setLoading(false);});return()=>{active=false;};},[tab]);
   const columns=tab==='revista'?magazineColumns:contentColumns;
   const rows=tab==='revista'?magazines:contents;
-  const visible=rows.filter(row=>columns.every(([key])=>String((row as any)[key]||(key==='nombre_cuenta'?(row as any).id_cuenta:key==='nombre_servicio'?(row as any).servicio:'')).toLocaleLowerCase('es').includes((filters[key]||'').trim().toLocaleLowerCase('es'))));
+  const visible=rows.filter(row=>columns.every(([key])=>matchesTableFilter(String((row as any)[key]||(key==='nombre_cuenta'?(row as any).id_cuenta:key==='nombre_servicio'?(row as any).servicio:'')).toLocaleLowerCase('es'), (filters[key]||'').trim().toLocaleLowerCase('es'))));
   return <main className="min-h-screen bg-gray-100 text-slate-900"><MiddleNav tituloprincipal="Contenidos"/><div className="mx-auto max-w-7xl p-6"><h1 className="mb-4 text-2xl font-semibold">Contenidos de producción</h1>
     <nav aria-label="Vista de contenidos" className="mb-4 flex gap-2"><button type="button" onClick={()=>{setTab('revista');setFilters({});}} className={`cursor-pointer rounded px-4 py-2 hover:bg-blue-100 ${tab==='revista'?'bg-blue-950 text-white hover:bg-blue-900':'bg-white'}`}>Filtrar por revista</button><button type="button" onClick={()=>{setTab('todos');setFilters({});}} className={`cursor-pointer rounded px-4 py-2 hover:bg-blue-100 ${tab==='todos'?'bg-blue-950 text-white hover:bg-blue-900':'bg-white'}`}>Todos los contenidos</button></nav>
     {error&&<p role="alert" className="mb-4 rounded bg-red-50 p-3 text-red-700">{error}</p>}

@@ -1,4 +1,5 @@
 'use client';
+import { isCommercialAgent } from "@/app/config/commercialAgents";
 import SearchableSelect from "@/app/components/SearchableSelect";
 
 import React, { FC, ChangeEvent, useEffect, useMemo, useState } from "react";
@@ -251,7 +252,7 @@ const DatosCRM: FC<DatosCRMProps> = ({
             <span className="font-medium">Agente</span>
             <select name="id_agente" value={id_agente} onChange={handleTextChange} className={fieldClass}>
               <option value="">Sin asignar</option>
-              {agentes.map((agente) => (
+              {agentes.filter(isCommercialAgent).map((agente) => (
                 <option key={agente.id_agente} value={agente.id_agente}>
                   {agente.nombre_completo_agente || `${agente.nombre_agente || ""} ${agente.apellidos_agente || ""}`.trim() || agente.id_agente}
                 </option>
@@ -262,7 +263,7 @@ const DatosCRM: FC<DatosCRMProps> = ({
             <span className="font-medium">Asignado a</span>
             <select name="asignado_a" value={asignado_a} onChange={handleTextChange} className={fieldClass}>
               <option value="">Sin asignar</option>
-              {agentes.filter((agente) => agente.email_agente).map((agente) => (
+              {agentes.filter(isCommercialAgent).filter((agente) => agente.email_agente).map((agente) => (
                 <option key={agente.id_agente} value={agente.email_agente}>
                   {agente.email_agente}
                 </option>

@@ -15,8 +15,8 @@ type CheckStatus = "idle" | "checking" | "exists" | "available";
 
 const endpoint = "/api/v1/admin/user-wizard";
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const roleOrder = ["base", "administracion", "operaciones", "superadmin"];
-const roleLabels: Record<string, string> = { base: "base", administracion: "administración", operaciones: "operaciones", superadmin: "superadmin" };
+const roleOrder = ["base", "comercial", "administracion", "operaciones", "direccion", "superadmin"];
+const roleLabels: Record<string, string> = { base: "base", comercial: "comercial", direccion: "dirección", administracion: "administración", operaciones: "operaciones", superadmin: "superadmin" };
 
 async function request(body: Record<string, unknown>) {
   const response = await fetch(endpoint, {

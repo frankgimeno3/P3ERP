@@ -1,3 +1,4 @@
+import { assertCommercialAgent } from "../agente/CommercialAgent.js";
 import crypto from "node:crypto";
 import { getPgPool } from "../../database/pgClient.js";
 import { addCuentaEntityEvent, formatChangeDetail } from "../registroEventos/RegistroEventosRepository.js";
@@ -672,6 +673,7 @@ async function replaceCobros(client, idPropuesta, cobros = []) {
 
 export async function createPropuesta(payload, actorId = "") {
   const pool = getPgPool();
+  await assertCommercialAgent(pool, payload.id_agente_propuesta);
   const client = await pool.connect();
   const idPropuesta = payload.id_propuesta || generateId("prop");
 
@@ -729,6 +731,7 @@ export async function updatePropuesta(idPropuesta, payload, actorId = "") {
     await ensureWizardSchema(client);
     const { rows: beforeRows } = await client.query("SELECT * FROM comercial_propuestas_db WHERE id_propuesta = $1 LIMIT 1", [idPropuesta]);
     const before = beforeRows[0] || null;
+    if (payload.id_agente_propuesta !== undefined) await assertCommercialAgent(client, payload.id_agente_propuesta, before?.id_agente_propuesta);
     const nextStatus = String(payload.estado_propuesta ?? before?.estado_propuesta ?? "").toLowerCase();
     const nextPhase = String(payload.fase_propuesta ?? before?.fase_propuesta ?? "1");
     const changesLifecycle = payload.estado_propuesta !== undefined || payload.fase_propuesta !== undefined;

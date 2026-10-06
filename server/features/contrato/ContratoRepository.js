@@ -1,3 +1,4 @@
+import { assertCommercialAgent } from "../agente/CommercialAgent.js";
 import { getPgPool } from "../../database/pgClient.js";
 
 function numberOrZero(value) {
@@ -151,6 +152,7 @@ export async function updateContrato(idContrato, data = {}) {
     if(!belongs.rowCount)throw new Error('El contacto debe pertenecer a la cuenta del contrato');
   }
 
+  if (data.id_agente_contrato !== undefined) await assertCommercialAgent(pool, agentId, current.id_agente_contrato);
   if (agentId) {
     const agent = await pool.query(
       "SELECT 1 FROM agentes_db WHERE id_agente=$1 LIMIT 1",

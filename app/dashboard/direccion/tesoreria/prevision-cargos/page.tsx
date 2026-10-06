@@ -1,4 +1,5 @@
 "use client";
+import DateInputRow from "@/app/components/DateInputRow";
 import TableFilters from '@/app/components/TableFilters';
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {useRouter} from 'next/navigation';
@@ -204,7 +205,7 @@ function Filters({ f, setF }: { f: any; setF: (x: any) => void }) {
       ))}
       <fieldset>
         <legend className="text-xs font-extralight">Fecha</legend>
-        <div className="mt-1 flex gap-1">
+        <DateInputRow className="mt-1 flex gap-1">
           <input
             aria-label="Día"
             placeholder="dd"
@@ -238,7 +239,7 @@ function Filters({ f, setF }: { f: any; setF: (x: any) => void }) {
             }
             className="w-20 rounded border p-2"
           />
-        </div>
+        </DateInputRow>
       </fieldset>
       <label className="text-xs font-extralight">
         Descripción

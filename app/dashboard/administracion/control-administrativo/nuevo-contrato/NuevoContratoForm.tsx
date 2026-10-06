@@ -1,4 +1,5 @@
 "use client";
+import { isCommercialAgent } from "@/app/config/commercialAgents";
 import { Fragment, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -50,9 +51,9 @@ export default function NuevoContratoPage({commercial=false}:{commercial?:boolea
     {error&&<p role="alert" className="rounded bg-red-50 p-3 text-red-700">{error}</p>}
     <section className="space-y-4 rounded bg-white p-6">
       {phase===0&&<><h2 className="text-xl font-semibold">Cuenta y contrato</h2><div className="grid gap-4 md:grid-cols-2">
-        <div><p>Cuenta *</p>{accountsLoading&&<p role="status" className="text-sm">Buscando cuentas?</p>}<SearchableSelect label="Cuenta" onSearchChange={setAccountQuery} value={data.id_cuenta_contrato} required disabled={loading} options={accounts.map(account=>({value:account.id_cuenta,label:account.nombre_empresa+' · '+account.id_cuenta}))} onChange={value=>setData({...data,id_cuenta_contrato:value,id_contacto_contrato:'',id_agente_contrato:accounts.find(account=>account.id_cuenta===value)?.id_agente || ''})}/></div>
+        <div><p>Cuenta *</p>{accountsLoading&&<p role="status" className="text-sm">Buscando cuentas?</p>}<SearchableSelect label="Cuenta" onSearchChange={setAccountQuery} value={data.id_cuenta_contrato} required disabled={loading} options={accounts.map(account=>({value:account.id_cuenta,label:account.nombre_empresa+' · '+account.id_cuenta}))} onChange={value=>setData({...data,id_cuenta_contrato:value,id_contacto_contrato:'',id_agente_contrato:agents.find(agent=>agent.id_agente===accounts.find(account=>account.id_cuenta===value)?.id_agente && isCommercialAgent(agent))?.id_agente || ''})}/></div>
         <label>Nombre del contrato *<input value={data.nombre_contrato} onChange={e=>setData({...data,nombre_contrato:e.target.value})} className={input}/></label>
-        <div><p>Agente</p><SearchableSelect label="Agente" value={data.id_agente_contrato} options={agents.map(agent=>({value:agent.id_agente,label:agent.nombre_completo_agente || agent.id_agente}))} onChange={value=>setData({...data,id_agente_contrato:value})}/></div>
+        <div><p>Agente</p><SearchableSelect label="Agente" value={data.id_agente_contrato} options={agents.filter(isCommercialAgent).map(agent=>({value:agent.id_agente,label:agent.nombre_completo_agente || agent.id_agente}))} onChange={value=>setData({...data,id_agente_contrato:value})}/></div>
         <div><p>Contacto</p><SearchableSelect label="Contacto" value={data.id_contacto_contrato} options={contacts.filter(contact=>contact.id_cuenta===data.id_cuenta_contrato).map(contact=>({value:contact.id_contacto,label:contact.nombre_completo_contacto || contact.id_contacto}))} onChange={value=>setData({...data,id_contacto_contrato:value})}/></div>
         <DatePartsInput label="Fecha de firma" value={data.fecha_firma_contrato} onChange={value=>setData({...data,fecha_firma_contrato:value})}/><DatePartsInput label="Fecha fin (opcional)" value={data.fecha_fin_contrato} onChange={value=>setData({...data,fecha_fin_contrato:value})}/>
         <label className="md:col-span-2">Comentarios<textarea className={input} value={data.comentarios_adicionales} onChange={e=>setData({...data,comentarios_adicionales:e.target.value})}/></label>

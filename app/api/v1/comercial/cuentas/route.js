@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createCuenta, getCuentas, getCuentasTotal } from "../../../../../server/features/cuenta/CuentaRepository.js";
+import { createCuenta, getCuentas, getCuentasTotal, getCuentaCountries } from "../../../../../server/features/cuenta/CuentaRepository.js";
 
 export const runtime = "nodejs";
 
@@ -13,6 +13,9 @@ function getFilters(request) {
     agenteFiltro: params.get("agenteFiltro")?.trim() || "",
     telFiltro: params.get("telFiltro")?.trim() || "",
     paisFiltro: params.get("paisFiltro")?.trim() || "",
+    paisExacto: params.get('paisExacto') === 'true',
+    sortBy: params.get('sortBy') || '',
+    sortDirection: params.get('sortDirection') || 'asc',
     correoFiltro: params.get('correoFiltro')?.trim() || '',
     ...(params.has('limit') ? { limit: Math.min(100, Math.max(1, Number(params.get('limit')) || 25)), page: Math.max(1, Number(params.get('page')) || 1) } : {}),
   };
@@ -20,6 +23,7 @@ function getFilters(request) {
 
 export async function GET(request) {
   try {
+    if (new URL(request.url).searchParams.get('countriesOnly') === 'true') return NextResponse.json(await getCuentaCountries());
     if (new URL(request.url).searchParams.get('countOnly') === 'true') return NextResponse.json({ total: await getCuentasTotal() });
     const cuentas = await getCuentas(getFilters(request));
     return NextResponse.json(cuentas);

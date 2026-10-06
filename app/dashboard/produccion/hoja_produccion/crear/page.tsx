@@ -1,5 +1,6 @@
 "use client";
 
+import DateInputRow from "@/app/components/DateInputRow";
 import React, { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import MiddleNav from "@/app/general_components/componentes_recurrentes/MiddleNav";
@@ -31,11 +32,11 @@ function DateInputs({ label, value, onChange }: { label: string; value: any; onC
   return (
     <div className="space-y-1">
       <span className="text-sm font-medium">{label}</span>
-      <div className="flex gap-2">
+      <DateInputRow className="flex gap-2">
         <input value={value.dd || ""} onChange={(event) => update("dd", event.target.value.slice(0, 2))} placeholder="dd" className="w-16 rounded border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-950" />
         <input value={value.mm || ""} onChange={(event) => update("mm", event.target.value.slice(0, 2))} placeholder="mm" className="w-16 rounded border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-950" />
         <input value={value.yyyy || ""} onChange={(event) => update("yyyy", event.target.value.slice(0, 4))} placeholder="yyyy" className="w-24 rounded border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-950" />
-      </div>
+      </DateInputRow>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 'use client';
+import DateInputRow from "@/app/components/DateInputRow";
 import TableFilters from '@/app/components/TableFilters';
 
 import { ChangeEvent, useCallback, useEffect, useMemo, useState } from 'react';
@@ -93,11 +94,11 @@ function DatePartsInput({
   return (
     <label className="block">
       <span className="text-sm font-medium">{label}</span>
-      <div className="mt-1 flex gap-1">
+      <DateInputRow className="mt-1 flex gap-1">
         <input value={value.day} onChange={(event) => onChange(updateDateParts(value, 'day', event.target.value))} placeholder="dd" className="w-14 rounded border border-gray-300 px-2 py-2 text-sm" />
         <input value={value.month} onChange={(event) => onChange(updateDateParts(value, 'month', event.target.value))} placeholder="mm" className="w-14 rounded border border-gray-300 px-2 py-2 text-sm" />
         <input value={value.year} onChange={(event) => onChange(updateDateParts(value, 'year', event.target.value))} placeholder="yyyy" className="w-20 rounded border border-gray-300 px-2 py-2 text-sm" />
-      </div>
+      </DateInputRow>
     </label>
   );
 }
@@ -484,13 +485,13 @@ export default function TesoreriaPage() {
             </button>
             <span className="text-xs text-gray-500">{dateFilterMode === 'fecha' ? 'Cambiar a rango' : 'Cambiar a fecha'}</span>
           </div>
-          {dateFilterMode === 'fecha' ? <div className="flex gap-1">
+          {dateFilterMode === 'fecha' ? <DateInputRow className="flex gap-1">
             <input aria-label="Día" value={filterFecha.day} onChange={(event) => setFilterFecha((current) => updateDateParts(current, 'day', event.target.value))} placeholder="dd" className="w-14 rounded border border-gray-300 px-2 py-2 text-sm" />
             <input aria-label="Mes" value={filterFecha.month} onChange={(event) => setFilterFecha((current) => updateDateParts(current, 'month', event.target.value))} placeholder="mm" className="w-14 rounded border border-gray-300 px-2 py-2 text-sm" />
             <input aria-label="Año" value={filterFecha.year} onChange={(event) => setFilterFecha((current) => updateDateParts(current, 'year', event.target.value))} placeholder="yyyy" className="w-20 rounded border border-gray-300 px-2 py-2 text-sm" />
-          </div> : <div className="flex flex-wrap items-end gap-3">
-            <div><span className="mb-1 block text-xs text-gray-500">Desde</span><div className="flex gap-1"><input aria-label="Día desde" value={filterFecha.day} onChange={(event) => setFilterFecha((current) => updateDateParts(current, 'day', event.target.value))} placeholder="dd" className="w-12 rounded border border-gray-300 px-2 py-2 text-sm" /><input aria-label="Mes desde" value={filterFecha.month} onChange={(event) => setFilterFecha((current) => updateDateParts(current, 'month', event.target.value))} placeholder="mm" className="w-12 rounded border border-gray-300 px-2 py-2 text-sm" /><input aria-label="Año desde" value={filterFecha.year} onChange={(event) => setFilterFecha((current) => updateDateParts(current, 'year', event.target.value))} placeholder="yyyy" className="w-20 rounded border border-gray-300 px-2 py-2 text-sm" /></div></div>
-            <div><span className="mb-1 block text-xs text-gray-500">Hasta</span><div className="flex gap-1"><input aria-label="Día hasta" value={filterFechaHasta.day} onChange={(event) => setFilterFechaHasta((current) => updateDateParts(current, 'day', event.target.value))} placeholder="dd" className="w-12 rounded border border-gray-300 px-2 py-2 text-sm" /><input aria-label="Mes hasta" value={filterFechaHasta.month} onChange={(event) => setFilterFechaHasta((current) => updateDateParts(current, 'month', event.target.value))} placeholder="mm" className="w-12 rounded border border-gray-300 px-2 py-2 text-sm" /><input aria-label="Año hasta" value={filterFechaHasta.year} onChange={(event) => setFilterFechaHasta((current) => updateDateParts(current, 'year', event.target.value))} placeholder="yyyy" className="w-20 rounded border border-gray-300 px-2 py-2 text-sm" /></div></div>
+          </DateInputRow> : <div className="flex flex-wrap items-end gap-3">
+            <div><span className="mb-1 block text-xs text-gray-500">Desde</span><DateInputRow className="flex gap-1"><input aria-label="Día desde" value={filterFecha.day} onChange={(event) => setFilterFecha((current) => updateDateParts(current, 'day', event.target.value))} placeholder="dd" className="w-12 rounded border border-gray-300 px-2 py-2 text-sm" /><input aria-label="Mes desde" value={filterFecha.month} onChange={(event) => setFilterFecha((current) => updateDateParts(current, 'month', event.target.value))} placeholder="mm" className="w-12 rounded border border-gray-300 px-2 py-2 text-sm" /><input aria-label="Año desde" value={filterFecha.year} onChange={(event) => setFilterFecha((current) => updateDateParts(current, 'year', event.target.value))} placeholder="yyyy" className="w-20 rounded border border-gray-300 px-2 py-2 text-sm" /></DateInputRow></div>
+            <div><span className="mb-1 block text-xs text-gray-500">Hasta</span><DateInputRow className="flex gap-1"><input aria-label="Día hasta" value={filterFechaHasta.day} onChange={(event) => setFilterFechaHasta((current) => updateDateParts(current, 'day', event.target.value))} placeholder="dd" className="w-12 rounded border border-gray-300 px-2 py-2 text-sm" /><input aria-label="Mes hasta" value={filterFechaHasta.month} onChange={(event) => setFilterFechaHasta((current) => updateDateParts(current, 'month', event.target.value))} placeholder="mm" className="w-12 rounded border border-gray-300 px-2 py-2 text-sm" /><input aria-label="Año hasta" value={filterFechaHasta.year} onChange={(event) => setFilterFechaHasta((current) => updateDateParts(current, 'year', event.target.value))} placeholder="yyyy" className="w-20 rounded border border-gray-300 px-2 py-2 text-sm" /></DateInputRow></div>
           </div>}
         </div>
         <label className="flex flex-col text-xs font-extralight text-gray-700">Tipo<select value={filterTipo} onChange={(event) => setFilterTipo(event.target.value)} className="mt-2 cursor-pointer rounded border border-gray-300 px-3 py-2 text-sm font-normal transition hover:border-blue-950"><option value="">Ingresos y gastos</option><option value="ingreso">Ingresos</option><option value="cargo">Gastos</option></select></label>

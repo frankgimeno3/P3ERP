@@ -1,5 +1,7 @@
 "use client";
 
+import { isCommercialAgent } from "@/app/config/commercialAgents";
+
 const copy = {
   es: {
     proposal: "Propuesta de servicios publicitarios",
@@ -378,7 +380,7 @@ export default function PropuestaPreview({
                   className="w-full cursor-pointer rounded border bg-white p-3"
                 >
                   <option value="">Selecciona agente</option>
-                  {agentes.map((agent) => (
+                  {agentes.filter(isCommercialAgent).map((agent) => (
                     <option key={agent.id_agente} value={agent.id_agente}>
                       {agent.nombre_completo_agente ||
                         agent.nombre_agente ||

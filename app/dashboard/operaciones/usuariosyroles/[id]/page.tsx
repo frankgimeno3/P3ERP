@@ -31,7 +31,7 @@ interface Role {
 
 
 const ESTADOS = ["activo", "inactivo", "bloqueado"];
-const ROLE_ORDER = ["base", "administracion", "operaciones", "superadmin"];
+const ROLE_ORDER = ["base", "comercial", "administracion", "operaciones", "direccion", "superadmin"];
 
 function getNombreAgente(agente: Agente | null) {
   if (!agente) return "-";

@@ -6,6 +6,7 @@ import { canAccessApiPath, canAccessDashboardPath, normalizeRole } from "./app/c
 
 import {loginUrl,loginDestination} from "./app/config/loginRedirect.js";
 import {managesTasks} from './server/features/laboral/TaskAccess.js';
+import {canManageAccountTasks} from './app/config/accountTasks.js';
 
 let jwks;
 
@@ -96,8 +97,11 @@ export async function middleware(request) {
     if (isApi && !canAccessApiPath(role, pathname, request.method)) return forbidden();
     const personalTask = pathname.match(/^\/tareas\/([^/]+)\/?$/);
     if(personalTask&&!managesTasks(role)){
-      const task=await pool.query('SELECT agente FROM laboral_tareas_empleado WHERE id=$1',[decodeURIComponent(personalTask[1])]);
-      if(!rows[0]?.id_agente||task.rows[0]?.agente!==rows[0].id_agente)return NextResponse.redirect(new URL('/',request.url));
+      const taskId=decodeURIComponent(personalTask[1]);
+      const task=taskId.startsWith('cta_')
+        ? await pool.query('SELECT t.id FROM comercial_cuenta_tareas t WHERE t.id=$1 AND ($3::boolean OR EXISTS(SELECT 1 FROM comercial_cuenta_tarea_agentes a WHERE a.id_tarea=t.id AND a.id_agente=$2))',[taskId,rows[0]?.id_agente||'',canManageAccountTasks(role)])
+        : await pool.query('SELECT id FROM laboral_tareas_empleado WHERE id=$1 AND agente=$2',[taskId,rows[0]?.id_agente||'']);
+      if(!rows[0]?.id_agente||!task.rowCount)return NextResponse.redirect(new URL('/',request.url));
     }
     const authenticatedHeaders = new Headers(request.headers);
     authenticatedHeaders.set('x-p3-actor-id', rows[0]?.id_agente || '');

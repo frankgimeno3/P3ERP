@@ -1,4 +1,6 @@
 "use client";
+import { matchesTableFilter } from "@/app/lib/dateFilters";
+import TableFilterInput from "@/app/components/TableFilterInput";
 import TableFilters from '@/app/components/TableFilters';
 
 import React, { FC, useEffect, useState } from "react";
@@ -88,7 +90,7 @@ const Materiales: FC = () => {
     const isPublished = estado.includes("publicad");
     if (!showPublished && isPublished) return false;
     if (!showOutOfContract && !hasContrato) return false;
-    return columns.every(([field]) => !filters[field]?.trim() || String(contenido[field] ?? "").toLowerCase().includes(filters[field].trim().toLowerCase()));
+    return columns.every(([field]) => !filters[field]?.trim() || matchesTableFilter(String(contenido[field] ?? "").toLowerCase(), filters[field].trim().toLowerCase()));
   });
 
   return (
@@ -132,7 +134,7 @@ const Materiales: FC = () => {
                       {[...new Set(contenidos.map((contenido) => String(contenido[field] || "")).filter(Boolean))].sort().map((value) => <option key={value} value={value}>{value}</option>)}
                     </select>
                   ) : (
-                    <input value={filters[field] || ""} onChange={(event) => setFilters({ ...filters, [field]: event.target.value })} className="w-full rounded border border-gray-300 px-3 py-2 text-[13px] outline-none focus:border-blue-950" />
+                    <TableFilterInput label={label} field={field} value={filters[field] || ""} className="w-full rounded border border-gray-300 px-3 py-2 text-[13px] outline-none focus:border-blue-950" onChange={nextValue => setFilters({ ...filters, [field]: nextValue })} />
                   )}
                 </label>
               ))}

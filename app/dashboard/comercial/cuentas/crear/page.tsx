@@ -1,5 +1,6 @@
 "use client";
 
+import { isCommercialAgent } from "@/app/config/commercialAgents";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import MiddleNav from "@/app/general_components/componentes_recurrentes/MiddleNav";
@@ -186,7 +187,7 @@ export default function CrearCuenta() {
                   <span className="mb-1 block font-medium">Agente <span className="text-red-600">*</span></span>
                   <select value={form.id_agente} onChange={(event) => update({ id_agente: event.target.value })} className="w-full rounded border border-gray-300 bg-white px-3 py-3 text-sm hover:border-blue-950">
                     <option value="">Seleccionar agente</option>
-                    {agentes.map((agente) => (
+                    {agentes.filter(isCommercialAgent).map((agente) => (
                       <option key={agente.id_agente} value={agente.id_agente}>
                         {agente.nombre_completo_agente || agente.id_agente}{agente.rol_agente ? ` (${agente.rol_agente})` : ""}
                       </option>

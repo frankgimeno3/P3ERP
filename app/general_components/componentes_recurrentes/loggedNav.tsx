@@ -1,5 +1,6 @@
 import { useCurrentUser, clearCurrentUser } from '@/app/lib/currentUser';
 import { useRouter, usePathname } from "next/navigation";
+import { MousePointer2 } from 'lucide-react';
 import Link from "next/link";
 import AuthenticationService from "@/app/service/AuthenticationService";
 
@@ -44,14 +45,19 @@ const LoggedNav = () => {
 
   return (
     <nav className="relative flex flex-row items-center justify-between bg-gradient-to-r from-gray-950 via-gray-900 to-gray-950 px-4 py-3 text-gray-200 uppercase md:px-6 md:py-3.5">
-      <div className="flex flex-col text-left">
+      <div className="flex items-center gap-3 text-left">
+        <Link href="/dashboard" aria-label="Ir al inicio del portal" className="group flex shrink-0 cursor-pointer items-center justify-center rounded p-2 hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white">
+          <MousePointer2 aria-hidden="true" size={38} strokeWidth={1.5} className="fill-transparent text-white transition-[fill] duration-700 ease-in-out group-hover:fill-white group-focus-visible:fill-white motion-reduce:transition-none" />
+        </Link>
+        <div className="flex flex-col">
         <p
           className="cursor-pointer text-xl font-normal text-gray-100 hover:text-white md:text-2xl"
           onClick={() => handleRedirection('/dashboard')}
         >
-          Portal de gestión PROPORCIÓN 3, S.A.
+          Portal de gestión PROPORCIÓN 3
         </p>
         <p className="text-sm font-normal text-gray-300">{description}</p>
+        </div>
       </div>
       <div className="flex flex-row items-center gap-2 text-sm uppercase md:gap-3 md:text-base">
         <Link

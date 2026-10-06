@@ -2,6 +2,7 @@
   "/dashboard/direccion/laboral/nominas": {
     "summary": "Consulta la ficha única de nómina de cada empleado o ex-empleado, sus pagos mensuales, anticipos y cargos recurrentes cuando existan.",
     "steps": [
+      "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "Nóminas muestra una ficha por empleado con nóminas, anticipos registrados o cargos recurrentes. Los ex-empleados conservan su histórico sin necesidad de recurrencia. Establecer nómina recurrente crea una previsión futura; un concepto bancario sin asociación no crea una nómina.",
       "Abre la ficha para ver sus cargos recurrentes, modificar su programación desde el enlace y consultar todos los registros bancarios asociados. Cada movimiento enlaza a su revisión bancaria.",
       "Las liquidaciones mensuales se conservan dentro de la ficha, con sus anticipos y transferencias. Los anticipos confirmados en la revisión bancaria aparecen como Anticipo en los movimientos, en el apartado de anticipos del empleado y en la pestaña Anticipos del listado general. Volver a revisar no duplica el anticipo.",
@@ -12,6 +13,7 @@
   "/dashboard/direccion/laboral/calendario-laboral": {
     "summary": "Configura un calendario por año con vacaciones, festivos y eventos editoriales.",
     "steps": [
+      "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "Agrega un año y abre su fila para configurar el calendario. El modal mantiene el foco mientras escribes y se cierra con × o Escape.",
       "Introduce vacaciones, festivos nacionales, autonómicos, de Barcelona y de convenio. Puedes registrar días sueltos o periodos dentro del año, con título y comentarios. Las vacaciones se guardan como tramos de lunes a viernes: los sábados y domingos quedan excluidos, y un rango que solo contiene fin de semana se rechaza. Los otros tipos de evento conservan sus fechas.",
       "Los elementos se reflejan en los doce meses del calendario inferior. Pulsa cualquier día para agregar un deadline de revista, publicación de revista o feria.",
@@ -22,6 +24,7 @@
   "/dashboard/direccion/laboral/contratacion": {
     "summary": "Organiza procesos de contratación, textos de oferta y comunicaciones y seguimiento de candidatos.",
     "steps": [
+      "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "Crea un proceso y abre su fila para completar la oferta y condiciones y los mensajes pre-llamada, post-llamada y de rechazo. El modal de agregar mantiene el foco al escribir y se cierra con × o Escape.",
       "Agrega candidatos con nombre, resumen CV y comentarios.",
       "Edita su estado: pendiente llamada, rechazado en llamada, pendiente reunión presencial, rechazado en reunión presencial, elegido o reserva. Puedes filtrar la tabla por estado. Los filtros de cada tabla se muestran juntos en una tarjeta Filtros inicialmente cerrada, con una etiqueta fina encima de cada campo. Cerrarla conserva los filtros aplicados."
@@ -30,16 +33,20 @@
   "/dashboard/comercial/cuentas": {
     "summary": "Consulta y administra la cartera de cuentas de cliente. El total de cuentas se muestra al entrar y no cambia al aplicar filtros.",
     "steps": [
+      "Pulsa la cabecera de cualquier columna para ordenar todo el listado de forma ascendente; vuelve a pulsarla para invertir el orden. El icono indica la dirección activa y la ordenación vuelve a la primera página. En el filtro País, escribe para buscar opciones y selecciona un país para aplicar el filtro; Todos los países lo elimina.",
+      "Los selectores de agentes permiten Comercial, Dirección, Administración, Operaciones y Superadmin; los agentes Base no pueden seleccionarse.",
       "La tabla distingue el ID cuenta (Tiger) del Código Edisoft, utilizado para identificar cuentas en los Excel administrativos. Todos los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen juntos, con etiquetas finas encima de cada campo; cerrarla conserva los filtros aplicados. combina los filtros para localizar una cuenta.",
       "Abre una fila para consultar su ficha, contactos, propuestas, comentarios y actividad.",
       "Pulsa Nueva cuenta para iniciar el alta guiada.",
       "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados.",
-      "La tabla consulta solo la pagina actual y el total del servidor. Los filtros se combinan y las respuestas de consultas anteriores se descartan."
+      "La tabla consulta solo la pagina actual y el total del servidor. Los filtros se combinan y las respuestas de consultas anteriores se descartan.",
+      "Abre una cuenta y entra en Tareas para gestionar sus acciones y responsables."
     ]
   },
   "/dashboard/comercial/contactos": {
     "summary": "Gestiona las personas de contacto asociadas a las cuentas. El total de contactos se muestra al entrar y no cambia al aplicar filtros.",
     "steps": [
+      "El agente se gestiona en la cuenta vinculada al contacto. Solo pueden seleccionarse agentes con rol Comercial, Dirección, Administración, Operaciones o Superadmin; los agentes Base quedan excluidos.",
       "Filtra la lista por los datos conocidos.",
       "Abre un contacto para revisar o modificar su ficha y eventos.",
       "Usa el alta de contacto para registrar una nueva persona y vincularla a una cuenta.",
@@ -50,6 +57,8 @@
   "/dashboard/comercial/propuestas": {
     "summary": "Crea y realiza el seguimiento de propuestas comerciales.",
     "steps": [
+      "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
+      "Los selectores de agentes permiten Comercial, Dirección, Administración, Operaciones y Superadmin; los agentes Base no pueden seleccionarse.",
       "Cambia entre las vistas de propuestas pendientes y el listado completo.",
       "Abre una propuesta para consultar su contenido, estado y seguimiento.",
       "Crea, edita, replica o actualiza la propuesta según el flujo comercial.",
@@ -64,6 +73,8 @@
   "/dashboard/comercial/contratos": {
     "summary": "Consulta contratos y crea nuevos contratos directamente desde Comercial.",
     "steps": [
+      "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
+      "Los selectores de agentes permiten Comercial, Dirección, Administración, Operaciones y Superadmin; los agentes Base no pueden seleccionarse.",
       "Crear contrato solo est? disponible para Administraci?n, Operaciones y Direcci?n. En la ficha se puede cambiar el contacto de la cuenta, iniciar una factura y reemplazar ?rdenes pendientes: las pagadas quedan bloqueadas y las nuevas deben sumar el mismo total.",
       "Pulsa Agregar contrato para introducir cuenta, servicios, cobros y fechas; el alta crea contrato, órdenes, recibos y contenidos de producción. No crea facturas automáticamente.",
       "Localiza el cliente o contrato en el listado. Se muestran como máximo 50 contratos por página; usa Anterior y Siguiente para navegar. Al cambiar filtros o pestaña vuelves a la primera página.",
@@ -86,6 +97,7 @@
   "/dashboard/produccion/hoja_produccion": {
     "summary": "Muestra la hoja de producción con pestañas 2026 y Anteriores, conservando la estructura de contenidos, anuncios, artículos y publicación.",
     "steps": [
+      "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "Despliega Filtros, cerrado inicialmente, para buscar por los campos de la hoja. La tabla no muestra Código CRM, Publicación / Nº web, Factura ni Comentarios.",
       "Usa los controles para incluir publicados o contenidos fuera de contrato.",
       "El cliente se muestra con el nombre actual de su cuenta vinculada, aunque el Excel original usase otro nombre. El agente es quien sigue ese contenido para obtener materiales y puede ser distinto del agente comercial del contrato.",
@@ -96,6 +108,7 @@
   "/dashboard/produccion/revistas": {
     "summary": "Consulta revistas pendientes y el calendario de publicación, materiales y recordatorios.",
     "steps": [
+      "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "En Pendientes el orden es Vidrio Plano, Ventanas, Quién es Quién y el resto. Estas tres revistas tienen subpestañas de edición; no se repite la columna ni el filtro de edición. Número es la primera columna. Un solo desplegable Filtros, inicialmente cerrado, muestra los filtros compactos de las columnas visibles.",
       "Usa Agregar revista para crear una edicion y establece si esta publicada o pendiente de publicar.",
       "Cambia el estado de una revista desde la tabla; las pendientes son las disponibles al elegir detalle de publicación en propuestas.",
@@ -105,6 +118,7 @@
   "/dashboard/produccion/contenidos": {
     "summary": "Consulta contenidos de producción por revista o en un listado completo.",
     "steps": [
+      "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "Filtrar por revista muestra primero el número, seguido de revista, región y sector, y permite abrir sus anuncios y artículos.",
       "Todos los contenidos muestra los registros de producción; abre la tarjeta Filtros y pulsa una fila para entrar en el detalle del contenido."
     ]
@@ -112,12 +126,14 @@
   "/dashboard/produccion/contenidos/[id]": {
     "summary": "Detalle de un contenido de producción y sus materiales.",
     "steps": [
+      "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "Edita especificaciones, Publicación / Nº web, agente por nombre, fecha límite con día, mes y año separados y estado; pulsa Guardar cambios. Agregar materiales permite subir un archivo vinculado al contenido."
     ]
   },
   "/dashboard/produccion/contenidos/revistas/[id_revista]": {
     "summary": "Revisa los materiales de la revista y organiza su planillo previo por bloques de contenido.",
     "steps": [
+      "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "Alterna Anuncios y Artículos; cada pestaña separa no revisados, incidencias, OK producción y no recibidos.",
       "Despliega un contenido para ver sus archivos, fecha de aportación, estado y comentarios de producción.",
       "Abre el contenido para agregar materiales desde su carpeta de revista.",
@@ -136,6 +152,7 @@
   "/dashboard/administracion/ferias": {
     "summary": "Separa el catálogo de ferias de sus ediciones concretas.",
     "steps": [
+      "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "Al crear una edición, elige Intercambio en un selector Sí/No de la primera fila y escribe inicio y finalización en tres campos: día, mes y año.",
       "En ediciones, el filtro Pa?s usa el pa?s de la feria del cat?logo; Intercambio se elige con S?/No y las fechas se introducen por d?a, mes y a?o.",
       "Usa las pestañas Ediciones relevantes pendientes, Otras pendientes, Ediciones pasadas y Ferias.",
@@ -147,12 +164,14 @@
   "/dashboard/administracion/ferias/catalogo/[id]": {
     "summary": "Muestra los datos generales de una feria del catálogo.",
     "steps": [
+      "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "Consulta país, periodicidad, temática y descripción. Las ediciones de esa feria tienen sus propias fechas y apartados de gestión."
     ]
   },
   "/dashboard/administracion/control-administrativo": {
     "summary": "Supervisa órdenes y operaciones pendientes de control administrativo.",
     "steps": [
+      "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "Los filtros incluyen estado de cobro, fecha de cobro y base imponible. Agregar contrato abre la creaci?n manual de contratos.",
       "Órdenes muestra las vigentes cuyo código empieza por C y los dos últimos dígitos del año actual (por ejemplo, C26 en 2026). Órdenes años anteriores reúne todos los demás códigos, incluidas sus canceladas. Canceladas muestra las canceladas del año actual. Los contadores siguen el mismo criterio; utiliza los filtros para encontrar una orden.",
       "Abre el detalle para revisar datos comerciales y administrativos.",
@@ -172,6 +191,7 @@
   "/dashboard/administracion/facturas-clientes": {
     "summary": "Gestiona facturas de clientes y su cumplimiento Verifactu.",
     "steps": [
+      "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "Consulta o filtra las facturas existentes.",
       "La ficha abre en Datos, con la edición habitual. Vista de documento muestra los datos guardados con el formato A4 de Proporción 3: cliente, conceptos, impuestos, total y vencimientos. Guarda los cambios en Datos para actualizar la vista. Los precios unitarios sin desglose y los datos fiscales ausentes no se inventan; abrir la vista no emite la factura.",
       "Crea una factura desde contratos y revisa impuestos, importes y destinatario.",
@@ -185,8 +205,9 @@
     ]
   },
   "/dashboard/administracion/pendiente-cobro": {
-    "summary": "Controla importes facturados que todavía están pendientes de cobro.",
+    "summary": "Consulta las órdenes reales de Control administrativo con importe pendiente de cobro.",
     "steps": [
+      "La conciliación del ingreso bancario vinculado a la orden confirma su cobro y la retira de este listado. Deshacer la revisión vuelve a dejarla pendiente. Los gastos de proveedores no liquidan órdenes de cobro de clientes. La página carga las órdenes reales al entrar o recargarla y se actualiza al volver a la pestaña. Las fechas se filtran mediante tres campos dd / mm / yyyy con separadores fijos.",
       "Filtra por cliente, vencimiento o estado.",
       "Revisa los importes y fechas de cada factura.",
       "Registra o comprueba el cobro cuando se produzca.",
@@ -206,6 +227,7 @@
   "/dashboard/administracion/proveedores": {
     "summary": "Consulta proveedores sin identificadores técnicos en la tabla, con todos los filtros en una tarjeta desplegable inicialmente cerrada. El botón Crear proveedor está arriba a la derecha y abre el alta en tres fases. Las fichas se abren en la pestaña Datos.",
     "steps": [
+      "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "Abre la tarjeta Filtros para filtrar por proveedor, nombre fiscal, VAT, país, moneda, pagos, total o último pago. Los filtros se combinan y se mantienen al cerrar el desplegable.",
       "En Cargos Pendientes, la tabla reúne pagos pendientes y programaciones recurrentes, distinguiendo su estado y fecha o periodicidad. Todos los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen juntos, con etiquetas finas encima de cada campo; cerrarla conserva los filtros aplicados. Pulsa Editar en el resumen de cargos recurrentes o su concepto en la tabla para abrir el modal; al guardar se actualizan ambos lugares.",
       "Pulsa Crear proveedor: introduce un nombre obligatorio y revisa coincidencias; después comprueba el código fiscal o pulsa No lo sé, saltar. En la tercera fase completa el nombre fiscal, selecciona obligatoriamente un país del catálogo mundial y escribe la moneda. El país usa un único campo desplegable: al pulsarlo aparecen opciones y al escribir se filtran; selecciona una opción. El identificador y las fechas de registro son automáticos.",
@@ -222,6 +244,7 @@
   "/dashboard/administracion/facturas-proveedores": {
     "summary": "Registra y consulta facturas recibidas de proveedores.",
     "steps": [
+      "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "Filtra el listado para localizar una factura.",
       "Pulsa Agregar para registrar una nueva factura con sus importes y vencimientos. También puedes iniciar el alta desde Facturas en la ficha del proveedor, que aparece preseleccionado.",
       "Abre el detalle para revisar o completar la contabilización.",
@@ -232,6 +255,7 @@
   "/dashboard/administracion/proveedores/tickets": {
     "summary": "Registra tickets y justificantes de gastos de proveedor.",
     "steps": [
+      "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "Consulta los tickets P3 y GM ya registrados. El pago con tarjeta enlaza con su ficha de Administración > Tarjetas.",
       "Al añadir un ticket, elige proveedor, fecha, importes, efectivo o una tarjeta activa, y adjunta PDF, JPG o PNG de hasta 15 MB. El ticket queda asociado a esa tarjeta. Si corresponde a una suscripción prevista, vincúlalo a su vencimiento en la pestaña Tickets de la tarjeta para evitar contar ambos importes.",
       "Pulsa Añadir para introducir un nuevo justificante. Desde Tickets en la ficha del proveedor puedes iniciar el mismo formulario con el proveedor preseleccionado.",
@@ -242,6 +266,7 @@
   "/dashboard/administracion/tarjetas": {
     "summary": "Gestiona tarjetas, sus tickets, suscripciones y liquidaciones bancarias.",
     "steps": [
+      "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "Crea una tarjeta con código único, nombre, últimos cuatro dígitos, banco Sabadell o Santander, tipo, estado y descripción. Se conservan las tarjetas registradas anteriormente; configura su calendario antes de liquidarlas.",
       "Indica la periodicidad en meses, inicio del período abierto, próximo cierre y fecha del cargo bancario mediante dd, mm y yyyy. Los ciclos siguientes conservan los días elegidos y usan el último día en meses más cortos. Tras liquidar, el calendario y el banco quedan protegidos.",
       "La ficha muestra sus datos y cuatro pestañas: Tickets, Cargos recurrentes (suscripciones), Liquidaciones anteriores y Próxima liquidación.",
@@ -279,6 +304,7 @@
   "/dashboard/operaciones/agentes/roles": {
     "summary": "Define roles y permisos desde Dirección, Laboral, Agentes, mediante el botón Administrar roles; esta página no aparece por separado en el menú lateral.",
     "steps": [
+      "El rol Comercial se sitúa entre Base y Administración y permite seleccionar al agente en la gestión comercial.",
       "Abre un rol existente o crea uno nuevo.",
       "Activa únicamente los accesos requeridos.",
       "Guarda y comprueba el efecto con un agente que tenga ese rol."
@@ -295,6 +321,7 @@
   "/dashboard/direccion/tesoreria": {
     "summary": "En Tesorería puedes importar, ordenar y revisar los movimientos de las cuentas bancarias de la empresa.",
     "steps": [
+      "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "Pulsa Añadir extracto, selecciona Santander o Sabadell e indica expresamente si el archivo tiene cabezal. Sin cabezal exige la tabla en la primera fila; con cabezal localiza la tabla después de los datos informativos de la cuenta.",
       "La aplicación detecta el sentido cronológico y compara las coincidencias exactas de cada movimiento para reconocer movimientos registrados e intercalar los ausentes con identificadores ordinales. En la fase de confirmación se muestra el rango de fechas operativas del archivo y la última fecha registrada para ese banco. Si hay movimientos anteriores, puedes marcar Omitir anteriores: se excluyen de la subida y se recalcula el total; los del mismo día se conservan y siguen pasando por la comparación de movimientos. La importación conserva los identificadores y todos los vínculos existentes con nóminas, anticipos y pagos. Solo inserta movimientos nuevos, con el siguiente identificador disponible por banco y año, aunque su fecha sea anterior. Cada coincidencia exacta consume una sola aparición, independientemente del orden del archivo. Si quedan cero movimientos nuevos, Finalizar sin subir cierra el asistente sin importar nada. El aviso distingue los movimientos comprobados de los omitidos; desmarca Omitir para comprobar los anteriores.",
       "Cambia entre las pestañas Sabadell y Santander y filtra, en este orden, por fecha, concepto, importe y estado. El interruptor de fecha permite usar una fecha concreta o un rango Desde/Hasta.",
@@ -304,6 +331,7 @@
   "/dashboard/direccion/tesoreria/extractos": {
     "summary": "Importa y consulta los extractos de Sabadell y Santander.",
     "steps": [
+      "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "Cambia entre las pestañas Sabadell y Santander y abre, cuando lo necesites, el filtro inicialmente oculto de dos filas para buscar por fecha, tipo, concepto, importe, estado o asociación.",
       "Pulsa Añadir extracto, elige banco y formato con o sin cabezal, y confirma las líneas nuevas detectadas. En la fase de confirmación se muestra el rango de fechas operativas del archivo y la última fecha registrada para ese banco. Si hay movimientos anteriores, puedes marcar Omitir anteriores: se excluyen de la subida y se recalcula el total; los del mismo día se conservan y siguen pasando por la comparación de movimientos. La importación conserva los identificadores y todos los vínculos existentes con nóminas, anticipos y pagos. Solo inserta movimientos nuevos, con el siguiente identificador disponible por banco y año, aunque su fecha sea anterior. Cada coincidencia exacta consume una sola aparición, independientemente del orden del archivo. Si quedan cero movimientos nuevos, Finalizar sin subir cierra el asistente sin importar nada. El aviso distingue los movimientos comprobados de los omitidos; desmarca Omitir para comprobar los anteriores.",
       "Pulsa el concepto para abrir el asistente de revisión o usa Conciliación para trabajar en bloque.",
@@ -313,6 +341,7 @@
   "/dashboard/direccion/tesoreria/extractos/conciliacion": {
     "summary": "Revisa, asigna y concilia líneas bancarias individualmente o en bloque.",
     "steps": [
+      "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "En Identificar cobros puedes a?adir una o varias ?rdenes de transferencia del mismo cliente. Cada orden aparece con su importe y permite retirarla con ?. El total seleccionado debe coincidir exactamente con el ingreso; al confirmar se actualizan todas sus ?rdenes y facturas, sin duplicar el abono bancario.",
       "Liquidación tarjeta aparece al seleccionar líneas. Selecciona cargos sin revisar ni asignar del banco de la tarjeta y pertenecientes a una misma liquidación. Revisa la previsión actual, explica cualquier diferencia y confirma: se guarda el histórico y se abre el siguiente período de la tarjeta.",
       "La ficha y el modal comienzan preguntando cómo quieres revisar: revisión completa o directa. La directa se confirma allí con un comentario. La completa adapta sus fases al caso: ingresos tiene tres (Avisos y comparación, Identificar cobros, Revisión final); proveedores y otros cargos tienen cuatro (Avisos y comparación, Asignado a, Cargo previsto e importes, Revisión final); nóminas tiene cinco (Avisos y comparación, Asignado a, Previsión de nómina, Liquidación de nóminas, Revisión final). Para cargos asignados a clientes se muestra Orden de cobro en lugar de Cargo previsto e importes. La navegación muestra el número y el nombre de cada fase, permite volver atrás y guarda únicamente al confirmar la revisión final.",
@@ -357,6 +386,7 @@
   "/dashboard/direccion/tesoreria/prevision-liquidez": {
     "summary": "Una previsión de liquidez compartida con la Vista Juan.",
     "steps": [
+      "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "Vista Juan · Excel editable, en la parte superior, abre una presentación alternativa de los mismos datos. No hay escenarios independientes ni botón Actualizar previsión. Los cambios propios actualizan la página al guardarse; para ver cambios externos, recarga.",
       "Elige la fecha con día, mes y año separados. El resumen corresponde al cierre del mes elegido; los ingresos y cargos muestran previsto, realizado y pendiente. Todos los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen juntos, con etiquetas finas encima de cada campo; cerrarla conserva los filtros aplicados.",
       "Añadir ingreso o gasto abre el mismo asistente que el + de la hoja. Pulsa el concepto para consultar los cargos recurrentes asociados, sus proveedores o empleados y sus vencimientos. Editar un importe modifica el mismo vencimiento en ambas vistas; retirar conserva el histórico.",
@@ -372,6 +402,7 @@
   "/dashboard/direccion/tesoreria/prevision-ingresos": {
     "summary": "Reúne órdenes de cobro e ingresos adicionales previstos.",
     "steps": [
+      "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "Todos es la pestaña inicial y reúne recibos y transferencias. Puedes cambiar a Recibos, Transfers o Remesas; cada remesa aparece una sola vez.",
       "Debajo de las pestañas, la tarjeta Filtros empieza cerrada y reúne todos los campos con etiquetas finas encima. Los filtros se combinan; las fechas tienen dd, mm y yyyy separados. Limpiar filtros restablece la tabla y cambiar de pestaña reinicia los filtros.",
       "Agregar ingreso sin contrato solo aparece en Todos y abre el asistente de ingresos adicionales.",
@@ -388,6 +419,7 @@
   "/dashboard/direccion/tesoreria/prevision-cargos": {
     "summary": "Gestiona cargos recurrentes previstos y cargos bancarios pendientes de asociar.",
     "steps": [
+      "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "Alterna entre Cargos previstos registrados y Cargos pendientes de asociar.",
       "Filtra por tipo Proveedor o Nómina, base imponible, importe total o neto, proveedor o empleado, fecha y descripción.",
       "Al agregar un cargo elige Proveedor para buscar el proveedor o dejarlo sin asignar, o Nómina para seleccionar un empleado e indicar su importe neto. Programa fechas con dd, mm y yyyy separados o una periodicidad, con una o varias reglas. No se permite duplicar un cargo previsto activo del mismo empleado. El interruptor Con IVA calcula la base automáticamente como total / 1,21 y Sin IVA como el total. El mismo formulario se usa desde proveedores y revisión bancaria.",
@@ -431,6 +463,7 @@
   "/dashboard/direccion/previsiones/prevision-liquidez": {
     "summary": "Una previsión de liquidez compartida con la Vista Juan.",
     "steps": [
+      "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "Vista Juan · Excel editable, en la parte superior, abre una presentación alternativa de los mismos datos. No hay escenarios independientes ni botón Actualizar previsión. Los cambios propios actualizan la página al guardarse; para ver cambios externos, recarga.",
       "Elige la fecha con día, mes y año separados. El resumen corresponde al cierre del mes elegido; los ingresos y cargos muestran previsto, realizado y pendiente. Todos los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen juntos, con etiquetas finas encima de cada campo; cerrarla conserva los filtros aplicados.",
       "Añadir ingreso o gasto abre el mismo asistente que el + de la hoja. Pulsa el concepto para consultar los cargos recurrentes asociados, sus proveedores o empleados y sus vencimientos. Editar un importe modifica el mismo vencimiento en ambas vistas; retirar conserva el histórico.",
@@ -445,6 +478,7 @@
   "/dashboard/direccion/previsiones/prevision-ingresos": {
     "summary": "Reúne cobros contractuales e ingresos adicionales previstos.",
     "steps": [
+      "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "Todos es la pestaña inicial y reúne recibos y transferencias. Puedes cambiar a Recibos, Transfers o Remesas; cada remesa aparece una sola vez.",
       "Debajo de las pestañas, la tarjeta Filtros empieza cerrada y reúne todos los campos con etiquetas finas encima. Los filtros se combinan; las fechas tienen dd, mm y yyyy separados. Limpiar filtros restablece la tabla y cambiar de pestaña reinicia los filtros.",
       "Agregar ingreso sin contrato solo aparece en Todos y abre el asistente de ingresos adicionales.",
@@ -462,6 +496,7 @@
   "/dashboard/direccion/previsiones/prevision-gastos": {
     "summary": "Gestiona los pagos previstos y los gastos que todavía necesitan asociarse.",
     "steps": [
+      "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "Cambia entre Gastos previstos registrados y Gastos pendientes de asociar; estos últimos son pagos sin proveedor.",
       "Crea un registro por cada pago o vencimiento y selecciona proveedor, fecha, forma —recibo, transferencia o pagaré—, banco —Sabadell o Santander— e importes.",
       "Pulsa cualquier fila para abrir su ficha, asociar un proveedor o modificar los datos del pago.",
@@ -491,6 +526,7 @@
   "/dashboard/administracion/facturas-clientes/crear": {
     "summary": "Prepara una factura a partir del contrato y sus órdenes de cobro.",
     "steps": [
+      "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "El origen de la factura puede ser un contrato o una sola orden. La selecci?n se hace en una tabla con filtros por columna. La opci?n inicial deja la factura previa para emitir VeriFactu despu?s; al elegir rellenarlo ahora se solicitan los datos del emisor y se emite al finalizar.",
       "Al aceptar una propuesta se crean el contrato y las órdenes de Control administrativo, sin factura automática. La factura se crea cuando el usuario lo solicita.",
       "Guardar los datos de pago actualiza las órdenes existentes con importe, vencimiento, forma de cobro y banco, conservando sus identificadores. La base se reparte según los impuestos de la factura. Recibo genera o actualiza su recibo; al cambiar a transferencia se retira el recibo que no tenga remesa. Los cobros confirmados o remesados requieren resolver antes sus asociaciones.",
@@ -512,6 +548,7 @@
   "/dashboard/administracion/control-administrativo/nuevo-contrato": {
     "summary": "Crea un contrato independiente, sin propuesta ni factura previa.",
     "steps": [
+      "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "Selecciona una cuenta real y, opcionalmente, agente y contacto de esa cuenta. Introduce nombre, fechas y comentarios.",
       "Añade servicios con unidades, precio e IVA y distribuye el total entre órdenes con fecha, forma de cobro y banco.",
       "Revisa los datos y confirma una sola vez. Se guardan contrato, servicios, cobros y órdenes en una transacción, con comentario en la cuenta; no se crea una factura.",
@@ -524,6 +561,7 @@
   "/dashboard/administracion/control-administrativo/importacion-masiva": {
     "summary": "Importa contratos, facturas u órdenes con formato explícito y revisión previa.",
     "steps": [
+      "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "Elige tipo, un registro o varios, y política para identificadores existentes: actualizar campos con valor, omitir o resolver por fila.",
       "Consulta los nombres exactos de columnas y descarga la plantilla. Una fila por registro en la primera hoja; .xlsx o .xls, hasta 10 MB y 5.000 filas. Las asociaciones usan IDs existentes; las fechas admiten dd/mm/yyyy o fechas Excel.",
       "Sube y valida sin escribir en la base de datos. Las tarjetas desplegables muestran errores y valores anteriores/nuevos. Corrige el archivo o decide actualizar o saltar cada fila y vuelve a validar.",
@@ -573,6 +611,8 @@
   "/dashboard/comercial/propuestas/crear": {
     "summary": "Buscar y seleccionar cuenta abre un modal con filtros por empresa, código, país y correo. Elige una cuenta válida y confirma. Se preselecciona su contacto principal si lo tiene.",
     "steps": [
+      "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
+      "Los selectores de agentes permiten Comercial, Dirección, Administración, Operaciones y Superadmin; los agentes Base no pueden seleccionarse.",
       "Buscar y seleccionar cuenta abre un modal con filtros por empresa, código, país y correo. Elige una cuenta válida y confirma. Se preselecciona su contacto principal si lo tiene.",
       "En Cobros el primer vencimiento se propone a dos meses; cada cobro añadido toma la fecha del anterior más un mes. El banco inicial depende del país de la cuenta y todas las fechas y bancos pueden editarse."
     ]
@@ -580,6 +620,8 @@
   "/dashboard/comercial/propuestas/[id_propuesta]/editar": {
     "summary": "La fase Servicios comparte el selector y la tabla compacta con los contratos independientes. Sus campos y márgenes se han reducido para aprovechar el ancho disponible.",
     "steps": [
+      "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
+      "Los selectores de agentes permiten Comercial, Dirección, Administración, Operaciones y Superadmin; los agentes Base no pueden seleccionarse.",
       "La fase Servicios comparte el selector y la tabla compacta con los contratos independientes. Sus campos y márgenes se han reducido para aprovechar el ancho disponible.",
       "En Cobros el primer vencimiento se propone a dos meses; cada cobro añadido toma la fecha del anterior más un mes. Todas las fechas pueden editarse.",
       "Buscar cuenta consulta resultados paginados sin cargar el catalogo completo. La propuesta carga solo su cuenta; cambiarla reinicia su contacto."
@@ -588,12 +630,16 @@
   "/dashboard/comercial/cuentas/[id_cuenta]": {
     "summary": "En Contactos, una corona amarilla identifica el contacto principal. Marca la casilla de otro contacto y confirma el cambio en el modal. El primer contacto creado en la cuenta se marca automáticamente; las propuestas nuevas lo preseleccionan.",
     "steps": [
-      "En Contactos, una corona amarilla identifica el contacto principal. Marca la casilla de otro contacto y confirma el cambio en el modal. El primer contacto creado en la cuenta se marca automáticamente; las propuestas nuevas lo preseleccionan."
+      "Los selectores de agentes permiten Comercial, Dirección, Administración, Operaciones y Superadmin; los agentes Base no pueden seleccionarse.",
+      "En Contactos, una corona amarilla identifica el contacto principal. Marca la casilla de otro contacto y confirma el cambio en el modal. El primer contacto creado en la cuenta se marca automáticamente; las propuestas nuevas lo preseleccionan.",
+      "En la pestaña Tareas puedes crear y editar acciones de la cuenta. Elige el tipo (material, publicaciones, propuestas, llamada, email o acción), indica el nombre y asigna como mínimo un agente activo con cuenta de empleado. Puedes añadir varios responsables, referencia de campaña o contrato y fecha límite dd / mm / yyyy. Comercial, Administración, Operaciones, Dirección y Superadmin gestionan estas tareas.",
+      "La misma tarea aparece en las tareas propias de cada responsable. Desde su detalle los agentes asignados pueden cambiar el estado; el cambio se comparte en la cuenta y en las listas de todos los responsables. Pendientes y Terminadas separan las tareas por estado."
     ]
   },
   "/dashboard/administracion/control-administrativo/[...id_orden]": {
     "summary": "Ficha organizada en Datos de la orden, Factura asociada, Cobro y Otros datos de la orden, con cancelación en dos fases.",
     "steps": [
+      "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "Si la orden no tiene factura, se puede crear una factura previa desde ella o vincular una factura sin asignar de la misma cuenta y con el mismo importe.",
       "Datos de la orden muestra contrato, número X/Y, cuenta, agente actual, estado y fecha de firma de la propuesta. El agente inicial de las órdenes nuevas es quien acepta la propuesta; puede cambiarse sin modificar el agente de la propuesta.",
       "Factura asociada muestra su referencia previa o definitiva, fecha, líneas e importes, con enlace a la ficha completa y un desplegable para abrir otras órdenes de esa factura.",
@@ -614,8 +660,9 @@
     "summary": "Consulta las tareas asignadas a tu agente.",
     "steps": [
       "Pendientes agrupa pendiente y en curso. Terminadas agrupa completada y cancelada.",
-      "Abre el nombre de una tarea para consultar su detalle. Solo el agente asignado y Operaciones o superior pueden acceder.",
-      "Puedes crearte tareas desde el dashboard. Operaciones crea tareas para empleados y administra su edición."
+      "Abre el nombre de una tarea para consultar su detalle. Las tareas de cuenta muestran su cuenta, tipo, referencia y fecha; los responsables pueden guardar cambios de estado. Las tareas personales conservan sus permisos de gestión habituales.",
+      "Puedes crearte tareas desde el dashboard. Operaciones crea tareas para empleados y administra su edición.",
+      "Las tareas de cuenta se comparten entre todos los agentes asignados y aparecen también en el panel de tareas propias. La columna Cuenta permite volver a la ficha."
     ]
   },
   "/dashboard/operaciones/tareas": {
@@ -623,7 +670,8 @@
     "steps": [
       "Abre un empleado para consultar sus tareas pendientes y terminadas.",
       "Crear tarea asigna una nueva tarea pendiente al empleado de la ficha. El modal se cierra con la cruz o Escape.",
-      "Abre una tarea para editar nombre, descripción y estado. Guarda los cambios para actualizarlos en RDS. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados."
+      "Abre una tarea para editar nombre, descripción y estado. Guarda los cambios para actualizarlos en RDS. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados.",
+      "Los contadores y listas incluyen las tareas de cuentas. Su estado se actualiza desde el detalle; los datos y responsables se editan en la pestaña Tareas de la cuenta."
     ]
   },
   "/dashboard": {
@@ -637,6 +685,7 @@
     "title": "Vista Juan · Previsión de liquidez",
     "summary": "Hoja editable de Sabadell y Santander: añadir, vincular y ajustar previsiones recurrentes desde la propia hoja.",
     "steps": [
+      "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "Las hojas originales de 2026 aportan el histórico de enero a septiembre y su saldo inicial. Son referencias del contable; no crean movimientos bancarios. El archivo original se conserva.",
       "Vista Juan · Excel editable, en la parte superior, abre una presentación alternativa de los mismos datos. No hay escenarios independientes ni botón Actualizar previsión. Los cambios propios actualizan la página al guardarse; para ver cambios externos, recarga.",
       "Al crear o editar una programación de proveedor se pregunta ¿Contiene IVA? No establece base imponible igual al total. Sí exige indicar el porcentaje incluido y calcula base = total / (1 + porcentaje / 100), con redondeo a céntimos. Las nóminas usan importe neto sin IVA. No se presupone un porcentaje para datos antiguos.",
@@ -666,6 +715,7 @@
     "title": "Conciliación",
     "summary": "Acceso directo a la misma conciliación bancaria de Tesorería.",
     "steps": [
+      "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "Esta dirección abre la misma pantalla que /dashboard/direccion/tesoreria/extractos/conciliacion. Los detalles de movimientos y los enlaces internos conservan esa ruta principal.",
       "Los movimientos revisados y asociados actualizan automáticamente el realizado y el pendiente de la previsión del ERP. Reabrir un movimiento retira su efecto hasta que vuelva a revisarse. Los filtros de cada tabla se muestran juntos en una tarjeta Filtros inicialmente cerrada, con una etiqueta fina encima de cada campo. Cerrarla conserva los filtros aplicados."
     ]

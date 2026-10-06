@@ -1,7 +1,8 @@
-export type AppRole = "base" | "direccion" | "administracion" | "operaciones" | "superadmin";
+export type AppRole = "base" | "comercial" | "direccion" | "administracion" | "operaciones" | "superadmin";
 
 export const roleRank: Record<AppRole, number> = {
   base: 0,
+  comercial: 0.5,
   direccion: 0,
   administracion: 1,
   operaciones: 2,
@@ -11,7 +12,7 @@ export const roleRank: Record<AppRole, number> = {
 export function normalizeRole(role: unknown): AppRole {
   const value = String(role || "").trim().toLowerCase();
   if (value === "direccion" || value === "dirección") return "direccion";
-  if (value === "administracion" || value === "operaciones" || value === "superadmin") return value;
+  if (value === "comercial" || value === "administracion" || value === "operaciones" || value === "superadmin") return value;
   return "base";
 }
 

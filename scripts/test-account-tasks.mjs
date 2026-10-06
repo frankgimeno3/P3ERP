@@ -1,0 +1,41 @@
+import assert from 'node:assert/strict';
+import {randomUUID} from 'node:crypto';
+import {readFile} from 'node:fs/promises';
+import env from '@next/env';
+import {getPgPool} from '../server/database/pgClient.js';
+import {saveAccountTask,accountTasks} from '../server/features/cuenta/AccountTaskRepository.js';
+import {readTasks,taskEmployees} from '../server/features/laboral/TaskRepository.js';
+env.loadEnvConfig(process.cwd());
+const pool=getPgPool(),db=await pool.connect(),schema='test_account_tasks_'+randomUUID().replaceAll('-','');
+const originalQuery=pool.query,originalConnect=pool.connect;
+try{
+ await db.query('CREATE SCHEMA '+schema);await db.query('SET search_path TO '+schema+',public');
+ for(const table of ['agentes_db','comercial_cuentas','laboral_tareas_empleado','general_eventos'])await db.query('CREATE TABLE '+schema+'.'+table+' (LIKE public.'+table+' INCLUDING ALL)');
+ await db.query(await readFile(new URL('../database/migrations/20261006_0002_account_tasks.sql',import.meta.url),'utf8'));
+ pool.query=(...args)=>db.query(...args);pool.connect=async()=>({query:db.query.bind(db),release(){}});
+ await db.query("INSERT INTO agentes_db(id_agente,nombre_completo_agente,is_empleado_account) VALUES('owner','Owner',true),('other','Other',true),('manager','Manager',true),('external','External',false)");
+ await db.query("INSERT INTO comercial_cuentas(id_cuenta,nombre_empresa) VALUES('account','Account')");
+ const manager={id:'manager',role:'comercial'},owner={id:'owner',role:'base'},other={id:'other',role:'base'};
+ const body={nombre:'Pedir material',tipo:'pedir_material_contratado',agentes:['owner','other'],fecha_limite:'15/10/2026'};
+ let task=await saveAccountTask(manager,'account',null,body);
+ assert.equal((await accountTasks(manager,{accountId:'account'})).length,1);
+ assert.equal((await readTasks(owner))[0].id,task.id);assert.equal((await readTasks(other))[0].id,task.id);
+ await assert.rejects(readTasks({id:'external',role:'base'},{id:task.id}),e=>e.status===403);
+ await assert.rejects(saveAccountTask(owner,'account',task.id,{...body,version:task.updated_at}),e=>e.status===403);
+ await assert.rejects(saveAccountTask(manager,'account',null,{...body,agentes:[]}),e=>e.status===400);
+ await assert.rejects(saveAccountTask(manager,'account',null,{...body,agentes:['external']}),e=>e.status===400);
+ await assert.rejects(saveAccountTask(manager,'account',null,{...body,fecha_limite:'31/02/2026'}),e=>e.status===400);
+ const version=task.updated_at;
+ task=await saveAccountTask(owner,'account',task.id,{estado:'completada',version},true);
+ assert.equal((await readTasks(other))[0].estado,'completada');
+ assert.equal((await taskEmployees({id:'manager',role:'operaciones'})).find(a=>a.id_agente==='owner').terminadas,1);
+ await assert.rejects(saveAccountTask(owner,'account',task.id,{estado:'pendiente',version},true),e=>e.status===409);
+ task=await saveAccountTask(manager,'account',task.id,{...body,agentes:['owner'],version:task.updated_at});
+ assert.equal((await readTasks(other)).length,0);
+ await db.query('BEGIN');await db.query('DELETE FROM comercial_cuenta_tarea_agentes WHERE id_tarea=$1',[task.id]);
+ await assert.rejects(db.query('COMMIT'),e=>e.code==='23514');await db.query('ROLLBACK');
+ assert.equal((await readTasks(owner)).length,1);
+ console.log('PASS: shared account tasks, required active assignees, permissions, completion, reassignment, dates, concurrency and database invariant.');
+}finally{
+ pool.query=originalQuery;pool.connect=originalConnect;await db.query('RESET search_path');await db.query('DROP SCHEMA IF EXISTS '+schema+' CASCADE');db.release();await pool.end();
+}

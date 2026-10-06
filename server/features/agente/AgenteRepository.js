@@ -183,6 +183,9 @@ export async function deleteAgente(idAgente, beforeDelete) {
       error.code = "EMPLOYEE_HISTORY";
       throw error;
     }
+    if ((await client.query('SELECT 1 FROM comercial_cuenta_tarea_agentes WHERE id_agente=$1 LIMIT 1', [idAgente])).rowCount) {
+      throw Object.assign(new Error('El agente tiene tareas de cuentas asignadas. Reasigna esas tareas antes de borrar su cuenta.'), { code: 'ACCOUNT_TASK_ASSIGNMENTS' });
+    }
     await beforeDelete(agente);
     await client.query(`DELETE FROM agentes_db WHERE id_agente = $1`, [idAgente]);
     await client.query("COMMIT");
