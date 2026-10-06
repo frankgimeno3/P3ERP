@@ -1,4 +1,6 @@
 "use client";
+import SortableTable from '@/app/components/SortableTable';
+
 
 import {proposalDate} from '@/app/config/proposalDate';
 import React, { FC, useEffect, useState } from "react";
@@ -57,7 +59,7 @@ const MisPendientes: FC<MisPendientesProps> = ({
   return (
     <div className="h-full">
       <div className="overflow-x-auto">
-      <table className="min-w-full text-sm">
+      <SortableTable className="min-w-full text-sm">
         <thead className="bg-blue-950 text-white">
           <tr>
             <th className="p-2 text-left">ID propuesta</th>
@@ -82,7 +84,7 @@ const MisPendientes: FC<MisPendientesProps> = ({
             </tr>
           ))}
         </tbody>
-      </table>
+      </SortableTable>
       </div>
     </div>
   );

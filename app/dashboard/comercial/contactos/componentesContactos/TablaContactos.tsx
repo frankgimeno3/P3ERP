@@ -1,4 +1,7 @@
 'use client';
+import SortableTable from '@/app/components/SortableTable';
+import type {TableSort} from '@/app/components/SortableTable';
+
 
 import React, { FC } from 'react';
 import { useRouter } from 'next/navigation';
@@ -8,9 +11,11 @@ import { InterfazContacto } from '@/app/interfaces/interfaces';
 
 interface TablaContactosProps {
   contactosFiltrados: InterfazContacto[];
+  sort: TableSort | null;
+  onSortChange: (sort: TableSort) => void;
 }
 
-const TablaContactos: FC<TablaContactosProps> = ({ contactosFiltrados }) => {
+const TablaContactos: FC<TablaContactosProps> = ({ contactosFiltrados, sort, onSortChange }) => {
   const router = useRouter();
 
   const handleRowClick = (e: React.MouseEvent<HTMLTableRowElement>, href: string) => {
@@ -24,7 +29,7 @@ const TablaContactos: FC<TablaContactosProps> = ({ contactosFiltrados }) => {
 
   return (
     <div className="mt-5">
-   <table className="mt-5  rounded-lg shadow-xl bg-white min-w-full">
+   <SortableTable sort={sort} onSortChange={onSortChange} className="mt-5  rounded-lg shadow-xl bg-white min-w-full">
         <thead className="bg-blue-950/80 text-white rounded-lg">
           <tr>
             <th className="text-left p-2 font-light pl-6">Nombre</th>
@@ -59,7 +64,7 @@ const TablaContactos: FC<TablaContactosProps> = ({ contactosFiltrados }) => {
             </tr>
           )}
         </tbody>
-      </table>
+      </SortableTable>
     </div>
   );
 };

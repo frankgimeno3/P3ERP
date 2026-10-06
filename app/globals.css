@@ -190,3 +190,6 @@ button:disabled,
   width: 100%;
   min-width: 0;
 }
+@media print {
+  .table-sort-button { display: none !important; }
+}

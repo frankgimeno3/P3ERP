@@ -1,4 +1,6 @@
 'use client';
+import SortableTable from '@/app/components/SortableTable';
+
 import TableFilters from '@/app/components/TableFilters';
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -113,7 +115,7 @@ export default function Agentes({ initialTab = 'agentes' }: { initialTab?: 'agen
       <div role="tablist" aria-label="Clasificación de agentes" className="mb-4 flex flex-wrap gap-2">{[['activo','Activos'],['inactivo','Inactivos'],['no_empleado','No empleados']].map(([value,label])=><button key={value} role="tab" aria-selected={statusTab===value} onClick={()=>setStatusTab(value)} className={`cursor-pointer rounded px-4 py-2 hover:bg-blue-100 ${statusTab===value?'bg-blue-950 text-white hover:bg-blue-800':'bg-white'}`}>{label}</button>)}</div>
       <TableFilters>{(['id','nombre','email'] as const).map(key=><label key={key}>{key==='id'?'ID':key==='nombre'?'Nombre':'Email'}<input className="block w-full rounded border p-2" value={filters[key]} onChange={e=>setFilters({...filters,[key]:e.target.value})} /></label>)}<label>Rol<select className="block w-full cursor-pointer rounded border p-2 hover:border-blue-900" value={filters.rol} onChange={e=>setFilters({...filters,rol:e.target.value})}><option value="">Todos</option>{Array.from(new Set([...rolesByName,...agentes.map(a=>a.rol_agente)])).filter(Boolean).sort().map(role=><option key={role} value={role}>{role}</option>)}</select></label></TableFilters>
       <div key={statusTab} role="tabpanel" className="overflow-hidden rounded bg-white shadow-sm">
-          <table className="min-w-full text-sm">
+          <SortableTable className="min-w-full text-sm">
             <thead className="bg-gray-200">
               <tr>
                 <th className="px-4 py-2 text-left">ID</th>
@@ -160,7 +162,7 @@ export default function Agentes({ initialTab = 'agentes' }: { initialTab?: 'agen
                 );
               })}
             </tbody>
-          </table>
+          </SortableTable>
       </div>
       </>}
       {showCreateUser && (

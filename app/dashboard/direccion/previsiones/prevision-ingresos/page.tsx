@@ -1,4 +1,6 @@
 "use client";
+import SortableTable from '@/app/components/SortableTable';
+
 import DateInputRow from "@/app/components/DateInputRow";
 import TableFilters from '@/app/components/TableFilters';
 import { useEffect, useMemo, useState } from "react";
@@ -120,7 +122,7 @@ export default function PrevisionIngresosPage() {
       {notice && <p role="status" className="mb-4 rounded border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">{notice}</p>}
       {error && <p role="alert" className="mb-4 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</p>}
       <div className="overflow-x-auto bg-white">
-        <table className="min-w-full">
+        <SortableTable className="min-w-full">
           <thead className="bg-blue-950 text-white"><tr>{columns.map(column => <th key={column.key} className="whitespace-nowrap p-3 text-left font-light">{column.label}</th>)}</tr></thead>
           <tbody>
             {loading ? <tr><td colSpan={columns.length} className="p-6 text-center text-gray-500">{tab === "remesas" ? "Cargando remesas…" : "Cargando previsión…"}</td></tr> : ordenesFiltradas.length === 0 ? <tr><td colSpan={columns.length} className="p-6 text-center text-gray-500">No hay resultados para esta pestaña y sus filtros.</td></tr> : ordenesFiltradas.map(orden => {
@@ -131,7 +133,7 @@ export default function PrevisionIngresosPage() {
               </tr>;
             })}
           </tbody>
-        </table>
+        </SortableTable>
       </div>
       {showReceiptExcel && <ReceiptExcelModal onClose={() => setShowReceiptExcel(false)} onImported={count => { setNotice(count + " recibos importados o actualizados correctamente."); setReloadKey(current => current + 1); }} />}
       {showAdditionalIncome && <AdditionalIncomeWizard onClose={() => setShowAdditionalIncome(false)} onCreated={() => { setShowAdditionalIncome(false); setReloadKey(current => current + 1); }} />}

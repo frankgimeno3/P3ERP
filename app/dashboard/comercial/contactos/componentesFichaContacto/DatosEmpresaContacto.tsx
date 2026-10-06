@@ -1,3 +1,5 @@
+
+import SortableTable from '@/app/components/SortableTable';
 import React, { FC, useState } from "react";
 import { InterfazContacto, InterfazCuenta } from "@/app/interfaces/interfaces";
 import PopupEmpresa from "./PopupEmpresa";
@@ -62,7 +64,7 @@ const DatosEmpresaContacto: FC<DatosEmpresaContactoProps> = ({
   return (
     <div className="p-4">
       <h2 className="text-xl font-bold mb-4">Datos asociados a la cuenta</h2>
-      <table className="min-w-full">
+      <SortableTable className="min-w-full">
         <thead className="bg-blue-950/80 text-white">
           <tr>
             <th className="text-left p-2 font-light">Empresa asociada</th>
@@ -115,7 +117,7 @@ const DatosEmpresaContacto: FC<DatosEmpresaContactoProps> = ({
             </td>
           </tr>
         </tbody>
-      </table>
+      </SortableTable>
 
       <PopupEmpresa
         isOpen={popupOpen}

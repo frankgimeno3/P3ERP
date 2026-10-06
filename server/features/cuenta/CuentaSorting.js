@@ -4,6 +4,7 @@ const columns = {
   id_edisoft: 'id_edisoft',
   id_agente: "COALESCE((SELECT a.nombre_completo_agente FROM agentes_db a WHERE a.id_agente = comercial_cuentas.id_agente), id_agente)",
   pais_cuenta: 'pais_cuenta',
+  correo_principal: 'correo_principal',
   telefono: "datos_comerciales->>'telefono_principal_cuenta'",
 };
 

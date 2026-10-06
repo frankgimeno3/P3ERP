@@ -1,6 +1,7 @@
 'use client';
 
 import {useUrlState} from '@/app/lib/useUrlState';
+import type {TableSort} from '@/app/components/SortableTable';
 import React, { FC, useState, useEffect } from 'react';
 import FiltrosContactos from './componentesContactos/FiltrosContactos';
 import TablaContactos from './componentesContactos/TablaContactos';
@@ -11,6 +12,7 @@ import { ContactoService } from '@/app/service/ContactoService';
 import LastTigerUpdate from '../LastTigerUpdate';
 
 const Contactos: FC = () => {
+  const [sort,setSort]=useState<TableSort|null>(null);
   const [tableState,setTableState]=useUrlState('contacts.table',{contactoFiltro:'',apellidosFiltro:'',codigoContactoFiltro:'',empresaAsociadaFiltro:'',telFiltro:'',emailFiltro:'',paisFiltro:'',currentPage:1});
   const {contactoFiltro,apellidosFiltro,codigoContactoFiltro,empresaAsociadaFiltro,telFiltro,emailFiltro,paisFiltro}=tableState;
   const currentPage=Math.max(1,Math.trunc(tableState.currentPage));
@@ -37,7 +39,7 @@ const Contactos: FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await ContactoService.getContactos({limit:itemsPerPage,page:currentPage,nombre_contacto:contactoFiltro,apellidos_contacto:apellidosFiltro,id_contacto:codigoContactoFiltro,nombre_empresa:empresaAsociadaFiltro,telefono_contacto:telFiltro,email_contacto:emailFiltro,pais_contacto:paisFiltro},{signal:controller.signal});
+      const data = await ContactoService.getContactos({limit:itemsPerPage,page:currentPage,sortBy:sort?['nombre_contacto','apellidos_contacto','id_contacto','nombre_empresa','telefono_contacto','email_contacto'][sort.column]:'',sortDirection:sort?.direction,nombre_contacto:contactoFiltro,apellidos_contacto:apellidosFiltro,id_contacto:codigoContactoFiltro,nombre_empresa:empresaAsociadaFiltro,telefono_contacto:telFiltro,email_contacto:emailFiltro,pais_contacto:paisFiltro},{signal:controller.signal});
       const mapeados: InterfazContacto[] = (data.rows||[]).map((c: InterfazContacto) => ({
         ...c,
         nombre_contacto: c.nombre_contacto ?? '',
@@ -66,7 +68,7 @@ const Contactos: FC = () => {
   };
 
   const timer=setTimeout(fetchContactos,250);return()=>{clearTimeout(timer);controller.abort();};
-}, [currentPage,contactoFiltro,apellidosFiltro,codigoContactoFiltro,empresaAsociadaFiltro,telFiltro,emailFiltro,paisFiltro]);
+}, [currentPage,contactoFiltro,apellidosFiltro,codigoContactoFiltro,empresaAsociadaFiltro,telFiltro,emailFiltro,paisFiltro,sort]);
 
 
   const filteredContactos = allContactos.filter((c) =>
@@ -118,7 +120,7 @@ const Contactos: FC = () => {
         {loading && !allContactos.length ? (
           <div className="mt-5 rounded bg-white p-6 text-sm text-gray-500 shadow-xl">Cargando contactos...</div>
         ) : (
-          <TablaContactos contactosFiltrados={contactosFiltrados} />
+          <TablaContactos contactosFiltrados={contactosFiltrados} sort={sort} onSortChange={next=>{setSort(next);setCurrentPage(1);}} />
         )}
 
         <div className="mt-4 grid grid-cols-3 items-center">

@@ -1,4 +1,6 @@
 "use client";
+import SortableTable from '@/app/components/SortableTable';
+
 import { matchesTableFilter } from "@/app/lib/dateFilters";
 import TableFilterInput from "@/app/components/TableFilterInput";
 import TableFilters from '@/app/components/TableFilters';
@@ -103,7 +105,7 @@ export default function FacturasProveedoresPage() {
         <div className="overflow-x-auto bg-white">
           <TableFilters>{columns.map(([field, label]) => (
                   <label key={field} className="block text-xs font-extralight text-gray-600"><span className="mb-1 block">{label}</span><TableFilterInput label={label} field={field} value={filters[field] || ""} className="w-full rounded border border-blue-200 px-2 py-1 text-xs outline-none focus:border-blue-950" onChange={nextValue => setFilters({ ...filters, [field]: nextValue })} /></label>
-                ))}</TableFilters><table className="min-w-full text-xs">
+                ))}</TableFilters><SortableTable className="min-w-full text-xs">
             <thead className="bg-blue-950 text-white">
               <tr>
                 {columns.map(([field, label], index) => <th key={field} className={`p-2 text-left font-light ${index === 0 ? "pl-6" : ""}`}>{label}</th>)}
@@ -128,7 +130,7 @@ export default function FacturasProveedoresPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </SortableTable>
         </div>
       </div>
     </div>

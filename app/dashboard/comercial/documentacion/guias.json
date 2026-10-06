@@ -40,7 +40,8 @@
       "Pulsa Nueva cuenta para iniciar el alta guiada.",
       "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados.",
       "La tabla consulta solo la pagina actual y el total del servidor. Los filtros se combinan y las respuestas de consultas anteriores se descartan.",
-      "Abre una cuenta y entra en Tareas para gestionar sus acciones y responsables."
+      "Abre una cuenta y entra en Tareas para gestionar sus acciones y responsables.",
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
     ]
   },
   "/dashboard/comercial/contactos": {
@@ -51,7 +52,8 @@
       "Abre un contacto para revisar o modificar su ficha y eventos.",
       "Usa el alta de contacto para registrar una nueva persona y vincularla a una cuenta.",
       "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados.",
-      "La paginacion se realiza en el servidor. Durante una nueva consulta se conserva la tabla anterior y se muestra Actualizando contactos. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados."
+      "La paginacion se realiza en el servidor. Durante una nueva consulta se conserva la tabla anterior y se muestra Actualizando contactos. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados.",
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
     ]
   },
   "/dashboard/comercial/propuestas": {
@@ -67,7 +69,8 @@
       "Despliega Filtros: la primera fila contiene nombre del cliente, código CRM y agente; la segunda contiene Desde, Hasta y estado.",
       "En Plantillas crea y edita productos en español y, si hace falta, versiones en otros idiomas. En la fase Servicios usa una versión del mismo idioma de la propuesta para sustituir o añadir productos.",
       "Buscar cuenta abre una tabla con filtros y 30 cuentas por pagina. Al elegir una cuenta se selecciona su contacto principal o el primero; si no tiene contactos se activa automaticamente el contacto manual.",
-      "Mis propuestas usa el agente de la sesion actual. Si no hay agente asociado no se muestran propuestas de otro agente. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados."
+      "Mis propuestas usa el agente de la sesion actual. Si no hay agente asociado no se muestran propuestas de otro agente. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados.",
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
     ]
   },
   "/dashboard/comercial/contratos": {
@@ -83,7 +86,9 @@
       "Verifica los datos antes de continuar con facturación y producción.",
       "La ficha individual conserva los datos generales, servicios, órdenes y facturas relacionadas. Las órdenes muestran sus importes, fechas, banco y estado, con enlaces a Control administrativo; las facturas enlazan a su detalle.. También permite subir y consultar el contrato firmado en PDF o imagen dentro de la carpeta del agente empleado y su año.",
       "La ficha tiene pestañas Datos y Vista de documento. El documento ofrece versión original en el idioma registrado y versión GM con plantilla y catálogo en español. Cada versión tiene descarga PDF.",
-      "Al crear un contrato independiente, Intercambio sin cobro monetario permite registrar el valor ofrecido y las condiciones sin generar cobros. Se muestran en los datos y en el documento del contrato. Los filtros de cada tabla se muestran juntos en una tarjeta Filtros inicialmente cerrada, con una etiqueta fina encima de cada campo. Cerrarla conserva los filtros aplicados."
+      "Al crear un contrato independiente, Intercambio sin cobro monetario permite registrar el valor ofrecido y las condiciones sin generar cobros. Se muestran en los datos y en el documento del contrato. Los filtros de cada tabla se muestran juntos en una tarjeta Filtros inicialmente cerrada, con una etiqueta fina encima de cada campo. Cerrarla conserva los filtros aplicados.",
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
+      "En la ficha del contrato, Crear nueva propuesta copia la cuenta, contacto, servicios, importes y condiciones a un borrador independiente. Usa el agente de la sesión, fecha de hoy y validez de 30 días; renueva las fechas de los cobros conservando sus intervalos. Revisa y edita el borrador antes de enviarlo."
     ]
   },
   "/dashboard/comercial/documentacion": {
@@ -91,7 +96,8 @@
     "steps": [
       "Selecciona Guías de uso u Otros documentos.",
       "En las guías, elige módulo y página y abre su explicación.",
-      "En otros documentos, consulta el calendario laboral o el de publicaciones y deadlines."
+      "En otros documentos, consulta el calendario laboral o el de publicaciones y deadlines.",
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
     ]
   },
   "/dashboard/produccion/hoja_produccion": {
@@ -102,7 +108,8 @@
       "Usa los controles para incluir publicados o contenidos fuera de contrato.",
       "El cliente se muestra con el nombre actual de su cuenta vinculada, aunque el Excel original usase otro nombre. El agente es quien sigue ese contenido para obtener materiales y puede ser distinto del agente comercial del contrato.",
       "Pulsa una fila para abrir /hoja_produccion/[id]. Puedes editar especificaciones en un área de texto, Publicación / Nº web, agente por nombre, fecha límite con día, mes y año separados y estado. Pulsa Guardar cambios para conservar la edición. También puedes subir materiales. Volver regresa a la hoja de producción.",
-      "Las pestañas incluyen el año actual y todos los años presentes en los contenidos. Anteriores conserva los contenidos históricos importados; Sin año permite localizar los que aún no tienen fecha. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados."
+      "Las pestañas incluyen el año actual y todos los años presentes en los contenidos. Anteriores conserva los contenidos históricos importados; Sin año permite localizar los que aún no tienen fecha. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados.",
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
     ]
   },
   "/dashboard/produccion/revistas": {
@@ -112,7 +119,8 @@
       "En Pendientes el orden es Vidrio Plano, Ventanas, Quién es Quién y el resto. Estas tres revistas tienen subpestañas de edición; no se repite la columna ni el filtro de edición. Número es la primera columna. Un solo desplegable Filtros, inicialmente cerrado, muestra los filtros compactos de las columnas visibles.",
       "Usa Agregar revista para crear una edicion y establece si esta publicada o pendiente de publicar.",
       "Cambia el estado de una revista desde la tabla; las pendientes son las disponibles al elegir detalle de publicación en propuestas.",
-      "En Calendario consulta todas las revistas, con Número como primera columna, y usa Modificar para editar las tres fechas mediante día, mes y año. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados."
+      "En Calendario consulta todas las revistas, con Número como primera columna, y usa Modificar para editar las tres fechas mediante día, mes y año. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados.",
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
     ]
   },
   "/dashboard/produccion/contenidos": {
@@ -120,7 +128,8 @@
     "steps": [
       "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "Filtrar por revista muestra primero el número, seguido de revista, región y sector, y permite abrir sus anuncios y artículos.",
-      "Todos los contenidos muestra los registros de producción; abre la tarjeta Filtros y pulsa una fila para entrar en el detalle del contenido."
+      "Todos los contenidos muestra los registros de producción; abre la tarjeta Filtros y pulsa una fila para entrar en el detalle del contenido.",
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
     ]
   },
   "/dashboard/produccion/contenidos/[id]": {
@@ -158,14 +167,17 @@
       "Usa las pestañas Ediciones relevantes pendientes, Otras pendientes, Ediciones pasadas y Ferias.",
       "Abre Filtros por columna para buscar dentro de cada pestaña.",
       "Agregar Edición abre el formulario de una edición y Agregar nueva feria crea un registro del catálogo.",
-      "En la ficha de una edición puedes guardar los apartados de intercambio, logística y entidades asociadas. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados."
+      "En la ficha de una edición puedes guardar los apartados de intercambio, logística y entidades asociadas. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados.",
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
+      "El enlace Información legal verifactu se muestra al pie de las páginas de Administración."
     ]
   },
   "/dashboard/administracion/ferias/catalogo/[id]": {
     "summary": "Muestra los datos generales de una feria del catálogo.",
     "steps": [
       "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
-      "Consulta país, periodicidad, temática y descripción. Las ediciones de esa feria tienen sus propias fechas y apartados de gestión."
+      "Consulta país, periodicidad, temática y descripción. Las ediciones de esa feria tienen sus propias fechas y apartados de gestión.",
+      "El enlace Información legal verifactu se muestra al pie de las páginas de Administración."
     ]
   },
   "/dashboard/administracion/control-administrativo": {
@@ -185,7 +197,9 @@
       "Abre Filtros para desplegar los criterios; el contador indica cuántos están activos aunque el panel esté cerrado.",
       "La columna Factura enlaza a su ficha e indica si es previa o definitiva.",
       "Órdenes muestra las vigentes y Canceladas conserva las órdenes canceladas. Las canceladas no generan ingresos previstos ni se pueden modificar o sobrescribir mediante Excel.",
-      "Todos los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen juntos, con etiquetas finas encima de cada campo; cerrarla conserva los filtros aplicados. Los filtros y la pestana se conservan en la URL al recargar o volver."
+      "Todos los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen juntos, con etiquetas finas encima de cada campo; cerrarla conserva los filtros aplicados. Los filtros y la pestana se conservan en la URL al recargar o volver.",
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
+      "El enlace Información legal verifactu se muestra al pie de las páginas de Administración."
     ]
   },
   "/dashboard/administracion/facturas-clientes": {
@@ -201,7 +215,10 @@
       "Guardar los datos de pago actualiza las órdenes existentes con importe, vencimiento, forma de cobro y banco, conservando sus identificadores. La base se reparte según los impuestos de la factura. Recibo genera o actualiza su recibo; al cambiar a transferencia se retira el recibo que no tenga remesa. Los cobros confirmados o remesados requieren resolver antes sus asociaciones.",
       "Recibos y transferencias son ingresos previstos de las órdenes, no ingresos recurrentes. Afectan a la liquidez una sola vez según banco y fecha, mientras sigan pendientes. Terminar el asistente prepara la factura; la emisión fiscal mantiene su confirmación específica.",
       "En la ficha de una factura en borrador, Eliminar borrador abre una confirmación. Elimina factura y líneas, conservando contratos, órdenes y recibos; las órdenes quedan sin factura. No permite borrar facturas emitidas, contabilizadas, con cobros confirmados ni con documentos derivados. El modal admite × y Escape.",
-      "Contratos sin facturar muestra contratos sin ninguna factura asociada. Solo el código del contrato es enlace; Crear factura genera un borrador a petición del usuario. Sus filtros se muestran juntos al abrir la tarjeta Filtros, inicialmente cerrada. En Vista de documento, Descargar PDF descarga el documento guardado."
+      "Contratos sin facturar muestra contratos sin ninguna factura asociada. Solo el código del contrato es enlace; Crear factura genera un borrador a petición del usuario. Sus filtros se muestran juntos al abrir la tarjeta Filtros, inicialmente cerrada. En Vista de documento, Descargar PDF descarga el documento guardado.",
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
+      "El enlace Información legal verifactu se muestra al pie de las páginas de Administración.",
+      "Las facturas importadas desde un registro Excel coinciden por número de factura y conservan su identificador, órdenes, recibos, remesas y cobros. Se guardan la hoja, fila y datos originales. Las diferencias entre el importe del registro y las órdenes se muestran en la ficha. Los abonos negativos se conservan como abonos."
     ]
   },
   "/dashboard/administracion/pendiente-cobro": {
@@ -211,7 +228,9 @@
       "Filtra por cliente, vencimiento o estado.",
       "Revisa los importes y fechas de cada factura.",
       "Registra o comprueba el cobro cuando se produzca.",
-      "Solo se muestran ordenes activas con importe monetario pendiente positivo. Los pagos parciales descuentan lo cobrado y las canceladas se excluyen. Todos los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen juntos, con etiquetas finas encima de cada campo; cerrarla conserva los filtros aplicados. filtros y pestana se conservan en la URL."
+      "Solo se muestran ordenes activas con importe monetario pendiente positivo. Los pagos parciales descuentan lo cobrado y las canceladas se excluyen. Todos los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen juntos, con etiquetas finas encima de cada campo; cerrarla conserva los filtros aplicados. filtros y pestana se conservan en la URL.",
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
+      "El enlace Información legal verifactu se muestra al pie de las páginas de Administración."
     ]
   },
   "/dashboard/administracion/suscripciones": {
@@ -221,7 +240,8 @@
       "Revisa vigencia, servicio y último número.",
       "Actualiza los datos cuando cambien las condiciones.",
       "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape. Los filtros de cada tabla se muestran juntos en una tarjeta Filtros inicialmente cerrada, con una etiqueta fina encima de cada campo. Cerrarla conserva los filtros aplicados.",
-      "Al crear se elige la cuenta, revista y edicion, y primer y ultimo numero. El ultimo publicado se calcula dentro de esa coleccion. Renovar permite revisar un nuevo periodo y crear una propuesta con los servicios anteriores; repetirlo reutiliza esa propuesta y no modifica el contrato vigente. No se crea otra renovacion activa para un periodo distinto."
+      "Al crear se elige la cuenta, revista y edicion, y primer y ultimo numero. El ultimo publicado se calcula dentro de esa coleccion. Renovar permite revisar un nuevo periodo y crear una propuesta con los servicios anteriores; repetirlo reutiliza esa propuesta y no modifica el contrato vigente. No se crea otra renovacion activa para un periodo distinto.",
+      "El enlace Información legal verifactu se muestra al pie de las páginas de Administración."
     ]
   },
   "/dashboard/administracion/proveedores": {
@@ -238,7 +258,9 @@
       "La ficha contiene Cargos bancarios, con todos los gastos relacionados con el proveedor, tengan o no pago previsto o cargo recurrente, y un filtro por columna.",
       "Datos se presenta en un panel blanco con Agregar cargo previsto y Eliminar arriba a la derecha. Los datos se distribuyen en tres filas de dos campos: nombre e identificador, nombre fiscal y CIF/VAT, país y moneda. Solo el identificador es de lectura; país y moneda se eligen mediante selectores con búsqueda. Los comentarios quedan debajo a ancho completo. Los cambios se guardan automáticamente y el estado permite reintentar si falla; escribir en un selector requiere elegir una opción válida antes de guardar.",
       "Eliminar proveedor pide confirmación: desvincula y conserva facturas, tickets, pagos, cargos recurrentes y movimientos; elimina los precios y productos/servicios propios. Tener registros asociados ya no bloquea el borrado con un 409.",
-      "Al editar un proveedor se conserva el nombre introducido, sin aplicar equivalencias de importación. La ficha muestra la respuesta guardada en RDS y confirma el guardado; los errores de validación se muestran con su detalle."
+      "Al editar un proveedor se conserva el nombre introducido, sin aplicar equivalencias de importación. La ficha muestra la respuesta guardada en RDS y confirma el guardado; los errores de validación se muestran con su detalle.",
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
+      "El enlace Información legal verifactu se muestra al pie de las páginas de Administración."
     ]
   },
   "/dashboard/administracion/facturas-proveedores": {
@@ -249,7 +271,9 @@
       "Pulsa Agregar para registrar una nueva factura con sus importes y vencimientos. También puedes iniciar el alta desde Facturas en la ficha del proveedor, que aparece preseleccionado.",
       "Abre el detalle para revisar o completar la contabilización.",
       "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape. Los filtros de cada tabla se muestran juntos en una tarjeta Filtros inicialmente cerrada, con una etiqueta fina encima de cada campo. Cerrarla conserva los filtros aplicados.",
-      "La factura valida fecha, base, total y suma de vencimientos antes de guardarse. Cada pago exige banco y forma valida. Puedes vincular explicitamente el pago al vencimiento estimado que sustituye para evitar duplicarlo. Los PDF se suben en una fase provisional y solo quedan vinculados al confirmar la factura. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados."
+      "La factura valida fecha, base, total y suma de vencimientos antes de guardarse. Cada pago exige banco y forma valida. Puedes vincular explicitamente el pago al vencimiento estimado que sustituye para evitar duplicarlo. Los PDF se suben en una fase provisional y solo quedan vinculados al confirmar la factura. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados.",
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
+      "El enlace Información legal verifactu se muestra al pie de las páginas de Administración."
     ]
   },
   "/dashboard/administracion/proveedores/tickets": {
@@ -260,7 +284,9 @@
       "Al añadir un ticket, elige proveedor, fecha, importes, efectivo o una tarjeta activa, y adjunta PDF, JPG o PNG de hasta 15 MB. El ticket queda asociado a esa tarjeta. Si corresponde a una suscripción prevista, vincúlalo a su vencimiento en la pestaña Tickets de la tarjeta para evitar contar ambos importes.",
       "Pulsa Añadir para introducir un nuevo justificante. Desde Tickets en la ficha del proveedor puedes iniciar el mismo formulario con el proveedor preseleccionado.",
       "Comprueba proveedor, concepto, importes y fecha antes de guardar.",
-      "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape."
+      "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape.",
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
+      "El enlace Información legal verifactu se muestra al pie de las páginas de Administración."
     ]
   },
   "/dashboard/administracion/tarjetas": {
@@ -274,7 +300,9 @@
       "En suscripciones, asocia un cargo previsto de proveedor u Otro, crea uno nuevo o edita su programación. Una suscripción solo pertenece a una tarjeta. Sus vencimientos se incluyen en el cierre correspondiente y salen del banco en la fecha de liquidación, sin computar también como pagos directos.",
       "Próxima liquidación muestra tickets y suscripciones del período abierto, con su total actualizado. En Conciliación, selecciona uno o varios cargos de esa misma liquidación y pulsa Liquidación tarjeta. Elige la tarjeta y revisa el desglose y la diferencia con el banco; si hay diferencia, explica el motivo.",
       "Confirmar guarda la previsión de ese momento y el importe real, marca los movimientos como revisados y abre el período siguiente. Liquidaciones anteriores conserva ese desglose aunque después cambien las suscripciones. Si los datos cambian mientras revisas, debes cargar de nuevo la previsión.",
-      "Para reabrir, abre uno de los movimientos de la última liquidación desde su revisión bancaria y pulsa Reabrir liquidación. La confirmación afecta a todos sus movimientos. La liquidación anterior queda anulada en el histórico y ese período vuelve a ser el próximo. Esta revisión requiere acceso a Dirección. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados."
+      "Para reabrir, abre uno de los movimientos de la última liquidación desde su revisión bancaria y pulsa Reabrir liquidación. La confirmación afecta a todos sus movimientos. La liquidación anterior queda anulada en el histórico y ese período vuelve a ser el próximo. Esta revisión requiere acceso a Dirección. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados.",
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
+      "El enlace Información legal verifactu se muestra al pie de las páginas de Administración."
     ]
   },
   "/dashboard/operaciones/data": {
@@ -282,7 +310,8 @@
     "steps": [
       "Usa Cambios con Excel para acceder a las importaciones y exportaciones habituales.",
       "En Actualizaciones Vtiger, adjunta un CSV o Excel y valida que sus columnas coincidan exactamente con el formato esperado.",
-      "Selecciona el modo de importación, ejecuta el proceso y consulta después su resumen y detalle en el historial."
+      "Selecciona el modo de importación, ejecuta el proceso y consulta después su resumen y detalle en el historial.",
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
     ]
   },
   "/dashboard/operaciones/agentes": {
@@ -298,7 +327,8 @@
       "La pestaña Asuntos muestra solo empleados activos, sin columna de estado. Abre una fila para gestionar libre disposición, documentos, ausencias y comentarios.",
       "Dentro de Agentes, Activos es la pestaña inicial y muestra empleados activos; Inactivos reúne empleados no activos, incluidos los bloqueados. No empleados reúne los agentes sin cuenta de empleado, cualquiera que sea su estado. Los filtros por ID, nombre, email y rol se mantienen al cambiar de pestaña. Las tablas no tienen columnas Estado ni Cuenta de empleado.",
       "La ficha del agente contiene Detalles, Nóminas y Tareas. Nóminas muestra su ficha única con historial bancario y la nómina pactada con enlace para editar el cargo recurrente.",
-      "Tareas muestra ID, nombre, agente, estado y descripción. Filtra por ID, nombre, descripción o estado; Crear tarea abre un modal que se cierra con × o Escape. Abre cualquier fila para consultar y editar su tarea en una subpágina. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados."
+      "Tareas muestra ID, nombre, agente, estado y descripción. Filtra por ID, nombre, descripción o estado; Crear tarea abre un modal que se cierra con × o Escape. Abre cualquier fila para consultar y editar su tarea en una subpágina. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados.",
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
     ]
   },
   "/dashboard/operaciones/agentes/roles": {
@@ -315,7 +345,8 @@
     "steps": [
       "Selecciona la gestión que necesitas revisar.",
       "Consulta cuentas, responsables y estado.",
-      "Actualiza los datos operativos y guarda. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados."
+      "Actualiza los datos operativos y guarda. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados.",
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
     ]
   },
   "/dashboard/direccion/tesoreria": {
@@ -325,7 +356,8 @@
       "Pulsa Añadir extracto, selecciona Santander o Sabadell e indica expresamente si el archivo tiene cabezal. Sin cabezal exige la tabla en la primera fila; con cabezal localiza la tabla después de los datos informativos de la cuenta.",
       "La aplicación detecta el sentido cronológico y compara las coincidencias exactas de cada movimiento para reconocer movimientos registrados e intercalar los ausentes con identificadores ordinales. En la fase de confirmación se muestra el rango de fechas operativas del archivo y la última fecha registrada para ese banco. Si hay movimientos anteriores, puedes marcar Omitir anteriores: se excluyen de la subida y se recalcula el total; los del mismo día se conservan y siguen pasando por la comparación de movimientos. La importación conserva los identificadores y todos los vínculos existentes con nóminas, anticipos y pagos. Solo inserta movimientos nuevos, con el siguiente identificador disponible por banco y año, aunque su fecha sea anterior. Cada coincidencia exacta consume una sola aparición, independientemente del orden del archivo. Si quedan cero movimientos nuevos, Finalizar sin subir cierra el asistente sin importar nada. El aviso distingue los movimientos comprobados de los omitidos; desmarca Omitir para comprobar los anteriores.",
       "Cambia entre las pestañas Sabadell y Santander y filtra, en este orden, por fecha, concepto, importe y estado. El interruptor de fecha permite usar una fecha concreta o un rango Desde/Hasta.",
-      "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape."
+      "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape.",
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
     ]
   },
   "/dashboard/direccion/tesoreria/extractos": {
@@ -380,7 +412,8 @@
       "En Asignado a, Otro aparece al final para revisar cargos sin proveedor, cliente ni empleado. Permite un comentario y asociar un cargo previsto de tipo Otro. Si existe una asignación anterior, confirma su sustitución o conserva ese movimiento omitiéndolo.",
       "Conciliación sustituye al nombre Revisión de líneas. En Otro puedes seleccionar o crear un cargo previsto de tipo Otro sin destinatario, y asociar sus vencimientos mediante el análisis. Las asociaciones se conservan al volver a conciliar.",
       "La ruta de Conciliación es /dashboard/direccion/tesoreria/extractos/conciliacion. Los detalles de movimientos y Duplicados se abren dentro de esta ruta. La URL se escribe sin tilde; el menú mantiene el nombre Conciliación. Las direcciones antiguas de revision y conciliación redirigen conservando la subruta y los filtros de la URL.",
-      "Los movimientos revisados y asociados actualizan automáticamente el realizado y el pendiente de la previsión del ERP. Reabrir un movimiento retira su efecto hasta que vuelva a revisarse. Los filtros de cada tabla se muestran juntos en una tarjeta Filtros inicialmente cerrada, con una etiqueta fina encima de cada campo. Cerrarla conserva los filtros aplicados."
+      "Los movimientos revisados y asociados actualizan automáticamente el realizado y el pendiente de la previsión del ERP. Reabrir un movimiento retira su efecto hasta que vuelva a revisarse. Los filtros de cada tabla se muestran juntos en una tarjeta Filtros inicialmente cerrada, con una etiqueta fina encima de cada campo. Cerrarla conserva los filtros aplicados.",
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
     ]
   },
   "/dashboard/direccion/tesoreria/prevision-liquidez": {
@@ -396,7 +429,8 @@
       "El saldo inicial desconocido y los extractos parciales se señalan: no acreditan un cierre bancario. La revisión de fin de mes se realiza desde la Vista Juan y conserva lo pendiente.",
       "Los recibos y remesas nuevos sin banco se asignan automáticamente a Sabadell. La asignación es un valor inicial: puedes seleccionar otro banco posteriormente. Los recibos pendientes existentes se han unificado en Sabadell; se conserva el histórico de cobros realizados.",
       "Existe una sola previsión del ERP: los cargos y órdenes vinculados son su fuente; los grupos y conceptos pendientes tienen presupuestos compartidos. Editar la tabla o Vista Juan cambia el mismo registro. Los detalles cubren el presupuesto del grupo y nunca se suman de nuevo. La conciliación alimenta el realizado sin una aplicación manual adicional.",
-      "Los pagos documentados de facturas son editables desde su concepto. El importe total debe coincidir con los vencimientos; los pagos ya conciliados quedan protegidos. Una factura sustituye una estimacion solo cuando se vincula explicitamente a su vencimiento. Los pagos sin banco se muestran aparte y se pueden abrir para asignarlo."
+      "Los pagos documentados de facturas son editables desde su concepto. El importe total debe coincidir con los vencimientos; los pagos ya conciliados quedan protegidos. Una factura sustituye una estimacion solo cuando se vincula explicitamente a su vencimiento. Los pagos sin banco se muestran aparte y se pueden abrir para asignarlo.",
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
     ]
   },
   "/dashboard/direccion/tesoreria/prevision-ingresos": {
@@ -423,14 +457,16 @@
       "Alterna entre Cargos previstos registrados y Cargos pendientes de asociar.",
       "Filtra por tipo Proveedor o Nómina, base imponible, importe total o neto, proveedor o empleado, fecha y descripción.",
       "Al agregar un cargo elige Proveedor para buscar el proveedor o dejarlo sin asignar, o Nómina para seleccionar un empleado e indicar su importe neto. Programa fechas con dd, mm y yyyy separados o una periodicidad, con una o varias reglas. No se permite duplicar un cargo previsto activo del mismo empleado. El interruptor Con IVA calcula la base automáticamente como total / 1,21 y Sin IVA como el total. El mismo formulario se usa desde proveedores y revisión bancaria.",
-      "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape."
+      "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape.",
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
     ]
   },
   "/dashboard/direccion/rds": {
     "summary": "Consulta la finalidad y la estructura actual de cada tabla RDS.",
     "steps": [
       "Abre una tabla para ver sus columnas, tipos, claves, valores por defecto y descripciones.",
-      "La estructura se consulta en PostgreSQL al abrir la página; los cambios de esquema aparecen automáticamente. Las descripciones funcionales se mantienen como comentarios de tabla en RDS."
+      "La estructura se consulta en PostgreSQL al abrir la página; los cambios de esquema aparecen automáticamente. Las descripciones funcionales se mantienen como comentarios de tabla en RDS.",
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
     ]
   },
   "/dashboard/direccion/copias-seguridad": {
@@ -439,7 +475,8 @@
       "Crear copia recuperable inicia un trabajo en segundo plano. Puedes dejar la pagina y volver: el estado y la descarga permanecen disponibles.",
       "Una copia recuperable contiene un volcado PostgreSQL, los documentos de S3 y un manifiesto con hashes SHA-256. Solo se ofrece descargar cuando termina y se verifica su integridad.",
       "La restauracion se prueba con el script restore-recoverable-backup.mjs en una base local nueva y aislada. El indicador de integridad no significa que se haya probado una restauracion completa.",
-      "Exportar datos seleccionados abre el asistente de tablas y columnas. Esa exportacion contiene datos y no sustituye una copia recuperable."
+      "Exportar datos seleccionados abre el asistente de tablas y columnas. Esa exportacion contiene datos y no sustituye una copia recuperable.",
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
     ]
   },
   "/dashboard/direccion/copias-seguridad/nueva": {
@@ -447,7 +484,8 @@
     "steps": [
       "Indica un nombre y selecciona tablas y columnas. Las claves primarias se conservan.",
       "Revisa los detalles y confirma la exportacion. Mientras trabaja se muestra el estado sin un porcentaje estimado.",
-      "La descarga contiene los datos seleccionados. No incluye el esquema de PostgreSQL ni los documentos de S3: usa Crear copia recuperable para ambos. Los filtros de cada tabla se muestran juntos en una tarjeta Filtros inicialmente cerrada, con una etiqueta fina encima de cada campo. Cerrarla conserva los filtros aplicados."
+      "La descarga contiene los datos seleccionados. No incluye el esquema de PostgreSQL ni los documentos de S3: usa Crear copia recuperable para ambos. Los filtros de cada tabla se muestran juntos en una tarjeta Filtros inicialmente cerrada, con una etiqueta fina encima de cada campo. Cerrarla conserva los filtros aplicados.",
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
     ]
   },
   "/dashboard/direccion/horas-juan": {
@@ -457,7 +495,8 @@
       "En normal e informativa introduce horas y minutos; se convierten a horas decimales y se valoran a 15 € por hora.",
       "Revisa o modifica el importe anterior a compensar e indica su motivo cuando no sea cero.",
       "Alterna entre Informes y Adeudos para consultar quién debe el saldo pendiente y abrir su informe de origen.",
-      "Desde el informe puedes guardar únicamente el documento como PDF o eliminarlo; los anticipos avisan de los cierres vinculados que también se borrarán."
+      "Desde el informe puedes guardar únicamente el documento como PDF o eliminarlo; los anticipos avisan de los cierres vinculados que también se borrarán.",
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
     ]
   },
   "/dashboard/direccion/previsiones/prevision-liquidez": {
@@ -490,7 +529,8 @@
       "Cada recibo se vincula a una orden por factura y número de cobro; si no existe, se crea. Las coincidencias ambiguas deben resolverse antes de importar. Los importes y fechas se actualizan en la orden sin duplicarla.",
       "Número de remesa, Remesa en carpeta e Importe remesa solo sustituyen datos anteriores cuando llega un nuevo valor. Las remesas se registran y agrupan sus recibos; su total visible se calcula dinámicamente sumando los importes de sus órdenes.",
       "La revisión bancaria confirma el cobro y la fecha real de órdenes, recibos y remesas, y actualiza el total cobrado de la factura. Los cambios quedan en los comentarios de la cuenta asociada.",
-      "Los ingresos previstos proceden de las órdenes pendientes: recibos y transferencias, sin recurrencia. Los cambios de importe, fecha y banco realizados al preparar la factura se reflejan en esas órdenes y en liquidez. Agrupar recibos en una remesa no suma un ingreso adicional."
+      "Los ingresos previstos proceden de las órdenes pendientes: recibos y transferencias, sin recurrencia. Los cambios de importe, fecha y banco realizados al preparar la factura se reflejan en esas órdenes y en liquidez. Agrupar recibos en una remesa no suma un ingreso adicional.",
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
     ]
   },
   "/dashboard/direccion/previsiones/prevision-gastos": {
@@ -500,7 +540,8 @@
       "Cambia entre Gastos previstos registrados y Gastos pendientes de asociar; estos últimos son pagos sin proveedor.",
       "Crea un registro por cada pago o vencimiento y selecciona proveedor, fecha, forma —recibo, transferencia o pagaré—, banco —Sabadell o Santander— e importes.",
       "Pulsa cualquier fila para abrir su ficha, asociar un proveedor o modificar los datos del pago.",
-      "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape."
+      "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape.",
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
     ]
   },
   "/dashboard/produccion/control_redaccion": {
@@ -509,7 +550,8 @@
       "Despliega Filtros, cerrado inicialmente, para localizar artículos, empresas o números de revista. Prioridad y Dónde está siguen disponibles como filtros, pero no aparecen en la tabla.",
       "Consulta el estado de corrección y la planificación editorial en la tabla.",
       "Pulsa Limpiar filtros para volver a mostrar todos los registros.",
-      "Añadir contenido para artículo abre un modal con empresa, título, estado, responsable, revista, páginas y publicación en Vidrioperfil (casilla). Debes rellenar al menos un destino previsto: España, Latam, Especial o Hueco. Revista puede quedar en blanco; los responsables son Ricardo, Frank o Paco. Al guardar aparece el artículo en la tabla. Cierra con ×, Cancelar o Escape. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados."
+      "Añadir contenido para artículo abre un modal con empresa, título, estado, responsable, revista, páginas y publicación en Vidrioperfil (casilla). Debes rellenar al menos un destino previsto: España, Latam, Especial o Hueco. Revista puede quedar en blanco; los responsables son Ricardo, Frank o Paco. Al guardar aparece el artículo en la tabla. Cierra con ×, Cancelar o Escape. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados.",
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
     ]
   },
   "/dashboard/operaciones/agentes/asuntos": {
@@ -530,7 +572,9 @@
       "El origen de la factura puede ser un contrato o una sola orden. La selecci?n se hace en una tabla con filtros por columna. La opci?n inicial deja la factura previa para emitir VeriFactu despu?s; al elegir rellenarlo ahora se solicitan los datos del emisor y se emite al finalizar.",
       "Al aceptar una propuesta se crean el contrato y las órdenes de Control administrativo, sin factura automática. La factura se crea cuando el usuario lo solicita.",
       "Guardar los datos de pago actualiza las órdenes existentes con importe, vencimiento, forma de cobro y banco, conservando sus identificadores. La base se reparte según los impuestos de la factura. Recibo genera o actualiza su recibo; al cambiar a transferencia se retira el recibo que no tenga remesa. Los cobros confirmados o remesados requieren resolver antes sus asociaciones.",
-      "Recibos y transferencias son ingresos previstos de las órdenes, no ingresos recurrentes. Afectan a la liquidez una sola vez según banco y fecha, mientras sigan pendientes. Terminar el asistente prepara la factura; la emisión fiscal mantiene su confirmación específica."
+      "Recibos y transferencias son ingresos previstos de las órdenes, no ingresos recurrentes. Afectan a la liquidez una sola vez según banco y fecha, mientras sigan pendientes. Terminar el asistente prepara la factura; la emisión fiscal mantiene su confirmación específica.",
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
+      "El enlace Información legal verifactu se muestra al pie de las páginas de Administración."
     ]
   },
   "/dashboard/operaciones/data/exportar/cuentas": {
@@ -555,7 +599,9 @@
       "La ficha del contrato muestra sus detalles, órdenes y facturas. Los recibos y transferencias pendientes alimentan las previsiones.",
       "Al elegir o cambiar la cuenta se rellena su agente asignado. Puedes modificarlo. La fecha fin es opcional.",
       "En Servicios se utiliza el mismo selector por canal, servicio y especificaciones y la misma tabla compacta que en propuestas. Puedes ajustar unidades, descuentos y modo de precio; esos datos se conservan en el contrato y al preparar su factura.",
-      "En el paso de cobro puedes elegir Intercambio sin cobro monetario y describir sus condiciones. Se conserva el valor de los servicios y se crean contrato y contenidos, sin órdenes de cobro, recibos ni facturas automáticas."
+      "En el paso de cobro puedes elegir Intercambio sin cobro monetario y describir sus condiciones. Se conserva el valor de los servicios y se crean contrato y contenidos, sin órdenes de cobro, recibos ni facturas automáticas.",
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
+      "El enlace Información legal verifactu se muestra al pie de las páginas de Administración."
     ]
   },
   "/dashboard/administracion/control-administrativo/importacion-masiva": {
@@ -566,7 +612,9 @@
       "Consulta los nombres exactos de columnas y descarga la plantilla. Una fila por registro en la primera hoja; .xlsx o .xls, hasta 10 MB y 5.000 filas. Las asociaciones usan IDs existentes; las fechas admiten dd/mm/yyyy o fechas Excel.",
       "Sube y valida sin escribir en la base de datos. Las tarjetas desplegables muestran errores y valores anteriores/nuevos. Corrige el archivo o decide actualizar o saltar cada fila y vuelve a validar.",
       "La confirmación guarda todo el conjunto válido en una transacción. Si otro usuario modifica los datos después de validar, se exige nueva validación. Celdas vacías o guiones no borran valores y filas ausentes no eliminan registros.",
-      "Las facturas se importan en proceso: no se emiten ni envían a VeriFactu. Se bloquean las sobrescrituras de facturas emitidas/contabilizadas y órdenes cobradas o conciliadas. Los contratos importados contienen datos generales; sus órdenes pueden importarse después."
+      "Las facturas se importan en proceso: no se emiten ni envían a VeriFactu. Se bloquean las sobrescrituras de facturas emitidas/contabilizadas y órdenes cobradas o conciliadas. Los contratos importados contienen datos generales; sus órdenes pueden importarse después.",
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
+      "El enlace Información legal verifactu se muestra al pie de las páginas de Administración."
     ]
   },
   "/dashboard/operaciones/servicios": {
@@ -575,7 +623,8 @@
       "Alterna las pestañas Servicios y Canales. Los botones superiores permiten crear ambos registros y agregar una revista mediante el mismo formulario del catálogo de Revistas.",
       "Pulsa un canal para ver y editar su nombre y consultar sus servicios. Crear servicio asociado fija ese canal.",
       "Pulsa un servicio desde cualquiera de las tablas para abrir su ficha y editar código al crear, canal, tarifa, soporte, fechas, concepto de factura, disponibilidad y contenido en cuatro idiomas. Oculto evita que aparezca en propuestas.",
-      "El menú lateral comienza expandido. La flecha superior lo reduce a una columna azul; la flecha contraria lo vuelve a expandir."
+      "El menú lateral comienza expandido. La flecha superior lo reduce a una columna azul; la flecha contraria lo vuelve a expandir.",
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
     ]
   },
   "/dashboard/operaciones/servicios/crear": {
@@ -634,7 +683,8 @@
       "Los selectores de agentes permiten Comercial, Dirección, Administración, Operaciones y Superadmin; los agentes Base no pueden seleccionarse.",
       "En Contactos, una corona amarilla identifica el contacto principal. Marca la casilla de otro contacto y confirma el cambio en el modal. El primer contacto creado en la cuenta se marca automáticamente; las propuestas nuevas lo preseleccionan.",
       "En la pestaña Tareas puedes crear y editar acciones de la cuenta. Elige el tipo (material, publicaciones, propuestas, llamada, email o acción), indica el nombre y asigna como mínimo un agente activo con cuenta de empleado. Puedes añadir varios responsables, referencia de campaña o contrato y fecha límite dd / mm / yyyy. Comercial, Administración, Operaciones, Dirección y Superadmin gestionan estas tareas.",
-      "La misma tarea aparece en las tareas propias de cada responsable. Desde su detalle los agentes asignados pueden cambiar el estado; el cambio se comparte en la cuenta y en las listas de todos los responsables. Pendientes y Terminadas separan las tareas por estado."
+      "La misma tarea aparece en las tareas propias de cada responsable. Desde su detalle los agentes asignados pueden cambiar el estado; el cambio se comparte en la cuenta y en las listas de todos los responsables. Pendientes y Terminadas separan las tareas por estado.",
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
     ]
   },
   "/dashboard/administracion/control-administrativo/[...id_orden]": {
@@ -647,7 +697,9 @@
       "Cobro permite alternar Con IVA y Sin IVA. Con IVA calcula una base de importe dividido por 1,21, no editable. Forma de cobro y banco son desplegables. Pendiente de cobro oculta la fecha real; Cobrada exige introducirla con día, mes y año. Los cobros de revisión bancaria se gestionan desde esa revisión.",
       "Otros datos de la orden reúne remesa, propuesta de origen, agente y contacto de esa propuesta, contacto de seguimiento de cobro de la cuenta y comentarios. El botón flotante Guardar aparece solo si hay cambios y desaparece al guardar o restablecer los valores originales.",
       "Cancelar orden avisa primero y después muestra los documentos afectados para confirmar. Retira recibos y transferencias pendientes, elimina la factura pendiente exclusiva y conserva las compartidas. Una factura emitida o contabilizada o un cobro confirmado impiden cancelar hasta resolverlos. La orden y una copia de los documentos eliminados permanecen como historial; deja de sumar en liquidez. El modal se cierra con × o Escape.",
-      "Los recibos y remesas nuevos sin banco se asignan automáticamente a Sabadell. La asignación es un valor inicial: puedes seleccionar otro banco posteriormente. Los recibos pendientes existentes se han unificado en Sabadell; se conserva el histórico de cobros realizados."
+      "Los recibos y remesas nuevos sin banco se asignan automáticamente a Sabadell. La asignación es un valor inicial: puedes seleccionar otro banco posteriormente. Los recibos pendientes existentes se han unificado en Sabadell; se conserva el histórico de cobros realizados.",
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
+      "El enlace Información legal verifactu se muestra al pie de las páginas de Administración."
     ]
   },
   "/": {
@@ -663,7 +715,8 @@
       "Pendientes agrupa pendiente y en curso. Terminadas agrupa completada y cancelada.",
       "Abre el nombre de una tarea para consultar su detalle. Las tareas de cuenta muestran su cuenta, tipo, referencia y fecha; los responsables pueden guardar cambios de estado. Las tareas personales conservan sus permisos de gestión habituales.",
       "Puedes crearte tareas desde el dashboard. Operaciones crea tareas para empleados y administra su edición.",
-      "Las tareas de cuenta se comparten entre todos los agentes asignados y aparecen también en el panel de tareas propias. La columna Cuenta permite volver a la ficha."
+      "Las tareas de cuenta se comparten entre todos los agentes asignados y aparecen también en el panel de tareas propias. La columna Cuenta permite volver a la ficha.",
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
     ]
   },
   "/dashboard/operaciones/tareas": {
@@ -672,14 +725,16 @@
       "Abre un empleado para consultar sus tareas pendientes y terminadas.",
       "Crear tarea asigna una nueva tarea pendiente al empleado de la ficha. El modal se cierra con la cruz o Escape.",
       "Abre una tarea para editar nombre, descripción y estado. Guarda los cambios para actualizarlos en RDS. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados.",
-      "Los contadores y listas incluyen las tareas de cuentas. Su estado se actualiza desde el detalle; los datos y responsables se editan en la pestaña Tareas de la cuenta."
+      "Los contadores y listas incluyen las tareas de cuentas. Su estado se actualiza desde el detalle; los datos y responsables se editan en la pestaña Tareas de la cuenta.",
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
     ]
   },
   "/dashboard": {
     "summary": "Panel personal del agente.",
     "steps": [
       "Mis tareas pendientes es la primera pestaña y muestra las tareas pendientes o en curso asignadas a tu agente. Ver todas mis tareas abre pendientes y terminadas. Los filtros de Tarea, Estado y Descripción están encima de la tabla, reunidos en un único desplegable Filtros, inicialmente cerrado. Al abrirlo se muestran todos juntos; cerrarlo conserva los filtros aplicados. El filtro Estado es un select con las opciones Todos los estados, Pendiente y En curso.",
-      "En Mis tareas pendientes, Agregar tarea abre un modal con nombre y descripción. La tarea se asigna al agente autenticado, queda pendiente y aparece en la lista al guardarla. No permite elegir otro agente. Los filtros de cada tabla se muestran juntos en una tarjeta Filtros inicialmente cerrada, con una etiqueta fina encima de cada campo. Cerrarla conserva los filtros aplicados."
+      "En Mis tareas pendientes, Agregar tarea abre un modal con nombre y descripción. La tarea se asigna al agente autenticado, queda pendiente y aparece en la lista al guardarla. No permite elegir otro agente. Los filtros de cada tabla se muestran juntos en una tarjeta Filtros inicialmente cerrada, con una etiqueta fina encima de cada campo. Cerrarla conserva los filtros aplicados.",
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
     ]
   },
   "/dashboard/direccion/tesoreria/prevision-liquidez/vista-juan": {
@@ -709,7 +764,8 @@
       "Todos los modales tienen × y Escape. Previsión liquidez vuelve a la página principal.",
       "Los recibos y remesas nuevos sin banco se asignan automáticamente a Sabadell. La asignación es un valor inicial: puedes seleccionar otro banco posteriormente. Los recibos pendientes existentes se han unificado en Sabadell; se conserva el histórico de cobros realizados.",
       "Existe una sola previsión del ERP: los cargos y órdenes vinculados son su fuente; los grupos y conceptos pendientes tienen presupuestos compartidos. Editar la tabla o Vista Juan cambia el mismo registro. Los detalles cubren el presupuesto del grupo y nunca se suman de nuevo. La conciliación alimenta el realizado sin una aplicación manual adicional.",
-      "Los pagos documentados de facturas son editables desde su concepto. El importe total debe coincidir con los vencimientos; los pagos ya conciliados quedan protegidos. Una factura sustituye una estimacion solo cuando se vincula explicitamente a su vencimiento. Los pagos sin banco se muestran aparte y se pueden abrir para asignarlo."
+      "Los pagos documentados de facturas son editables desde su concepto. El importe total debe coincidir con los vencimientos; los pagos ya conciliados quedan protegidos. Una factura sustituye una estimacion solo cuando se vincula explicitamente a su vencimiento. Los pagos sin banco se muestran aparte y se pueden abrir para asignarlo.",
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
     ]
   },
   "/dashboard/direccion/tesoreria/conciliacion": {
@@ -727,7 +783,8 @@
       "La ruta muestra la carpeta actual. Durante una consulta aparece Cargando mediateca; una respuesta antigua no sustituye una carpeta abierta posteriormente.",
       "Eliminar mueve los registros a la papelera y conserva los archivos. Deshacer permite recuperar la ultima eliminacion.",
       "Papelera muestra eliminaciones anteriores y permite restaurarlas despues de recargar. Las carpetas requieren permiso de operaciones; los conflictos de identidad impiden sobrescribir contenido.",
-      "Los errores muestran Reintentar y conservan el contenido ya cargado. Los filtros de cada tabla se muestran juntos en una tarjeta Filtros inicialmente cerrada, con una etiqueta fina encima de cada campo. Cerrarla conserva los filtros aplicados."
+      "Los errores muestran Reintentar y conservan el contenido ya cargado. Los filtros de cada tabla se muestran juntos en una tarjeta Filtros inicialmente cerrada, con una etiqueta fina encima de cada campo. Cerrarla conserva los filtros aplicados.",
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
     ]
   },
   "/dashboard/operaciones/data/importar/cuentas": {

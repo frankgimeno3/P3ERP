@@ -54,6 +54,8 @@ export async function getContactos(filters = {}) {
   const pool = getPgPool();
   const values = [];
   const where = [];
+  const sortColumns=['nombre_contacto','apellidos_contacto','id_contacto','nombre_empresa','telefono_contacto','email_contacto','pais_contacto'];
+  const orderBy=sortColumns.includes(filters.sortBy)?`${filters.sortBy} ${filters.sortDirection==='desc'?'DESC':'ASC'} NULLS LAST${filters.sortBy==='id_contacto'?'':', id_contacto ASC'}`:'nombre_completo_contacto ASC, id_contacto ASC';
 
   if (filters.idCuenta) {
     values.push(filters.idCuenta);
@@ -71,7 +73,7 @@ export async function getContactos(filters = {}) {
       SELECT *, EXISTS(SELECT 1 FROM comercial_cuentas c WHERE c.id_cuenta=comercial_contactos.id_cuenta AND c.datos_comerciales->>'contacto_principal'=comercial_contactos.id_contacto) AS es_principal
       FROM comercial_contactos
       ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
-      ORDER BY nombre_completo_contacto ASC, id_contacto ASC
+      ORDER BY ${orderBy}
       ${pagination}
     `,
     values,

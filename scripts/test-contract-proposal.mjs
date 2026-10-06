@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {contractProposalPayload} from '../server/features/contrato/ContractProposal.js';
+const contract={id_contrato:'C26.000.155',id_cuenta_contrato:'client',id_agente_contrato:'old',iva_aplicable:true,importe_total_bi_contrato:2000,importe_contrato_con_iva:2420,lineas_contrato:[{id_linea_contrato:'oldline',id_linea_propuesta:'oldproposal',producto:'Contrato global',modo_precio:'personalizado',precio_total_personalizado:2000,unidades:1}]};
+const data=contractProposalPayload(contract,'current',[{id_cobro_contrato:'oldpayment',importe_cobro:2420}],new Date('2026-10-06T10:00:00Z'));
+assert.equal(data.id_agente_propuesta,'current');assert.equal(data.fecha_envio_propuesta,'06/10/2026');assert.equal(data.fecha_validez_propuesta,'05/11/2026');
+assert.equal(data.estado_propuesta,'Borrador');assert.equal(data.fase_propuesta,'1');assert.equal(data.lineas[0].precio_total_personalizado,2000);
+assert.equal(data.lineas[0].id_linea_propuesta,undefined);assert.equal(data.cobros[0].id_cobro_propuesta,undefined);assert.equal(data.cobros[0].fecha_cobro,'06/10/2026');
+assert.equal(contract.id_agente_contrato,'old');assert.equal(contractProposalPayload({...contract,es_intercambio:true},'current',data.cobros).cobros.length,0);
+assert.equal(contractProposalPayload(contract,'current',[{fecha_cobro:'01/01/2026'},{fecha_cobro:'31/01/2026'}],new Date('2026-10-06T10:00:00Z')).cobros[1].fecha_cobro,'05/11/2026');
+assert.throws(()=>contractProposalPayload({...contract,id_cuenta_contrato:''},'current'));assert.throws(()=>contractProposalPayload(contract,''));
+console.log('PASS: contract proposal preserves values, resets IDs/status, uses current agent/date and handles exchanges.');

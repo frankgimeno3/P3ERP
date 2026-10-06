@@ -1,3 +1,5 @@
+
+import SortableTable from '@/app/components/SortableTable';
 import SalirContactoIcon from "@/app/gm/gmcomponents/svg/SalirContactoIcon";
 import type { Account, Agent } from "./types";
 
@@ -49,7 +51,7 @@ export default function CuentaAgentesModal({
           </div>
 
           <div className="min-w-[520px] flex-1 overflow-hidden border border-slate-300 bg-white">
-            <table className="min-w-full border-collapse text-sm">
+            <SortableTable className="min-w-full border-collapse text-sm">
               <thead>
                 <tr>
                   <th className="border-r border-slate-300 bg-[#FC9A00] px-3 py-2 text-left font-semibold text-black">Codigo</th>
@@ -70,7 +72,7 @@ export default function CuentaAgentesModal({
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </SortableTable>
           </div>
         </div>
       </div>

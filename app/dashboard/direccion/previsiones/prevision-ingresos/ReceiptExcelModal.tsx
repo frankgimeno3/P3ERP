@@ -1,4 +1,6 @@
 "use client";
+import SortableTable from '@/app/components/SortableTable';
+
 import { useEffect, useRef, useState } from "react";
 import { PrevisionIngresosService } from "@/app/service/PrevisionIngresosService";
 
@@ -63,14 +65,14 @@ export default function ReceiptExcelModal({ onClose, onImported }: { onClose: ()
       <div className="space-y-5 p-6">
         <div className="rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm">
           <p>La primera hoja debe incluir estas ocho columnas en su primera fila:</p>
-          <div className="mt-3 overflow-x-auto"><table className="min-w-full"><thead><tr>{columns.map(([key, label]) => <th key={key} className="whitespace-nowrap border border-blue-200 px-3 py-2 text-left font-medium">{label}</th>)}</tr></thead></table></div>
+          <div className="mt-3 overflow-x-auto"><SortableTable className="min-w-full"><thead><tr>{columns.map(([key, label]) => <th key={key} className="whitespace-nowrap border border-blue-200 px-3 py-2 text-left font-medium">{label}</th>)}</tr></thead></SortableTable></div>
           <p className="mt-3">Número de recibo es obligatorio: <strong>526058-004</strong> corresponde a la factura <strong>526058</strong>, recibo <strong>4</strong>. Se eliminan los espacios al principio y al final.</p>
           <p className="mt-2">Los recibos existentes se actualizan sin duplicarse. Los campos vacíos o «-» conservan los valores anteriores. La remesa se crea o actualiza al indicar su número y su total se calcula sumando sus recibos. Usa fechas de Excel o dd/mm/yyyy e importes numéricos o con coma decimal.</p>
         </div>
         <label className="block text-sm font-medium">Archivo Excel (.xlsx o .xls, máximo 10 MB y 5.000 recibos)
           <input type="file" accept=".xlsx,.xls" disabled={busy} onChange={event => { requestId.current++; setFile(event.target.files?.[0] || null); setPreview(null); setError(""); }} className="mt-2 block w-full cursor-pointer rounded border border-slate-300 p-2 transition enabled:hover:bg-slate-50 file:mr-4 file:cursor-pointer file:rounded file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:text-blue-950 disabled:cursor-default disabled:opacity-50 disabled:file:cursor-default" />
         </label>
-        {preview && <div><h3 className="mb-2 font-semibold">{preview.total} recibos válidos. Vista previa de los primeros {preview.rows.length}.</h3><div className="overflow-x-auto rounded border"><table className="min-w-full text-sm"><thead className="bg-blue-950 text-white"><tr>{[...columns, ["numero_factura", "Factura detectada"], ["numero_cobro", "Nº recibo en factura"]].map(([key, label]) => <th key={key} className="whitespace-nowrap p-3 text-left font-medium">{label}</th>)}</tr></thead><tbody>{preview.rows.map(row => <tr key={String(row.numero_recibo)} className="border-b">{[...columns, ["numero_factura"], ["numero_cobro"]].map(([key]) => <td key={key} className="whitespace-nowrap p-3">{row[key] == null || row[key] === "" ? "-" : key.startsWith("importe_") ? Number(row[key]).toLocaleString("es-ES", { style: "currency", currency: "EUR" }) : String(row[key])}</td>)}</tr>)}</tbody></table></div></div>}
+        {preview && <div><h3 className="mb-2 font-semibold">{preview.total} recibos válidos. Vista previa de los primeros {preview.rows.length}.</h3><div className="overflow-x-auto rounded border"><SortableTable className="min-w-full text-sm"><thead className="bg-blue-950 text-white"><tr>{[...columns, ["numero_factura", "Factura detectada"], ["numero_cobro", "Nº recibo en factura"]].map(([key, label]) => <th key={key} className="whitespace-nowrap p-3 text-left font-medium">{label}</th>)}</tr></thead><tbody>{preview.rows.map(row => <tr key={String(row.numero_recibo)} className="border-b">{[...columns, ["numero_factura"], ["numero_cobro"]].map(([key]) => <td key={key} className="whitespace-nowrap p-3">{row[key] == null || row[key] === "" ? "-" : key.startsWith("importe_") ? Number(row[key]).toLocaleString("es-ES", { style: "currency", currency: "EUR" }) : String(row[key])}</td>)}</tr>)}</tbody></SortableTable></div></div>}
         {error && <p role="alert" className="whitespace-pre-wrap rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</p>}
         {busy && <p role="status" className="text-sm text-slate-600">{preview ? "Importando recibos. Si cierras el modal, la importación continuará." : "Validando el archivo…"}</p>}
         <footer className="flex justify-end gap-3 border-t pt-4">

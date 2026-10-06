@@ -1,4 +1,6 @@
 'use client';
+import SortableTable from '@/app/components/SortableTable';
+
 
 import React, { FC, useEffect, useState } from 'react';
 import ModalAnadirDireccion from './modals/modalsDirecciones/ModalAnadirDireccion';
@@ -123,7 +125,7 @@ const Direcciones: FC<DireccionesProps> = ({
       )}
 
       {direcciones.map((direccion, idx) => (
-        <table key={idx} className="min-w-full overflow-hidden rounded border border-gray-300 bg-white text-xs shadow-sm">
+        <SortableTable key={idx} className="min-w-full overflow-hidden rounded border border-gray-300 bg-white text-xs shadow-sm">
           <thead className="bg-blue-950/80 text-white">
             <tr>
               {columns.map((column) => (
@@ -164,7 +166,7 @@ const Direcciones: FC<DireccionesProps> = ({
               </td>
             </tr>
           </tbody>
-        </table>
+        </SortableTable>
       ))}
 
       <ModalAnadirDireccion isOpen={isAddOpen} onClose={() => setIsAddOpen(false)} onConfirm={handleAdd} />

@@ -1,4 +1,6 @@
 "use client";
+import SortableTable from '@/app/components/SortableTable';
+
 import TableFilters from '@/app/components/TableFilters';
 import { use, useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
@@ -169,7 +171,7 @@ export default function ProveedorPage({
 
             {/* Data table */}
             <div className="overflow-x-auto bg-white rounded shadow">
-              <table className="min-w-full text-sm">
+              <SortableTable className="min-w-full text-sm">
                 <thead className="bg-blue-950 text-white">
                   <tr>
                     {tab === "tickets" && (
@@ -273,7 +275,7 @@ export default function ProveedorPage({
                     </tr>
                   )}
                 </tbody>
-              </table>
+              </SortableTable>
             </div>
           </>
         ) : (

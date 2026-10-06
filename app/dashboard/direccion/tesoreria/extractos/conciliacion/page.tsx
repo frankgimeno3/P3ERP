@@ -1,4 +1,6 @@
 "use client";
+import SortableTable from '@/app/components/SortableTable';
+
 import TableFilters from '@/app/components/TableFilters';
 import {request} from '@/app/lib/request';
 
@@ -123,7 +125,7 @@ export default function RevisionLineasPage() {
       </TableFilters>
       <p className="bg-white px-4 pb-3 text-sm text-gray-600"><span className="mr-2 inline-block h-3 w-3 rounded border border-rose-200 bg-rose-50" aria-hidden="true" />Rosa suave: posible duplicado por misma fecha operativa e importe, también entre bancos y con movimientos ya revisados. Compruébalo en Detectar duplicados.</p>
       <div className="overflow-x-auto rounded-b bg-white text-slate-900 shadow">
-        <table className="w-full min-w-[1000px] table-fixed text-sm">
+        <SortableTable className="w-full min-w-[1000px] table-fixed text-sm">
           <thead className="bg-gray-200">
             <tr>
               <th className="w-12 p-3">
@@ -176,7 +178,7 @@ export default function RevisionLineasPage() {
               </tr>
             )}
           </tbody>
-        </table>
+        </SortableTable>
       </div>
       {mode && <BankReviewWizard compactAssignment lines={selectedRows} all={rows} mode={mode} modal onSaved={saved} onClose={()=>setMode(null)} />}
       {cardSettlement&&<CardSettlementModal lines={selectedRows} close={()=>setCardSettlement(false)} done={()=>{setCardSettlement(false);saved();}}/>}

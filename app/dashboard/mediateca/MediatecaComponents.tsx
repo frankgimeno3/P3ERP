@@ -1,4 +1,6 @@
 "use client";
+import SortableTable from '@/app/components/SortableTable';
+
 import TableFilters from '@/app/components/TableFilters';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -470,7 +472,7 @@ export function MediatecaBrowser({
           /></label></TableFilters>
         </div>
         <div className="overflow-x-auto rounded-lg border">
-          <table className="min-w-full text-sm">
+          <SortableTable className="min-w-full text-sm">
             <thead className="bg-gray-50 text-left">
               <tr>
                 <th className="p-3">Nombre</th>
@@ -505,14 +507,14 @@ export function MediatecaBrowser({
               ))}
               {!loading && filteredFolders.length === 0 && <tr><td colSpan={picker ? 2 : 3} className="p-4 text-center text-gray-400">Sin carpetas.</td></tr>}
             </tbody>
-          </table>
+          </SortableTable>
         </div>
       </section>
 
       <section>
         <h2 className="mb-3 font-semibold">Archivos en la carpeta actual ({currentFolderName})</h2>
         <div className="overflow-x-auto rounded-lg border">
-          <table className="min-w-full text-sm">
+          <SortableTable className="min-w-full text-sm">
             <thead className="bg-gray-50 text-left">
               <tr>
                 {picker && <th className="p-3">Sel.</th>}
@@ -555,7 +557,7 @@ export function MediatecaBrowser({
               })}
               {!loading && filteredMedia.length === 0 && <tr><td colSpan={picker ? 6 : 5} className="p-4 text-center text-gray-400">Sin archivos.</td></tr>}
             </tbody>
-          </table>
+          </SortableTable>
         </div>
       </section>
 

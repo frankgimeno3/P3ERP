@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { cuentaOrderBy } from '../server/features/cuenta/CuentaSorting.js';
 
-for (const column of ['nombre_empresa', 'id_cuenta', 'id_edisoft', 'id_agente', 'pais_cuenta', 'telefono']) {
+for (const column of ['nombre_empresa', 'id_cuenta', 'id_edisoft', 'id_agente', 'pais_cuenta', 'telefono', 'correo_principal']) {
   for (const direction of ['asc', 'desc']) {
     const order = cuentaOrderBy(column, direction);
     assert(order.includes(` ${direction.toUpperCase()} NULLS LAST`));
@@ -14,4 +14,4 @@ for (const column of ['', 'constructor', 'nombre_empresa; DROP TABLE comercial_c
   assert.equal(cuentaOrderBy(column, 'desc'), 'created_at DESC, id_cuenta ASC');
 }
 assert.equal(cuentaOrderBy('id_cuenta', 'desc; DROP TABLE comercial_cuentas'), 'id_cuenta ASC NULLS LAST');
-console.log('PASS account sorting: all six columns, direction, stable pagination and SQL allowlist.');
+console.log('PASS account sorting: account columns and search email, direction, stable pagination and SQL allowlist.');

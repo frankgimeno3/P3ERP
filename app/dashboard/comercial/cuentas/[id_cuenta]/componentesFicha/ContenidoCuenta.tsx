@@ -1,4 +1,6 @@
 'use client';
+import SortableTable from '@/app/components/SortableTable';
+
 import TableFilters from '@/app/components/TableFilters';
 
 import Link from 'next/link';
@@ -135,7 +137,7 @@ const ContenidoCuenta: FC<ContenidoCuentaProps> = ({ id_cuenta }) => {
       {error && <div className="border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
 
       <div className="overflow-x-auto">
-        <table className="min-w-full bg-white text-sm">
+        <SortableTable className="min-w-full bg-white text-sm">
           <thead className="bg-blue-950 text-white">
             <tr>
               <th className="p-2 text-left">ID</th>
@@ -174,7 +176,7 @@ const ContenidoCuenta: FC<ContenidoCuentaProps> = ({ id_cuenta }) => {
               </tr>
             ))}
           </tbody>
-        </table>
+        </SortableTable>
       </div>
     </div>
   );

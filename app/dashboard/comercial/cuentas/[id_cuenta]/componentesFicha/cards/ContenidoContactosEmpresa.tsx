@@ -1,4 +1,6 @@
 'use client';
+import SortableTable from '@/app/components/SortableTable';
+
 
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -111,7 +113,7 @@ const ContenidoContactosEmpresa: FC<ContenidoContactosEmpresaProps> = ({ id_cuen
       {contactosFiltrados.length === 0 ? (
         <p className="text-gray-500">No hay contactos disponibles para esta cuenta.</p>
       ) : (
-        <table className="min-w-full">
+        <SortableTable className="min-w-full">
           <thead className="bg-blue-950/80 text-white">
             <tr>
               <th className="text-left p-2 font-light">Código de contacto</th>
@@ -148,7 +150,7 @@ const ContenidoContactosEmpresa: FC<ContenidoContactosEmpresaProps> = ({ id_cuen
               </tr>
             ))}
           </tbody>
-        </table>
+        </SortableTable>
       )}
 
       {principal&&<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"><section role="dialog" aria-modal="true" aria-label="Cambiar contacto principal" className="relative w-full max-w-lg rounded bg-white p-6 shadow-xl"><button aria-label="Cerrar" onClick={()=>setPrincipal(null)} className="absolute right-3 top-2 cursor-pointer rounded px-2 text-2xl hover:bg-gray-100">×</button><h2 className="pr-8 text-lg font-semibold">Cambiar contacto principal</h2><p className="my-4">¿Quieres establecer a {principal.nombre_completo_contacto} como contacto principal de esta cuenta?</p>{error&&<p role="alert" className="text-red-700">{error}</p>}<div className="mt-4 flex justify-end gap-3"><button onClick={()=>setPrincipal(null)} className="cursor-pointer rounded border px-4 py-2 hover:bg-gray-100">Cancelar</button><button disabled={procesando} onClick={confirmarPrincipal} className="rounded bg-blue-950 px-4 py-2 text-white enabled:cursor-pointer enabled:hover:bg-blue-900 disabled:opacity-50">Confirmar cambio</button></div></section></div>}

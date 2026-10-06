@@ -1,4 +1,6 @@
 "use client";
+import SortableTable from '@/app/components/SortableTable';
+
 
 import { useEffect, useState, type KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
@@ -118,7 +120,7 @@ export default function TablaHome({ searchTerm, selectedField }: TablaHomeProps)
     <div className="bg-[#f3f5f7] px-4 pb-6 sm:px-6 lg:px-8">
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         <div tabIndex={0} onKeyDown={handleKeyDown} className="outline-none">
-          <table className="min-w-full border-collapse">
+          <SortableTable className="min-w-full border-collapse">
             <thead>
               <tr>
                 {columns.map((column) => (
@@ -156,7 +158,7 @@ export default function TablaHome({ searchTerm, selectedField }: TablaHomeProps)
                 <tr><td colSpan={columns.length} className="px-3 py-6 text-center text-sm text-slate-500">No hay cuentas.</td></tr>
               )}
             </tbody>
-          </table>
+          </SortableTable>
         </div>
       </div>
     </div>

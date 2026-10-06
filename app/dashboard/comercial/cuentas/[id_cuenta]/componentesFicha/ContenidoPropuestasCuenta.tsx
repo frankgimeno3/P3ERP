@@ -1,4 +1,6 @@
 'use client';
+import SortableTable from '@/app/components/SortableTable';
+
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -92,7 +94,7 @@ const ContenidoPropuestasCuenta: FC<ContenidoPropuestasCuentaProps> = ({ id_cuen
       </div>
 
       <div className="overflow-x-auto">
-        <table className="min-w-full">
+        <SortableTable className="min-w-full">
           <thead className="bg-blue-950/80 text-white">
             <tr>
               <th className="text-left p-2 font-light">ID Propuesta</th>
@@ -119,7 +121,7 @@ const ContenidoPropuestasCuenta: FC<ContenidoPropuestasCuentaProps> = ({ id_cuen
               </tr>
             ))}
           </tbody>
-        </table>
+        </SortableTable>
 
         {loading && <p className="mt-4 text-center text-gray-500">Cargando propuestas...</p>}
         {!loading && error && <p className="mt-4 text-center text-red-600">{error}</p>}

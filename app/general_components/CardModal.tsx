@@ -1,4 +1,6 @@
 "use client";
+import SortableTable from '@/app/components/SortableTable';
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 interface Tarjeta {
@@ -217,7 +219,7 @@ export default function CardModal({ isOpen, onClose, onSelectCard }: CardModalPr
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="min-w-full text-sm border">
+                  <SortableTable className="min-w-full text-sm border">
                     <thead className="bg-gray-100">
                       <tr>
                         <th className="p-3 text-left">Nombre</th>
@@ -272,7 +274,7 @@ export default function CardModal({ isOpen, onClose, onSelectCard }: CardModalPr
                         </tr>
                       ))}
                     </tbody>
-                  </table>
+                  </SortableTable>
                 </div>
               )}
             </>

@@ -1,4 +1,6 @@
 "use client";
+import SortableTable from '@/app/components/SortableTable';
+
 import DateInputRow from "@/app/components/DateInputRow";
 import TableFilters from '@/app/components/TableFilters';
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -127,7 +129,7 @@ export default function Page() {
         {generationMessage && <p role="status" className="mb-4 rounded bg-green-50 p-3">{generationMessage}</p>}
         <Filters f={f} setF={setF} />
         <div className="overflow-x-auto rounded bg-white shadow">
-          <table className="min-w-full text-sm">
+          <SortableTable className="min-w-full text-sm">
             <thead className="bg-blue-950 text-white">
               <tr>
                 {[
@@ -166,7 +168,7 @@ export default function Page() {
                 </tr>
               )}
             </tbody>
-          </table>
+          </SortableTable>
         </div>
         {manage&&<RecurringChargeManageModal id={manage.id} action={manage.action} onClose={()=>setManage(null)} onSaved={()=>{setManage(null);load();onChanged?.();}}/>}
         {open && (

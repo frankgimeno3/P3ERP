@@ -1,4 +1,8 @@
 'use client';
+import SortableTable from '@/app/components/SortableTable';
+import type {TableSort} from '@/app/components/SortableTable';
+import {compareTableValues} from '@/app/lib/tableSorting';
+
 import { isCommercialAgent } from "@/app/config/commercialAgents";
 import TableFilters from '@/app/components/TableFilters';
 
@@ -44,6 +48,7 @@ const ContenidoPorCliente: FC<ContenidoPorClienteProps> = ({ estado = 'curso' })
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [page, setPage] = useState(1);
+  const [sort,setSort]=useState<TableSort|null>(null);
   const pageSize = 50;
 
   useEffect(() => {
@@ -95,7 +100,12 @@ const ContenidoPorCliente: FC<ContenidoPorClienteProps> = ({ estado = 'curso' })
   const totalPages = Math.max(1, Math.ceil(contratosFiltrados.length / pageSize));
   const currentPage = Math.min(page, totalPages);
   const firstIndex = (currentPage - 1) * pageSize;
-  const contratosPagina = contratosFiltrados.slice(firstIndex, firstIndex + pageSize);
+  const sortValue=(row:any,column:number)=>[
+    row.id_contrato,row.nombre_empresa||row.id_cuenta_contrato,formatDateToISO(row.fecha_firma_contrato),
+    row.nombre_contacto||row.id_contacto_contrato,row.nombre_agente_contrato||row.id_agente_contrato,row.id_propuesta,row.importe_contrato_con_iva,
+  ][column];
+  const contratosOrdenados=sort?[...contratosFiltrados].sort((a,b)=>compareTableValues(sortValue(a,sort.column),sortValue(b,sort.column),sort.direction)):contratosFiltrados;
+  const contratosPagina = contratosOrdenados.slice(firstIndex, firstIndex + pageSize);
 
   return (
     <div className="mt-8 flex flex-col gap-4 rounded-xl">
@@ -109,7 +119,7 @@ const ContenidoPorCliente: FC<ContenidoPorClienteProps> = ({ estado = 'curso' })
       {error && <div className="rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
 
       <div className="overflow-x-auto">
-        <table className="min-w-full bg-white">
+        <SortableTable sort={sort} onSortChange={next=>{setSort(next);setPage(1);}} className="min-w-full bg-white">
           <thead className="bg-blue-950 text-white">
             <tr>
               <th className="p-2 pl-6 text-left font-light">Contrato</th>
@@ -169,7 +179,7 @@ const ContenidoPorCliente: FC<ContenidoPorClienteProps> = ({ estado = 'curso' })
               );
             })}
           </tbody>
-        </table>
+        </SortableTable>
       </div>
       {!loading && contratosFiltrados.length > 0 && (
         <nav aria-label="Paginación de contratos" className="flex flex-wrap items-center justify-between gap-3 rounded bg-white p-4 text-sm">

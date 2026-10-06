@@ -1,4 +1,6 @@
 "use client";
+import SortableTable from '@/app/components/SortableTable';
+
 import { matchesTableFilter } from "@/app/lib/dateFilters";
 import TableFilterInput from "@/app/components/TableFilterInput";
 import TableFilters from '@/app/components/TableFilters';
@@ -31,14 +33,14 @@ export default function VerifactuRecordsPage() {
       </div>
       <div className="mb-4 flex justify-end"><Link href="/dashboard/administracion/facturas-clientes" className="cursor-pointer rounded border border-blue-950 px-4 py-2 text-sm text-blue-950 transition hover:bg-blue-50">Volver a facturas</Link></div>
       {error && <p className="mb-4 rounded bg-red-50 p-3 text-red-700">{error}</p>}
-      <div className="overflow-x-auto rounded-xl bg-white shadow"><TableFilters>{visibleColumns.map(column => <label key={column} className="block text-xs font-extralight text-gray-600"><span className="mb-1 block">{column}</span><TableFilterInput label={column} field={column} value={filters[column] || ""} className="w-full min-w-40 rounded border border-blue-200 px-2 py-1.5 outline-none transition focus:border-blue-950" placeholder={`Filtrar ${column}`} onChange={nextValue => setFilters(current => ({...current, [column]: nextValue}))} /></label>)}</TableFilters><table className="min-w-full text-xs">
+      <div className="overflow-x-auto rounded-xl bg-white shadow"><TableFilters>{visibleColumns.map(column => <label key={column} className="block text-xs font-extralight text-gray-600"><span className="mb-1 block">{column}</span><TableFilterInput label={column} field={column} value={filters[column] || ""} className="w-full min-w-40 rounded border border-blue-200 px-2 py-1.5 outline-none transition focus:border-blue-950" placeholder={`Filtrar ${column}`} onChange={nextValue => setFilters(current => ({...current, [column]: nextValue}))} /></label>)}</TableFilters><SortableTable className="min-w-full text-xs">
         <thead className="bg-blue-950 text-white"><tr>{visibleColumns.map(column => <th key={column} className="p-3 text-left font-medium">{column}</th>)}</tr>
 
         </thead>
         <tbody>{filtered.map(record => <tr key={record.id} className="border-t transition hover:bg-blue-50">{visibleColumns.map(column => <td key={column} className="max-w-xs truncate p-3" title={text(record[column])}>{text(record[column]) || "—"}</td>)}</tr>)}
           {!filtered.length && !error && <tr><td colSpan={visibleColumns.length} className="p-8 text-center text-gray-500">No hay registros que coincidan con los filtros.</td></tr>}
         </tbody>
-      </table></div>
+      </SortableTable></div>
     </main>
   </div>;
 }

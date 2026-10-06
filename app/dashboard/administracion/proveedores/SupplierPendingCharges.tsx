@@ -1,4 +1,6 @@
 'use client';
+import SortableTable from '@/app/components/SortableTable';
+
 import TableFilters from '@/app/components/TableFilters';
 import { useState } from 'react';
 import TableColumnFilter from '@/app/components/TableColumnFilter';
@@ -22,8 +24,8 @@ export default function SupplierPendingCharges({ pending, recurring, onEdit }: {
     }))),
   ].filter(row => labels.every((_, index) => String(row.values[index] || '').toLowerCase().includes((filters[index] || '').trim().toLowerCase())));
   return <div className="overflow-x-auto rounded bg-white shadow">
-    <TableFilters>{labels.map((label, index) => <div key={label}><TableColumnFilter label={label} value={filters[index] || ''} onChange={value => setFilters(current => ({ ...current, [index]: value }))} /></div>)}</TableFilters><table className="min-w-full text-left"><thead className="bg-blue-950 text-white"><tr>{labels.map((label) => <th key={label} className="p-3 align-top">{label}</th>)}</tr></thead>
+    <TableFilters>{labels.map((label, index) => <div key={label}><TableColumnFilter label={label} value={filters[index] || ''} onChange={value => setFilters(current => ({ ...current, [index]: value }))} /></div>)}</TableFilters><SortableTable className="min-w-full text-left"><thead className="bg-blue-950 text-white"><tr>{labels.map((label) => <th key={label} className="p-3 align-top">{label}</th>)}</tr></thead>
       <tbody>{rows.map(row => <tr key={row.key} className="border-b">{row.values.map((value: string, index: number) => <td key={index} className="p-3">{index === 0 && row.chargeId ? <button type="button" onClick={() => onEdit(row.chargeId)} className="cursor-pointer rounded p-1 text-left text-blue-950 underline hover:bg-blue-100" aria-label={`Editar ${value}`}>{value}</button> : value}</td>)}</tr>)}{!rows.length && <tr><td colSpan={4} className="p-8 text-center">No hay cargos que coincidan con los filtros.</td></tr>}</tbody>
-    </table>
+    </SortableTable>
   </div>;
 }

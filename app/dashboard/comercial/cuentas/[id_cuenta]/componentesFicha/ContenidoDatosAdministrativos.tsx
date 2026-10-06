@@ -1,4 +1,6 @@
 'use client';
+import SortableTable from '@/app/components/SortableTable';
+
 
 import React, { FC, useState } from "react";
 import { InterfazCuenta } from "@/app/interfaces/interfaces";
@@ -85,7 +87,7 @@ const ContenidoDatosAdministrativos: FC<ContenidoDatosAdministrativosProps> = ({
 
       {subpestana === "facturas" && (
         <section>
-          <table className="min-w-full border border-gray-300 text-sm bg-white">
+          <SortableTable className="min-w-full border border-gray-300 text-sm bg-white">
             <thead className="bg-blue-950/80 text-white">
               <tr>
                 <th className="text-left p-2 font-light">Factura</th>
@@ -109,13 +111,13 @@ const ContenidoDatosAdministrativos: FC<ContenidoDatosAdministrativosProps> = ({
                 </tr>
               )}
             </tbody>
-          </table>
+          </SortableTable>
         </section>
       )}
 
       {subpestana === "cobros" && (
         <section>
-          <table className="min-w-full border border-gray-300 text-sm bg-white">
+          <SortableTable className="min-w-full border border-gray-300 text-sm bg-white">
             <thead className="bg-blue-950/80 text-white">
               <tr>
                 <th className="text-left p-2 font-light">Factura</th>
@@ -141,7 +143,7 @@ const ContenidoDatosAdministrativos: FC<ContenidoDatosAdministrativosProps> = ({
                 </tr>
               )}
             </tbody>
-          </table>
+          </SortableTable>
         </section>
       )}
     </div>

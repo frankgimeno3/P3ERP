@@ -1,4 +1,6 @@
 "use client";
+import SortableTable from '@/app/components/SortableTable';
+
 import TableFilters from '@/app/components/TableFilters';
 import { useEffect, useMemo, useState } from "react";
 import MiddleNav from "@/app/general_components/componentes_recurrentes/MiddleNav";
@@ -69,7 +71,7 @@ export default function GestionCuentasPage() {
             <label className="text-sm"><span className="mb-1 block text-xs font-extralight text-gray-500">Agente</span><select value={filters.agente} onChange={(event) => setFilters({ ...filters, agente: event.target.value })} className="w-full rounded border border-gray-300 bg-white px-3 py-2"><option value="">Todos los agentes</option>{agentes.map((agente) => <option key={agente.id_agente} value={agente.id_agente}>{agente.nombre_completo_agente || `${agente.nombre_agente || ""} ${agente.apellidos_agente || ""}`.trim()}</option>)}</select></label>
           </TableFilters>
           <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
+            <SortableTable className="min-w-full text-sm">
               <thead className="bg-blue-950 text-white">
                 <tr>
                   <th className="p-2 text-left">ID cuenta</th>
@@ -103,7 +105,7 @@ export default function GestionCuentasPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </SortableTable>
           </div>
         </section>
       </main>

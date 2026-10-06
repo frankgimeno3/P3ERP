@@ -1,3 +1,5 @@
+
+import SortableTable from '@/app/components/SortableTable';
 import styles from './InvoiceDocument.module.css';
 
 const money=(value:unknown)=>Number(value||0).toLocaleString('es-ES',{useGrouping:true,minimumFractionDigits:2,maximumFractionDigits:2});
@@ -35,11 +37,11 @@ export default function InvoiceDocument({invoice}:{invoice:any}) {
           </div>
           <p className={styles.customerCode}>Código cliente: {code&&code!=='0'?code:'—'}</p>
         </div>
-        <table className={styles.metadata}><thead><tr><th>{emitted?'FACTURA':'FACTURA PREVIA'}</th><th>FECHA</th><th>NIF/CIF</th></tr></thead><tbody><tr><td>{invoice.numero_factura||'Sin número'}</td><td>{date(invoice.fecha_factura)}</td><td>{fiscalValue('vat_code')||'—'}</td></tr></tbody></table>
+        <SortableTable className={styles.metadata}><thead><tr><th>{emitted?'FACTURA':'FACTURA PREVIA'}</th><th>FECHA</th><th>NIF/CIF</th></tr></thead><tbody><tr><td>{invoice.numero_factura||'Sin número'}</td><td>{date(invoice.fecha_factura)}</td><td>{fiscalValue('vat_code')||'—'}</td></tr></tbody></SortableTable>
       </header>
       <section className={styles.detail} aria-label="Conceptos y totales">
         <p className={styles.legal}>CIF. A-46449005 Reg. Merc. Barcelona: Tomo 11470, Libro 10243, Sec. 2º, Folio 218, Hoja 131.154 Insc. 2ª</p>
-        <table className={styles.items}>
+        <SortableTable className={styles.items}>
           <colgroup><col style={{width:'70%'}}/><col style={{width:'8%'}}/><col style={{width:'11%'}}/><col style={{width:'11%'}}/></colgroup>
           <thead><tr><th>Concepto</th><th>Cantidad</th><th>Precio</th><th>Importe</th></tr></thead>
           <tbody>{lines.map((line:any,index:number)=><tr key={line.id_linea_factura||index}>
@@ -49,9 +51,9 @@ export default function InvoiceDocument({invoice}:{invoice:any}) {
             <td>{money(line.base_imponible)}</td>
           </tr>)}{!lines.length&&<tr><td colSpan={4}>Sin conceptos registrados.</td></tr>}
           <tr className={styles.filler} aria-hidden="true"><td/><td/><td/><td/></tr></tbody>
-        </table>
+        </SortableTable>
         {(surcharge!==0||withholding!==0)&&<div className={styles.adjustments}>{surcharge!==0&&<p>Recargo de equivalencia: {money(surcharge)} {currency}</p>}{withholding!==0&&<p>Retención: −{money(withholding)} {currency}</p>}</div>}
-        <table className={styles.totals}><thead><tr><th>Base imponible</th><th>I.V.A.</th><th>Importe I.V.A.</th><th>TOTAL {currency==='EUR'?'EUROS':currency}</th></tr></thead><tbody><tr><td>{money(invoice.base_imponible)}</td><td>{(rates.length?rates:[Number(invoice.iva_porcentaje||0)]).map(rate=>`${Number(rate).toLocaleString('es-ES')} %`).join(' / ')}</td><td>{money(vatAmount)}</td><td>{money(invoice.importe_total)}</td></tr></tbody></table>
+        <SortableTable className={styles.totals}><thead><tr><th>Base imponible</th><th>I.V.A.</th><th>Importe I.V.A.</th><th>TOTAL {currency==='EUR'?'EUROS':currency}</th></tr></thead><tbody><tr><td>{money(invoice.base_imponible)}</td><td>{(rates.length?rates:[Number(invoice.iva_porcentaje||0)]).map(rate=>`${Number(rate).toLocaleString('es-ES')} %`).join(' / ')}</td><td>{money(vatAmount)}</td><td>{money(invoice.importe_total)}</td></tr></tbody></SortableTable>
       </section>
       <footer className={styles.payment}>
         <h2>FORMA DE PAGO:</h2>

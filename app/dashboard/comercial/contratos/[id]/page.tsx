@@ -1,7 +1,9 @@
 "use client";
+import SortableTable from '@/app/components/SortableTable';
+
 import { isCommercialAgent } from "@/app/config/commercialAgents";
 import React, { FC, useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import MiddleNav from "@/app/general_components/componentes_recurrentes/MiddleNav";
 import { ContratoService } from "@/app/service/ContratoService";
@@ -27,6 +29,8 @@ const Field = ({ label, value }: { label: string; value?: React.ReactNode }) => 
 const ResumenContrato: FC = () => {
   const [tab,setTab]=useState<'datos'|'documento'>('datos');
   const params = useParams();
+  const router=useRouter();
+  const [creatingProposal,setCreatingProposal]=useState(false);
   const id = params?.id as string;
   const [contrato, setContrato] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
@@ -85,6 +89,12 @@ const ResumenContrato: FC = () => {
     }
   };
   const chooseContact=async(contactId:string)=>{const updated=await ContratoService.updateContrato(id,{id_contacto_contrato:contactId});setContrato(updated);setMessage('Contacto del contrato actualizado.');};
+  const createProposal=async()=>{
+    if(creatingProposal)return;setCreatingProposal(true);setError('');
+    try{const response=await apiClient.post(`/api/v1/comercial/contratos/${encodeURIComponent(id)}/propuesta`);router.push(`/dashboard/comercial/propuestas/${encodeURIComponent(response.data.id_propuesta)}`);}
+    catch(reason:any){setError(reason.response?.data?.message||'No se pudo crear la propuesta.');}
+    finally{setCreatingProposal(false);}
+  };
   const refreshContract=async()=>{setContrato(await ContratoService.getContratoById(id));setMessage('Órdenes reemplazadas correctamente.');};
 
   const uploadSigned = async () => {
@@ -132,6 +142,7 @@ const ResumenContrato: FC = () => {
         <section className="bg-white">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3">
             <h2 className="text-base font-semibold text-blue-950">Datos generales</h2>
+            <button type="button" disabled={creatingProposal||!contrato.id_cuenta_contrato} onClick={()=>void createProposal()} className="rounded border border-blue-950 px-4 py-2 text-sm font-semibold text-blue-950 transition enabled:cursor-pointer enabled:hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50">{creatingProposal?'Creando propuesta…':'Crear nueva propuesta'}</button>
             <button type="button" onClick={() => void saveGeneralData()} disabled={saving} className="cursor-pointer rounded bg-blue-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-50">
               {saving ? "Guardando..." : "Guardar cambios"}
             </button>
@@ -187,7 +198,7 @@ const ResumenContrato: FC = () => {
         <section className="bg-white">
           <h2 className="px-4 py-3 text-base font-semibold text-blue-950">Contenido del contrato</h2>
           <div className="overflow-x-auto">
-            <table className="min-w-full">
+            <SortableTable className="min-w-full">
               <thead className="bg-blue-950 text-white">
                 <tr>
                   <th className="p-2 text-left font-light">Línea</th>
@@ -218,14 +229,14 @@ const ResumenContrato: FC = () => {
                   </tr>
                 )}
               </tbody>
-            </table>
+            </SortableTable>
           </div>
         </section>
 
         <section className="bg-white">
           <div className="flex items-center justify-between px-4 py-3"><h2 className="text-base font-semibold text-blue-950">Órdenes asociadas</h2><button type="button" onClick={()=>setOrdersOpen(true)} className="cursor-pointer rounded border px-3 py-1.5 text-sm text-blue-950 hover:bg-blue-50">Modificar órdenes</button></div>
           <div className="overflow-x-auto">
-            <table className="min-w-full">
+            <SortableTable className="min-w-full">
               <thead className="bg-blue-950 text-white">
                 <tr>
                   <th className="p-2 text-left font-light">Orden</th>
@@ -255,10 +266,10 @@ const ResumenContrato: FC = () => {
                   </tr>
                 )}
               </tbody>
-            </table>
+            </SortableTable>
           </div>
         </section>
-        <section className="bg-white p-4"><div className="mb-4 flex items-center justify-between"><h2 className="font-semibold text-blue-950">Facturas asociadas</h2><Link href={`/dashboard/administracion/facturas-clientes/crear?origen=contrato&id_contrato=${encodeURIComponent(id)}`} className="cursor-pointer rounded border px-3 py-1.5 text-sm text-blue-950 hover:bg-blue-50">Crear factura</Link></div>{contrato.facturas?.length ? <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr>{["Factura","Estado","Base","Total","Cobrado","Fecha de cobro"].map(label=><th key={label} className="p-2 text-left">{label}</th>)}</tr></thead><tbody>{contrato.facturas.map((factura:any)=><tr key={factura.id_factura_cliente} className="border-t"><td className="p-2"><Link href={`/dashboard/administracion/facturas-clientes/${encodeURIComponent(factura.id_factura_cliente)}`} className="cursor-pointer text-blue-900 hover:underline">{factura.numero_factura || factura.id_factura_cliente}</Link></td><td className="p-2">{factura.verifactu_estado_envio==="factura emitida"?"Emitida":factura.estado}</td><td className="p-2">{formatMoney(factura.base_imponible)}</td><td className="p-2">{formatMoney(factura.importe_total)}</td><td className="p-2">{formatMoney(factura.importe_cobrado)}</td><td className="p-2">{formatDate(factura.fecha_real_cobro)}</td></tr>)}</tbody></table></div>:<p>Este contrato todavía no tiene factura asociada.</p>}</section>
+        <section className="bg-white p-4"><div className="mb-4 flex items-center justify-between"><h2 className="font-semibold text-blue-950">Facturas asociadas</h2><Link href={`/dashboard/administracion/facturas-clientes/crear?origen=contrato&id_contrato=${encodeURIComponent(id)}`} className="cursor-pointer rounded border px-3 py-1.5 text-sm text-blue-950 hover:bg-blue-50">Crear factura</Link></div>{contrato.facturas?.length ? <div className="overflow-x-auto"><SortableTable className="w-full text-sm"><thead><tr>{["Factura","Estado","Base","Total","Cobrado","Fecha de cobro"].map(label=><th key={label} className="p-2 text-left">{label}</th>)}</tr></thead><tbody>{contrato.facturas.map((factura:any)=><tr key={factura.id_factura_cliente} className="border-t"><td className="p-2"><Link href={`/dashboard/administracion/facturas-clientes/${encodeURIComponent(factura.id_factura_cliente)}`} className="cursor-pointer text-blue-900 hover:underline">{factura.numero_factura || factura.id_factura_cliente}</Link></td><td className="p-2">{factura.verifactu_estado_envio==="factura emitida"?"Emitida":factura.estado}</td><td className="p-2">{formatMoney(factura.base_imponible)}</td><td className="p-2">{formatMoney(factura.importe_total)}</td><td className="p-2">{formatMoney(factura.importe_cobrado)}</td><td className="p-2">{formatDate(factura.fecha_real_cobro)}</td></tr>)}</tbody></SortableTable></div>:<p>Este contrato todavía no tiene factura asociada.</p>}</section>
       </div>{tab==='documento'&&<ContractDocument contract={contrato}/>}</div>
       {contactOpen&&<ContractContactModal accountId={contrato.id_cuenta_contrato} onClose={()=>setContactOpen(false)} onSelect={chooseContact}/>}
       {ordersOpen&&<ContractOrdersModal contractId={id} orders={contrato.ordenes||[]} onClose={()=>setOrdersOpen(false)} onDone={refreshContract}/>}

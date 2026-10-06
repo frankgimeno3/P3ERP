@@ -1,4 +1,6 @@
 "use client";
+import SortableTable from '@/app/components/SortableTable';
+
 import TableFilters from '@/app/components/TableFilters';
 
 import { useEffect, useMemo, useState } from "react";
@@ -327,7 +329,7 @@ export default function DashboardPage() {
             </TableFilters>
 
             <div className="overflow-x-auto">
-              <table className="min-w-full text-sm">
+              <SortableTable className="min-w-full text-sm">
                 <thead className="bg-blue-950 text-white">
                   <tr>
                     <th className="p-2 text-left">Codigo</th>
@@ -360,7 +362,7 @@ export default function DashboardPage() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </SortableTable>
             </div>
           </div>
         )}

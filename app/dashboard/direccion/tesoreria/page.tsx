@@ -1,4 +1,6 @@
 'use client';
+import SortableTable from '@/app/components/SortableTable';
+
 import DateInputRow from "@/app/components/DateInputRow";
 import TableFilters from '@/app/components/TableFilters';
 
@@ -508,7 +510,7 @@ export default function TesoreriaPage() {
       {error && <div className="mb-4 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
 
       <div className="overflow-hidden rounded bg-white shadow-sm">
-        <table className="w-full table-fixed text-sm">
+        <SortableTable className="w-full table-fixed text-sm">
           <thead className="bg-gray-200">
             <tr>
               <th className="w-[14%] px-3 py-2 text-left">F. Valor</th>
@@ -544,7 +546,7 @@ export default function TesoreriaPage() {
               </tr>
             ))}
           </tbody>
-        </table>
+        </SortableTable>
       </div>
 
       {isModalOpen && (

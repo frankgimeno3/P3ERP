@@ -1,4 +1,6 @@
 "use client";
+import SortableTable from '@/app/components/SortableTable';
+
 import { matchesTableFilter } from "@/app/lib/dateFilters";
 import TableFilterInput from "@/app/components/TableFilterInput";
 import TableFilters from '@/app/components/TableFilters';
@@ -33,9 +35,9 @@ export default function PendienteCobroPage() {
     <div className="mb-4 flex flex-wrap items-end justify-between gap-3"><div className="flex gap-1">{(["reclamables","todas"] as const).map(item => <button key={item} type="button" onClick={() => setTab(item)} className={`cursor-pointer rounded-t px-5 py-2 capitalize transition hover:bg-blue-800 hover:text-white ${tab === item ? "bg-blue-950 text-white" : "bg-white"}`}>{item}</button>)}</div></div>
     {loading && <p role="status" className="mb-4">Cargando órdenes…</p>}
     {error && <p role="alert" className="mb-4 rounded bg-red-50 p-3 text-red-700">{error} <button type="button" onClick={() => setVersion(v => v + 1)} className="cursor-pointer underline hover:text-red-950">Reintentar</button></p>}
-    <div className="overflow-x-auto bg-white shadow-sm"><TableFilters>{columns.map(([key,label])=><div key={key}><label className="block text-xs font-extralight text-gray-600"><span className="mb-1 block">{label}</span><TableFilterInput label={label} field={key} value={filters[key]} className="mt-1 rounded border bg-white p-2 text-black" onChange={nextValue => setFilters({...filters,[key]:nextValue})} /></label></div>)}</TableFilters><table className="min-w-full text-sm"><thead className="bg-blue-950 text-white"><tr>{columns.map(([key,label])=><th key={key} className="p-3 text-left font-medium">{label}</th>)}</tr></thead><tbody>
+    <div className="overflow-x-auto bg-white shadow-sm"><TableFilters>{columns.map(([key,label])=><div key={key}><label className="block text-xs font-extralight text-gray-600"><span className="mb-1 block">{label}</span><TableFilterInput label={label} field={key} value={filters[key]} className="mt-1 rounded border bg-white p-2 text-black" onChange={nextValue => setFilters({...filters,[key]:nextValue})} /></label></div>)}</TableFilters><SortableTable className="min-w-full text-sm"><thead className="bg-blue-950 text-white"><tr>{columns.map(([key,label])=><th key={key} className="p-3 text-left font-medium">{label}</th>)}</tr></thead><tbody>
       {shown.map(row => <tr key={row.id_orden} onClick={() => router.push(`/dashboard/administracion/control-administrativo/${encodeURIComponent(row.id_orden)}`)} className="cursor-pointer border-b transition hover:bg-blue-50"><td className="p-3 font-medium text-blue-950">{row.id_orden}</td><td className="p-3">{row.cliente || "—"}</td><td className="p-3">{row.id_factura || "—"}</td><td className="p-3">{row.fecha_teorica_cobro || "—"}</td><td className="p-3">{row.forma_cobro || "—"}</td><td className="p-3">{Number(row.importe_pendiente ?? row.cobro_total ?? 0).toLocaleString("es-ES",{style:"currency",currency:"EUR"})}</td></tr>)}
       {!loading && !error && !shown.length && <tr><td colSpan={6} className="p-8 text-center text-gray-500">No hay órdenes pendientes en esta vista.</td></tr>}
-    </tbody></table></div>
+    </tbody></SortableTable></div>
   </main></div>;
 }

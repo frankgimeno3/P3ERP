@@ -1,4 +1,6 @@
 "use client";
+import SortableTable from '@/app/components/SortableTable';
+
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -59,7 +61,7 @@ export default function RolesPage() {
       {error && <div className="mb-4 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
 
       <div className="overflow-hidden rounded bg-white shadow-sm">
-        <table className="min-w-full text-sm">
+        <SortableTable className="min-w-full text-sm">
           <thead className="bg-gray-200">
             <tr>
               <th className="px-4 py-2 text-left">ID</th>
@@ -107,7 +109,7 @@ export default function RolesPage() {
               );
             })}
           </tbody>
-        </table>
+        </SortableTable>
       </div>
     </div>
   );

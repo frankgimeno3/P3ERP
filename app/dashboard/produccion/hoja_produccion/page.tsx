@@ -1,4 +1,6 @@
 "use client";
+import SortableTable from '@/app/components/SortableTable';
+
 import { matchesTableFilter } from "@/app/lib/dateFilters";
 import TableFilterInput from "@/app/components/TableFilterInput";
 import TableFilters from '@/app/components/TableFilters';
@@ -164,7 +166,7 @@ const Materiales: FC = () => {
           </TableFilters>
 
           <div className="overflow-x-auto text-[11px]">
-            <table className="min-w-full">
+            <SortableTable className="min-w-full">
               <thead className="bg-blue-950 text-white">
                 <tr>
                   {tableColumns.map(([field, label]) => <th key={field} className="text-left p-2 font-light">{label}</th>)}
@@ -179,7 +181,7 @@ const Materiales: FC = () => {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </SortableTable>
 
             {loading && <p className="mt-4 text-center text-gray-500">Cargando contenidos...</p>}
             {!loading && error && <p className="mt-4 text-center text-red-600">{error}</p>}

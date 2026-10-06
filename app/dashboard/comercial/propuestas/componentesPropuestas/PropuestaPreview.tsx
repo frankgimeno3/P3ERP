@@ -1,4 +1,6 @@
 "use client";
+import SortableTable from '@/app/components/SortableTable';
+
 
 import { isCommercialAgent } from "@/app/config/commercialAgents";
 
@@ -246,7 +248,7 @@ export default function PropuestaPreview({
             {t.services}
           </h2>
           <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
+            <SortableTable className="min-w-full text-sm">
               <thead className="bg-slate-800 text-white">
                 <tr>
                   <th className="p-3 text-left">{t.service}</th>
@@ -288,7 +290,7 @@ export default function PropuestaPreview({
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </SortableTable>
           </div>
           <div className="ml-auto mt-4 max-w-sm space-y-2 rounded bg-slate-50 p-4 text-sm">
             <div className="flex justify-between">

@@ -1,4 +1,6 @@
 "use client";
+import SortableTable from '@/app/components/SortableTable';
+
 import TableFilters from '@/app/components/TableFilters';
 
 import { useEffect, useMemo, useState } from "react";
@@ -95,7 +97,7 @@ export default function FacturasClientesPage() {
         {error && <div className="mb-4 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
 
         <div className="overflow-x-auto bg-white">
-          <table className="min-w-full text-xs">
+          <SortableTable className="min-w-full text-xs">
             <thead className="bg-blue-950 text-white">
               <tr>
                 <th className="p-2 pl-6 text-left font-light">N FRA</th>
@@ -124,7 +126,7 @@ export default function FacturasClientesPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </SortableTable>
         </div>
       </>} </div>
       {conditionsOpen&&<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4" role="dialog" aria-modal="true" aria-labelledby="conditions-title"><div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-xl bg-white shadow-2xl"><div className="sticky top-0 flex items-center justify-between border-b bg-white p-5"><div><h2 id="conditions-title" className="text-lg font-semibold text-blue-950">Condiciones VERI*FACTU</h2><p className="text-sm text-gray-500">Checklist editable de implementación.</p></div><button type="button" onClick={()=>setConditionsOpen(false)} aria-label="Cerrar modal" className="cursor-pointer rounded px-2 text-2xl transition hover:bg-gray-100">×</button></div><div className="space-y-3 p-5">{conditions.map((condition,index)=><article key={index} className="rounded-lg border"><div className="flex items-center gap-3 p-4 transition hover:bg-blue-50"><input type="checkbox" checked={Boolean(condition.estado)} onChange={event=>{const next=conditions.map((item,i)=>i===index?{...item,estado:event.target.checked}:item);setConditions(next);void saveConditions(next);}} className="h-5 w-5 cursor-pointer"/><button type="button" onClick={()=>setExpandedCondition(value=>value===index?null:index)} className="flex flex-1 cursor-pointer items-center justify-between text-left font-semibold text-blue-950"><span>{condition.nombre}</span><span>{expandedCondition===index?"▴":"▾"}</span></button></div>{expandedCondition===index&&<div className="space-y-3 border-t bg-gray-50 p-4"><label className="block text-sm font-medium">Nombre<input value={condition.nombre} onChange={event=>setConditions(items=>items.map((item,i)=>i===index?{...item,nombre:event.target.value}:item))} className="mt-1 w-full rounded border bg-white p-2"/></label><label className="block text-sm font-medium">Descripción<textarea value={condition.descripcion} onChange={event=>setConditions(items=>items.map((item,i)=>i===index?{...item,descripcion:event.target.value}:item))} className="mt-1 min-h-24 w-full resize-y rounded border bg-white p-3"/></label><div className="flex justify-end"><button type="button" onClick={()=>void saveConditions()} className="cursor-pointer rounded bg-blue-950 px-4 py-2 text-sm text-white transition hover:bg-blue-900">Guardar cambios</button></div></div>}</article>)}</div></div></div>}

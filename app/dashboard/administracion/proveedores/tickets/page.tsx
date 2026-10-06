@@ -1,4 +1,6 @@
 "use client";
+import SortableTable from '@/app/components/SortableTable';
+
 import TableFilters from '@/app/components/TableFilters';
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
@@ -157,7 +159,7 @@ export default function TicketsProveedoresPage() {
           <div className="text-center py-8 text-gray-500">Cargando tickets...</div>
         ) : (
           <div className="overflow-x-auto bg-white shadow">
-            <table className="min-w-full text-sm">
+            <SortableTable className="min-w-full text-sm">
               <thead className="bg-blue-950 text-white">
                 <tr>
                   {getColumns().map((x) => (
@@ -184,7 +186,7 @@ export default function TicketsProveedoresPage() {
                   </tr>
                 )}
               </tbody>
-            </table>
+            </SortableTable>
           </div>
         )}
       </main>

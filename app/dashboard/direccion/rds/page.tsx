@@ -1,3 +1,5 @@
+
+import SortableTable from '@/app/components/SortableTable';
 import { getPgPool } from '@/server/database/pgClient.js';
 import catalog from '@/database/rds-table-catalog.json';
 
@@ -51,7 +53,7 @@ export default async function RdsPage() {
           <p className="mt-1 text-sm font-normal text-slate-600">{table.description}</p>
         </summary>
         <div className="overflow-x-auto border-t border-slate-200">
-          <table className="w-full min-w-[700px] text-left text-sm">
+          <SortableTable className="w-full min-w-[700px] text-left text-sm">
             <thead className="bg-slate-50"><tr><th className="px-4 py-2">Columna</th><th className="px-4 py-2">Tipo</th><th className="px-4 py-2">Nulo</th><th className="px-4 py-2">Por defecto</th><th className="px-4 py-2">Descripción</th></tr></thead>
             <tbody>{table.columns.map(column => <tr key={column.name} className="border-t border-slate-100">
               <td className="px-4 py-2 font-mono">{column.name}{column.primary ? ' 🔑' : ''}</td>
@@ -60,7 +62,7 @@ export default async function RdsPage() {
               <td className="px-4 py-2 font-mono text-xs">{column.defaultValue || '—'}</td>
               <td className="px-4 py-2">{column.description || '—'}</td>
             </tr>)}</tbody>
-          </table>
+          </SortableTable>
         </div>
       </details>)}
     </div>

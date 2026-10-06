@@ -1,4 +1,6 @@
 'use client';
+import SortableTable from '@/app/components/SortableTable';
+
 
 import React, { FC, useEffect, useState } from 'react';
 import { RegistroEventosService } from '@/app/service/RegistroEventosService';
@@ -36,7 +38,7 @@ const RegistroEventosContacto: FC<RegistroEventosContactoProps> = ({ id_contacto
     <div className="space-y-4">
       <h2 className="text-xl font-bold">Registro de eventos</h2>
       <div className="overflow-x-auto">
-        <table className="min-w-full bg-white text-sm">
+        <SortableTable className="min-w-full bg-white text-sm">
           <thead className="bg-blue-950 text-white">
             <tr>
               <th className="p-2 text-left">Fecha</th>
@@ -58,7 +60,7 @@ const RegistroEventosContacto: FC<RegistroEventosContactoProps> = ({ id_contacto
               </tr>
             ))}
           </tbody>
-        </table>
+        </SortableTable>
       </div>
     </div>
   );

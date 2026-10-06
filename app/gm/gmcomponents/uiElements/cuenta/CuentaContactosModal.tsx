@@ -1,3 +1,5 @@
+
+import SortableTable from '@/app/components/SortableTable';
 import EliminarContactoIcon from "@/app/gm/gmcomponents/svg/EliminarContactoIcon";
 import ModificarContactoIcon from "@/app/gm/gmcomponents/svg/ModificarContactoIcon";
 import NuevoContactoIcon from "@/app/gm/gmcomponents/svg/NuevoContactoIcon";
@@ -89,7 +91,7 @@ export default function CuentaContactosModal({
           </div>
 
           <div className="min-w-[620px] flex-1 overflow-hidden border border-slate-300 bg-white">
-            <table className="min-w-full border-collapse text-sm">
+            <SortableTable className="min-w-full border-collapse text-sm">
               <thead>
                 <tr>
                   <th className="border-r border-slate-300 bg-[#FC9A00] px-3 py-2 text-left font-semibold text-black">Nombre y Apellidos</th>
@@ -114,7 +116,7 @@ export default function CuentaContactosModal({
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </SortableTable>
           </div>
 
           {contactForm && (

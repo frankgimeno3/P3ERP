@@ -1,4 +1,6 @@
 "use client";
+import SortableTable from '@/app/components/SortableTable';
+
 
 import {proposalDate} from '@/app/config/proposalDate';
 import React, { FC, useEffect, useState } from "react";
@@ -52,7 +54,7 @@ const TodasPropuestas: FC<TodasPropuestasProps> = ({
 
   return (
     <div className="h-full overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-700 rounded-lg border border-gray-700">
+      <SortableTable className="min-w-full divide-y divide-gray-700 rounded-lg border border-gray-700">
         <thead>
           <tr className="text-left">
             <th className="px-4 py-3 text-left">ID Propuesta</th>
@@ -82,7 +84,7 @@ const TodasPropuestas: FC<TodasPropuestasProps> = ({
             </tr>
           ))}
         </tbody>
-      </table>
+      </SortableTable>
       {loading && <p className="mt-4 text-center text-sm text-gray-500">Cargando propuestas...</p>}
       {!loading && resultadosFiltrados.length === 0 && <p className="mt-4 text-center text-sm text-gray-500">No se encontraron resultados.</p>}
     </div>
