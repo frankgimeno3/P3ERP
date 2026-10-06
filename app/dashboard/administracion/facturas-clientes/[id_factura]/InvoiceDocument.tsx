@@ -37,7 +37,7 @@ export default function InvoiceDocument({invoice}:{invoice:any}) {
           </div>
           <p className={styles.customerCode}>Código cliente: {code&&code!=='0'?code:'—'}</p>
         </div>
-        <SortableTable className={styles.metadata}><thead><tr><th>{emitted?'FACTURA':'FACTURA PREVIA'}</th><th>FECHA</th><th>NIF/CIF</th></tr></thead><tbody><tr><td>{invoice.numero_factura||'Sin número'}</td><td>{date(invoice.fecha_factura)}</td><td>{fiscalValue('vat_code')||'—'}</td></tr></tbody></SortableTable>
+        <SortableTable className={styles.metadata}><thead><tr><th>{invoice.factura_tipo==='abono'?'FACTURA ABONO':emitted?'FACTURA':'FACTURA PREVIA'}</th><th>FECHA</th><th>NIF/CIF</th></tr></thead><tbody><tr><td>{invoice.numero_factura||'Sin número'}</td><td>{date(invoice.fecha_factura)}</td><td>{fiscalValue('vat_code')||'—'}</td></tr></tbody></SortableTable>
       </header>
       <section className={styles.detail} aria-label="Conceptos y totales">
         <p className={styles.legal}>CIF. A-46449005 Reg. Merc. Barcelona: Tomo 11470, Libro 10243, Sec. 2º, Folio 218, Hoja 131.154 Insc. 2ª</p>

@@ -88,7 +88,8 @@
       "La ficha tiene pestañas Datos y Vista de documento. El documento ofrece versión original en el idioma registrado y versión GM con plantilla y catálogo en español. Cada versión tiene descarga PDF.",
       "Al crear un contrato independiente, Intercambio sin cobro monetario permite registrar el valor ofrecido y las condiciones sin generar cobros. Se muestran en los datos y en el documento del contrato. Los filtros de cada tabla se muestran juntos en una tarjeta Filtros inicialmente cerrada, con una etiqueta fina encima de cada campo. Cerrarla conserva los filtros aplicados.",
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
-      "En la ficha del contrato, Crear nueva propuesta copia la cuenta, contacto, servicios, importes y condiciones a un borrador independiente. Usa el agente de la sesión, fecha de hoy y validez de 30 días; renueva las fechas de los cobros conservando sus intervalos. Revisa y edita el borrador antes de enviarlo."
+      "En la ficha del contrato, Crear nueva propuesta copia la cuenta, contacto, servicios, importes y condiciones a un borrador independiente. Usa el agente de la sesión, fecha de hoy y validez de 30 días; renueva las fechas de los cobros conservando sus intervalos. Revisa y edita el borrador antes de enviarlo.",
+      "Los servicios facturados desde PDF se relacionan con las líneas del contrato cuando publicación y medio permiten una coincidencia única. Se completan las descripciones y productos ausentes conservando las tarifas, contenidos y asociaciones existentes."
     ]
   },
   "/dashboard/comercial/documentacion": {
@@ -113,14 +114,14 @@
     ]
   },
   "/dashboard/produccion/revistas": {
-    "summary": "Consulta revistas pendientes y el calendario de publicación, materiales y recordatorios.",
+    "summary": "Gestiona revistas pendientes y planifica sus siete eventos en un calendario de 24 meses.",
     "steps": [
       "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "En Pendientes el orden es Vidrio Plano, Ventanas, Quién es Quién y el resto. Estas tres revistas tienen subpestañas de edición; no se repite la columna ni el filtro de edición. Número es la primera columna. Un solo desplegable Filtros, inicialmente cerrado, muestra los filtros compactos de las columnas visibles.",
-      "Usa Agregar revista para crear una edicion y establece si esta publicada o pendiente de publicar.",
-      "Cambia el estado de una revista desde la tabla; las pendientes son las disponibles al elegir detalle de publicación en propuestas.",
-      "En Calendario consulta todas las revistas, con Número como primera columna, y usa Modificar para editar las tres fechas mediante día, mes y año. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados.",
-      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
+      "Agregar revista crea un número pendiente de publicar. Desde Pendientes, Abrir accede a /dashboard/produccion/revistas/[id_revista]. El estado se modifica exclusivamente dentro de la ficha.",
+      "Calendario muestra 24 meses desde el actual, con semanas de lunes a domingo y etiquetas de eventos por día. A la derecha, el panel fijo permite filtrar eventos y editar sus fechas con dd / mm / yyyy.",
+      "Cada número conserva en la base de datos las fechas de petición y recordatorio de materiales, deadline previsto y real, envío a imprenta, impresión estimada y envío de revistas."
     ]
   },
   "/dashboard/produccion/contenidos": {
@@ -129,7 +130,8 @@
       "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "Filtrar por revista muestra primero el número, seguido de revista, región y sector, y permite abrir sus anuncios y artículos.",
       "Todos los contenidos muestra los registros de producción; abre la tarjeta Filtros y pulsa una fila para entrar en el detalle del contenido.",
-      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
+      "Al abrir una revista se accede directamente a /dashboard/produccion/contenidos/revistas/[id_revista]/contenidos."
     ]
   },
   "/dashboard/produccion/contenidos/[id]": {
@@ -142,6 +144,8 @@
   "/dashboard/produccion/contenidos/revistas/[id_revista]": {
     "summary": "Revisa los materiales de la revista y organiza su planillo previo por bloques de contenido.",
     "steps": [
+      "Datos de la revista permite editar las siete fechas de eventos, fecha de publicación y estado. Guardar datos conserva los cambios en el número de revista.",
+      "Las pestañas Datos de la revista y Contenidos cambian la URL. Contenidos utiliza el sufijo /contenidos y conserva anuncios, artículos y planillo previo.",
       "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "Alterna Anuncios y Artículos; cada pestaña separa no revisados, incidencias, OK producción y no recibidos.",
       "Despliega un contenido para ver sus archivos, fecha de aportación, estado y comentarios de producción.",
@@ -199,7 +203,9 @@
       "Órdenes muestra las vigentes y Canceladas conserva las órdenes canceladas. Las canceladas no generan ingresos previstos ni se pueden modificar o sobrescribir mediante Excel.",
       "Todos los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen juntos, con etiquetas finas encima de cada campo; cerrarla conserva los filtros aplicados. Los filtros y la pestana se conservan en la URL al recargar o volver.",
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
-      "El enlace Información legal verifactu se muestra al pie de las páginas de Administración."
+      "El enlace Información legal verifactu se muestra al pie de las páginas de Administración.",
+      "Las ?rdenes canceladas por una factura abono muestran Abonada y su n?mero de abono. Se conserva la orden sin fecha de pago y deja de estar pendiente de cobro.",
+      "Gestión de órdenes conserva las listas habituales. Pendiente de gestionar muestra subpestañas Sin contrato, Sin importe, Sin forma de cobro, Sin fecha de cobro y Pendientes de facturar. Las órdenes siguen en Gestión de órdenes y pueden aparecer en varios motivos. Las canceladas no requieren gestión; los intercambios no necesitan importe ni cobro monetario. Subir Excel, Agregar contrato e Importación masiva se reúnen en una misma fila."
     ]
   },
   "/dashboard/administracion/facturas-clientes": {
@@ -218,7 +224,13 @@
       "Contratos sin facturar muestra contratos sin ninguna factura asociada. Solo el código del contrato es enlace; Crear factura genera un borrador a petición del usuario. Sus filtros se muestran juntos al abrir la tarjeta Filtros, inicialmente cerrada. En Vista de documento, Descargar PDF descarga el documento guardado.",
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
       "El enlace Información legal verifactu se muestra al pie de las páginas de Administración.",
-      "Las facturas importadas desde un registro Excel coinciden por número de factura y conservan su identificador, órdenes, recibos, remesas y cobros. Se guardan la hoja, fila y datos originales. Las diferencias entre el importe del registro y las órdenes se muestran en la ficha. Los abonos negativos se conservan como abonos."
+      "Las facturas importadas desde un registro Excel coinciden por número de factura y conservan su identificador, órdenes, recibos, remesas y cobros. Se guardan la hoja, fila y datos originales. Las diferencias entre el importe del registro y las órdenes se muestran en la ficha. Los abonos negativos se conservan como abonos.",
+      "La tarjeta Filtros aparece en su propia fila debajo de los años y las acciones. El listado muestra el nombre fiscal guardado, el código del cliente y fechas dd/mm/yyyy; la forma de cobro procede de la factura o de sus órdenes vinculadas cuando está disponible.",
+      "Cliente se obtiene primero de la cuenta de las órdenes de Control administrativo y, si falta, del nombre fiscal de la factura o de su cuenta. Las asociaciones ambiguas requieren revisión. Los totales regionales conservan el registro original y se completan con el país de facturación conocido; los ceros se muestran como 0,00 EUR. La forma de cobro procede de la factura o de sus órdenes, sin inventarla.",
+      "Los PDF originales de facturas y recibos se abren desde Documentos originales en la ficha. La lectura de esos documentos completa datos fiscales, servicios, forma de pago y vencimientos. Los avisos indican diferencias con cobros confirmados, abonos o formas especiales que requieren revisión. El IBAN de un recibo corresponde al cliente; el banco de cobro de las remesas es independiente.",
+      "Crear factura abono abre un borrador negativo asociado a una factura numerada, tambi?n importada. Usa prefijo A y fecha; en emisi?n fiscal se utiliza una serie distinta y una rectificativa por diferencias. Al finalizar o aplicar el abono se reduce el saldo pendiente: las ?rdenes abonadas se conservan canceladas y sin fecha de pago; los cobros previos no se alteran. Repetir la aplicaci?n no duplica efectos. No se permite superar el total original; los recibos remesados y los cobros parciales conciliados requieren revisi?n antes de cambiarlos.",
+      "Si el PDF fija un importe mayor que el dinero ya registrado, la diferencia se conserva como saldo pendiente con su orden y cobro de contrato asociados. Los movimientos bancarios y remesas hist?ricos se mantienen; cualquier exceso cobrado se identifica en la ficha.",
+      "Facturas y Contratos sin facturar son pestañas sobre un panel gris claro. Los botones de gestión aparecen arriba a la derecha; debajo, las pestañas Sin fecha y años muestran un panel blanco con la tarjeta de filtros de ancho completo, los estados En proceso y Enviadas y la tabla. La columna N FRA muestra el número documental, conservando el identificador interno para abrir la ficha."
     ]
   },
   "/dashboard/administracion/pendiente-cobro": {
@@ -447,7 +459,8 @@
       "Cada recibo se vincula a una orden por factura y número de cobro; si no existe, se crea. Las coincidencias ambiguas deben resolverse antes de importar. Los importes y fechas se actualizan en la orden sin duplicarla.",
       "Número de remesa, Remesa en carpeta e Importe remesa solo sustituyen datos anteriores cuando llega un nuevo valor. Las remesas se registran y agrupan sus recibos; su total visible se calcula dinámicamente sumando los importes de sus órdenes.",
       "La revisión bancaria confirma el cobro y la fecha real de órdenes, recibos y remesas, y actualiza el total cobrado de la factura. Los cambios quedan en los comentarios de la cuenta asociada.",
-      "Los ingresos previstos proceden de las órdenes pendientes: recibos y transferencias, sin recurrencia. Los cambios de importe, fecha y banco realizados al preparar la factura se reflejan en esas órdenes y en liquidez. Agrupar recibos en una remesa no suma un ingreso adicional."
+      "Los ingresos previstos proceden de las órdenes pendientes: recibos y transferencias, sin recurrencia. Los cambios de importe, fecha y banco realizados al preparar la factura se reflejan en esas órdenes y en liquidez. Agrupar recibos en una remesa no suma un ingreso adicional.",
+      "Al importar recibos, la coincidencia se comprueba por referencia y por número de factura y cobro. Una referencia antigua se actualiza conservando su orden, sin duplicar el ingreso. Si hay varias coincidencias, se requiere resolverlas antes de importar. Los recibos sin remesa permanecen pendientes de remesar; registrar una remesa no confirma su cobro."
     ]
   },
   "/dashboard/direccion/tesoreria/prevision-cargos": {
@@ -530,7 +543,8 @@
       "Número de remesa, Remesa en carpeta e Importe remesa solo sustituyen datos anteriores cuando llega un nuevo valor. Las remesas se registran y agrupan sus recibos; su total visible se calcula dinámicamente sumando los importes de sus órdenes.",
       "La revisión bancaria confirma el cobro y la fecha real de órdenes, recibos y remesas, y actualiza el total cobrado de la factura. Los cambios quedan en los comentarios de la cuenta asociada.",
       "Los ingresos previstos proceden de las órdenes pendientes: recibos y transferencias, sin recurrencia. Los cambios de importe, fecha y banco realizados al preparar la factura se reflejan en esas órdenes y en liquidez. Agrupar recibos en una remesa no suma un ingreso adicional.",
-      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
+      "Al importar recibos, la coincidencia se comprueba por referencia y por número de factura y cobro. Una referencia antigua se actualiza conservando su orden, sin duplicar el ingreso. Si hay varias coincidencias, se requiere resolverlas antes de importar. Los recibos sin remesa permanecen pendientes de remesar; registrar una remesa no confirma su cobro."
     ]
   },
   "/dashboard/direccion/previsiones/prevision-gastos": {
@@ -574,7 +588,8 @@
       "Guardar los datos de pago actualiza las órdenes existentes con importe, vencimiento, forma de cobro y banco, conservando sus identificadores. La base se reparte según los impuestos de la factura. Recibo genera o actualiza su recibo; al cambiar a transferencia se retira el recibo que no tenga remesa. Los cobros confirmados o remesados requieren resolver antes sus asociaciones.",
       "Recibos y transferencias son ingresos previstos de las órdenes, no ingresos recurrentes. Afectan a la liquidez una sola vez según banco y fecha, mientras sigan pendientes. Terminar el asistente prepara la factura; la emisión fiscal mantiene su confirmación específica.",
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
-      "El enlace Información legal verifactu se muestra al pie de las páginas de Administración."
+      "El enlace Información legal verifactu se muestra al pie de las páginas de Administración.",
+      "Crear factura abono abre un borrador negativo asociado a una factura numerada, tambi?n importada. Usa prefijo A y fecha; en emisi?n fiscal se utiliza una serie distinta y una rectificativa por diferencias. Al finalizar o aplicar el abono se reduce el saldo pendiente: las ?rdenes abonadas se conservan canceladas y sin fecha de pago; los cobros previos no se alteran. Repetir la aplicaci?n no duplica efectos. No se permite superar el total original; los recibos remesados y los cobros parciales conciliados requieren revisi?n antes de cambiarlos."
     ]
   },
   "/dashboard/operaciones/data/exportar/cuentas": {
@@ -699,7 +714,8 @@
       "Cancelar orden avisa primero y después muestra los documentos afectados para confirmar. Retira recibos y transferencias pendientes, elimina la factura pendiente exclusiva y conserva las compartidas. Una factura emitida o contabilizada o un cobro confirmado impiden cancelar hasta resolverlos. La orden y una copia de los documentos eliminados permanecen como historial; deja de sumar en liquidez. El modal se cierra con × o Escape.",
       "Los recibos y remesas nuevos sin banco se asignan automáticamente a Sabadell. La asignación es un valor inicial: puedes seleccionar otro banco posteriormente. Los recibos pendientes existentes se han unificado en Sabadell; se conserva el histórico de cobros realizados.",
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
-      "El enlace Información legal verifactu se muestra al pie de las páginas de Administración."
+      "El enlace Información legal verifactu se muestra al pie de las páginas de Administración.",
+      "Las ?rdenes canceladas por una factura abono muestran Abonada y su n?mero de abono. Se conserva la orden sin fecha de pago y deja de estar pendiente de cobro."
     ]
   },
   "/": {
@@ -801,6 +817,55 @@
       "Selecciona un Excel de hasta 10 MB y 2000 filas con encabezados unicos. La primera hoja se valida antes de guardar.",
       "Revisa las filas nuevas y las diferencias con registros existentes. Los errores se muestran antes de confirmar.",
       "Confirmar guarda el lote en una transaccion. Repetir el mismo lote no duplica registros y los cambios concurrentes requieren revisar otra vez."
+    ]
+  },
+  "/dashboard/produccion/revistas/[id_revista]": {
+    "summary": "Ficha de revista con datos de planificación y contenidos.",
+    "steps": [
+      "Datos de la revista permite editar las siete fechas de eventos, fecha de publicación y estado. Guardar datos conserva los cambios en el número de revista.",
+      "Las pestañas Datos de la revista y Contenidos cambian la URL. Contenidos utiliza el sufijo /contenidos y conserva anuncios, artículos y planillo previo."
+    ]
+  },
+  "/dashboard/produccion/revistas/[id_revista]/contenidos": {
+    "summary": "Revisa los materiales de la revista y organiza su planillo previo por bloques de contenido.",
+    "steps": [
+      "Datos de la revista permite editar las siete fechas de eventos, fecha de publicación y estado. Guardar datos conserva los cambios en el número de revista.",
+      "Las pestañas Datos de la revista y Contenidos cambian la URL. Contenidos utiliza el sufijo /contenidos y conserva anuncios, artículos y planillo previo.",
+      "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
+      "Alterna Anuncios y Artículos; cada pestaña separa no revisados, incidencias, OK producción y no recibidos.",
+      "Despliega un contenido para ver sus archivos, fecha de aportación, estado y comentarios de producción.",
+      "Abre el contenido para agregar materiales desde su carpeta de revista.",
+      "Planillo previo combina la hoja de producción y el control de redacción: orden por recepción de materiales; sin fecha real, usa el orden de la hoja e indica esa limitación. Las extensiones no conocidas son provisionales y se ajustan con Páginas.",
+      "La miniatura muestra pliegos de dos páginas, portada a la derecha y última página a la izquierda, con su pareja derecha invisible. No hay contraportada. La numeración en toda la vista es Portada, Interior portada, 1, 2, 3… Sumario e índice se reservan inicialmente en las páginas 3 y 5, pero pueden desplazarse al reorganizar contenidos.",
+      "Mover bloque usa la misma numeración de revista en el selector de destino, tabla y miniatura. No permite insertar en una parte intermedia. Los anuncios y artículos de dos páginas comienzan en una página par y terminan en la impar consecutiva; los destinos incompatibles están deshabilitados. Usa los huecos suficientes sin desplazar lo posterior; en otro caso inserta el bloque y desplaza lo posterior entero. El origen queda libre.",
+      "Quitar bloque confirma todas las páginas asociadas y permite dejar huecos rojos o adelantar lo posterior. El contenido original permanece disponible para volver a añadirlo.",
+      "Añadir página inserta un espacio libre sin partir contenidos. Si un desplazamiento altera la orientación de un anuncio o artículo de dos páginas, se intercala un hueco antes del contenido para conservar su pareja par/impar. Se mantiene un total par, añadiendo si hace falta una página libre al final. Solo la portada permanece fija al inicio.",
+      "Intercambiar por aparece en anuncios y artículos de una página: permite elegir otro contenido de una página de la misma revista y cambia solamente sus dos posiciones.",
+      "Asignar contenido está siempre activo en los huecos rojos. Permite traer un contenido ya colocado, si cabe entero, dejando su origen rojo o cubriendo ese origen en cascada. También permite cerrar el hueco sin asignar contenido.",
+      "La cascada adelanta contenidos completos de una página, saltando los bloques de varias páginas sin alterar sus posiciones. Retira huecos finales conservando un total par; un hueco sin contenido posterior elegible debe permanecer. El modal muestra todas las páginas afectadas antes de confirmar.",
+      "Cada operación muestra las posiciones afectadas y se guarda automáticamente, con control de ediciones simultáneas. El planillo previo no modifica el definitivo ni los contratos.",
+      "Publicar asignaciones definitivas abre una revision de paginas antes de confirmar. La version debe seguir vigente; la publicacion es atomica y repetirla no duplica las asignaciones. Los contratos y contenidos se conservan. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados."
+    ]
+  },
+  "/dashboard/produccion/contenidos/revistas/[id_revista]/contenidos": {
+    "summary": "Revisa los materiales de la revista y organiza su planillo previo por bloques de contenido.",
+    "steps": [
+      "Datos de la revista permite editar las siete fechas de eventos, fecha de publicación y estado. Guardar datos conserva los cambios en el número de revista.",
+      "Las pestañas Datos de la revista y Contenidos cambian la URL. Contenidos utiliza el sufijo /contenidos y conserva anuncios, artículos y planillo previo.",
+      "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
+      "Alterna Anuncios y Artículos; cada pestaña separa no revisados, incidencias, OK producción y no recibidos.",
+      "Despliega un contenido para ver sus archivos, fecha de aportación, estado y comentarios de producción.",
+      "Abre el contenido para agregar materiales desde su carpeta de revista.",
+      "Planillo previo combina la hoja de producción y el control de redacción: orden por recepción de materiales; sin fecha real, usa el orden de la hoja e indica esa limitación. Las extensiones no conocidas son provisionales y se ajustan con Páginas.",
+      "La miniatura muestra pliegos de dos páginas, portada a la derecha y última página a la izquierda, con su pareja derecha invisible. No hay contraportada. La numeración en toda la vista es Portada, Interior portada, 1, 2, 3… Sumario e índice se reservan inicialmente en las páginas 3 y 5, pero pueden desplazarse al reorganizar contenidos.",
+      "Mover bloque usa la misma numeración de revista en el selector de destino, tabla y miniatura. No permite insertar en una parte intermedia. Los anuncios y artículos de dos páginas comienzan en una página par y terminan en la impar consecutiva; los destinos incompatibles están deshabilitados. Usa los huecos suficientes sin desplazar lo posterior; en otro caso inserta el bloque y desplaza lo posterior entero. El origen queda libre.",
+      "Quitar bloque confirma todas las páginas asociadas y permite dejar huecos rojos o adelantar lo posterior. El contenido original permanece disponible para volver a añadirlo.",
+      "Añadir página inserta un espacio libre sin partir contenidos. Si un desplazamiento altera la orientación de un anuncio o artículo de dos páginas, se intercala un hueco antes del contenido para conservar su pareja par/impar. Se mantiene un total par, añadiendo si hace falta una página libre al final. Solo la portada permanece fija al inicio.",
+      "Intercambiar por aparece en anuncios y artículos de una página: permite elegir otro contenido de una página de la misma revista y cambia solamente sus dos posiciones.",
+      "Asignar contenido está siempre activo en los huecos rojos. Permite traer un contenido ya colocado, si cabe entero, dejando su origen rojo o cubriendo ese origen en cascada. También permite cerrar el hueco sin asignar contenido.",
+      "La cascada adelanta contenidos completos de una página, saltando los bloques de varias páginas sin alterar sus posiciones. Retira huecos finales conservando un total par; un hueco sin contenido posterior elegible debe permanecer. El modal muestra todas las páginas afectadas antes de confirmar.",
+      "Cada operación muestra las posiciones afectadas y se guarda automáticamente, con control de ediciones simultáneas. El planillo previo no modifica el definitivo ni los contratos.",
+      "Publicar asignaciones definitivas abre una revision de paginas antes de confirmar. La version debe seguir vigente; la publicacion es atomica y repetirla no duplica las asignaciones. Los contratos y contenidos se conservan. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados."
     ]
   }
 }

@@ -143,6 +143,16 @@ try{
   assert.equal((await db.query('SELECT cobro_total FROM tesoreria_ordenes WHERE id_orden=$1',[additional.id_ingreso_adicional])).rows[0].cobro_total,'35');
   assert.equal((await getIngresosAdicionales()).length,0);
   console.log('PASS: partial reimport, computed remittances, exact matching, review/unreview, order/invoice states, safe administrative import, authenticated comments, proposal confirmation with invoice/orders/receipts.');
+  await db.query("INSERT INTO administracion_facturas_clientes(id_factura_cliente,numero_factura,id_cuenta) VALUES('legacy_invoice','526999','client')");
+  await db.query("INSERT INTO tesoreria_ordenes(id_orden,id_factura,id_cuenta,numero_cobro,forma_cobro,cobro_total) VALUES('legacy_order','legacy_invoice','client',4,'recibo',1108.39)");
+  await db.query("INSERT INTO tesoreria_recibos_importados(numero_recibo,numero_factura,numero_cobro,id_orden,importe_recibo) VALUES('prev_legacy-001','526999',1,'legacy_order',1108.39)");
+  const legacyRow=receipt('526999-001',1108.40,'LEGACY-REM');
+  await importReceipts([legacyRow],pool,'actor');await importReceipts([legacyRow],pool,'actor');
+  const legacyReceipts=(await db.query("SELECT * FROM tesoreria_recibos_importados WHERE numero_factura='526999'")).rows;
+  assert.equal(legacyReceipts.length,1);assert.equal(legacyReceipts[0].numero_recibo,'526999-001');assert.equal(legacyReceipts[0].id_orden,'legacy_order');
+  assert.equal((await db.query("SELECT count(*)::int n FROM tesoreria_ordenes WHERE id_factura='legacy_invoice'")).rows[0].n,1);
+  assert.equal(Number((await db.query("SELECT cobro_total FROM tesoreria_ordenes WHERE id_orden='legacy_order'")).rows[0].cobro_total),1108.4);
+  console.log('PASS: legacy receipt reference becomes canonical, preserving its order and avoiding duplicate income on reimport.');
 }finally{
   pool.connect=connect;pool.query=query;
   await db.query('ROLLBACK');await db.query('SET search_path TO public');await db.query('DROP SCHEMA IF EXISTS '+schema+' CASCADE');db.release();await pool.end();

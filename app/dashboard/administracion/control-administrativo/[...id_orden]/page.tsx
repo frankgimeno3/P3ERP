@@ -68,7 +68,7 @@ export default function OrdenAdministrativaPage({params}:{params:Promise<{id_ord
       <div><p className="mb-2">Número de orden</p><p className={field}>{order.numero_orden}</p></div>
       <div><p className="mb-2">Cuenta</p><div className={field}>{order.id_cuenta?<Link className={link} href={'/dashboard/comercial/cuentas/'+encodeURIComponent(order.id_cuenta)}>{order.cliente||order.id_cuenta}</Link>:'Sin cuenta asociada'}</div></div>
       <div><p className="mb-2">Agente actual de la orden</p><SearchableSelect label="Agente actual de la orden" value={order.id_agente||''} options={agentOptions} onChange={value=>change('id_agente',value)} disabled={disabled} required={Boolean(original.id_agente)} inputClassName={field}/></div>
-      <div><p className="mb-2">Estado</p><p className={field}>{order.cancelada?'Cancelada':order.cobrada?'Cobrada':'Pendiente de cobro'}</p></div>
+      <div><p className="mb-2">Estado</p><p className={field}>{order.cancelada?(order.cancelacion_detalle?.numero_abono?'Abonada ? '+order.cancelacion_detalle.numero_abono:'Cancelada'):order.cobrada?'Cobrada':'Pendiente de cobro'}</p></div>
       <div><p className="mb-2">Fecha de firma de la propuesta</p><p className={field}>{order.id_propuesta?formatDate(order.fecha_firma_propuesta):'Sin propuesta de origen'}</p></div>
     </div></section>
     <section className={section}><h2 className="mb-5 text-xl font-semibold text-blue-950">Factura asociada</h2>{invoice?<div className="space-y-5">

@@ -14,6 +14,7 @@ import {useUrlState} from '@/app/lib/useUrlState';
 import TableColumnFilter from '@/app/components/TableColumnFilter';
 import DatePartsInput from '@/app/components/DatePartsInput';
 import { administrativeOrderTab } from '@/app/lib/administrativeOrderTabs';
+import {administrativeOrderIssues,administrativeIssueTabs} from '@/app/lib/administrativeOrderIssues';
 
 const formatMoney = (value?: number) => {
   const amount = Number(value ?? 0);
@@ -42,6 +43,8 @@ export default function ControlAdministrativoPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [tab,setTab]=useUrlState<'vigentes'|'anteriores'|'canceladas'>('orders.tab','vigentes');
+  const [view,setView]=useUrlState<'gestion'|'pendiente'>('orders.view','gestion');
+  const [issue,setIssue]=useUrlState('orders.issue','todas');
   const currentYear = new Date().getFullYear();
   const [showExcel,setShowExcel]=useState(false),[reloadKey,setReloadKey]=useState(0),[notice,setNotice]=useState('');
 
@@ -68,7 +71,7 @@ export default function ControlAdministrativoPage() {
     const matches = (value: unknown, query: string) => String(value ?? "").toLowerCase().includes(query.trim().toLowerCase());
 
     return ordenes.filter((orden) =>
-      administrativeOrderTab(orden,currentYear)===tab
+      (view==='gestion'?administrativeOrderTab(orden,currentYear)===tab:administrativeOrderIssues(orden).length>0&&(issue==='todas'||administrativeOrderIssues(orden).includes(issue)))
       && matches(orden.id_orden, filtros.orden)
       && matches(orden.cliente, filtros.cliente)
       && (!filtros.agente || String(orden.id_agente || orden.agente) === filtros.agente)
@@ -80,7 +83,7 @@ export default function ControlAdministrativoPage() {
       && (!filtros.importe_total||String(Number(orden.cobro_total||0)).includes(filtros.importe_total.replace(',','.')))
       && (!filtros.base_imponible || String(Number(orden.base_imponible||0)).includes(filtros.base_imponible.replace(',','.'))),
     );
-  }, [filtros, ordenes, tab, currentYear]);
+  }, [filtros, ordenes, tab, currentYear, view, issue]);
 
   const handleFiltroChange = (field: keyof typeof filtros, value: string) => {
     setFiltros((prev) => ({ ...prev, [field]: value }));
@@ -91,8 +94,8 @@ export default function ControlAdministrativoPage() {
       <MiddleNav tituloprincipal="Control administrativo" />
       <div className="min-h-screen w-full bg-gray-100 px-12 py-10 text-gray-600">
         <div className="mb-4 flex flex-col gap-3">
-          <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-semibold text-blue-950">Ordenes</h2><button type="button" onClick={()=>setShowExcel(true)} className="cursor-pointer rounded bg-blue-950 px-4 py-2 text-sm text-white transition hover:bg-blue-900">Subir excel de control administrativo</button></div>
-          <div className="flex flex-wrap gap-3"><Link href="/dashboard/comercial/contratos/crear" className="cursor-pointer rounded bg-blue-950 px-4 py-2 text-sm text-white transition hover:bg-blue-900">Agregar contrato</Link><Link href="/dashboard/administracion/control-administrativo/importacion-masiva" className="cursor-pointer rounded border border-blue-950 px-4 py-2 text-sm text-blue-950 transition hover:bg-blue-50">Importación masiva</Link></div>
+          <div className="flex flex-wrap justify-end gap-3"><button type="button" onClick={()=>setShowExcel(true)} className="cursor-pointer rounded bg-blue-950 px-4 py-2 text-sm text-white transition hover:bg-blue-900">Subir excel de control administrativo</button><Link href="/dashboard/comercial/contratos/crear" className="cursor-pointer rounded bg-blue-950 px-4 py-2 text-sm text-white transition hover:bg-blue-900">Agregar contrato</Link><Link href="/dashboard/administracion/control-administrativo/importacion-masiva" className="cursor-pointer rounded border border-blue-950 px-4 py-2 text-sm text-blue-950 transition hover:bg-blue-50">Importación masiva</Link></div>
+          <div role="tablist" aria-label="Control administrativo" className="flex border-b border-gray-300">{([['gestion','Gestión de órdenes'],['pendiente','Pendiente de gestionar']] as const).map(([value,label])=><button type="button" key={value} role="tab" id={'orders-view-'+value} aria-controls="orders-panel" aria-selected={view===value} onClick={()=>setView(value)} className={`cursor-pointer rounded-t-lg border px-5 py-3 font-medium transition ${view===value?'border-gray-300 border-b-white bg-white text-blue-950':'border-transparent hover:bg-gray-200'}`}>{label}{value==='pendiente'?' ('+ordenes.filter(o=>administrativeOrderIssues(o).length>0).length+')':''}</button>)}</div>
           {notice && <p role="status" className="rounded bg-green-50 p-3 text-green-800">{notice}</p>}
 
         </div>
@@ -103,8 +106,10 @@ export default function ControlAdministrativoPage() {
           </div>
         )}
 
-        <div role="tablist" aria-label="Estado de las órdenes" className="mb-4 flex gap-2">{(['vigentes','anteriores','canceladas'] as const).map(value=><button type="button" key={value} role="tab" aria-selected={tab===value} onClick={()=>setTab(value)} className={`cursor-pointer rounded px-4 py-2 transition ${tab===value?'bg-blue-950 text-white hover:bg-blue-800':'bg-white hover:bg-blue-50'}`}>{value==='vigentes'?'Órdenes':value==='anteriores'?'Órdenes años anteriores':'Canceladas'} ({ordenes.filter(o=>administrativeOrderTab(o,currentYear)===value).length})</button>)}</div>
-        <div role="tabpanel" className="overflow-x-auto bg-white">
+        {view==='gestion'&&<div role="tablist" aria-label="Estado de las órdenes" className="mb-4 flex gap-2">{(['vigentes','anteriores','canceladas'] as const).map(value=><button type="button" key={value} role="tab" aria-selected={tab===value} onClick={()=>setTab(value)} className={`cursor-pointer rounded px-4 py-2 transition ${tab===value?'bg-blue-950 text-white hover:bg-blue-800':'bg-white hover:bg-blue-50'}`}>{value==='vigentes'?'Órdenes':value==='anteriores'?'Órdenes años anteriores':'Canceladas'} ({ordenes.filter(o=>administrativeOrderTab(o,currentYear)===value).length})</button>)}</div>}
+        {view==='pendiente'&&<div role="tablist" aria-label="Motivo pendiente de gestionar" className="mb-4 flex flex-wrap gap-2">{administrativeIssueTabs.map(([value,label])=><button type="button" role="tab" key={value} aria-selected={issue===value} onClick={()=>setIssue(value)} className={`cursor-pointer rounded px-4 py-2 text-sm transition ${issue===value?'bg-blue-950 text-white hover:bg-blue-900':'bg-white hover:bg-blue-50'}`}>{label} ({ordenes.filter(o=>{const reasons=administrativeOrderIssues(o);return value==='todas'?reasons.length>0:reasons.includes(value)}).length})</button>)}</div>}
+        {view==='pendiente'&&<p className="mb-4 text-sm text-gray-600">Estas órdenes siguen disponibles en Gestión de órdenes. Una orden puede aparecer en varias subpestañas.</p>}
+        <div role="tabpanel" id="orders-panel" aria-labelledby={'orders-view-'+view} className="overflow-x-auto bg-white">
           <TableFilters><div><TableColumnFilter label="Orden" value={filtros.orden} onChange={value=>handleFiltroChange('orden',value)}/></div><div><TableColumnFilter label="Cliente" value={filtros.cliente} onChange={value=>handleFiltroChange('cliente',value)}/></div><div><label className="block text-xs font-extralight text-gray-600"><span className="mb-1 block">Agente</span><select aria-label="Filtrar por agente" value={filtros.agente} onChange={event=>handleFiltroChange('agente',event.target.value)} className={inputClass+' text-gray-900 cursor-pointer'}><option value="">Todos</option>{agentes.map(agente=><option key={agente.id_agente} value={agente.id_agente}>{agente.nombre_completo_agente||agente.id_agente}</option>)}</select></label></div><div><TableColumnFilter label="Contrato" value={filtros.contrato} onChange={value=>handleFiltroChange('contrato',value)}/></div><div><TableColumnFilter label="Factura" value={filtros.factura} onChange={value=>handleFiltroChange('factura',value)}/></div><div><TableColumnFilter label="Base imponible" value={filtros.base_imponible} onChange={value=>handleFiltroChange('base_imponible',value)}/></div><div><TableColumnFilter label="Forma de cobro" value={filtros.forma_cobro} onChange={value=>handleFiltroChange('forma_cobro',value)}/></div><div><TableColumnFilter label="Importe total" value={filtros.importe_total} onChange={value=>handleFiltroChange('importe_total',value)}/></div><div><div className="text-xs font-extralight text-gray-600"><DatePartsInput label="Fecha de cobro" value={filtros.fecha_cobro} onChange={value=>handleFiltroChange('fecha_cobro',value)}/></div></div><div><label className="block text-xs font-extralight text-gray-600"><span className="mb-1 block">Estado de cobro</span><select aria-label="Filtrar estado" value={filtros.estado_cobro} onChange={event=>handleFiltroChange('estado_cobro',event.target.value)} className={inputClass+' text-gray-900 cursor-pointer'}><option value="">Todos</option><option value="cobrada">Cobrada</option><option value="pendiente">Pendiente</option></select></label></div></TableFilters><SortableTable className="min-w-full">
             <thead className="bg-blue-950 text-white">
               <tr>
@@ -148,7 +153,7 @@ export default function ControlAdministrativoPage() {
                   <td className="border-b border-gray-200 p-2">{orden.forma_cobro || "-"}</td>
                   <td className="border-b border-gray-200 p-2">{formatMoney(orden.cobro_total)}</td>
                   <td className="border-b border-gray-200 p-2">{orden.fecha_real_cobro || '-'}</td>
-                  <td className="border-b border-gray-200 p-2">{orden.estado || (orden.cancelada ? 'Cancelada' : orden.cobrada ? 'Cobrada' : 'Pendiente')}</td>
+                  <td className="border-b border-gray-200 p-2">{orden.estado || (orden.cancelada ? (orden.cancelacion_detalle?.numero_abono?'Abonada ? '+orden.cancelacion_detalle.numero_abono:'Cancelada') : orden.cobrada ? 'Cobrada' : 'Pendiente')}</td>
                 </tr>
               ))}
             </tbody>

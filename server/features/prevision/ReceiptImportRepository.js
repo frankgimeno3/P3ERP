@@ -10,7 +10,9 @@ export async function getRemesas() {
 }
 
 export async function saveReceipt(db, row, actorId = '') {
-  const previous = (await db.query('SELECT * FROM tesoreria_recibos_importados WHERE numero_recibo=$1 FOR UPDATE', [row.numero_recibo])).rows[0];
+  const existingReceipts = (await db.query('SELECT * FROM tesoreria_recibos_importados WHERE numero_recibo=$1 OR (numero_factura=$2 AND numero_cobro=$3) FOR UPDATE', [row.numero_recibo,row.numero_factura,row.numero_cobro])).rows;
+  if(existingReceipts.length>1)incomeError('Hay varios recibos para la factura '+row.numero_factura+' y el cobro '+row.numero_cobro+'. Resuelve la coincidencia antes de importar.');
+  const previous = existingReceipts[0];
   let invoice = (await db.query('SELECT * FROM administracion_facturas_clientes WHERE id_factura_cliente=$1 OR numero_factura=$1', [row.numero_factura])).rows;
   if (invoice.length > 1) incomeError('Hay varias facturas con número ' + row.numero_factura + '. Resuelve la coincidencia antes de importar.');
   const accounts = row.cliente ? (await db.query("SELECT id_cuenta FROM comercial_cuentas WHERE id_cuenta=$1 OR lower(btrim(nombre_empresa))=lower($1) OR lower(btrim(nombre_fiscal))=lower($1)", [row.cliente])).rows : [];

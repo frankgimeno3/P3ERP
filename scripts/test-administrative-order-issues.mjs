@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {administrativeOrderIssues} from '../app/lib/administrativeOrderIssues.js';
+import {planControlOrderNames} from '../server/features/orden/AdministrativeOrderReview.js';
+assert.deepEqual(administrativeOrderIssues({}),['contrato','importe','forma','fecha','factura']);
+assert.deepEqual(administrativeOrderIssues({cancelada:true}),[]);
+assert.deepEqual(administrativeOrderIssues({id_contrato:'C26',forma_cobro:'intercambio'}),[]);
+assert.deepEqual(administrativeOrderIssues({id_contrato:'C26',cobro_total:121,forma_cobro:'recibo',fecha_teorica_cobro:'10/10/2026'}),['factura']);
+const rows=[{ORDEN:'C26.000.001-1/1',FACTURA:'526001','CODIGO CRM':12,'IMPORTE CON IVA':121,row:2}],order={id_orden:'ord_rec_old',id_factura:'internal',id_cuenta:'c',cobro_total:121},invoices=[{id_factura_cliente:'internal',numero_factura:'526001'}],accounts=[{id_cuenta:'c',id_edisoft:'12'}];
+assert.equal(planControlOrderNames(rows,[order],invoices,accounts).rename[0].newId,rows[0].ORDEN);
+assert.match(planControlOrderNames(rows,[order,{id_orden:rows[0].ORDEN}],invoices,accounts).unmatched[0].reason,/ocupado/);
+assert.equal(planControlOrderNames(rows,[{...order,cobro_total:22}],invoices,accounts).rename.length,0);
+console.log('PASS: overlapping management categories, cancellations and nonmonetary exceptions; unique order matches, collisions and residual amounts.');

@@ -383,6 +383,15 @@ Constraints:
 Indexes:
 - facturas_clientes_db_id_cuenta_idx: CREATE INDEX facturas_clientes_db_id_cuenta_idx ON public.administracion_facturas_clientes USING btree (id_cuenta)
 
+### administracion_facturas_documentos
+
+PDF originales de facturas de clientes y sus recibos, descargables únicamente
+desde el endpoint autenticado de Administración. Columnas: `id_documento`
+(text, PK), `id_factura_cliente` (FK con borrado en cascada), `nombre`, `sha256`,
+`contenido` (bytea, entre 1 byte y 15 MB) y `created_at` (timestamptz).
+La combinación `(id_factura_cliente, sha256)` es única para evitar duplicados.
+Migración: `20261006_0003_customer_invoice_documents.sql`.
+
 ### administracion_facturas_proveedores
 
 | # | Column | Type | Nullable | Default |
@@ -1183,3 +1192,7 @@ Migración `20261006_0002_account_tasks.sql`:
   y a `agentes_db`. Una tarea tiene uno o más responsables y se consulta también
   en sus listas personales. Un trigger diferido exige al menos una asignación.
   Borrar una cuenta o un agente con tareas asignadas está restringido.
+
+### Planificación de números de revista
+
+`servicios_publicaciones` conserva por número las fechas `fecha_pedir_materiales`, `fecha_recordatorio`, `deadline_materiales` (previsto), `deadline_real_materiales`, `fecha_envio_imprenta`, `fecha_estimada_impresion` y `fecha_envio_revistas`. Valores dd/mm/yyyy o vacíos; migración `20261006_0004_magazine_event_dates.sql`.

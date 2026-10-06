@@ -1,3 +1,4 @@
+import {magazineEvents,magazineDate} from '../../../app/config/magazineEvents.js';
 import { getPgPool } from "../../database/pgClient.js";
 
 let schemaReady = false;
@@ -61,6 +62,7 @@ function normalizeRevista(row) {
     deadline_materiales: row.deadline_materiales ?? row.deadline_material ?? "",
     fecha_publicacion: row.fecha_publicacion ?? "",
     fecha_recordatorio: row.fecha_recordatorio ?? "",
+    ...Object.fromEntries(magazineEvents.map(event=>[event.key,row[event.key]||''])),
     estado_publicacion: row.estado_publicacion ?? "",
     impresa_o_digital: row.impresa_o_digital ?? row.version_publicacion ?? "",
     version_publicacion: row.version_publicacion ?? row.impresa_o_digital ?? "",
@@ -75,6 +77,7 @@ function normalizeRevista(row) {
 
 async function ensurePublicacionesSchema(pool = getPgPool()) {
   if (schemaReady) return;
+  await pool.query(`ALTER TABLE servicios_publicaciones ADD COLUMN IF NOT EXISTS fecha_pedir_materiales TEXT NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS deadline_real_materiales TEXT NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS fecha_envio_imprenta TEXT NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS fecha_estimada_impresion TEXT NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS fecha_envio_revistas TEXT NOT NULL DEFAULT ''`);
   await pool.query(`
     ALTER TABLE servicios_revistas
       ADD COLUMN IF NOT EXISTS impresa_o_digital TEXT NOT NULL DEFAULT 'digital';
@@ -292,6 +295,7 @@ export async function getRevistas() {
       p.estado_publicacion,
       p.deadline_materiales,
       p.fecha_recordatorio,
+      p.fecha_pedir_materiales,p.deadline_real_materiales,p.fecha_envio_imprenta,p.fecha_estimada_impresion,p.fecha_envio_revistas,
       p.version_publicacion
     FROM servicios_publicaciones p
     LEFT JOIN servicios_revistas r ON r.id_revista = p.revista_id
@@ -327,6 +331,7 @@ export async function getRevistaById(idRevista) {
         p.numero_publicacion,
         p.fecha_publicacion,
         p.fecha_recordatorio,
+      p.fecha_pedir_materiales,p.deadline_real_materiales,p.fecha_envio_imprenta,p.fecha_estimada_impresion,p.fecha_envio_revistas,
         p.estado_publicacion,
         p.version_publicacion,
         p.deadline_materiales,
@@ -357,7 +362,8 @@ export async function getRevistaById(idRevista) {
       LEFT JOIN comercial_cuentas cu ON cu.id_cuenta = c.id_cuenta
       LEFT JOIN servicios_db s ON s.id_servicio = c.servicio
       WHERE r.id_revista = $1 OR p.id_publicacion = $1
-      GROUP BY r.id_revista, p.id_publicacion, p.numero_publicacion, p.fecha_publicacion, p.fecha_recordatorio, p.estado_publicacion, p.deadline_materiales
+      GROUP BY r.id_revista, p.id_publicacion, p.numero_publicacion, p.fecha_publicacion, p.fecha_recordatorio,
+      p.fecha_pedir_materiales,p.deadline_real_materiales,p.fecha_envio_imprenta,p.fecha_estimada_impresion,p.fecha_envio_revistas, p.estado_publicacion, p.deadline_materiales
       LIMIT 1
     ` : `
       SELECT
@@ -366,6 +372,7 @@ export async function getRevistaById(idRevista) {
         p.numero_publicacion,
         p.fecha_publicacion,
         p.fecha_recordatorio,
+      p.fecha_pedir_materiales,p.deadline_real_materiales,p.fecha_envio_imprenta,p.fecha_estimada_impresion,p.fecha_envio_revistas,
         p.estado_publicacion,
         p.version_publicacion,
         p.deadline_materiales,
@@ -384,6 +391,7 @@ export async function getRevistaById(idRevista) {
 }
 
 export async function updateRevista(idRevista, data = {}) {
+  data=validatedMagazineDates(data);
   const pool = getPgPool();
   await ensurePublicacionesSchema(pool);
 
@@ -408,6 +416,7 @@ export async function updateRevista(idRevista, data = {}) {
   const publicacionValues = [];
   const publicacionSets = [];
   const publicacionFieldMap = {
+    ...Object.fromEntries(magazineEvents.map(event=>[event.key,event.key])),
     publicacion: "numero_publicacion",
     numero_publicacion: "numero_publicacion",
     deadline_materiales: "deadline_materiales",
@@ -748,6 +757,7 @@ export async function deletePublicationPages(idPublicacion, data = {}) {
 }
 
 export async function createRevista(data = {}) {
+  data=validatedMagazineDates(data);
   const pool = getPgPool();
   await ensurePublicacionesSchema(pool);
   if (!data.id_revista && data.revista && (data.publicacion || data.numero_publicacion)) {
@@ -824,6 +834,7 @@ export async function createRevista(data = {}) {
 
   await setNumeroPaginas(idPublicacion, data.num_paginas || 9);
 
+  await updateRevista(rows[0].id_revista,Object.fromEntries(magazineEvents.filter(event=>data[event.key]!==undefined).map(event=>[event.key,data[event.key]])));
   return getRevistaById(rows[0].id_revista);
 }
 
@@ -833,4 +844,10 @@ export async function setRevistaPublicationStatus(idRevista, status) {
     WHERE revista_id=$1 AND tipo_publicacion='revista' RETURNING id_publicacion`,[idRevista,status]);
   if (!result.rowCount) return null;
   return getRevistaById(idRevista);
+}
+
+function validatedMagazineDates(data){
+  const patch={...data};
+  for(const key of ['fecha_publicacion',...magazineEvents.map(event=>event.key)])if(Object.hasOwn(patch,key)){const date=magazineDate(patch[key]);if(date===null){const error=new Error('Fecha no válida: '+key);error.status=400;throw error;}patch[key]=date;}
+  return patch;
 }

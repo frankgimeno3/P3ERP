@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import {matchInvoiceCustomers,invoiceRegionalTotals} from '../server/features/factura/InvoiceCustomerMatching.js';
+const accounts=[{id_cuenta:'a',nombre_empresa:'Cliente A',nombre_fiscal:'Fiscal A',pais_facturacion:'ES'},{id_cuenta:'b',nombre_empresa:'Cliente B',pais_facturacion:'FR'}];
+const invoice={id_factura_cliente:'f',numero_factura:'526001',id_cuenta:'a',datos_fiscales:{nombre_fiscal:'Fiscal A'},importe_total:121};
+let result=matchInvoiceCustomers([invoice],accounts,[{id_orden:'o',id_factura:'526001',id_cuenta:'b',forma_cobro:'recibo'}]);
+assert.equal(result.resolved[0].cliente,'Cliente B');assert.equal(result.patches[0].patch.id_cuenta,'b');assert.equal(result.patches[0].patch.forma_cobro,'recibo');assert.equal(result.patches[0].patch.total_ue,121);
+result=matchInvoiceCustomers([{...invoice,id_cuenta:'missing'}],accounts,[]);assert.equal(result.patches[0].patch.id_cuenta,'a');assert.equal(result.unresolved.length,0);
+result=matchInvoiceCustomers([{...invoice,id_cuenta:'missing',datos_fiscales:{nombre_fiscal:'Desconocido'}}],accounts,[]);assert.equal(result.unresolved[0].nombre_fiscal,'Desconocido');
+result=matchInvoiceCustomers([invoice],accounts,[{id_factura:'f',id_cuenta:'a'},{id_factura:'f',id_cuenta:'b'}]);assert.equal(result.unresolved.length,1);assert.equal(result.patches[0]?.patch.id_cuenta,undefined);
+assert.deepEqual(invoiceRegionalTotals({...invoice,total_nac_iva:0,total_ue:50,total_resto:null}),{total_nac_iva:0,total_ue:50,total_resto:0});
+assert.deepEqual(invoiceRegionalTotals(invoice),{});
+assert.deepEqual(invoiceRegionalTotals(invoice,{pais_facturacion:'XX'}),{});
+assert.equal(invoiceRegionalTotals(invoice,{pais_facturacion:'HOLANDA'}).total_ue,121);
+assert.equal(invoiceRegionalTotals({...invoice,total_ue:0},accounts[0]).total_nac_iva,121);
+assert.equal(invoiceRegionalTotals({...invoice,datos_importacion:{registro_facturas:{original:['f',1,'code','name',0,0,-500]}}}).total_resto,-500);
+assert.equal(matchInvoiceCustomers([{...invoice,ya_contabilizada:true}],accounts,[]).patches.length,0);
+const first=matchInvoiceCustomers([invoice],accounts,[]);const updated={...invoice,...first.patches[0].patch};assert.equal(matchInvoiceCustomers([updated],accounts,[]).patches.length,0);
+console.log('PASS: order precedence, fiscal matching, ambiguous names, regional amounts, protected invoices and idempotence.');

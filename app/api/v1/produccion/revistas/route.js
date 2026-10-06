@@ -11,8 +11,8 @@ export async function GET() {
   } catch (error) {
     console.error("Error in GET /api/v1/produccion/revistas:", error);
     return NextResponse.json(
-      { message: "Error al cargar las revistas", detail: process.env.NODE_ENV === "development" ? error.message : undefined },
-      { status: 500 },
+      { message: "Error al cargar las revistas", detail: error.status===400||process.env.NODE_ENV === "development" ? error.message : undefined },
+      { status: error.status||500 },
     );
   }
 }
@@ -26,8 +26,8 @@ export async function POST(request) {
   } catch (error) {
     console.error("Error in POST /api/v1/produccion/revistas:", error);
     return NextResponse.json(
-      { message: "Error al crear la revista", detail: process.env.NODE_ENV === "development" ? error.message : undefined },
-      { status: 500 },
+      { message: "Error al crear la revista", detail: error.status===400||process.env.NODE_ENV === "development" ? error.message : undefined },
+      { status: error.status||500 },
     );
   }
 }

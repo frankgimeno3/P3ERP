@@ -9,7 +9,7 @@ export async function deleteDraftInvoice(id,version,actorId=''){
     const invoice=(await db.query('SELECT * FROM administracion_facturas_clientes WHERE id_factura_cliente=$1 FOR UPDATE',[id])).rows[0];
     if(!invoice){await db.query('COMMIT');return null;}
     if(!version || new Date(invoice.updated_at).toISOString()!==version)incomeError('La factura ha cambiado. Recarga su ficha antes de eliminarla.');
-    if((invoice.verifactu_estado_envio||'borrador')!=='borrador'||invoice.ya_contabilizada)incomeError('Solo se pueden eliminar facturas en borrador, sin emitir ni contabilizar.');
+    if((invoice.verifactu_estado_envio||'borrador')!=='borrador'||invoice.ya_contabilizada||invoice.datos_importacion?.abono_aplicado||invoice.datos_importacion?.saldo_tras_abonos)incomeError('Solo se pueden eliminar borradores sin emitir, contabilizar ni aplicar abonos.');
     if((await db.query('SELECT 1 FROM fiscal_verifactu_registros WHERE invoice_id=$1 LIMIT 1',[id])).rowCount)incomeError('La factura tiene un registro de emisión y no se puede eliminar.');
     if((await db.query('SELECT 1 FROM administracion_facturas_clientes WHERE factura_origen_id=$1 LIMIT 1',[id])).rowCount)incomeError('La factura tiene documentos derivados. Revísalos antes de eliminarla.');
     const orders=(await db.query('SELECT * FROM tesoreria_ordenes WHERE id_factura=$1 ORDER BY id_orden FOR UPDATE',[id])).rows;

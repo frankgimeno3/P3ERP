@@ -16,7 +16,7 @@ export async function GET(_request, context) {
     return NextResponse.json(revista);
   } catch (error) {
     console.error("Error in GET /api/v1/produccion/revistas/[id_revista]:", error);
-    return NextResponse.json({ message: "Error al cargar la revista", detail: process.env.NODE_ENV === "development" ? error.message : undefined }, { status: 500 });
+    return NextResponse.json({ message: "Error al cargar la revista", detail: error.status===400||process.env.NODE_ENV === "development" ? error.message : undefined }, { status: error.status||500 });
   }
 }
 

@@ -1,4 +1,6 @@
 import { syncInvoiceOrders } from './InvoiceOrders.js';
+import {invoiceRegionalTotals} from './InvoiceCustomerMatching.js';
+import {applyCreditNote} from './CreditNotes.js';
 import crypto from "node:crypto";
 import { accountActivity, orderActivity } from "../comentario/AccountActivity.js";
 import { ensureOrderReceipt, lockIncome, syncOrderCollections, syncInvoiceCollection } from "../prevision/IncomeReconciliation.js";
@@ -35,10 +37,16 @@ async function ensureSchema(db) {
   `);
 }
 
-function normalize(row) {
+export function normalize(row) {
+  const date = String(row.fecha_emision || row.fecha_factura || "");
+  const iso = date.match(/^(\d{4})-(\d{2})-(\d{2})/);
   return {
     ...row,
-    fecha_factura: row.fecha_emision || row.fecha_factura || "",
+    ...invoiceRegionalTotals(row,row),
+    fecha_factura: iso ? `${iso[3]}/${iso[2]}/${iso[1]}` : date,
+    cliente: row.cliente_orden || row.datos_fiscales?.nombre_fiscal || row.nombre_empresa || row.datos_importacion?.registro_facturas?.cliente || "",
+    codigo_cliente: row.codigo_cliente || row.datos_importacion?.registro_facturas?.codigo || row.id_cuenta || "",
+    forma_cobro: row.forma_cobro || row.formas_cobro_ordenes || "",
     base_imponible: number(row.base_imponible),
     importe_total: number(row.importe_total),
     iva_porcentaje: number(row.iva_porcentaje),
@@ -139,8 +147,19 @@ export async function getCustomerInvoices(filters = {}) {
   const where = [];
   if (filters.estado) { values.push(filters.estado); where.push(`f.estado=$${values.length}`); }
   const { rows } = await pool.query(`
-    SELECT f.*,cu.nombre_empresa
+    SELECT f.*,to_char(f.fecha_emision,'YYYY-MM-DD') AS fecha_emision,cu.nombre_empresa,cu.id_edisoft AS codigo_cliente,
+      cu.pais_facturacion,cu.pais_cuenta,linked.cliente_orden,linked.formas_cobro_ordenes
     FROM administracion_facturas_clientes f LEFT JOIN comercial_cuentas cu ON cu.id_cuenta=f.id_cuenta
+    LEFT JOIN LATERAL (
+      SELECT CASE WHEN count(DISTINCT oc.id_cuenta)=1 THEN max(COALESCE(NULLIF(trim(oc.nombre_empresa),''),oc.nombre_fiscal)) END AS cliente_orden,
+        string_agg(DISTINCT NULLIF(trim(o.forma_cobro),''), ', ' ORDER BY NULLIF(trim(o.forma_cobro),'')) AS formas_cobro_ordenes
+      FROM tesoreria_ordenes o LEFT JOIN comercial_contratos c ON c.id_contrato=o.id_contrato
+      LEFT JOIN comercial_cuentas oc ON oc.id_cuenta=COALESCE(NULLIF(o.id_cuenta,''),c.id_cuenta_contrato)
+      WHERE o.id_factura=f.id_factura_cliente
+        OR (o.id_factura=f.numero_factura AND NOT EXISTS(SELECT 1 FROM administracion_facturas_clientes owner WHERE owner.id_factura_cliente=o.id_factura))
+        OR o.id_orden=f.id_orden_origen
+        OR (NULLIF(o.id_factura,'') IS NULL AND NULLIF(f.id_contrato,'') IS NOT NULL AND o.id_contrato=f.id_contrato)
+    ) linked ON true
     ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
     ORDER BY f.created_at DESC
   `, values);
@@ -151,7 +170,7 @@ export async function getCustomerInvoice(idFactura) {
   const pool = getPgPool();
   await ensureSchema(pool);
   const { rows } = await pool.query(`
-    SELECT f.*,cu.nombre_empresa,c.id_agente_contrato,cu.id_edisoft AS codigo_cliente,
+    SELECT f.*,to_char(f.fecha_emision,'YYYY-MM-DD') AS fecha_emision,cu.nombre_empresa,c.id_agente_contrato,cu.id_edisoft AS codigo_cliente,
       jsonb_build_object('nombre_fiscal',cu.nombre_fiscal,'vat_code',cu.vat_code,
         'direccion_facturacion',cu.direccion_facturacion,'poblacion_facturacion',cu.poblacion_facturacion,
         'cp_facturacion',cu.cp_facturacion,'pais_facturacion',cu.pais_facturacion) AS cuenta_documento
@@ -160,12 +179,13 @@ export async function getCustomerInvoice(idFactura) {
     LEFT JOIN comercial_contratos c ON c.id_contrato=f.id_contrato
     WHERE f.id_factura_cliente=$1 LIMIT 1`, [idFactura]);
   if (!rows[0]) return null;
-  const [lines, payments, orders] = await Promise.all([
+  const [lines, payments, orders, documents] = await Promise.all([
     pool.query(`SELECT * FROM administracion_lineas_factura WHERE id_factura_cliente=$1 ORDER BY posicion`, [idFactura]),
     pool.query(`SELECT * FROM comercial_contratos_cobros WHERE id_contrato=$1 ORDER BY numero_cobro`, [rows[0].id_contrato]),
     pool.query(`SELECT * FROM tesoreria_ordenes WHERE id_factura=$1 ORDER BY numero_cobro`, [idFactura]),
+    pool.query('SELECT id_documento,nombre,sha256 FROM administracion_facturas_documentos WHERE id_factura_cliente=$1 ORDER BY nombre',[idFactura]),
   ]);
-  return normalize({ ...rows[0], lineas: lines.rows, cobros: payments.rows, ordenes: orders.rows });
+  return normalize({ ...rows[0], lineas: lines.rows, cobros: payments.rows, ordenes: orders.rows, documentos: documents.rows });
 }
 
 export async function createInvoiceDraft(idContrato, actorId = "", transaction = null) {
@@ -240,6 +260,7 @@ export async function createRectifyingInvoiceDraft(sourceInvoiceId, invoiceType)
     if (!source.rows[0]) throw new Error("La factura de origen no existe");
     if (!["rectificativa", "abono"].includes(invoiceType)) throw new Error("Tipo de factura rectificativa no válido");
     const original = source.rows[0];
+    if(original.factura_tipo==='abono'||number(original.importe_total)<=0)throw new Error('Selecciona una factura de origen positiva, no otro abono.');
     const idFactura = id("fac");
     await client.query(`INSERT INTO administracion_facturas_clientes (
       id_factura_cliente,id_cuenta,base_imponible,importe_total,estado,moneda,datos_fiscales,forma_cobro,
@@ -292,6 +313,10 @@ export async function emitCustomerInvoice(idFactura, data = {}, actorId = "") {
     const issuerNif = String(data.issuer_nif || data.verifactu_emisor || "").trim().toUpperCase();
     const issuerName = String(data.issuer_name || data.verifactu_emisor || "").trim();
     const series = String(data.serie || data.verifactu_serie || "").trim();
+    if(invoice.factura_tipo==='abono'){
+      if(number(invoice.importe_total)>=0||!/^A/i.test(series))throw new Error('El abono debe tener importe negativo y una serie con prefijo A.');
+      if((await client.query('SELECT 1 FROM fiscal_verifactu_registros WHERE invoice_series=$1 AND NOT is_rectifying LIMIT 1',[series])).rowCount)throw new Error('La serie de abonos debe ser distinta de la de facturas ordinarias.');
+    }
     const invoiceDate = String(data.fecha_expedicion || data.verifactu_fecha_expedicion || "").slice(0, 10);
     if (!/^[A-Z0-9][A-Z0-9]{7,8}$/.test(issuerNif) || !issuerName || !series || !/^\d{4}-\d{2}-\d{2}$/.test(invoiceDate)) {
       throw new Error("Emisor, NIF, serie y fecha de expedición son obligatorios");
@@ -476,6 +501,7 @@ export async function emitCustomerInvoice(idFactura, data = {}, actorId = "") {
       installation.software_name,installation.software_id,installation.exclusive_use,installation.multi_entity,
       JSON.stringify(recordPayload),exchangeRate]);
     await syncInvoiceOrders(client,idFactura,actorId);
+    if(invoice.factura_tipo==='abono')await applyCreditNote(client,idFactura,actorId);
     await client.query(`INSERT INTO fiscal_verifactu_envios (id,record_id,status,request_xml) VALUES ($1,$2,'PENDING',$3)`,
       [id("vfout"),recordId,recordXml]);
     await client.query("COMMIT");
@@ -493,7 +519,7 @@ export async function updateCustomerInvoice(idFactura, data = {}, actorId = "") 
     await ensureSchema(client);
     const current = await client.query(`SELECT * FROM administracion_facturas_clientes WHERE id_factura_cliente=$1 FOR UPDATE`, [idFactura]);
     if (!current.rows[0]) { await client.query("ROLLBACK"); return null; }
-    if (current.rows[0].verifactu_estado_envio === "factura emitida") {
+    if (current.rows[0].verifactu_estado_envio === "factura emitida" || current.rows[0].datos_importacion?.abono_aplicado || current.rows[0].datos_importacion?.saldo_tras_abonos) {
       await client.query(`UPDATE administracion_facturas_clientes SET comentarios_internos=$1,updated_at=NOW() WHERE id_factura_cliente=$2`,
         [data.comentarios_internos ?? current.rows[0].comentarios_internos ?? "", idFactura]);
       await client.query("COMMIT");

@@ -51,6 +51,10 @@ export class FacturaService {
         return response.data;
     }
 
+    static async aplicarFacturaAbono(idFactura) {
+        return (await apiClient.post(`/api/v1/admin/facturas-clientes/${encodeURIComponent(idFactura)}/abono`)).data;
+    }
+
     static async getVerifactuRecords() {
         const response = await apiClient.get('/api/v1/admin/facturas-clientes/verifactu-records');
         return response.data;
