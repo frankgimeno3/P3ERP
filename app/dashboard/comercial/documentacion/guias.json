@@ -630,6 +630,7 @@
   "/dashboard/comercial/cuentas/[id_cuenta]": {
     "summary": "En Contactos, una corona amarilla identifica el contacto principal. Marca la casilla de otro contacto y confirma el cambio en el modal. El primer contacto creado en la cuenta se marca automáticamente; las propuestas nuevas lo preseleccionan.",
     "steps": [
+      "La ficha se organiza en Datos Comerciales (Datos generales, Comentarios, Contactos y Propuestas) y Datos de gestión (Contratos, Contenidos, Datos administrativos y Registro de eventos). Tareas sigue disponible como pestaña principal.",
       "Los selectores de agentes permiten Comercial, Dirección, Administración, Operaciones y Superadmin; los agentes Base no pueden seleccionarse.",
       "En Contactos, una corona amarilla identifica el contacto principal. Marca la casilla de otro contacto y confirma el cambio en el modal. El primer contacto creado en la cuenta se marca automáticamente; las propuestas nuevas lo preseleccionan.",
       "En la pestaña Tareas puedes crear y editar acciones de la cuenta. Elige el tipo (material, publicaciones, propuestas, llamada, email o acción), indica el nombre y asigna como mínimo un agente activo con cuenta de empleado. Puedes añadir varios responsables, referencia de campaña o contrato y fecha límite dd / mm / yyyy. Comercial, Administración, Operaciones, Dirección y Superadmin gestionan estas tareas.",

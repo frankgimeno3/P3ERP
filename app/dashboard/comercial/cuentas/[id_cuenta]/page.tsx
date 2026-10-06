@@ -233,6 +233,7 @@ const FichaCliente = () => {
     );
   }
 
+  const seccion = pestana === 'tareas' ? 'tareas' : ['general','comentarios','contactos','propuestas'].includes(pestana) ? 'comercial' : 'gestion';
   const tituloCuenta = cuentaEditable.nombre_empresa?.trim() || id_cuenta;
 
   return (
@@ -240,34 +241,38 @@ const FichaCliente = () => {
       <MiddleNav tituloprincipal={`Ficha de la cuenta ${tituloCuenta}`} />
 
       <div className="bg-gray-200 min-h-screen p-12 text-gray-600">
-        <div className="flex flex-row justify-between relative">
-          <div className='flex flex-row justify-left mt-2'>
-            {[
-              { key: 'general', label: 'Datos Generales' },
-              { key: 'comentarios', label: 'Comentarios' },
-              { key: 'contactos', label: 'Contactos' },
-              { key: 'propuestas', label: 'Propuestas' },
-              { key: 'contratos', label: 'Contratos' },
-              { key: 'contenidos', label: 'Contenidos' },
-              { key: 'tareas', label: 'Tareas' },
-              { key: 'datos_administrativos', label: 'Datos administrativos' },
-              { key: 'general_eventos', label: 'Registro de eventos' },
-            ].map(({ key, label }, index) => (
-              <div
-                key={key}
-                className={`p-3 rounded-tr-lg cursor-pointer w-44 text-center text-sm transition-all duration-300
-                ${pestana === key
-                    ? 'bg-blue-950 text-white z-30 rounded-tl-lg'
-                    : 'bg-white text-gray-700 z-10 hover:bg-gray-200'
-                  }`}
-                style={{ marginLeft: index === 0 ? '0px' : '-5px' }}
-                onClick={() => setPestana(key as PestanaCuenta)}
-              >
-                {label}
-              </div>
-            ))}
-          </div>
+        <div role="tablist" aria-label="Secciones de la cuenta" className="flex flex-wrap gap-2">
+          {[
+            { key: 'comercial', label: 'Datos Comerciales', first: 'general' },
+            { key: 'gestion', label: 'Datos de gestión', first: 'contratos' },
+            { key: 'tareas', label: 'Tareas', first: 'tareas' },
+          ].map(({ key, label, first }) => (
+            <button key={key} type="button" role="tab" aria-selected={seccion === key}
+              onClick={() => setPestana(first as PestanaCuenta)}
+              className={`cursor-pointer rounded-t-lg px-5 py-3 text-sm transition-colors duration-200 ${seccion === key ? 'bg-blue-950 text-white hover:bg-blue-900' : 'bg-white text-gray-700 hover:bg-blue-50'}`}>
+              {label}
+            </button>
+          ))}
         </div>
+        {seccion !== 'tareas' && <div role="tablist" aria-label={seccion === 'comercial' ? 'Datos Comerciales' : 'Datos de gestión'} className="flex flex-wrap gap-2 border-b border-gray-200 bg-white p-3">
+          {(seccion === 'comercial' ? [
+            { key: 'general', label: 'Datos generales' },
+            { key: 'comentarios', label: 'Comentarios' },
+            { key: 'contactos', label: 'Contactos' },
+            { key: 'propuestas', label: 'Propuestas' },
+          ] : [
+            { key: 'contratos', label: 'Contratos' },
+            { key: 'contenidos', label: 'Contenidos' },
+            { key: 'datos_administrativos', label: 'Datos administrativos' },
+            { key: 'general_eventos', label: 'Registro de eventos' },
+          ]).map(({ key, label }) => (
+            <button key={key} type="button" role="tab" aria-selected={pestana === key}
+              onClick={() => setPestana(key as PestanaCuenta)}
+              className={`cursor-pointer rounded px-4 py-2 text-sm transition-colors duration-200 ${pestana === key ? 'bg-blue-50 font-medium text-blue-950 hover:bg-blue-100' : 'text-gray-600 hover:bg-gray-100'}`}>
+              {label}
+            </button>
+          ))}
+        </div>}
 
         <div className="bg-white p-12 shadow-xl rounded-b-lg">
           {pestana === 'tareas' && <AccountTasks accountId={id_cuenta} />}
