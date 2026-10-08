@@ -736,8 +736,11 @@
     ]
   },
   "/dashboard/operaciones/tareas": {
-    "summary": "Crea y supervisa las tareas de los agentes empleados.",
+    "summary": "Supervisa las tareas por agente, consulta el calendario e importa tareas de vtiger por fases.",
     "steps": [
+      "Alterna Tareas por agente y Calendario. El calendario muestra los meses a la izquierda y filtros y tarjetas a la derecha. Puedes cambiar el año, seleccionar un día y abrir el detalle de cada tarea. Las tareas sin agente asociado aparecen también en una sección propia.",
+      "Importar tareas de vtiger abre un asistente de cuatro fases: cargar CSV, revisar agentes, revisar cuentas y confirmar. Las asociaciones son expresas y opcionales; no se crean agentes ni cuentas. Los responsables y relaciones originales se conservan aunque se dejen sin asociar.",
+      "La revisión muestra tareas nuevas, ya registradas y sin asociación. Confirmar guarda el lote completo. Repetir el mismo archivo no duplica ni sobrescribe tareas. Como vtiger no exporta un ID, un registro con campos modificados se considera nuevo. Todos los campos originales se pueden consultar en el detalle, incluidas las descripciones completas y horarios.",
       "Abre un empleado para consultar sus tareas pendientes y terminadas.",
       "Crear tarea asigna una nueva tarea pendiente al empleado de la ficha. El modal se cierra con la cruz o Escape.",
       "Abre una tarea para editar nombre, descripción y estado. Guarda los cambios para actualizarlos en RDS. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados.",

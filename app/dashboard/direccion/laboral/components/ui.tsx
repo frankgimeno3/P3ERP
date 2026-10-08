@@ -35,7 +35,7 @@ export function Notice({ error, children }: { error?: string; children?: ReactNo
   return error ? <p role="alert" className="my-3 rounded border border-red-200 bg-red-50 p-3 text-red-800">{error}</p> : children ? <p role="status" className="my-3 rounded bg-green-50 p-3 text-green-800">{children}</p> : null;
 }
 export function Header({ title, back, children }: { title: string; back?: string; children?: ReactNode }) {
-  return <header className="mb-5 flex flex-wrap items-center justify-between gap-3"><div>{back && <Link href={back} className="mb-2 inline-block rounded px-2 py-1 text-blue-900 hover:bg-blue-100">← Volver</Link>}<p className="text-xs uppercase text-slate-500">Dirección / Laboral</p><h1 className="text-2xl font-semibold text-blue-950">{title}</h1></div>{children}</header>;
+  return <header className="mb-5 flex flex-wrap items-center justify-between gap-3"><div>{back && <Link href={back} className="mb-2 inline-block rounded px-2 py-1 text-blue-900 hover:bg-blue-100">← Volver</Link>}<p className="text-xs uppercase text-slate-600">Dirección / Laboral</p><h1 className="text-2xl font-semibold text-blue-950">{title}</h1></div>{children}</header>;
 }
 export function Field({ label, children }: { label: string; children: ReactNode }) {
   return <label className="block space-y-1"><span className="block font-medium text-slate-600">{label}</span>{children}</label>;
@@ -104,5 +104,5 @@ export function Documents({ kind, id }: { kind: 'empleados' | 'nominas' | 'antic
     const response = await fetch(`${apiRoot}/${kind}/${id}/documentos`, { method: 'POST', body: form });
     const result = await response.json(); if (!response.ok) throw new Error(result.message || 'No se pudo subir el archivo.');
     setFile(null); if (ref.current) ref.current.value = ''; reload();
-  }}><Field label="Archivo (máximo 15 MB)"><input ref={ref} type="file" required onChange={e => setFile(e.target.files?.[0] || null)} /></Field></Form><ul className="mt-4 space-y-2">{data?.map(doc => <li key={doc.id}><a className="block rounded bg-slate-50 p-3 text-blue-900 hover:bg-blue-50" href={`${apiRoot}/documentos/${doc.id}`}>{doc.nombre} · {Math.ceil(doc.tamano / 1024)} KB ↓</a></li>)}</ul>{loading ? <p>Cargando documentos…</p> : !data?.length && <p className="mt-3 text-slate-500">Sin documentos.</p>}</section>;
+  }}><Field label="Archivo (máximo 15 MB)"><input ref={ref} type="file" required onChange={e => setFile(e.target.files?.[0] || null)} /></Field></Form><ul className="mt-4 space-y-2">{data?.map(doc => <li key={doc.id}><a className="block rounded bg-slate-50 p-3 text-blue-900 hover:bg-blue-50" href={`${apiRoot}/documentos/${doc.id}`}>{doc.nombre} · {Math.ceil(doc.tamano / 1024)} KB ↓</a></li>)}</ul>{loading ? <p>Cargando documentos…</p> : !data?.length && <p className="mt-3 text-slate-600">Sin documentos.</p>}</section>;
 }

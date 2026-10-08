@@ -130,7 +130,7 @@ export default function Home() {
       </div>
 
       <div className="flex flex-grow flex-col items-center justify-center">
-        <form onSubmit={handleLogin} className="flex w-full max-w-md flex-col gap-4 rounded bg-gray-900 p-8 shadow-md">
+        <form onSubmit={handleLogin} className="flex w-full max-w-md flex-col gap-4 rounded bg-gray-900 p-8 text-gray-100 shadow-md">
           <h2 className="mb-4 text-center text-2xl font-semibold text-white">Ingrese email y contraseña</h2>
 
           <input

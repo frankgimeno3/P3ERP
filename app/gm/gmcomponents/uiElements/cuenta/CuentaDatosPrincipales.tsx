@@ -35,7 +35,7 @@ function TextField({ label, value, onChange, className = "", readOnly = false }:
         readOnly={readOnly}
         onChange={(event) => onChange(event.target.value)}
         className={`min-w-0 flex-1 rounded-md border border-gray-300 px-2 py-1 text-left text-sm text-slate-700 outline-none ${
-          readOnly ? "bg-slate-100 text-slate-500" : "bg-white"
+          readOnly ? "bg-slate-100 text-slate-600" : "bg-white"
         }`}
       />
     </label>

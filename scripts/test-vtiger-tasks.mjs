@@ -1,0 +1,32 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {parseTaskCsv,vtigerDate} from '../app/config/vtigerTasks.js';
+import {prepareVtigerTasks,importVtigerTasks,taskImportOptions} from '../server/features/laboral/VtigerTaskRepository.js';
+const header='Asunto,Asignado a,Fecha y Hora Inicio,Fecha y Hora Fin,En relación con,Estado,Descripción';
+const record='"Llamar, revisar",origen,08-10-2026 10:00:00,08-10-2026 11:00:00,Accounts::::Empresa,Planned,"Primera línea\nSegunda ""cita"""';
+const csv=`${header}\r\n${record}\r\n${record}\r\n`;
+const rows=parseTaskCsv(`\uFEFF${csv}`),tasks=prepareVtigerTasks(csv);
+assert.equal(rows.length,2);assert.equal(rows[0].Asunto,'Llamar, revisar');
+assert.equal(rows[0]['Descripción'],'Primera línea\nSegunda "cita"');
+assert.notEqual(tasks[0].key,tasks[1].key);
+assert.deepEqual(prepareVtigerTasks(csv).map(task=>task.key),tasks.map(task=>task.key));
+assert.equal(vtigerDate('08-10-2026 10:00:00'),'2026-10-08T10:00:00');
+assert.throws(()=>vtigerDate('31-02-2026 10:00:00'));
+assert.throws(()=>prepareVtigerTasks(csv.replaceAll('Planned','Unknown')),/Estado desconocido/);
+assert.throws(()=>prepareVtigerTasks(csv.replaceAll('08-10-2026 11:00:00','07-10-2026 11:00:00')),/precede/);
+assert.throws(()=>parseTaskCsv(`${header}\n"incompleto`),/falta cerrar/);
+assert.throws(()=>parseTaskCsv(`${header}\na,b`),/columnas/);
+assert.throws(()=>prepareVtigerTasks(''),/encabezado/);
+assert.throws(()=>prepareVtigerTasks('a'.repeat(10*1024*1024+1)),/10 MB/);
+await assert.rejects(taskImportOptions({id:'',role:'operaciones'}),error=>error.status===401);
+await assert.rejects(importVtigerTasks({id:'base',role:'base'},{csv},true),error=>error.status===403);
+if(process.argv[2]){
+ const original=await readFile(process.argv[2],'utf8'),real=prepareVtigerTasks(original);
+ assert.equal(real.length,605);assert.equal(Object.keys(real[0].raw).length,20);
+ assert.equal(real.filter(task=>task.raw['En relación con']).length,550);
+ assert.equal(Math.max(...real.map(task=>task.raw['Descripción'].length)),11996);
+ assert.equal(new Set(real.map(task=>task.key)).size,605);
+ assert.deepEqual(real.map(task=>task.raw),parseTaskCsv(original));
+ console.log('PASS: las 605 tareas conservan los 20 campos y las descripciones completas.');
+}
+console.log('PASS: CSV multilínea, comillas, duplicados, fechas, validación y permisos sin escrituras en RDS.');

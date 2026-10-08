@@ -197,7 +197,7 @@ export default function RoleAccessPage() {
       <div className="mb-5 flex items-center justify-between">
         <div>
           <p className="text-xl font-semibold text-gray-700">Accesos</p>
-          <p className="text-sm text-gray-500">{role ? `${role.nombre_rol || role.id_rol} (${role.id_rol})` : params.id}</p>
+          <p className="text-sm text-gray-600">{role ? `${role.nombre_rol || role.id_rol} (${role.id_rol})` : params.id}</p>
           {role?.descripcion_rol && <p className="mt-1 text-sm text-gray-600">{role.descripcion_rol}</p>}
         </div>
         <div className="flex gap-2">
@@ -250,7 +250,7 @@ export default function RoleAccessPage() {
                     />
                     <span>{route}</span>
                     {basePermissionSet.has(route) ? (
-                      <span className="rounded bg-gray-100 px-2 py-0.5 text-[10px] uppercase text-gray-500">rol</span>
+                      <span className="rounded bg-gray-100 px-2 py-0.5 text-[10px] uppercase text-gray-600">rol</span>
                     ) : permissions.includes(route) ? (
                       <span className="rounded bg-blue-100 px-2 py-0.5 text-[10px] uppercase text-blue-800">adicional</span>
                     ) : null}

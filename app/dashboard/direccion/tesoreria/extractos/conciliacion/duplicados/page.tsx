@@ -57,7 +57,7 @@ export default function DuplicadosPage() {
           <h1 className="text-2xl font-semibold">
             Duplicados de líneas bancarias
           </h1>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-600">
             Coincidencias por fecha operativa e importe.
           </p>
         </div>

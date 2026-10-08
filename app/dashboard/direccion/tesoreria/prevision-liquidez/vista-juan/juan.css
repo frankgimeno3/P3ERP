@@ -17,7 +17,7 @@
 .juan-grid .spacer{width:35px;border:0;background:white!important}
 .juan-grid input{width:100%;padding:1px 0;background:transparent;text-align:right;color:inherit;border:0;outline:0;font:inherit;cursor:pointer}
 .juan-grid input:hover:not(:disabled){background:#fff6c8}.juan-grid input:focus{background:#fff7d0;outline:2px solid #278446;position:relative;z-index:1;cursor:text}
-.juan-grid input:disabled{cursor:default;opacity:.8}.juan-grid .forecast,.juan-grid .negative{color:red}.juan-grid .invalid{outline:2px solid #d11}
+.juan-grid input:disabled{cursor:default;opacity:.8}.juan-grid .forecast,.juan-grid .negative{color:#991b1b}.juan-grid .invalid{outline:2px solid #d11}
 .juan-grid .total th,.juan-grid .total td{font-weight:bold;border-top:2px solid #111;border-bottom:2px solid #111}
 .juan-balances th:first-child{width:280px}.juan-balances td:last-child{width:95px}.juan-balances .total td,.juan-balances .total th{height:3.4em}
 .juan-grid .check{background:#c5d9ef}.juan-grid .erp{background:#eaf1f5}.juan-grid .check th,.juan-grid .erp th{font-size:.9em}

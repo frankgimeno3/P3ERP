@@ -313,7 +313,7 @@ function StepHeader({ current }: { current: number }) {
       <div className="flex items-center gap-7">
         {[1, 2, 3, 4].map((step, index) => (
           <div key={step} className="flex items-center gap-7">
-            <div className={`flex h-16 w-16 items-center justify-center rounded-full text-xl font-semibold ${step === current ? "bg-blue-600 text-white" : step < current ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-500"}`}>
+            <div className={`flex h-16 w-16 items-center justify-center rounded-full text-xl font-semibold ${step === current ? "bg-blue-600 text-white" : step < current ? "bg-green-100 text-green-800" : "bg-gray-200 text-gray-600"}`}>
               {step}
             </div>
             {index < 3 && <div className="h-1 w-14 bg-gray-300" />}
@@ -345,7 +345,7 @@ function TextField({
 }) {
   return (
     <label className="block text-sm">
-      <span className="mb-1 block font-medium">{label} {required && <span className="text-red-600">*</span>}</span>
+      <span className="mb-1 block font-medium">{label} {required && <span className="text-red-700">*</span>}</span>
       <input
         value={value}
         readOnly={readOnly || Boolean(unavailableChecked)}
@@ -355,7 +355,7 @@ function TextField({
       />
       {onUnavailableChange && (
         <span className="mt-2 flex justify-end">
-          <span className="inline-flex items-center gap-2 text-xs text-gray-500">
+          <span className="inline-flex items-center gap-2 text-xs text-gray-600">
             <input type="checkbox" checked={Boolean(unavailableChecked)} onChange={(event) => onUnavailableChange(event.target.checked)} />
             dato no disponible
           </span>
@@ -385,7 +385,7 @@ function CountryField({
   return (
     <div className="relative text-sm">
       <label className="block">
-        <span className="mb-1 block font-medium">Pais <span className="text-red-600">*</span></span>
+        <span className="mb-1 block font-medium">Pais <span className="text-red-700">*</span></span>
         <input value={open ? query : value} onFocus={onFocus} onChange={(event) => onQueryChange(event.target.value)} placeholder="Escribe para filtrar paises" className="w-full rounded border border-gray-300 px-3 py-3 text-sm hover:border-blue-950" />
       </label>
       {open && (

@@ -206,7 +206,7 @@ export default function AgenteDetallePage() {
 
             {selectedRole?.permisos_rol?.length ? (
               <details className="mt-4 border-t border-gray-200 pt-4">
-                <summary className="cursor-pointer rounded p-2 text-xs font-semibold uppercase text-gray-500 hover:bg-blue-50">Permisos</summary>
+                <summary className="cursor-pointer rounded p-2 text-xs font-semibold uppercase text-gray-600 hover:bg-blue-50">Permisos</summary>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {selectedRole.permisos_rol.map((permiso) => <span key={permiso} className="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700">{permiso}</span>)}
                 </div>

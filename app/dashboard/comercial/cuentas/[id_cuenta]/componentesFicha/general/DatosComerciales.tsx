@@ -60,7 +60,7 @@ const DatosComerciales: FC<DatosComercialesProps> = ({ datos_comerciales, pais_c
           <span className="font-medium">País</span>
           <div className="rounded border border-gray-300 bg-gray-100 px-2 py-1 text-gray-700">{pais_cuenta || '-'}</div>
           <div className="flex items-center justify-between gap-2">
-            <span className="text-xs text-gray-500">Heredado desde Detalles de la cuenta</span>
+            <span className="text-xs text-gray-600">Heredado desde Detalles de la cuenta</span>
             <button type="button" onClick={scrollToPais} className="rounded border border-gray-300 px-2 py-1 text-xs hover:bg-gray-50">
               Editar arriba
             </button>
@@ -75,7 +75,7 @@ const DatosComerciales: FC<DatosComercialesProps> = ({ datos_comerciales, pais_c
         <label className="space-y-1">
           <span className="font-medium">Teléfono de contacto</span>
           <input name="telefono_principal_cuenta" value={datos_comerciales.telefono_principal_cuenta} onChange={handleInputChange} className={inputClass} />
-          <span className="text-xs text-gray-400">(agregar el prefijo +xy siempre)</span>
+          <span className="text-xs text-gray-600">(agregar el prefijo +xy siempre)</span>
         </label>
 
         <label className="space-y-1">

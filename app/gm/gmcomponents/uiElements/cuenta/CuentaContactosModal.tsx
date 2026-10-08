@@ -121,7 +121,7 @@ export default function CuentaContactosModal({
 
           {contactForm && (
             <div className="w-[360px] shrink-0 border border-slate-300 bg-white">
-              <div className="border-b border-slate-300 bg-slate-400 px-4 py-2 text-sm font-semibold text-white">
+              <div className="border-b border-slate-300 bg-slate-600 px-4 py-2 text-sm font-semibold text-white">
                 Datos del contacto
               </div>
               <div className="grid gap-px bg-slate-300">

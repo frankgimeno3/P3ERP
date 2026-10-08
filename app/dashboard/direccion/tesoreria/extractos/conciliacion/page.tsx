@@ -66,7 +66,7 @@ export default function RevisionLineasPage() {
           <h1 className="text-2xl font-semibold text-gray-800">
             Conciliación
           </h1>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-600">
             Asigna movimientos y controla su revisión.
           </p>
           <p className="mt-2 text-sm font-semibold text-amber-800" role="status">
@@ -109,7 +109,7 @@ export default function RevisionLineasPage() {
               setBank(b);
               setSelected([]);
             }}
-            className={`cursor-pointer border-b-2 px-6 py-3 font-semibold transition hover:bg-blue-50 ${bank === b ? "border-blue-950 text-blue-950" : "border-transparent text-gray-500"}`}
+            className={`cursor-pointer border-b-2 px-6 py-3 font-semibold transition hover:bg-blue-50 ${bank === b ? "border-blue-950 text-blue-950" : "border-transparent text-gray-600"}`}
           >
             {b}
           </button>

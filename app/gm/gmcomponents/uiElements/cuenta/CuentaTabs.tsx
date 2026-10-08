@@ -35,7 +35,7 @@ export default function CuentaTabs({ activeTab, onTabChange }: CuentaTabsProps) 
                   ? isActive
                     ? "border-slate-700 bg-slate-700 text-white"
                     : "border-slate-300 bg-[#eef2f5] text-slate-700 hover:bg-white"
-                  : "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400"
+                  : "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-600"
               }`}
             >
               {tab.number}. {tab.label}

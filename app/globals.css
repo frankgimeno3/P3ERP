@@ -1,18 +1,20 @@
 @import "tailwindcss";
 
 :root {
+  /* ERP pages use light surfaces; the OS theme must not invert inherited text. */
+  color-scheme: light;
   --background: #ffffff;
   --foreground: #1f2937;
   --panel-navy: #1f2937;
   --panel-navy-2: #334155;
   --accent-blue: #2563eb;
-  --surface: #1e293b;
-  --surface-elevated: #334155;
-  --surface-hover: #475569;
-  --input-bg: #1e293b;
-  --input-border: #475569;
+  --surface: #ffffff;
+  --surface-elevated: #172554;
+  --surface-hover: #eff6ff;
+  --input-bg: #ffffff;
+  --input-border: #d1d5db;
   --input-focus: #2563eb;
-  --text-muted: #94a3b8;
+  --text-muted: #4b5563;
 }
 
 @theme inline {
@@ -20,13 +22,6 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-ubuntu), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
@@ -86,7 +81,7 @@ td {
 .content-main textarea {
   background-color: var(--input-bg);
   border-color: var(--input-border);
-  color: #f1f5f9;
+  color: #111827;
 }
 
 .content-main input::placeholder,
@@ -104,7 +99,7 @@ td {
 
 .content-main select option {
   background: var(--input-bg);
-  color: #f1f5f9;
+  color: #111827;
 }
 
 .content-main table thead tr {
@@ -112,7 +107,7 @@ td {
 }
 
 .content-main table thead th {
-  color: #cbd5e1;
+  color: #ffffff;
 }
 
 .content-main table tbody tr {
@@ -124,7 +119,7 @@ td {
 }
 
 .content-main table tbody td {
-  color: #f1f5f9;
+  color: #111827;
 }
 
 :where(a[href], button:not(:disabled), [role="button"]:not([aria-disabled="true"]), summary) {

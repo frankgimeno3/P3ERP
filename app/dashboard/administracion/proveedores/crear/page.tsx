@@ -53,7 +53,7 @@ export default function CreateSupplierPage() {
   };
   return <div className="min-h-screen bg-gray-100 text-gray-800"><MiddleNav tituloprincipal="Crear proveedor" /><main className="mx-auto max-w-3xl px-6 py-10">
     <Link href={root} className="mb-5 inline-block cursor-pointer rounded p-2 text-blue-950 hover:bg-blue-100">← Proveedores</Link>
-    <ol className="mb-6 flex flex-wrap gap-4 text-sm">{['Nombre', 'Código fiscal', 'Resto de datos'].map((label, i) => <li key={label} aria-current={step === i + 1 ? 'step' : undefined} className={step === i + 1 ? 'font-bold text-blue-950' : 'text-gray-500'}>{i + 1}. {label}</li>)}</ol>
+    <ol className="mb-6 flex flex-wrap gap-4 text-sm">{['Nombre', 'Código fiscal', 'Resto de datos'].map((label, i) => <li key={label} aria-current={step === i + 1 ? 'step' : undefined} className={step === i + 1 ? 'font-bold text-blue-950' : 'text-gray-600'}>{i + 1}. {label}</li>)}</ol>
     <form className="space-y-5 rounded bg-white p-6 shadow" onSubmit={event => { event.preventDefault(); if (step === 3) void save(); else if (reviewed && !duplicate && !loading && !loadError && (step === 1 ? name : vat)) advance(step + 1); }}>
       <h1 className="text-xl font-semibold">{step === 1 ? 'Comprueba el nombre del proveedor' : step === 2 ? 'Comprueba el código fiscal' : 'Completa los datos del proveedor'}</h1>
       {step < 3 ? <>

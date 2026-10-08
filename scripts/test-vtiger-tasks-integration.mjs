@@ -1,0 +1,34 @@
+import assert from 'node:assert/strict';
+import {randomUUID} from 'node:crypto';
+import env from '@next/env';
+import {getPgPool} from '../server/database/pgClient.js';
+import {importVtigerTasks} from '../server/features/laboral/VtigerTaskRepository.js';
+import {readTasks,taskCalendar,taskEmployees,writeTask} from '../server/features/laboral/TaskRepository.js';
+env.loadEnvConfig(process.cwd());
+const pool=getPgPool(),db=await pool.connect(),schema='test_vtiger_'+randomUUID().replaceAll('-',''),query=pool.query.bind(pool),connect=pool.connect.bind(pool);
+const header='Asunto,Asignado a,Fecha y Hora Inicio,Fecha y Hora Fin,En relación con,Estado,Descripción';
+const csv=`${header}\nSin asociación,origen,08-10-2026 10:00:00,08-10-2026 11:00:00,,Planned,"Detalle\ncompleto"\nCon asociación,otro,08-10-2026 12:00:00,08-10-2026 13:00:00,Accounts::::Empresa,Held,Hecha`;
+try{
+ await db.query('CREATE SCHEMA '+schema);await db.query('SET search_path TO '+schema+',public');
+ for(const table of ['agentes_db','laboral_tareas_empleado','comercial_cuentas','comercial_cuenta_tareas','comercial_cuenta_tarea_agentes'])await db.query('CREATE TABLE '+schema+'.'+table+' (LIKE public.'+table+' INCLUDING ALL)');
+ pool.query=(...args)=>db.query(...args);pool.connect=async()=>({query:db.query.bind(db),release(){}});
+ await db.query("INSERT INTO agentes_db(id_agente,nombre_agente,is_empleado_account) VALUES('owner','Propietario',true)");
+ await db.query("INSERT INTO comercial_cuentas(id_cuenta,nombre_empresa) VALUES('account','Empresa')");
+ const actor={id:'manager',role:'operaciones'},body={csv,agents:{otro:'owner'},accounts:{'Accounts::::Empresa':'account'}};
+ const preview=await importVtigerTasks(actor,body);assert.equal(preview.new,2);assert.equal((await db.query('SELECT count(*)::int n FROM laboral_tareas_empleado')).rows[0].n,0);
+ const imported=await importVtigerTasks(actor,body,true);assert.equal(imported.inserted,2);assert.equal(imported.unassigned,1);assert.equal(imported.unlinked,1);
+ assert.equal((await importVtigerTasks(actor,body,true)).inserted,0);
+ const calendar=await taskCalendar(actor);assert.equal(calendar.length,2);const unassigned=await readTasks(actor,{id:calendar.find(row=>!row.agente).id});assert.equal(unassigned.descripcion,'Detalle\ncompleto');assert.equal(unassigned.fecha_inicio,'2026-10-08T10:00:00');
+ assert.equal(unassigned.vtiger_original['Asignado a'],'origen');assert.equal(unassigned.id_cuenta,null);
+ assert.equal((await readTasks({id:'owner',role:'base'})).length,1);
+ await assert.rejects(readTasks({id:'owner',role:'base'},{id:unassigned.id}),error=>error.status===403);
+ assert.equal((await taskEmployees(actor))[0].terminadas,1);
+ const updated=await writeTask(actor,unassigned.id,{...unassigned,estado:'en_curso'});assert.equal(updated.estado,'en_curso');
+ await assert.rejects(writeTask(actor,unassigned.id,{...unassigned,estado:'completada'}),error=>error.status===409);
+ const read=await readTasks(actor,{id:unassigned.id});assert.equal(read.vtiger_original.Estado,'Planned');
+ await assert.rejects(importVtigerTasks(actor,{...body,agents:{otro:'missing'}},true),error=>error.status===400);
+ await db.query("ALTER TABLE laboral_tareas_empleado ADD CONSTRAINT test_import_failure CHECK(nombre <> 'Fallida')");
+ await assert.rejects(importVtigerTasks(actor,{...body,csv:csv.replace('Sin asociación','Nueva válida').replace('Con asociación','Fallida')},true));
+ assert.equal((await db.query('SELECT count(*)::int n FROM laboral_tareas_empleado')).rows[0].n,2);
+ console.log('PASS: revisión sin escrituras, importación con/sin asociaciones, reimportación, calendario, permisos y edición concurrente en esquema aislado.');
+}finally{pool.query=query;pool.connect=connect;await db.query('RESET search_path');await db.query('DROP SCHEMA IF EXISTS '+schema+' CASCADE');db.release();await pool.end();}

@@ -145,7 +145,7 @@ const ModalAnadirDireccion: FC<ModalAnadirDireccionProps> = ({ isOpen, onClose, 
           </button>
           <button
             className={`px-4 py-2 rounded text-white ${
-              isValid ? 'bg-blue-600 hover:bg-blue-700 cursor-pointer' : 'bg-gray-400 cursor-not-allowed'
+              isValid ? 'bg-blue-600 hover:bg-blue-700 cursor-pointer' : 'bg-gray-600 cursor-not-allowed'
             }`}
             onClick={handleConfirm}
             disabled={!isValid}

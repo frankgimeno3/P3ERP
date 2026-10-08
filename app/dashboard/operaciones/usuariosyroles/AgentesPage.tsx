@@ -97,7 +97,7 @@ export default function Agentes({ initialTab = 'agentes' }: { initialTab?: 'agen
       <div className="mb-5 flex items-center justify-between">
         <div>
           <p className="text-xl font-semibold text-gray-700">Agentes</p>
-          <p className="text-sm text-gray-500">Agentes registrados y rol asignado</p>
+          <p className="text-sm text-gray-600">Agentes registrados y rol asignado</p>
         </div>
         <div className="flex gap-3"><button type="button" onClick={() => router.push('/dashboard/operaciones/agentes/roles')} className="cursor-pointer rounded border px-4 py-2 hover:bg-blue-50">Administrar roles</button><button type="button" onClick={() => setShowCreateUser(true)} className="cursor-pointer rounded-md bg-blue-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-800 hover:shadow-md">
           Crear agente

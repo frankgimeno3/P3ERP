@@ -85,8 +85,8 @@ const TodasPropuestas: FC<TodasPropuestasProps> = ({
           ))}
         </tbody>
       </SortableTable>
-      {loading && <p className="mt-4 text-center text-sm text-gray-500">Cargando propuestas...</p>}
-      {!loading && resultadosFiltrados.length === 0 && <p className="mt-4 text-center text-sm text-gray-500">No se encontraron resultados.</p>}
+      {loading && <p className="mt-4 text-center text-sm text-gray-600">Cargando propuestas...</p>}
+      {!loading && resultadosFiltrados.length === 0 && <p className="mt-4 text-center text-sm text-gray-600">No se encontraron resultados.</p>}
     </div>
   );
 };

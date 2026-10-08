@@ -158,11 +158,11 @@ function DatePartsInput({
 }
 
 function RequiredBadge({ complete }: { complete: boolean }) {
-  return <span className={`ml-2 inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none ${complete ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-600"}`}>{complete ? "1/1" : "0/1"}</span>;
+  return <span className={`ml-2 inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none ${complete ? "bg-green-100 text-green-800" : "bg-gray-200 text-gray-600"}`}>{complete ? "1/1" : "0/1"}</span>;
 }
 
 function ToggleQuestion({ label, checked, onChange }: { label: string; checked: boolean; onChange: (checked: boolean) => void }) {
-  return <div className="text-sm"><p className="mb-2">{label}</p><div className="flex items-center gap-3"><span className={!checked ? "font-semibold text-blue-950" : "text-gray-500"}>No</span><Switch checked={checked} onChange={onChange} label={label} /><span className={checked ? "font-semibold text-blue-950" : "text-gray-500"}>Sí</span></div></div>;
+  return <div className="text-sm"><p className="mb-2">{label}</p><div className="flex items-center gap-3"><span className={!checked ? "font-semibold text-blue-950" : "text-gray-600"}>No</span><Switch checked={checked} onChange={onChange} label={label} /><span className={checked ? "font-semibold text-blue-950" : "text-gray-600"}>Sí</span></div></div>;
 }
 
 function Switch({ checked, onChange, label }: { checked: boolean; onChange: (checked: boolean) => void; label: string }) {
@@ -268,7 +268,7 @@ function LineaEditor({
         </label>
       )}
 
-      {esRevista && linea.id_publicacion && <div className="md:col-span-2 rounded border p-4"><p className="mb-3 text-sm font-semibold">Páginas preferentes de la publicación</p><div className="grid gap-4 md:grid-cols-2"><div><p className="mb-2 text-xs font-semibold uppercase text-gray-500">Preferentes disponibles</p><div className="grid grid-cols-2 gap-2">{paginas.filter((page) => String(page.pagina_preferente || "").startsWith("pag_pref_")).map((page) => <PageChoice key={page.id_pagina_publicacion} page={page} selected={linea.id_pagina_publicacion === page.id_pagina_publicacion} onSelect={() => !page.has_content && onPatch({ id_pagina_publicacion: page.id_pagina_publicacion })} />)}</div></div><div><p className="mb-2 text-xs font-semibold uppercase text-gray-500">Posibilidades</p><div className="space-y-2">{paginas.filter((page) => ["portada", "interior_portada"].includes(String(page.pagina_preferente || ""))).map((page) => <PageChoice key={page.id_pagina_publicacion} page={page} selected={linea.id_pagina_publicacion === page.id_pagina_publicacion} onSelect={() => !page.has_content && onPatch({ id_pagina_publicacion: page.id_pagina_publicacion })} />)}<div className="rounded border border-dashed p-3 text-sm"><strong>Página premium</strong><p className="text-xs text-gray-500">Selecciona una página numerada a la izquierda.</p></div></div></div></div><div className="mt-3 flex gap-4 text-xs"><span className="text-green-700">● Disponible</span><span className="text-orange-600">● Ofrecida</span><span className="text-red-700">● Vendida</span></div></div>}
+      {esRevista && linea.id_publicacion && <div className="md:col-span-2 rounded border p-4"><p className="mb-3 text-sm font-semibold">Páginas preferentes de la publicación</p><div className="grid gap-4 md:grid-cols-2"><div><p className="mb-2 text-xs font-semibold uppercase text-gray-600">Preferentes disponibles</p><div className="grid grid-cols-2 gap-2">{paginas.filter((page) => String(page.pagina_preferente || "").startsWith("pag_pref_")).map((page) => <PageChoice key={page.id_pagina_publicacion} page={page} selected={linea.id_pagina_publicacion === page.id_pagina_publicacion} onSelect={() => !page.has_content && onPatch({ id_pagina_publicacion: page.id_pagina_publicacion })} />)}</div></div><div><p className="mb-2 text-xs font-semibold uppercase text-gray-600">Posibilidades</p><div className="space-y-2">{paginas.filter((page) => ["portada", "interior_portada"].includes(String(page.pagina_preferente || ""))).map((page) => <PageChoice key={page.id_pagina_publicacion} page={page} selected={linea.id_pagina_publicacion === page.id_pagina_publicacion} onSelect={() => !page.has_content && onPatch({ id_pagina_publicacion: page.id_pagina_publicacion })} />)}<div className="rounded border border-dashed p-3 text-sm"><strong>Página premium</strong><p className="text-xs text-gray-600">Selecciona una página numerada a la izquierda.</p></div></div></div></div><div className="mt-3 flex gap-4 text-xs"><span className="text-green-800">● Disponible</span><span className="text-orange-800">● Ofrecida</span><span className="text-red-700">● Vendida</span></div></div>}
 
       <label className="flex flex-col gap-1 text-sm">
         Servicio
@@ -748,7 +748,7 @@ export default function PropuestaEditor({
                 type="button"
                 onClick={() => item < step && setStep(item)}
                 disabled={item > step}
-                className={`mr-3 h-10 w-10 rounded-full text-sm font-semibold ${item <= step ? "cursor-pointer hover:ring-2 hover:ring-blue-200" : "cursor-not-allowed"} ${step === item ? "bg-blue-950 text-white" : item < step ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-500"}`}
+                className={`mr-3 h-10 w-10 rounded-full text-sm font-semibold ${item <= step ? "cursor-pointer hover:ring-2 hover:ring-blue-200" : "cursor-not-allowed"} ${step === item ? "bg-blue-950 text-white" : item < step ? "bg-green-100 text-green-800" : "bg-gray-200 text-gray-600"}`}
               >
                 {item}
               </button>
@@ -881,7 +881,7 @@ export default function PropuestaEditor({
                 </div>
                 <div className="ml-auto w-full max-w-md space-y-3 rounded border bg-white p-4 text-sm">
                   <div className="flex justify-between"><span>Total antes del descuento</span><strong>{subtotal.toFixed(2)} {form.moneda}</strong></div>
-                  <div className="flex items-center justify-between gap-3"><span>Descuento general</span><div className="flex items-center gap-2"><span className={form.tipo_descuento_final === "porcentaje" ? "font-semibold text-blue-950" : "text-gray-400"}>%</span><Switch label="Tipo de descuento general" checked={form.tipo_descuento_final === "importe"} onChange={(exact) => setForm((prev) => ({ ...prev, tipo_descuento_final: exact ? "importe" : "porcentaje", descuento_final_propuesta: 0 }))} /><span className={form.tipo_descuento_final === "importe" ? "font-semibold text-blue-950" : "text-gray-400"}>€</span><input type="number" min="0" max={form.tipo_descuento_final === "porcentaje" ? 100 : subtotal} value={form.descuento_final_propuesta} onChange={(event) => { const maximum = form.tipo_descuento_final === "porcentaje" ? 100 : subtotal; setForm((prev) => ({ ...prev, descuento_final_propuesta: Math.min(maximum, Math.max(0, toNumber(event.target.value))) })); }} className="w-24 rounded border p-2 text-right" /></div></div>
+                  <div className="flex items-center justify-between gap-3"><span>Descuento general</span><div className="flex items-center gap-2"><span className={form.tipo_descuento_final === "porcentaje" ? "font-semibold text-blue-950" : "text-gray-600"}>%</span><Switch label="Tipo de descuento general" checked={form.tipo_descuento_final === "importe"} onChange={(exact) => setForm((prev) => ({ ...prev, tipo_descuento_final: exact ? "importe" : "porcentaje", descuento_final_propuesta: 0 }))} /><span className={form.tipo_descuento_final === "importe" ? "font-semibold text-blue-950" : "text-gray-600"}>€</span><input type="number" min="0" max={form.tipo_descuento_final === "porcentaje" ? 100 : subtotal} value={form.descuento_final_propuesta} onChange={(event) => { const maximum = form.tipo_descuento_final === "porcentaje" ? 100 : subtotal; setForm((prev) => ({ ...prev, descuento_final_propuesta: Math.min(maximum, Math.max(0, toNumber(event.target.value))) })); }} className="w-24 rounded border p-2 text-right" /></div></div>
                   <div className="flex justify-between text-gray-500"><span>Descuento aplicado</span><span>-{generalDiscountAmount.toFixed(2)} {form.moneda}</span></div>
                   <div className="flex justify-between"><span>Base imponible</span><strong>{baseImponible.toFixed(2)} {form.moneda}</strong></div>
                   <div className="flex justify-between"><span>IVA ({form.iva_aplicable ? "21%" : "0%"})</span><strong>{(totalConIva - baseImponible).toFixed(2)} {form.moneda}</strong></div>
@@ -959,7 +959,7 @@ export default function PropuestaEditor({
 
                 <div className="rounded-lg border bg-white p-6 shadow-sm">
                   <div className="border-b pb-4">
-                    <p className="text-xs uppercase text-gray-400">Propuesta</p>
+                    <p className="text-xs uppercase text-gray-600">Propuesta</p>
                     <h3 className="text-xl font-semibold text-blue-950">{form.nombre_propuesta || form.id_propuesta}</h3>
                     <div className="mt-3 grid gap-2 text-sm md:grid-cols-2">
                       <p><strong>Cuenta:</strong> {cuenta?.nombre_empresa || form.id_cuenta_propuesta}</p>
@@ -1026,7 +1026,7 @@ export default function PropuestaEditor({
                 <div className="max-h-[90vh] w-full max-w-5xl overflow-y-auto rounded-lg bg-white p-6 shadow-2xl">
                   <div className="mb-4 flex items-center justify-between">
                     <div><h3 className="text-lg font-semibold text-blue-950">Seleccionar servicio</h3><p className="text-sm text-gray-500">Fase {lineModalStep}: {lineModalStep === 1 ? "elige el canal" : lineModalStep === 2 ? "elige el servicio" : "configura las especificaciones"}.</p></div>
-                    <button type="button" onClick={() => { setLineModalIndex(null); setLineModalDraft(null); }} className="cursor-pointer rounded px-2 py-1 text-gray-500 hover:bg-gray-100">
+                    <button type="button" onClick={() => { setLineModalIndex(null); setLineModalDraft(null); }} className="cursor-pointer rounded px-2 py-1 text-gray-600 hover:bg-gray-100">
                       ×
                     </button>
                   </div>

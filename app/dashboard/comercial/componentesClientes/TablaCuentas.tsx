@@ -218,7 +218,7 @@ const Tablacuentas: FC<TablacuentasProps> = ({
             disabled={currentPage === 1}
             className={`px-4 py-2 rounded-lg ${
               currentPage === 1
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
                 : 'bg-blue-950 text-white hover:bg-blue-900 cursor-pointer'
             }`}
           >
@@ -232,7 +232,7 @@ const Tablacuentas: FC<TablacuentasProps> = ({
             disabled={currentPage === totalPages}
             className={`px-4 py-2 rounded-lg ${
               currentPage === totalPages
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
                 : 'bg-blue-950 text-white hover:bg-blue-900 cursor-pointer'
             }`}
           >

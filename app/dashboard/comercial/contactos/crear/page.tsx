@@ -131,7 +131,7 @@ export default function CrearContacto() {
 
               {linked && (
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-700">Cuenta asociada <span className="text-red-600">*</span></label>
+                  <label className="mb-2 block text-sm font-semibold text-slate-700">Cuenta asociada <span className="text-red-700">*</span></label>
                   <button
                     type="button"
                     onClick={() => setAccountModalOpen(true)}
@@ -246,7 +246,7 @@ function StepHeader({ current, labels }: { current: number; labels: string[] }) 
       <div className="flex flex-wrap items-center gap-7">
         {[1, 2, 3, 4].map((step, index) => (
           <div key={step} className="flex items-center gap-7">
-            <div className={`flex h-12 w-12 items-center justify-center rounded-full text-lg font-bold ${step === current ? "bg-blue-600 text-white" : step < current ? "bg-green-100 text-green-700" : "bg-slate-200 text-slate-500"}`}>
+            <div className={`flex h-12 w-12 items-center justify-center rounded-full text-lg font-bold ${step === current ? "bg-blue-600 text-white" : step < current ? "bg-green-100 text-green-800" : "bg-slate-200 text-slate-600"}`}>
               {step}
             </div>
             {index < 3 && <div className="h-1 w-10 bg-slate-300" />}
@@ -274,7 +274,7 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (value: boo
 function TextField({ label, value, onChange, placeholder = "", required = false, readOnly = false }: { label: string; value: string; onChange?: (value: string) => void; placeholder?: string; required?: boolean; readOnly?: boolean }) {
   return (
     <label className="block text-sm">
-      <span className="mb-1 block font-medium text-slate-700">{label} {required && <span className="text-red-600">*</span>}</span>
+      <span className="mb-1 block font-medium text-slate-700">{label} {required && <span className="text-red-700">*</span>}</span>
       <input value={value} readOnly={readOnly} onChange={(event) => onChange?.(event.target.value)} placeholder={placeholder} className={`w-full rounded-lg border px-3 py-3 text-sm ${readOnly ? "border-slate-200 bg-slate-100 text-slate-600" : "border-slate-300 bg-slate-900 text-white placeholder:text-slate-400 hover:border-blue-500"}`} />
     </label>
   );

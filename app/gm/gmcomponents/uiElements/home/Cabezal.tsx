@@ -24,10 +24,10 @@ export default function Cabezal() {
         </div>
 
         <div className="mb-4 flex flex-row items-end justify-end pt-2">
-          <button disabled className="flex h-8 w-8 items-center justify-center rounded-sm border border-black text-lg font-bold text-black">
+          <button disabled className="flex h-8 w-8 items-center justify-center rounded-sm border border-slate-300 bg-slate-100 text-lg font-bold text-slate-700">
             −
           </button>
-          <button disabled className="flex h-8 w-8 items-center justify-center rounded-sm border border-black text-lg font-bold text-black">
+          <button disabled className="flex h-8 w-8 items-center justify-center rounded-sm border border-slate-300 bg-slate-100 text-lg font-bold text-slate-700">
             □
           </button>
           <button type="button" aria-label="Volver al dashboard" onClick={() => router.push("/dashboard")} className="flex h-8 w-8 items-center justify-center rounded-sm border border-black bg-red-600 text-lg font-bold text-white">

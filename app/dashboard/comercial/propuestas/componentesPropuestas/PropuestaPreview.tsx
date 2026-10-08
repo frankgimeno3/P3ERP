@@ -422,7 +422,7 @@ export default function PropuestaPreview({
 function Info({ label, value }: { label: string; value: any }) {
   return (
     <div>
-      <span className="block text-xs font-semibold uppercase text-gray-400">
+      <span className="block text-xs font-semibold uppercase text-gray-600">
         {label}
       </span>
       <span className="font-medium text-slate-800">{value || "—"}</span>

@@ -23,6 +23,7 @@ function load(file){
     if(id.includes('AgenteService'))return {AgenteService:{getAgentes:async()=>[{id_agente:'agent',nombre_completo_agente:'Agente asignado'}]}};
     if(id.includes('ContactoService'))return {ContactoService:{getContactos:async()=>[]}};
     if(id.startsWith('@/')){const base=id.slice(2);return load(['.tsx','.ts','.js'].map(ext=>base+ext).find(fs.existsSync));}
+    if(id.startsWith('.')){const base=path.resolve(path.dirname(file),id);return load([base,...['.tsx','.ts','.js'].map(ext=>base+ext)].find(fs.existsSync));}
     return require(id);
   },mod,mod.exports);cache.set(file,mod.exports);return mod.exports;
 }

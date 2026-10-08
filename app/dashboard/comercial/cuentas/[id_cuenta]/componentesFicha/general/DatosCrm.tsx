@@ -130,7 +130,7 @@ function CuentaSearchModal({
       <div className="w-full max-w-2xl rounded bg-white p-6 shadow-2xl">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-lg font-semibold text-blue-950">{title}</h3>
-          <button type="button" onClick={onClose} className="rounded px-2 py-1 text-gray-500 hover:bg-gray-100">x</button>
+          <button type="button" onClick={onClose} className="rounded px-2 py-1 text-gray-600 hover:bg-gray-100">x</button>
         </div>
         <SearchableSelect label="Cuenta" required value={selected?.id_cuenta||''} onChange={id=>setSelected(cuentas.find(c=>c.id_cuenta===id)||null)} onSearchChange={setQuery} options={cuentas.map(c=>({value:c.id_cuenta,label:c.nombre_empresa+' · '+c.id_cuenta}))} />
         <div className="mt-5 flex justify-end gap-3">
@@ -378,7 +378,7 @@ const DatosCRM: FC<DatosCRMProps> = ({
                   <span>{feria.nombre_feria || feria.titulo_especifico_edicion || feria.id_feria}</span>
                 </label>
               ))}
-              {feriasDisponibles.length === 0 && <p className="text-xs text-gray-500">No hay ferias disponibles.</p>}
+              {feriasDisponibles.length === 0 && <p className="text-xs text-gray-600">No hay ferias disponibles.</p>}
             </div>
           </div>
 

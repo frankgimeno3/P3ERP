@@ -58,14 +58,14 @@ const MiddleNav: FC<MiddleNavProps> = ({ tituloprincipal, currentLabel }) => {
             <div className="flex items-center" key={index}>
               {isProblematic ? (
                 <p
-                  className="flex min-h-[30px] max-w-full items-center gap-1 break-all rounded-md bg-gray-300/50 px-2 py-1 text-xs font-medium uppercase text-slate-200"
+                  className="flex min-h-[30px] max-w-full items-center gap-1 break-all rounded-md bg-gray-900/70 px-2 py-1 text-xs font-medium uppercase text-slate-200"
                 >
                   {renderSegmentLabel(segment, fullPath)}
                 </p>
               ) : (
                 <Link
                   href={getHref(index)}
-                  className="flex min-h-[30px] max-w-full cursor-pointer items-center gap-1 break-all rounded-md bg-gray-300/50 px-2 py-1 text-xs font-medium uppercase text-white transition-colors hover:bg-gray-300/60"
+                  className="flex min-h-[30px] max-w-full cursor-pointer items-center gap-1 break-all rounded-md bg-gray-900/70 px-2 py-1 text-xs font-medium uppercase text-white transition-colors hover:bg-gray-900/90"
                 >
                   {renderSegmentLabel(segment, fullPath)}
                 </Link>

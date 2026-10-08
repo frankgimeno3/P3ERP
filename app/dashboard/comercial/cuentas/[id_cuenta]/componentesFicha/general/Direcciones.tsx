@@ -121,7 +121,7 @@ const Direcciones: FC<DireccionesProps> = ({
       </div>
 
       {direcciones.length === 0 && (
-        <p className="text-gray-500">No hay direcciones registradas para esta cuenta.</p>
+        <p className="text-gray-600">No hay direcciones registradas para esta cuenta.</p>
       )}
 
       {direcciones.map((direccion, idx) => (
@@ -153,7 +153,7 @@ const Direcciones: FC<DireccionesProps> = ({
                 <button
                   type="button"
                   className={`rounded-lg p-2 px-4 text-xs text-white shadow-xl ${
-                    direcciones.length === 1 ? 'cursor-not-allowed bg-gray-400' : 'cursor-pointer bg-red-600 hover:bg-red-700'
+                    direcciones.length === 1 ? 'cursor-not-allowed bg-gray-600' : 'cursor-pointer bg-red-600 hover:bg-red-700'
                   }`}
                   onClick={() => {
                     setDireccionDelete(direccion);

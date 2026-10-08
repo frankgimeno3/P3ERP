@@ -117,7 +117,7 @@ export default function TicketsProveedoresPage() {
               className={`cursor-pointer hover:bg-blue-50 px-4 py-2 border-b-2 transition font-semibold ${
                 currentTab === tab
                   ? "border-blue-950 text-blue-950"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
+                  : "border-transparent text-gray-600 hover:text-gray-700"
               }`}
             >
               {tab}
@@ -156,7 +156,7 @@ export default function TicketsProveedoresPage() {
 
         {/* Tickets Table */}
         {loading ? (
-          <div className="text-center py-8 text-gray-500">Cargando tickets...</div>
+          <div className="text-center py-8 text-gray-600">Cargando tickets...</div>
         ) : (
           <div className="overflow-x-auto bg-white shadow">
             <SortableTable className="min-w-full text-sm">

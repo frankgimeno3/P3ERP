@@ -111,7 +111,7 @@ const ContenidoContactosEmpresa: FC<ContenidoContactosEmpresaProps> = ({ id_cuen
       </div>
 
       {contactosFiltrados.length === 0 ? (
-        <p className="text-gray-500">No hay contactos disponibles para esta cuenta.</p>
+        <p className="text-gray-600">No hay contactos disponibles para esta cuenta.</p>
       ) : (
         <SortableTable className="min-w-full">
           <thead className="bg-blue-950/80 text-white">

@@ -123,10 +123,10 @@ const ContenidoPropuestasCuenta: FC<ContenidoPropuestasCuentaProps> = ({ id_cuen
           </tbody>
         </SortableTable>
 
-        {loading && <p className="mt-4 text-center text-gray-500">Cargando propuestas...</p>}
-        {!loading && error && <p className="mt-4 text-center text-red-600">{error}</p>}
+        {loading && <p className="mt-4 text-center text-gray-600">Cargando propuestas...</p>}
+        {!loading && error && <p className="mt-4 text-center text-red-700">{error}</p>}
         {!loading && !error && propuestas.length === 0 && (
-          <p className="mt-4 text-center text-gray-500">
+          <p className="mt-4 text-center text-gray-600">
             No hay propuestas {tabs.find((tab) => tab.key === estado)?.label.toLowerCase()} para esta cuenta.
           </p>
         )}

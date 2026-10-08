@@ -20,7 +20,7 @@ export default function UnloggedPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-950 p-8 text-white">
       <section className="w-full max-w-xl rounded bg-white p-8 text-gray-700 shadow-2xl">
-        <p className="text-xs font-semibold uppercase text-gray-400">Sesion finalizada</p>
+        <p className="text-xs font-semibold uppercase text-gray-600">Sesion finalizada</p>
         <h1 className="mt-2 text-2xl font-semibold text-blue-950">Se ha cerrado tu sesion por seguridad</h1>
         <p className="mt-4 text-sm leading-6">
           Estabas en la pagina <strong>{previousUrl}</strong>, pero la sesion ha caducado por seguridad o por inactividad.

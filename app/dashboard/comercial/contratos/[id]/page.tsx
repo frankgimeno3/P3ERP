@@ -21,7 +21,7 @@ const formatMoney = (value?: number) => {
 
 const Field = ({ label, value }: { label: string; value?: React.ReactNode }) => (
   <div className="border-b border-gray-200 px-4 py-3">
-    <p className="text-xs uppercase text-gray-400">{label}</p>
+    <p className="text-xs uppercase text-gray-600">{label}</p>
     <p className="mt-1 text-sm text-gray-700">{value || "-"}</p>
   </div>
 );
@@ -128,7 +128,7 @@ const ResumenContrato: FC = () => {
   if (!contrato) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-200 text-gray-600 p-12">
-        <h2 className="text-xl font-semibold text-red-600">{error || `No se encontró el contrato con ID: ${id}`}</h2>
+        <h2 className="text-xl font-semibold text-red-700">{error || `No se encontró el contrato con ID: ${id}`}</h2>
       </div>
     );
   }
@@ -153,7 +153,7 @@ const ResumenContrato: FC = () => {
             <Field label="Moneda" value={contrato.moneda || "EUR"} />
             <Field label="Comentarios" value={contrato.comentarios_adicionales} />
             <label className="border-b border-gray-200 px-4 py-3">
-              <span className="text-xs uppercase text-gray-400">Agente</span>
+              <span className="text-xs uppercase text-gray-600">Agente</span>
               <select value={contrato.id_agente_contrato || ""} onChange={(event) => setContrato({ ...contrato, id_agente_contrato: event.target.value })} className="mt-1 w-full cursor-pointer rounded border bg-white px-3 py-2 text-sm transition hover:border-blue-950">
                 <option value="">Sin agente</option>
                 {agentes.filter(isCommercialAgent).map((agente) => <option key={agente.id_agente} value={agente.id_agente}>{agente.nombre_completo_agente || agente.nombre_agente || agente.id_agente}</option>)}

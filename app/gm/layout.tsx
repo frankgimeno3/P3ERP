@@ -27,7 +27,7 @@ export default function RootLayout({
           transition: background-color .25s ease, border-color .25s ease, box-shadow .25s ease;
         }
         .gm-shell button:not(:disabled):hover, .gm-shell [role="button"]:not([aria-disabled="true"]):hover {
-          background-color: rgba(255,255,255,.18);
+          filter: brightness(.94);
           border-color: rgba(107,114,128,.45);
           box-shadow: 0 1px 3px rgba(15,23,42,.12);
         }

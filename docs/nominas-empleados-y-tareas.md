@@ -6,7 +6,7 @@ La ficha agrupa los cargos recurrentes del empleado y los movimientos vinculados
 
 El endpoint `laboral_nominas-empleados` expone fichas agregadas; `laboral_nominas` conserva su contrato de liquidaciones mensuales. La ficha del cargo recurrente permite editar su programación y comprueba que no haya cambiado desde la lectura. Sus cambios no alteran los importes bancarios anteriores.
 
-`laboral_tareas_empleado` registra id, nombre, agente, estado y descripción. La API de tareas filtra por agente y valida el agente también al editar una tarea. Los estados son pendiente, en curso, completada y cancelada.
+`laboral_tareas_empleado` registra id, nombre, agente, estado y descripción. La API de tareas filtra por agente y valida el agente también al editar una tarea. Los estados son pendiente, en curso, completada y cancelada. Las tareas importadas de vtiger admiten agente y cuenta nulos; conservan todos los campos de origen en `vtiger_original`, inicio/fin sin conversión de zona horaria y una clave de importación única. Las tareas nuevas creadas manualmente siguen exigiendo agente.
 
 El panel abre en «Mis tareas pendientes», consultando la identidad autenticada
 del servidor. `/tareas` separa pendientes/en curso de completadas/canceladas;
@@ -19,6 +19,32 @@ identidad del navegador. La vista personal es de consulta.
 totales. La ficha `/{id_agente}` permite crear tareas y abrir el detalle en
 modo edición. Crear y editar exige Operaciones o superior. Se reutiliza la
 tabla existente, sin duplicar tareas ni crear otra tabla.
+
+La pestaña Calendario consulta `/api/v1/tareas/calendario`, reservado a gestión,
+y reúne tareas internas, importadas y de cuentas. Muestra doce meses del año
+seleccionado a la izquierda y filtros agrupados y tarjetas a la derecha.
+Las tareas importadas sin agente asociado tienen también una sección propia.
+
+`/dashboard/operaciones/tareas/importar` gestiona cuatro fases: CSV, agentes,
+cuentas y confirmación. `/api/v1/tareas/importar` valida el lote completo antes
+de guardar. No infiere asociaciones ni crea entidades; los vínculos expresos
+son opcionales y se validan contra las entidades existentes. Confirmar usa una
+transacción; un fallo revierte todo el lote. La clave combina el hash de los
+campos originales ordenados y la aparición de cada registro idéntico. Repetir
+el archivo no duplica ni sobrescribe tareas. Al no existir ID de vtiger en esta
+exportación, un registro modificado se considera nuevo. Los campos de origen
+permanecen intactos aunque se edite la tarea. Las fechas sin hora se representan
+a las 00:00 y se advierten en la revisión, sin alterar el texto original.
+
+Migración: `node --experimental-default-type=module scripts/migrate-vtiger-tasks.mjs --apply`.
+La importación operativa también puede ejecutarse con
+`node --experimental-default-type=module scripts/import-vtiger-tasks.mjs --file <CSV> --actor <id_agente> --apply`.
+Comprueba el rol real del agente en la base de datos, deja los vínculos sin
+asociar y verifica todos los campos originales después de guardar. Sin `--apply`
+solo revisa el archivo y las coincidencias existentes.
+Pruebas: `scripts/test-vtiger-tasks.mjs` (CSV y validaciones sin RDS) y
+`scripts/test-vtiger-tasks-integration.mjs` (esquema temporal aislado y eliminado
+al terminar: transacción, duplicados, asociaciones opcionales, permisos y versiones).
 
 Desde el dashboard cada agente puede agregar sus propias tareas mediante
 un modal. `POST /api/v1/tareas/propias` fija agente e inicio pendiente en el

@@ -69,8 +69,8 @@ const MisPendientes: FC<MisPendientesProps> = ({
           </tr>
         </thead>
         <tbody>
-          {loading && <tr><td colSpan={4} className="p-4 text-gray-500">Cargando propuestas...</td></tr>}
-          {!loading && resultadosFiltrados.length === 0 && <tr><td colSpan={4} className="p-4 text-gray-500">No hay propuestas para mostrar.</td></tr>}
+          {loading && <tr><td colSpan={4} className="p-4 text-gray-600">Cargando propuestas...</td></tr>}
+          {!loading && resultadosFiltrados.length === 0 && <tr><td colSpan={4} className="p-4 text-gray-600">No hay propuestas para mostrar.</td></tr>}
           {resultadosFiltrados.map((res) => (
             <tr
               key={res.id_propuesta}

@@ -28,8 +28,9 @@ export async function employeePayrolls(id, employee) {
 }
 
 export async function agentTasks(id, employee) {
-  const rows = (await getPgPool().query(`SELECT t.*,COALESCE(NULLIF(a.nombre_completo_agente,''),a.nombre_agente,a.id_agente) AS nombre_agente
-    FROM laboral_tareas_empleado t JOIN agentes_db a ON a.id_agente=t.agente
+  const rows = (await getPgPool().query(`SELECT t.*,to_char(t.fecha_inicio,'YYYY-MM-DD"T"HH24:MI:SS') fecha_inicio,to_char(t.fecha_fin,'YYYY-MM-DD"T"HH24:MI:SS') fecha_fin,
+    c.nombre_empresa nombre_cuenta,COALESCE(NULLIF(a.nombre_completo_agente,''),a.nombre_agente,a.id_agente) AS nombre_agente
+    FROM laboral_tareas_empleado t LEFT JOIN agentes_db a ON a.id_agente=t.agente LEFT JOIN comercial_cuentas c ON c.id_cuenta=t.id_cuenta
     WHERE ($1::text IS NULL OR t.id=$1) AND ($2::text IS NULL OR t.agente=$2) ORDER BY t.created_at DESC`,[id || null,employee || null])).rows;
   if (id && !rows.length) throw new LaboralError('Tarea no encontrada.',404);
   return id ? rows[0] : rows;

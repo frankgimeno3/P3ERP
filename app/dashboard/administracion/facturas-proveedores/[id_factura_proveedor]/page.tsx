@@ -103,7 +103,7 @@ export default function FacturaProveedorDetallePage() {
           <section className="bg-white p-6 shadow-sm">
             <div className="mb-5 flex items-start justify-between gap-4">
               <div>
-                <p className="text-xs font-semibold uppercase text-gray-400">ID factura</p>
+                <p className="text-xs font-semibold uppercase text-gray-600">ID factura</p>
                 <h1 className="text-xl font-semibold text-blue-950">{factura.id_factura_proveedor}</h1>
               </div>
               <div className="flex gap-2">

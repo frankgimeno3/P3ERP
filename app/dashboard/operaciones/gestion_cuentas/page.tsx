@@ -116,7 +116,7 @@ export default function GestionCuentasPage() {
 function Filter({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
   return (
     <label className="text-sm">
-      <span className="mb-1 block text-xs font-extralight text-gray-500">{label}</span>
+      <span className="mb-1 block text-xs font-extralight text-gray-600">{label}</span>
       <input value={value} onChange={(event) => onChange(event.target.value)} className="w-full rounded border border-gray-300 px-3 py-2 outline-none focus:border-blue-950" />
     </label>
   );

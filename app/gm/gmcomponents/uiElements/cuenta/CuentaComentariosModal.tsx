@@ -27,7 +27,7 @@ export default function CuentaComentariosModal({
 
         <div className="bg-[#f3f5f7] p-5">
           <div className="border border-slate-300 bg-white">
-            <div className="border-b border-slate-300 bg-slate-400 px-4 py-2 text-sm font-semibold text-white">
+            <div className="border-b border-slate-300 bg-slate-600 px-4 py-2 text-sm font-semibold text-white">
               {account.nombre}
             </div>
             <textarea

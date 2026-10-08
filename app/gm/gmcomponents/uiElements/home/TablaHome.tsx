@@ -124,7 +124,7 @@ export default function TablaHome({ searchTerm, selectedField }: TablaHomeProps)
             <thead>
               <tr>
                 {columns.map((column) => (
-                  <th key={column.key} className="border-r border-slate-300 bg-slate-400 px-3 py-2 text-left text-sm font-semibold uppercase tracking-wide text-white last:border-r-0">
+                  <th key={column.key} className="border-r border-slate-300 bg-slate-600 px-3 py-2 text-left text-sm font-semibold uppercase tracking-wide text-white last:border-r-0">
                     {column.label}
                   </th>
                 ))}

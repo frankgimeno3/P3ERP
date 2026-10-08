@@ -19,7 +19,7 @@ const ContenidoGeneral: FC<ContenidoGeneralProps> = ({
   setIsContenidoEdited 
 }) => {
   if (!cuentaEditable) {
-    return <p className="text-red-500">Cuenta no encontrada</p>;
+    return <p className="text-red-700">Cuenta no encontrada</p>;
   }
 
   const fieldMap: Record<string, string> = {

@@ -200,7 +200,7 @@ const FichaCliente = () => {
       <div className="flex flex-col h-full min-h-screen text-gray-600">
         <MiddleNav tituloprincipal="Error" />
         <div className="bg-gray-200 min-h-screen p-12">
-          <p className="text-red-500">El id_cuenta introducido no corresponde a ninguna cuenta</p>
+          <p className="text-red-700">El id_cuenta introducido no corresponde a ninguna cuenta</p>
         </div>
       </div>
     );

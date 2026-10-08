@@ -34,6 +34,6 @@ export default function GmAccessAndPointer({ children }: { children: ReactNode }
     return () => { window.removeEventListener("mousemove", move); window.removeEventListener("keydown", key); };
   }, []);
 
-  if (!allowed) return <div className="flex min-h-screen items-center justify-center bg-slate-100 text-sm text-slate-500">Comprobando sesión...</div>;
+  if (!allowed) return <div className="flex min-h-screen items-center justify-center bg-slate-100 text-sm text-slate-600">Comprobando sesión...</div>;
   return <>{children}{pulse && <span key={pulse.id} className="gm-control-pulse" style={{ left: pulse.x, top: pulse.y }} aria-hidden="true" />}</>;
 }

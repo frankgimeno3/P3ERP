@@ -226,7 +226,7 @@ export default function CuentaDetalle({ cuenta, contactos = [], agentes = [], is
         >
           <GuardarIcon className="h-6 w-6 shrink-0" />
           <p>{saving ? "Guardando" : "Guardar"}</p>
-          {feedback && <span className="text-xs text-slate-500">{feedback}</span>}
+          {feedback && <span className="text-xs text-slate-600">{feedback}</span>}
         </button>
         <div
           className="flex flex-row items-center gap-2 cursor-pointer hover:shadow-xl p-5 mb-5 "

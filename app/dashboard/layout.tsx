@@ -16,7 +16,7 @@ export default function RegistroLayout({
   return (
     <>
       <LoggedNav />
-      <div className="flex w-full min-w-0 flex-row overflow-x-hidden">
+      <div className="flex w-full min-w-0 flex-row overflow-x-hidden bg-gray-100 text-gray-900">
         <LoggedLeftMenu />
         <div className={`relative flex min-h-[calc(100vh-4rem)] min-w-0 flex-1 flex-col ${pathname === '/dashboard/administracion' || pathname.startsWith('/dashboard/administracion/') ? 'pb-12' : ''}`}>
           {children}

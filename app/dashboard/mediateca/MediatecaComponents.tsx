@@ -52,7 +52,7 @@ function ModalFrame({ title, children, onClose }: { title: string; children: Rea
       <div className="w-full max-w-md rounded-lg bg-white shadow-xl" onMouseDown={(event) => event.stopPropagation()}>
         <div className="flex items-center justify-between border-b px-5 py-4">
           <h2 className="font-semibold text-gray-900">{title}</h2>
-          <button type="button" onClick={onClose} aria-label="Cerrar" className="cursor-pointer rounded p-1 text-gray-500 hover:bg-gray-100">×</button>
+          <button type="button" onClick={onClose} aria-label="Cerrar" className="cursor-pointer rounded p-1 text-gray-600 hover:bg-gray-100">×</button>
         </div>
         <div className="p-5">{children}</div>
       </div>
@@ -88,7 +88,7 @@ function CreateFolderModal({ parentPath, onClose, onDone }: { parentPath: string
           Nombre
           <input autoFocus value={name} onChange={(event) => setName(event.target.value)} className="mt-1 w-full rounded-lg border p-2" />
         </label>
-        <p className="text-xs text-gray-500">Ruta: {displayPath}</p>
+        <p className="text-xs text-gray-600">Ruta: {displayPath}</p>
         {error && <p className="text-sm text-red-700">{error}</p>}
         <div className="flex justify-end gap-2">
           <button type="button" onClick={onClose} className="rounded-lg bg-gray-100 px-4 py-2 text-sm">Cancelar</button>
@@ -226,7 +226,7 @@ function MoveModal({ item, onClose, onDone }: { item: MediatecaMedia; onClose: (
           Ruta destino
           <input value={path} onChange={(event) => setPath(event.target.value)} placeholder="carpeta/subcarpeta" className="mt-1 w-full rounded-lg border p-2 font-mono text-sm" />
         </label>
-        <p className="text-xs text-gray-500">Deja vacío para mover a la raíz.</p>
+        <p className="text-xs text-gray-600">Deja vacío para mover a la raíz.</p>
         {error && <p className="text-sm text-red-700">{error}</p>}
         <div className="flex justify-end gap-2">
           <button type="button" onClick={onClose} className="rounded-lg bg-gray-100 px-4 py-2 text-sm">Cancelar</button>
@@ -444,7 +444,7 @@ export function MediatecaBrowser({
           <button type="button" onClick={() => setSegments([])} className="rounded px-2 py-1 font-medium text-blue-800 hover:bg-blue-100">Mediateca</button>
           {segments.map((segment, index) => (
             <span key={`${segment}-${index}`} className="flex items-center gap-1">
-              <span className="text-gray-400">/</span>
+              <span className="text-gray-600">/</span>
               <button type="button" onClick={() => setSegments(segments.slice(0, index + 1))} className="rounded px-2 py-1 text-blue-800 hover:bg-blue-100">{segment}</button>
             </span>
           ))}
@@ -488,7 +488,7 @@ export function MediatecaBrowser({
                       {folder.name}
                     </button>
                   </td>
-                  <td className="p-3 font-mono text-xs text-gray-500">{folder.path}</td>
+                  <td className="p-3 font-mono text-xs text-gray-600">{folder.path}</td>
                   {!picker && (
                     <td className="p-3 text-right">
                       <div className="flex justify-end gap-2">
@@ -505,7 +505,7 @@ export function MediatecaBrowser({
                   )}
                 </tr>
               ))}
-              {!loading && filteredFolders.length === 0 && <tr><td colSpan={picker ? 2 : 3} className="p-4 text-center text-gray-400">Sin carpetas.</td></tr>}
+              {!loading && filteredFolders.length === 0 && <tr><td colSpan={picker ? 2 : 3} className="p-4 text-center text-gray-600">Sin carpetas.</td></tr>}
             </tbody>
           </SortableTable>
         </div>
@@ -543,10 +543,10 @@ export function MediatecaBrowser({
                     </td>
                     <td className="p-3">
                       {src ? <a className="font-medium text-blue-800 hover:underline" href={src} target="_blank" rel="noreferrer">{item.name}</a> : item.name}
-                      <p className="font-mono text-[10px] text-gray-400">{item.id}</p>
+                      <p className="font-mono text-[10px] text-gray-600">{item.id}</p>
                     </td>
                     <td className="p-3">{item.type === "pdf" ? "PDF" : "Imagen"}</td>
-                    <td className="p-3 font-mono text-xs text-gray-500">{item.folderPath || "(raiz)"}</td>
+                    <td className="p-3 font-mono text-xs text-gray-600">{item.folderPath || "(raiz)"}</td>
                     <td className="space-x-2 p-3 text-right">
                       {!picker && <button type="button" onClick={() => setRenameTarget(item)} className="rounded bg-gray-100 px-3 py-1 text-xs">Renombrar</button>}
                       {!picker && <button type="button" onClick={() => setMoveTarget(item)} className="rounded bg-gray-100 px-3 py-1 text-xs">Mover</button>}
@@ -555,7 +555,7 @@ export function MediatecaBrowser({
                   </tr>
                 );
               })}
-              {!loading && filteredMedia.length === 0 && <tr><td colSpan={picker ? 6 : 5} className="p-4 text-center text-gray-400">Sin archivos.</td></tr>}
+              {!loading && filteredMedia.length === 0 && <tr><td colSpan={picker ? 6 : 5} className="p-4 text-center text-gray-600">Sin archivos.</td></tr>}
             </tbody>
           </SortableTable>
         </div>
@@ -599,7 +599,7 @@ export function MediatecaModal({
       <div className="flex max-h-[90vh] w-full max-w-6xl flex-col rounded-lg bg-white shadow-xl" onMouseDown={(event) => event.stopPropagation()}>
         <div className="flex items-center justify-between border-b px-6 py-4">
           <h2 className="text-lg font-semibold text-gray-900">Mediateca</h2>
-          <button type="button" onClick={onClose} aria-label="Cerrar" className="cursor-pointer rounded p-1 text-gray-500 hover:bg-gray-100">×</button>
+          <button type="button" onClick={onClose} aria-label="Cerrar" className="cursor-pointer rounded p-1 text-gray-600 hover:bg-gray-100">×</button>
         </div>
         <div className="overflow-auto p-6">
           <MediatecaBrowser

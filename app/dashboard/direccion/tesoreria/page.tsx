@@ -445,7 +445,7 @@ export default function TesoreriaPage() {
       <div className="mb-5 flex items-center justify-between">
         <div>
           <p className="text-xl font-semibold text-gray-700">Extractos bancarios</p>
-          <p className="text-sm text-gray-500">Lineas bancarias importadas y revision de movimientos</p>
+          <p className="text-sm text-gray-600">Lineas bancarias importadas y revision de movimientos</p>
         </div>
         <div className="flex gap-2">
           <button type="button" onClick={() => router.push('/dashboard/direccion/tesoreria/extractos/conciliacion')} className="cursor-pointer rounded border border-blue-950 px-4 py-2 text-sm font-medium text-blue-950 transition hover:bg-blue-50 hover:shadow-sm">Conciliación</button>
@@ -485,15 +485,15 @@ export default function TesoreriaPage() {
             <button type="button" role="switch" aria-checked={dateFilterMode === 'rango'} onClick={() => setDateFilterMode((current) => current === 'fecha' ? 'rango' : 'fecha')} className={`relative h-6 w-11 cursor-pointer rounded-full transition-colors hover:ring-2 hover:ring-blue-200 ${dateFilterMode === 'rango' ? 'bg-blue-950' : 'bg-gray-300'}`}>
               <span className={`absolute left-1 top-1 h-4 w-4 rounded-full bg-white shadow transition-transform ${dateFilterMode === 'rango' ? 'translate-x-5' : 'translate-x-0'}`} />
             </button>
-            <span className="text-xs text-gray-500">{dateFilterMode === 'fecha' ? 'Cambiar a rango' : 'Cambiar a fecha'}</span>
+            <span className="text-xs text-gray-600">{dateFilterMode === 'fecha' ? 'Cambiar a rango' : 'Cambiar a fecha'}</span>
           </div>
           {dateFilterMode === 'fecha' ? <DateInputRow className="flex gap-1">
             <input aria-label="Día" value={filterFecha.day} onChange={(event) => setFilterFecha((current) => updateDateParts(current, 'day', event.target.value))} placeholder="dd" className="w-14 rounded border border-gray-300 px-2 py-2 text-sm" />
             <input aria-label="Mes" value={filterFecha.month} onChange={(event) => setFilterFecha((current) => updateDateParts(current, 'month', event.target.value))} placeholder="mm" className="w-14 rounded border border-gray-300 px-2 py-2 text-sm" />
             <input aria-label="Año" value={filterFecha.year} onChange={(event) => setFilterFecha((current) => updateDateParts(current, 'year', event.target.value))} placeholder="yyyy" className="w-20 rounded border border-gray-300 px-2 py-2 text-sm" />
           </DateInputRow> : <div className="flex flex-wrap items-end gap-3">
-            <div><span className="mb-1 block text-xs text-gray-500">Desde</span><DateInputRow className="flex gap-1"><input aria-label="Día desde" value={filterFecha.day} onChange={(event) => setFilterFecha((current) => updateDateParts(current, 'day', event.target.value))} placeholder="dd" className="w-12 rounded border border-gray-300 px-2 py-2 text-sm" /><input aria-label="Mes desde" value={filterFecha.month} onChange={(event) => setFilterFecha((current) => updateDateParts(current, 'month', event.target.value))} placeholder="mm" className="w-12 rounded border border-gray-300 px-2 py-2 text-sm" /><input aria-label="Año desde" value={filterFecha.year} onChange={(event) => setFilterFecha((current) => updateDateParts(current, 'year', event.target.value))} placeholder="yyyy" className="w-20 rounded border border-gray-300 px-2 py-2 text-sm" /></DateInputRow></div>
-            <div><span className="mb-1 block text-xs text-gray-500">Hasta</span><DateInputRow className="flex gap-1"><input aria-label="Día hasta" value={filterFechaHasta.day} onChange={(event) => setFilterFechaHasta((current) => updateDateParts(current, 'day', event.target.value))} placeholder="dd" className="w-12 rounded border border-gray-300 px-2 py-2 text-sm" /><input aria-label="Mes hasta" value={filterFechaHasta.month} onChange={(event) => setFilterFechaHasta((current) => updateDateParts(current, 'month', event.target.value))} placeholder="mm" className="w-12 rounded border border-gray-300 px-2 py-2 text-sm" /><input aria-label="Año hasta" value={filterFechaHasta.year} onChange={(event) => setFilterFechaHasta((current) => updateDateParts(current, 'year', event.target.value))} placeholder="yyyy" className="w-20 rounded border border-gray-300 px-2 py-2 text-sm" /></DateInputRow></div>
+            <div><span className="mb-1 block text-xs text-gray-600">Desde</span><DateInputRow className="flex gap-1"><input aria-label="Día desde" value={filterFecha.day} onChange={(event) => setFilterFecha((current) => updateDateParts(current, 'day', event.target.value))} placeholder="dd" className="w-12 rounded border border-gray-300 px-2 py-2 text-sm" /><input aria-label="Mes desde" value={filterFecha.month} onChange={(event) => setFilterFecha((current) => updateDateParts(current, 'month', event.target.value))} placeholder="mm" className="w-12 rounded border border-gray-300 px-2 py-2 text-sm" /><input aria-label="Año desde" value={filterFecha.year} onChange={(event) => setFilterFecha((current) => updateDateParts(current, 'year', event.target.value))} placeholder="yyyy" className="w-20 rounded border border-gray-300 px-2 py-2 text-sm" /></DateInputRow></div>
+            <div><span className="mb-1 block text-xs text-gray-600">Hasta</span><DateInputRow className="flex gap-1"><input aria-label="Día hasta" value={filterFechaHasta.day} onChange={(event) => setFilterFechaHasta((current) => updateDateParts(current, 'day', event.target.value))} placeholder="dd" className="w-12 rounded border border-gray-300 px-2 py-2 text-sm" /><input aria-label="Mes hasta" value={filterFechaHasta.month} onChange={(event) => setFilterFechaHasta((current) => updateDateParts(current, 'month', event.target.value))} placeholder="mm" className="w-12 rounded border border-gray-300 px-2 py-2 text-sm" /><input aria-label="Año hasta" value={filterFechaHasta.year} onChange={(event) => setFilterFechaHasta((current) => updateDateParts(current, 'year', event.target.value))} placeholder="yyyy" className="w-20 rounded border border-gray-300 px-2 py-2 text-sm" /></DateInputRow></div>
           </div>}
         </div>
         <label className="flex flex-col text-xs font-extralight text-gray-700">Tipo<select value={filterTipo} onChange={(event) => setFilterTipo(event.target.value)} className="mt-2 cursor-pointer rounded border border-gray-300 px-3 py-2 text-sm font-normal transition hover:border-blue-950"><option value="">Ingresos y gastos</option><option value="ingreso">Ingresos</option><option value="cargo">Gastos</option></select></label>
@@ -580,12 +580,12 @@ export default function TesoreriaPage() {
                     <label className={`cursor-pointer rounded border p-3 text-sm transition hover:border-blue-950 hover:bg-blue-50 ${selectedFormat === 'sin-cabezal' ? 'border-blue-950 bg-blue-50 text-blue-950' : 'border-gray-300'}`}>
                       <input type="radio" name="formato-extracto" value="sin-cabezal" checked={selectedFormat === 'sin-cabezal'} onChange={() => setSelectedFormat('sin-cabezal')} className="mr-2 cursor-pointer" />
                       <span className="font-medium">Sin cabezal</span>
-                      <span className="mt-1 block pl-5 text-xs text-gray-500">La tabla empieza en la primera fila.</span>
+                      <span className="mt-1 block pl-5 text-xs text-gray-600">La tabla empieza en la primera fila.</span>
                     </label>
                     <label className={`cursor-pointer rounded border p-3 text-sm transition hover:border-blue-950 hover:bg-blue-50 ${selectedFormat === 'con-cabezal' ? 'border-blue-950 bg-blue-50 text-blue-950' : 'border-gray-300'}`}>
                       <input type="radio" name="formato-extracto" value="con-cabezal" checked={selectedFormat === 'con-cabezal'} onChange={() => setSelectedFormat('con-cabezal')} className="mr-2 cursor-pointer" />
                       <span className="font-medium">Con cabezal</span>
-                      <span className="mt-1 block pl-5 text-xs text-gray-500">Incluye los datos de cuenta antes de la tabla.</span>
+                      <span className="mt-1 block pl-5 text-xs text-gray-600">Incluye los datos de cuenta antes de la tabla.</span>
                     </label>
                   </div>
                 </fieldset>
