@@ -32,7 +32,6 @@ export function PayrollList() {
 
 function PaymentForm({ kind, initial, onSaved }: { kind: Kind; initial?: Payment; onSaved: (id: string) => void }) {
   const [form, setForm] = useState({ id_empleado: initial?.id_empleado || '', mes: initial?.mes || new Date().getMonth() + 1, anio: initial?.anio || new Date().getFullYear(), importe_neto: initial?.importe_neto || '', estado: initial?.estado || 'pendiente', comentarios: initial?.comentarios || '', id_transferencia: initial?.id_transferencia || '' });
-  const [transferQuery, setTransferQuery] = useState('');
   const employees = useResource<Employee[]>('empleados'), transfers = useResource<Transfer[]>(`transferencias?empleado=${encodeURIComponent(form.id_empleado)}`);
   const update = (key: string, value: string | number) => setForm(current => ({ ...current, [key]: value }));
   return <Form label={initial ? 'Guardar cambios' : kind === 'nominas' ? 'Crear nómina' : 'Agregar anticipo'} onSave={async () => {

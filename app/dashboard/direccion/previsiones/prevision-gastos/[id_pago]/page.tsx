@@ -11,14 +11,12 @@ export default function EditPlannedExpensePage({ params }: { params: Promise<{ i
   const router = useRouter();
   const [form, setForm] = useState<any>(null);
   const [providers, setProviders] = useState<any[]>([]);
-  const [providerFilter, setProviderFilter] = useState("");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   useEffect(() => { Promise.all([fetch(`/api/v1/direccion/prevision-gastos/${encodeURIComponent(id_pago)}`).then((r) => r.json()), fetch("/api/v1/admin/proveedores").then((r) => r.json())]).then(([payment, providerRows]) => { const [day = "", month = "", year = ""] = String(payment.fecha_pago || "").split("/"); setForm({ ...payment, day, month, year }); setProviders(Array.isArray(providerRows) ? providerRows : []); }); }, [id_pago]);
   if (!form) return <div className="min-h-screen bg-gray-100"><MiddleNav tituloprincipal="Gasto previsto"/><main className="p-12">Cargando…</main></div>;
   const date = `${form.day}/${form.month}/${form.year}`;
   const save = async () => { setSaving(true); setMessage(""); const response = await fetch(`/api/v1/direccion/prevision-gastos/${encodeURIComponent(id_pago)}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, fecha_pago: date }) }); const data = await response.json(); setSaving(false); setMessage(response.ok ? "Cambios guardados" : data.message || "No se ha podido guardar"); };
-  const shownProviders = providers.filter((provider) => !providerFilter.trim() || [provider.id_proveedor, provider.nombre_proveedor, provider.nombre_fiscal_proveedor, provider.vat_code].join(" ").toLowerCase().includes(providerFilter.trim().toLowerCase())).slice(0, 12);
   return <div className="min-h-screen bg-gray-100"><MiddleNav tituloprincipal={`Cargo previsto ${id_pago}`}/><main className="p-6 lg:p-12"><button type="button" onClick={() => router.push("/dashboard/direccion/tesoreria/prevision-cargos")} className="mb-4 cursor-pointer rounded border bg-white px-4 py-2 transition hover:bg-gray-50">← Volver a previsión de cargos</button><section className="mx-auto max-w-4xl space-y-5 rounded-xl bg-white p-6 shadow">
     <div><h1 className="text-xl font-semibold text-blue-950">Modificar cargo previsto</h1><p className="text-sm text-gray-500">Asocia un proveedor pendiente o actualiza los datos de este cargo concreto.</p></div>
     <SearchableSelect label="Proveedor" value={form.id_proveedor} onChange={id=>setForm({...form,id_proveedor:id,nombre_proveedor:providers.find(p=>p.id_proveedor===id)?.nombre_proveedor||''})} options={providers.map(p=>({value:p.id_proveedor,label:p.nombre_proveedor||p.nombre_fiscal_proveedor||p.id_proveedor,searchText:JSON.stringify(p)}))} />

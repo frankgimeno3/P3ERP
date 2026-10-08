@@ -3,7 +3,7 @@ import SearchableSelect from "@/app/components/SearchableSelect";
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search, X } from "lucide-react";
+import { X } from "lucide-react";
 import MiddleNav from "@/app/general_components/componentes_recurrentes/MiddleNav";
 import { ContactoService } from "@/app/service/ContactoService";
 import { CuentaService } from "@/app/service/CuentaService";

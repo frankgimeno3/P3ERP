@@ -2,7 +2,7 @@
 import DateInputRow from "@/app/components/DateInputRow";
 import SearchableSelect from "@/app/components/SearchableSelect";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { CuentaService } from "@/app/service/CuentaService";
 import { PrevisionIngresosService } from "@/app/service/PrevisionIngresosService";
 
@@ -18,17 +18,12 @@ export default function AdditionalIncomeWizard({ onClose, onCreated }: { onClose
   const [withClient, setWithClient] = useState(true);
   const [form, setForm] = useState<FormState>(initialForm);
   const [accounts, setAccounts] = useState<any[]>([]);
-  const [accountFilter, setAccountFilter] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => { CuentaService.getCuentas().then((data) => setAccounts(Array.isArray(data) ? data : [])).catch(() => setError("No se han podido cargar las cuentas.")); }, []);
   useEffect(() => { const close = (event: KeyboardEvent) => { if (event.key === "Escape" && !saving) onClose(); }; window.addEventListener("keydown", close); return () => window.removeEventListener("keydown", close); }, [onClose, saving]);
 
-  const shownAccounts = useMemo(() => {
-    const query = accountFilter.trim().toLowerCase();
-    return accounts.filter((account) => !query || [account.id_cuenta, account.nombre_empresa, account.nombre_fiscal, account.cif, account.correo_principal].join(" ").toLowerCase().includes(query)).slice(0, 12);
-  }, [accountFilter, accounts]);
   const theoreticalDate = `${form.day}/${form.month}/${form.year}`;
   const canContinue = step === 1 ? Boolean((withClient ? form.id_cuenta : form.cliente_manual.trim()) && form.tipo_ingreso)
     : step === 2 ? Boolean(!form.asociado_factura || form.numero_factura.trim())
