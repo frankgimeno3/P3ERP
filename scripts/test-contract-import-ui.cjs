@@ -25,7 +25,7 @@ function load(file){
     if(id.includes('ServicioService'))return {ServicioService:{getServicios:async()=>[{id_servicio:'srv',id_medio:'web',nombre_medio:'Web',nombre_servicio_es:'Servicio',precio_tarifa:100}]}};
     if(id.includes('RevistaService'))return {RevistaService:{getRevistas:async()=>[]}};
     if(id.includes('CuentaService'))return {CuentaService:{getCuentas:async()=>({rows:[{id_cuenta:'client',nombre_empresa:'Cliente',id_agente:'agent'}],total:1})}};
-    if(id.includes('AgenteService'))return {AgenteService:{getAgentes:async()=>[{id_agente:'agent',nombre_completo_agente:'Agente asignado'}]}};
+    if(id.includes('AgenteService'))return {AgenteService:{getAgentes:async()=>[{id_agente:'agent',nombre_completo_agente:'Agente asignado',rol_agente:'comercial'}]}};
     if(id.includes('ContactoService'))return {ContactoService:{getContactos:async()=>[]}};
     if(id==='xlsx')return {...require('xlsx'),writeFile:book=>{template=book;}};
     if(id.startsWith('@/')){const base=id.slice(2);return load(['.tsx','.ts','.js'].map(ext=>base+ext).find(fs.existsSync));}

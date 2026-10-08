@@ -5,8 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "node .\\.next\\standalone\\server.js",
-    "lint": "next lint",
+    "start": "next start",
+    "lint": "eslint app server scripts middleware.js instrumentation.js instrumentation-node.js next.config.ts",
     "test:regression": "node scripts/run-regression-tests.mjs",
     "test:integration": "node scripts/run-regression-tests.mjs --integration"
   },

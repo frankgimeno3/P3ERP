@@ -580,10 +580,13 @@ async function replaceLineas(client, idPropuesta, lineas = []) {
   await client.query(`ALTER TABLE comercial_propuestas_lineas ADD COLUMN IF NOT EXISTS id_pagina_publicacion TEXT NOT NULL DEFAULT ''`);
   const previousRows=await client.query('SELECT id_linea_propuesta,id_pagina_publicacion,especificaciones_linea FROM comercial_propuestas_lineas WHERE id_propuesta=$1',[idPropuesta]);
   const previousById=new Map(previousRows.rows.map(row=>[row.id_linea_propuesta,row]));
+  const pageIds=[...new Set(lineas.map(line=>line?.id_pagina_publicacion).filter(Boolean))];
+  const pages=pageIds.length?await client.query('SELECT id_pagina_publicacion,pagina_preferente FROM servicios_paginas_revista WHERE id_pagina_publicacion=ANY($1::text[])',[pageIds]):{rows:[]};
+  const pagesById=new Map(pages.rows.map(page=>[page.id_pagina_publicacion,page]));
   await client.query("DELETE FROM comercial_propuestas_lineas WHERE id_propuesta = $1", [idPropuesta]);
   for (let index = 0; index < lineas.length; index += 1) {
     const linea = lineas[index] ?? {};
-    const page=(linea.id_pagina_publicacion ? (await client.query('SELECT pagina_preferente FROM servicios_paginas_revista WHERE id_pagina_publicacion=$1',[linea.id_pagina_publicacion])).rows[0] : null);
+    const page=pagesById.get(linea.id_pagina_publicacion);
     const prior=previousById.get(linea.id_linea_propuesta);
     const specification=String(page?.pagina_preferente||'').startsWith('pag_pref_') && prior?.id_pagina_publicacion===linea.id_pagina_publicacion
       ? prior.especificaciones_linea : linea.especificaciones_linea ?? '';

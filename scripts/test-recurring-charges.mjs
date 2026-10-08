@@ -1,7 +1,7 @@
 import { readLegacyMigrationSql } from './readLegacyMigrationSql.mjs';
 // Isolated schema and transaction: all test records and DDL are rolled back.
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
+
 import nextEnv from '@next/env';
 import { randomUUID } from 'node:crypto';
 import { getPgPool } from '../server/database/pgClient.js';

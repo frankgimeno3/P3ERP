@@ -16,3 +16,8 @@ assert.equal(invoiceRegionalTotals({...invoice,datos_importacion:{registro_factu
 assert.equal(matchInvoiceCustomers([{...invoice,ya_contabilizada:true}],accounts,[]).patches.length,0);
 const first=matchInvoiceCustomers([invoice],accounts,[]);const updated={...invoice,...first.patches[0].patch};assert.equal(matchInvoiceCustomers([updated],accounts,[]).patches.length,0);
 console.log('PASS: order precedence, fiscal matching, ambiguous names, regional amounts, protected invoices and idempotence.');
+// Missing optional identifiers must not associate unrelated rows by undefined === undefined.
+result=matchInvoiceCustomers([invoice],accounts,[{id_factura:'unrelated',id_cuenta:'b',forma_cobro:'recibo'}]);
+assert.equal(result.resolved[0].account,'a');assert.equal(result.resolved[0].orders,0);
+result=matchInvoiceCustomers([{...invoice,id_orden_origen:'origin',id_contrato:'contract'}],accounts,[{id_orden:'origin',id_factura:'f',id_cuenta:'a',forma_cobro:'transferencia'},{id_orden:'second',id_contrato:'contract',id_cuenta:'a',forma_cobro:'recibo'}]);
+assert.equal(result.resolved[0].orders,2);assert.equal(result.patches[0].patch.forma_cobro,'transferencia, recibo');

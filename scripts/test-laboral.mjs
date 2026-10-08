@@ -2,7 +2,7 @@ import { readLegacyMigrationSql } from './readLegacyMigrationSql.mjs';
 // Run: node --experimental-default-type=module scripts/test-laboral.mjs
 // Uses an isolated schema inside a transaction; all fixtures and DDL are rolled back.
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
+
 import { randomUUID } from 'node:crypto';
 import nextEnv from '@next/env';
 import { getPgPool } from '../server/database/pgClient.js';

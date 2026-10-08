@@ -1,4 +1,4 @@
-import type {GetServerSideProps, Metadata} from "next";
+import type { Metadata } from "next";
 import { Geist_Mono, Ubuntu } from "next/font/google";
 import "./globals.css";
 import ModalDismissManager from "./general_components/componentes_recurrentes/ModalDismissManager";

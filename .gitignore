@@ -40,3 +40,6 @@ next-dev.*.log
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Generated audit reports and screenshots (deliver outside the repository)
+/outputs/

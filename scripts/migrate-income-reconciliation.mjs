@@ -1,5 +1,5 @@
 import { readLegacyMigrationSql } from './readLegacyMigrationSql.mjs';
-import fs from 'node:fs';
+
 import env from '@next/env';
 import { getPgPool } from '../server/database/pgClient.js';
 import { saveReceipt } from '../server/features/prevision/ReceiptImportRepository.js';

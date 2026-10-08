@@ -2,6 +2,7 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const ts = require('typescript');
+const path = require('node:path');
 const { NextRequest } = require('next/server');
 
 function load(file) {
@@ -16,6 +17,8 @@ function load(file) {
     if (id.includes('roleAccess')) return { normalizeRole: role => role, canAccessDashboardPath: () => true, canAccessApiPath: () => true };
     if (id.includes('TaskAccess')) return { managesTasks: () => true };
     if (id.includes('loginRedirect')) return load('app/config/loginRedirect.js');
+    if(id.startsWith('./')||id.startsWith('../'))return load(path.resolve(path.dirname(file),id));
+    if(id.startsWith('@/'))return load(path.resolve(id.slice(2)));
     return require(id);
   }, mod, mod.exports);
   return mod.exports;

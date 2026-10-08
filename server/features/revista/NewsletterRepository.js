@@ -1,3 +1,4 @@
+import {singleFlight} from '../../database/singleFlight.js';
 import { getPgPool } from "../../database/pgClient.js";
 
 let schemaReady = false;
@@ -24,7 +25,9 @@ function normalizeNewsletter(row) {
   };
 }
 
-async function ensureSchema(pool = getPgPool()) {
+const ensureSchema = singleFlight(initializeSchema);
+
+async function initializeSchema(pool = getPgPool()) {
   if (schemaReady) return;
   await pool.query(`
     CREATE TABLE IF NOT EXISTS servicios_newsletters (

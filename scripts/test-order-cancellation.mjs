@@ -1,7 +1,7 @@
 import { readLegacyMigrationSql } from './readLegacyMigrationSql.mjs';
 // Integration tests in a private schema; no real orders are modified.
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
+
 import {randomUUID} from 'node:crypto';
 import env from '@next/env';
 import {getPgPool} from '../server/database/pgClient.js';

@@ -307,30 +307,12 @@ function Preview({ label, value }: { label: string; value: string }) {
 }
 
 function AccountModal({ cuentas, selectedId, onClose, onSelect }: { cuentas: Cuenta[]; selectedId: string; onClose: () => void; onSelect: (cuenta: Cuenta) => void }) {
-  const [filters, setFilters] = useState({ id: "", name: "", cif: "", country: "" });
-  const [page, setPage] = useState(1);
-  const pageSize = 6;
-  const filtered = useMemo(() => {
-    return cuentas.filter((cuenta) =>
-      cuenta.id_cuenta.toLowerCase().includes(filters.id.toLowerCase()) &&
-      (cuenta.nombre_empresa || "").toLowerCase().includes(filters.name.toLowerCase()) &&
-      `${cuenta.cif || ""} ${cuenta.vat_code || ""}`.toLowerCase().includes(filters.cif.toLowerCase()) &&
-      (cuenta.pais_cuenta || "").toLowerCase().includes(filters.country.toLowerCase())
-    );
-  }, [cuentas, filters]);
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const visible = filtered.slice((page - 1) * pageSize, page * pageSize);
-
-  useEffect(() => {
-    setPage(1);
-  }, [filters]);
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4">
       <div className="max-h-[90vh] w-full max-w-6xl overflow-hidden rounded-xl bg-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
           <h2 className="text-2xl font-bold text-slate-900">Seleccionar cuenta</h2>
-          <button type="button" onClick={onClose} className="rounded p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-900" aria-label="Cerrar">
+          <button type="button" onClick={onClose} className="cursor-pointer rounded p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-900" aria-label="Cerrar">
             <X size={22} />
           </button>
         </div>
@@ -340,17 +322,5 @@ function AccountModal({ cuentas, selectedId, onClose, onSelect }: { cuentas: Cue
         </div>
       </div>
     </div>
-  );
-}
-
-function ModalFilter({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (value: string) => void; placeholder: string }) {
-  return (
-    <label className="block text-sm">
-      <span className="mb-1 block font-medium text-slate-600">{label}</span>
-      <div className="flex items-center gap-2 rounded-lg bg-slate-900 px-3 py-3 text-white">
-        <Search size={15} className="text-slate-400" />
-        <input value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400" />
-      </div>
-    </label>
   );
 }

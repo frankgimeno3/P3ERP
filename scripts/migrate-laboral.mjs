@@ -1,6 +1,6 @@
 import { readLegacyMigrationSql } from './readLegacyMigrationSql.mjs';
 // Run: node --experimental-default-type=module scripts/migrate-laboral.mjs
-import fs from 'node:fs';
+
 import nextEnv from '@next/env';
 import { getPgPool } from '../server/database/pgClient.js';
 

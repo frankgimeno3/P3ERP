@@ -38,7 +38,7 @@ Consulta la guía pertinente en `node_modules/next/dist/docs/` antes de escribir
 
 - Desarrollo: `npm run dev`, sujeto al permiso de arriba.
 - Tipos: `node node_modules/typescript/bin/tsc --noEmit --incremental false`.
-- Lint acotado: `node node_modules/eslint/bin/eslint.js <archivos>`; preferirlo al script heredado `npm run lint` (`next lint`).
+- Lint acotado: `node node_modules/eslint/bin/eslint.js <archivos>`; preferir la ejecución acotada; `npm run lint` revisa app, server, scripts y configuración.
 - Prueba pertinente: `node --experimental-default-type=module scripts/test-<tema>.mjs` o `node scripts/test-<tema>.cjs`. No hay script `npm test`. Revisa requisitos: algunas usan RDS y otras necesitan jsdom mediante `P3_SELECTOR_TEST_MODULES`; no ejecutes migradores/importadores como pruebas.
-- Build: `npm run build`; escribe en `.next/`, así que pide permiso si puede afectar al servidor activo. `npm start` apunta a un build standalone, no habilitado en la configuración actual.
+- Build: `npm run build`; escribe en `.next/`, así que pide permiso si puede afectar al servidor activo. `npm start` usa `next start` y necesita un build previo; no iniciarlo sin autorización.
 - Cambios documentales: revisar diff/enlaces; no ejecutar build ni pruebas de aplicación.

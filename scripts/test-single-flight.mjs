@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {singleFlight} from '../server/database/singleFlight.js';
+let calls=0,finish;
+const initialize=singleFlight(async()=>{calls++;return await new Promise(resolve=>{finish=resolve;});});
+const readers=Array.from({length:20},()=>initialize());
+await Promise.resolve();assert.equal(calls,1);finish('ready');
+assert.deepEqual(await Promise.all(readers),Array(20).fill('ready'));
+const next=initialize();await Promise.resolve();assert.equal(calls,2);finish('again');assert.equal(await next,'again');
+let attempts=0;
+const retry=singleFlight(async()=>{if(++attempts===1)throw new Error('temporary');return 'recovered';});
+await assert.rejects(retry(),/temporary/);assert.equal(await retry(),'recovered');
+console.log('PASS: concurrent initialization shared, no result cache and failures retryable.');

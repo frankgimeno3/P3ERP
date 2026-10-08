@@ -1,7 +1,7 @@
 import { readLegacyMigrationSql } from './readLegacyMigrationSql.mjs';
 // Preview: node --experimental-default-type=module scripts/unificar-proveedores.mjs
 // Apply:   node --experimental-default-type=module scripts/unificar-proveedores.mjs --apply
-import fs from 'node:fs';
+
 import nextEnv from '@next/env';
 import { getPgPool } from '../server/database/pgClient.js';
 import { supplierMergePlan, mergeSuppliers } from '../server/features/proveedor/SupplierMerge.js';

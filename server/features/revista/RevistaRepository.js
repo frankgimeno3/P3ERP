@@ -1,3 +1,4 @@
+import {singleFlight} from '../../database/singleFlight.js';
 import {magazineEvents,magazineDate} from '../../../app/config/magazineEvents.js';
 import { getPgPool } from "../../database/pgClient.js";
 
@@ -75,7 +76,9 @@ function normalizeRevista(row) {
   };
 }
 
-async function ensurePublicacionesSchema(pool = getPgPool()) {
+const ensurePublicacionesSchema = singleFlight(initializeSchema);
+
+async function initializeSchema(pool = getPgPool()) {
   if (schemaReady) return;
   await pool.query(`ALTER TABLE servicios_publicaciones ADD COLUMN IF NOT EXISTS fecha_pedir_materiales TEXT NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS deadline_real_materiales TEXT NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS fecha_envio_imprenta TEXT NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS fecha_estimada_impresion TEXT NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS fecha_envio_revistas TEXT NOT NULL DEFAULT ''`);
   await pool.query(`

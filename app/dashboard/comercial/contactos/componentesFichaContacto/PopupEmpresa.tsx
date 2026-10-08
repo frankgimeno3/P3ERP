@@ -1,6 +1,6 @@
 import SearchableSelect from "@/app/components/SearchableSelect";
 import { InterfazCuenta } from "@/app/interfaces/interfaces";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 
  
 
@@ -17,11 +17,6 @@ const PopupEmpresa: React.FC<PopupEmpresaProps> = ({
   empresas,
   onSelect,
 }) => {
-  const [busquedaNombre, setBusquedaNombre] = useState("");
-  const [busquedaCodigo, setBusquedaCodigo] = useState("");
-  const [resultados, setResultados] = useState<InterfazCuenta[] | null>(null);
-  const [cargando, setCargando] = useState(false);
-
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -30,20 +25,6 @@ const PopupEmpresa: React.FC<PopupEmpresaProps> = ({
     return () => document.removeEventListener("keydown", handleEsc);
   }, [onClose]);
 
-  const handleBuscar = () => {
-    setCargando(true);
-    setResultados(null);
-    setTimeout(() => {
-      const coincidencias = empresas.filter(
-        (e) =>
-          e.nombre_empresa.toLowerCase().includes(busquedaNombre.toLowerCase()) ||
-          e.id_cuenta.toLowerCase().includes(busquedaCodigo.toLowerCase())
-      );
-      setResultados(coincidencias);
-      setCargando(false);
-    }, 3000);
-  };
-
   if (!isOpen) return null;
 
   return (
@@ -51,7 +32,7 @@ const PopupEmpresa: React.FC<PopupEmpresaProps> = ({
       <div className="bg-white rounded-2xl shadow-lg p-6 w-[700px] relative">
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 text-gray-500 hover:text-gray-800"
+          className="absolute top-3 right-3 cursor-pointer text-gray-500 transition hover:text-gray-800"
         >
           ×
         </button>

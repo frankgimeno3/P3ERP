@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { EmployeePayrollList } from './EmployeePayroll';
 import RecurringChargeModal from '../../tesoreria/RecurringChargeModal';
 import { EmployeeList } from './Employees';
-import { useRouter } from 'next/navigation';
+import 'next/navigation';
 import { useState } from 'react';
 import { Documents, Field, Form, Header, Modal, Notice, PeriodFields, money, periodLabel, request, root, useResource } from './ui';
 

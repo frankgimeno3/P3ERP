@@ -1,7 +1,7 @@
 
 import SortableTable from '@/app/components/SortableTable';
 import { InterfazContacto } from '@/app/interfaces/interfaces';
-import React, { FC, ChangeEvent } from 'react';
+import React, { FC } from 'react';
  
 interface DatosGralesContactoProps {
   contacto: InterfazContacto;

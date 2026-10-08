@@ -2,7 +2,7 @@
 import DateInputRow from "@/app/components/DateInputRow";
 import SearchableSelect from "@/app/components/SearchableSelect";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import MiddleNav from "@/app/general_components/componentes_recurrentes/MiddleNav";
 import { FacturaService } from "@/app/service/FacturaService";
@@ -27,7 +27,6 @@ export default function FacturaProveedorDetallePage() {
   const [form, setForm] = useState<any>({});
   const [dateParts, setDateParts] = useState<any>({});
   const [proveedores, setProveedores] = useState<any[]>([]);
-  const [providerQuery, setProviderQuery] = useState("");
   const [showProviderModal, setShowProviderModal] = useState(false);
   const [pendingProveedor, setPendingProveedor] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
@@ -50,10 +49,6 @@ export default function FacturaProveedorDetallePage() {
       .finally(() => setLoading(false));
   }, [params.id_factura_proveedor]);
 
-  const filteredProviders = useMemo(() => {
-    const query = providerQuery.trim().toLowerCase();
-    return proveedores.filter((proveedor) => !query || Object.values(proveedor).join(" ").toLowerCase().includes(query));
-  }, [providerQuery, proveedores]);
 
   const updateField = (field: string, value: any) => {
     setForm((current: any) => ({ ...current, [field]: value }));

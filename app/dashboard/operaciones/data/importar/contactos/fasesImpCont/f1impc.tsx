@@ -6,7 +6,7 @@ interface f1impcProps {
   setConfiguracion: React.Dispatch<React.SetStateAction<string>>;
 }
 
-const f1impc: FC<f1impcProps> = ({ setFaseImportacionContacto, configuracion, setConfiguracion }) => {
+const FaseInicialImportacion: FC<f1impcProps> = ({ setFaseImportacionContacto, setConfiguracion }) => {
   const [opcionSeleccionada, setOpcionSeleccionada] = useState<string | null>(null);
 
   const handleContinuar = () => {
@@ -88,4 +88,4 @@ const f1impc: FC<f1impcProps> = ({ setFaseImportacionContacto, configuracion, se
   );
 };
 
-export default f1impc;
+export default FaseInicialImportacion;

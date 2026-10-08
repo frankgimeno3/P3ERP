@@ -41,9 +41,9 @@ function value(cell?: HTMLTableCellElement): string {
   if (fields.length) return fields.map(field => field instanceof HTMLSelectElement ? field.selectedOptions[0]?.textContent || '' : field instanceof HTMLInputElement && ['checkbox','radio'].includes(field.type) ? (field.checked ? '1' : '0') : field instanceof HTMLInputElement && field.type==='number' ? field.value.replace('.',',') : field.value).join(' / ');
   return cell.textContent?.trim() || Array.from(cell.querySelectorAll('[aria-label],[title]')).map(element=>element.getAttribute('aria-label')||element.getAttribute('title')||'').join(' ');
 }
-function cellAt(row: HTMLTableRowElement, column: number) {
-  let offset = 0;
-  for (const cell of Array.from(row.cells)) { if (column >= offset && column < offset + cell.colSpan) return cell; offset += cell.colSpan; }
+function sameValues(a: Record<string,string[]>, b: Record<string,string[]>) {
+  const keys=Object.keys(a);
+  return keys.length===Object.keys(b).length && keys.every(key=>b[key]?.length===a[key].length && a[key].every((value,index)=>value===b[key][index]));
 }
 
 /** Orders React row groups, preserving their keys, controls and event handlers. */
@@ -73,14 +73,18 @@ export default function SortableTable({ children, sort: controlled, onSortChange
     const next: Record<string,string[]> = {};
     ordered.forEach((list,index) => {
       const rows = Array.from(table.current?.tBodies[index]?.rows || []); let offset=0;
-      list.forEach(entry => { const row=rows[offset]; if(row) next[entry.key]=Array.from({length:Array.from(row.cells).reduce((sum,cell)=>sum+cell.colSpan,0)},(_,column)=>value(cellAt(row,column))); offset+=entry.count; });
+      list.forEach(entry => {
+        const row=rows[offset];
+        if(row)next[entry.key]=Array.from(row.cells).flatMap(cell=>Array<string>(cell.colSpan).fill(value(cell)));
+        offset+=entry.count;
+      });
     });
     return next;
   },[ordered]);
   useLayoutEffect(() => {
     if (!sort || onSortChange) return;
     const next=snapshot();
-    if (JSON.stringify(Object.entries(next).sort()) !== JSON.stringify(Object.entries(values).sort())) setValues(next);
+    if (!sameValues(next,values)) setValues(next);
   },[sort,onSortChange,snapshot,values]);
   const choose = (column: number) => {
     const next: TableSort = { column, direction: sort?.column === column && sort.direction === 'asc' ? 'desc' : 'asc' };
