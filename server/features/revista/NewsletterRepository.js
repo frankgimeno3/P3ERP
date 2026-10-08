@@ -1,7 +1,5 @@
-import {singleFlight} from '../../database/singleFlight.js';
 import { getPgPool } from "../../database/pgClient.js";
 
-let schemaReady = false;
 
 function normalizeNewsletter(row) {
   return {
@@ -25,85 +23,9 @@ function normalizeNewsletter(row) {
   };
 }
 
-const ensureSchema = singleFlight(initializeSchema);
-
-async function initializeSchema(pool = getPgPool()) {
-  if (schemaReady) return;
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS servicios_newsletters (
-      id_newsletter TEXT PRIMARY KEY,
-      nombre_newsletter TEXT NOT NULL DEFAULT '',
-      edicion TEXT NOT NULL DEFAULT '',
-      titulo TEXT NOT NULL DEFAULT '',
-      descripcion TEXT NOT NULL DEFAULT '',
-      estado TEXT NOT NULL DEFAULT 'activo',
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    );
-  `);
-  await pool.query(`
-    ALTER TABLE servicios_newsletters
-      ADD COLUMN IF NOT EXISTS nombre_newsletter TEXT NOT NULL DEFAULT '',
-      ADD COLUMN IF NOT EXISTS edicion TEXT NOT NULL DEFAULT '';
-  `);
-  await pool.query(`
-    ALTER TABLE servicios_publicaciones
-      ADD COLUMN IF NOT EXISTS tipo_publicacion TEXT NOT NULL DEFAULT '',
-      ADD COLUMN IF NOT EXISTS revista_id TEXT,
-      ADD COLUMN IF NOT EXISTS newsletter_id TEXT,
-      ADD COLUMN IF NOT EXISTS numero_publicacion TEXT NOT NULL DEFAULT '',
-      ADD COLUMN IF NOT EXISTS deadline_materiales TEXT NOT NULL DEFAULT '',
-      ADD COLUMN IF NOT EXISTS link TEXT NOT NULL DEFAULT '',
-      ADD COLUMN IF NOT EXISTS cuenta_id TEXT,
-      ADD COLUMN IF NOT EXISTS contenido_id TEXT;
-  `);
-  await pool.query(`CREATE INDEX IF NOT EXISTS publicaciones_db_newsletter_id_idx ON servicios_publicaciones (newsletter_id);`);
-  await pool.query(`
-    INSERT INTO servicios_newsletters (id_newsletter, nombre_newsletter, edicion, titulo, estado, created_at, updated_at)
-    SELECT id_newsletter, COALESCE(titulo, ''), COALESCE(estado, ''), COALESCE(titulo, ''), COALESCE(estado, 'activo'), created_at, updated_at
-    FROM newsletters_db
-    ON CONFLICT (id_newsletter) DO NOTHING
-  `).catch(() => {});
-  await pool.query(`
-    INSERT INTO servicios_publicaciones (
-      id_publicacion,
-      nombre_publicacion,
-      fecha_publicacion,
-      estado_publicacion,
-      medio_publicacion,
-      detalle_publicacion,
-      tipo_publicacion,
-      newsletter_id,
-      numero_publicacion,
-      deadline_materiales,
-      link,
-      cuenta_id,
-      contenido_id
-    )
-    SELECT
-      'pub_' || n.id_newsletter,
-      COALESCE(n.titulo, n.id_newsletter),
-      COALESCE(n.fecha_publicacion, ''),
-      COALESCE(n.estado, 'Pendiente'),
-      'newsletter',
-      COALESCE(n.titulo, ''),
-      'newsletter',
-      n.id_newsletter,
-      COALESCE(NULLIF(regexp_replace(n.id_newsletter, '\\D', '', 'g'), ''), '1'),
-      COALESCE(n.deadline_materiales, ''),
-      COALESCE(n.link, ''),
-      n.cuenta_id,
-      n.contenido_id
-    FROM newsletters_db n
-    WHERE COALESCE(n.id_newsletter, '') <> ''
-    ON CONFLICT (id_publicacion) DO NOTHING
-  `).catch(() => {});
-  schemaReady = true;
-}
 
 export async function getNewsletters(filters = {}) {
   const pool = getPgPool();
-  await ensureSchema(pool);
   const values = [];
   const where = ["(p.tipo_publicacion = 'newsletter' OR (p.tipo_publicacion = '' AND p.medio_publicacion ILIKE '%newsletter%'))"];
 
@@ -130,7 +52,6 @@ export async function getNewsletters(filters = {}) {
 
 export async function getNewsletterById(idNewsletter) {
   const pool = getPgPool();
-  await ensureSchema(pool);
   const { rows } = await pool.query(
     `
       SELECT p.*, n.id_newsletter, n.nombre_newsletter, n.edicion, n.titulo, n.descripcion, n.estado, c.nombre_empresa, co.especificaciones_contenido
@@ -149,7 +70,6 @@ export async function getNewsletterById(idNewsletter) {
 
 export async function updateNewsletter(idNewsletter, data = {}) {
   const pool = getPgPool();
-  await ensureSchema(pool);
   const current = await getNewsletterById(idNewsletter);
   const supportId = current?.id_newsletter || idNewsletter;
   const publicationId = current?.id_publicacion || idNewsletter;
@@ -211,7 +131,6 @@ export async function updateNewsletter(idNewsletter, data = {}) {
 
 export async function createNewsletter(data = {}) {
   const pool = getPgPool();
-  await ensureSchema(pool);
   const idNewsletter = data.id_newsletter?.trim() || `news_${Date.now()}`;
   const idPublicacion = data.id_publicacion?.trim() || `pub_${idNewsletter}_${Date.now()}`;
 

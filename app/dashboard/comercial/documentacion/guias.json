@@ -121,7 +121,8 @@
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
       "Agregar revista crea un número pendiente de publicar. Desde Pendientes, Abrir accede a /dashboard/produccion/revistas/[id_revista]. El estado se modifica exclusivamente dentro de la ficha.",
       "Calendario muestra 24 meses desde el actual, con semanas de lunes a domingo y etiquetas de eventos por día. A la derecha, el panel fijo permite filtrar eventos y editar sus fechas con dd / mm / yyyy.",
-      "Cada número conserva en la base de datos las fechas de petición y recordatorio de materiales, deadline previsto y real, envío a imprenta, impresión estimada y envío de revistas."
+      "Cada número conserva en la base de datos las fechas de petición y recordatorio de materiales, deadline previsto y real, envío a imprenta, impresión estimada y envío de revistas.",
+      "Consultar el listado o el calendario no modifica las páginas, los recuentos ni las fechas de actualización de las publicaciones."
     ]
   },
   "/dashboard/produccion/contenidos": {

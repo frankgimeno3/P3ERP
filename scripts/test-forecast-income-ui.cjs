@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports -- CommonJS test harness for TSX module mocks. */
 // Run with P3_SELECTOR_TEST_MODULES pointing to the isolated jsdom node_modules.
 // No application server or database is used.
 const assert = require('node:assert/strict');
@@ -23,6 +22,10 @@ function load(file) {
     if (id.includes('PrevisionIngresosService')) return { PrevisionIngresosService: service };
     if (id.includes('MiddleNav') || id.includes('AdditionalIncomeWizard')) return { __esModule: true, default: () => null };
     if (id === './ReceiptExcelModal') return load(path.join(path.dirname(file), 'ReceiptExcelModal.tsx'));
+    if(id.startsWith('@/')||id.startsWith('./')||id.startsWith('../')){
+      const base=id.startsWith('@/')?id.slice(2):path.resolve(path.dirname(file),id);
+      return load(['','.tsx','.ts','.js'].map(ext=>base+ext).find(candidate=>fs.existsSync(candidate)&&fs.statSync(candidate).isFile()));
+    }
     return require(id);
   }, mod, mod.exports);
   return mod.exports;
@@ -53,7 +56,10 @@ const selectFile = async name => {
   assert.equal(document.querySelectorAll('tbody tr').length, 2);
   assert.equal(document.querySelectorAll('input[type="date"]').length, 0);
   assert.equal(document.querySelectorAll('input[type="search"]').length + document.querySelectorAll('fieldset').length, document.querySelectorAll('thead th').length);
-  assert.equal(document.querySelector('div[style]').style.gridTemplateRows, 'repeat(2, auto)');
+  const filters=document.querySelector('details');
+  assert.ok(filters);assert.equal(filters.open,false);
+  assert.equal(filters.querySelector('summary').textContent,'Filtros');
+  await React.act(async()=>{filters.open=true;});
   await type(document.querySelector('input[placeholder="Filtrar cliente"]'), 'alvaro');
   assert.match(body(), /REC-1/); assert.ok(!body().includes('TRANSFER-1'));
   await type(document.querySelector('input[placeholder="Filtrar factura"]'), '999');
@@ -98,5 +104,5 @@ const selectFile = async name => {
   assert.equal(consoleErrors.length, 0, consoleErrors.join('\n'));
   await React.act(async () => root.unmount());
   console.error = originalError; dom.window.close();
-  console.log('PASS: Todos, per-field filters in two rows, separate dates, tab races, button visibility, Excel preview, errors, file replacement, confirm/reload, Escape and close button.');
+  console.log('PASS: Todos, grouped collapsed filters, separate dates, tab races, button visibility, Excel preview, errors, file replacement, confirm/reload, Escape and close button.');
 })().catch(error => { console.error = originalError; console.error(error); process.exitCode = 1; });

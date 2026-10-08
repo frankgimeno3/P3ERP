@@ -197,25 +197,6 @@ function generateId(prefix) {
   return `${prefix}_${crypto.randomUUID()}`;
 }
 
-async function ensureWizardSchema(client) {
-  await client.query(`ALTER TABLE comercial_propuestas_db
-    ADD COLUMN IF NOT EXISTS base_imponible_personalizada BOOLEAN NOT NULL DEFAULT FALSE,
-    ADD COLUMN IF NOT EXISTS importe_base_personalizada NUMERIC,
-    ADD COLUMN IF NOT EXISTS es_intercambio BOOLEAN NOT NULL DEFAULT FALSE,
-    ADD COLUMN IF NOT EXISTS condiciones_intercambio TEXT NOT NULL DEFAULT '',
-    ADD COLUMN IF NOT EXISTS intercambio_precio_final BOOLEAN NOT NULL DEFAULT FALSE,
-    ADD COLUMN IF NOT EXISTS intercambio_transferencias BOOLEAN NOT NULL DEFAULT FALSE,
-    ADD COLUMN IF NOT EXISTS fecha_pago_proporcion3 TEXT NOT NULL DEFAULT '',
-    ADD COLUMN IF NOT EXISTS fecha_pago_contraparte TEXT NOT NULL DEFAULT '',
-    ADD COLUMN IF NOT EXISTS importe_intercambio NUMERIC NOT NULL DEFAULT 0`);
-  await client.query(`ALTER TABLE comercial_propuestas_db ADD COLUMN IF NOT EXISTS idioma_propuesta TEXT NOT NULL DEFAULT 'es', ADD COLUMN IF NOT EXISTS tipo_descuento_final TEXT NOT NULL DEFAULT 'porcentaje', ADD COLUMN IF NOT EXISTS transferencias_intercambio JSONB NOT NULL DEFAULT '[]'::jsonb`);
-  await client.query(`ALTER TABLE comercial_propuestas_db ADD COLUMN IF NOT EXISTS moneda TEXT NOT NULL DEFAULT '€'`);
-  await client.query(`ALTER TABLE comercial_propuestas_db
-    ADD COLUMN IF NOT EXISTS comentarios_seguimiento TEXT NOT NULL DEFAULT '',
-    ADD COLUMN IF NOT EXISTS acciones_proxima_gestion TEXT NOT NULL DEFAULT '',
-    ADD COLUMN IF NOT EXISTS fecha_proxima_gestion DATE`);
-}
-
 async function addCuentaProposalComment(client, { idCuenta, idAgente, contenido }) {
   if (!idCuenta || !contenido) return;
   await client.query(
@@ -295,15 +276,6 @@ async function finalizeProposal(client, propuesta, status, actorId = "") {
 
   const idContrato = `con_${propuesta.id_propuesta}`;
   if((await client.query('SELECT 1 FROM tesoreria_ordenes WHERE id_contrato=$1 AND cancelada LIMIT 1',[idContrato])).rowCount)throw new Error('Esta propuesta tiene órdenes canceladas. Crea una nueva propuesta para generar nuevas órdenes.');
-  await client.query(`
-    ALTER TABLE comercial_contratos
-      ADD COLUMN IF NOT EXISTS nombre_contrato TEXT NOT NULL DEFAULT '',
-      ADD COLUMN IF NOT EXISTS comentarios_adicionales TEXT NOT NULL DEFAULT '',
-      ADD COLUMN IF NOT EXISTS datos_facturacion JSONB NOT NULL DEFAULT '{}'::jsonb,
-      ADD COLUMN IF NOT EXISTS moneda TEXT NOT NULL DEFAULT 'EUR',
-      ADD COLUMN IF NOT EXISTS propuesta_snapshot JSONB NOT NULL DEFAULT '{}'::jsonb,
-      ADD COLUMN IF NOT EXISTS id_factura TEXT;
-  `);
   await client.query(
     `INSERT INTO comercial_contratos (
       id_contrato,id_agente_contrato,fecha_cobro_prevista_contrato,forma_cobro_contrato,
@@ -324,30 +296,6 @@ async function finalizeProposal(client, propuesta, status, actorId = "") {
       propuesta.moneda || "EUR", JSON.stringify(propuesta),
     ],
   );
-
-  await client.query(`
-    ALTER TABLE comercial_contratos_lineas
-      ADD COLUMN IF NOT EXISTS id_linea_propuesta TEXT, ADD COLUMN IF NOT EXISTS id_servicio TEXT,
-      ADD COLUMN IF NOT EXISTS id_publicacion TEXT, ADD COLUMN IF NOT EXISTS precio_tarifa NUMERIC NOT NULL DEFAULT 0,
-      ADD COLUMN IF NOT EXISTS descuento_producto NUMERIC NOT NULL DEFAULT 0,
-      ADD COLUMN IF NOT EXISTS tipo_descuento_producto TEXT NOT NULL DEFAULT 'porcentaje',
-      ADD COLUMN IF NOT EXISTS precio_unitario NUMERIC NOT NULL DEFAULT 0,
-      ADD COLUMN IF NOT EXISTS unidades NUMERIC NOT NULL DEFAULT 1,
-      ADD COLUMN IF NOT EXISTS descripcion_linea TEXT NOT NULL DEFAULT '',
-      ADD COLUMN IF NOT EXISTS especificaciones_linea TEXT NOT NULL DEFAULT '',
-      ADD COLUMN IF NOT EXISTS modo_precio TEXT NOT NULL DEFAULT 'calculado',
-      ADD COLUMN IF NOT EXISTS precio_total_personalizado NUMERIC,
-      ADD COLUMN IF NOT EXISTS id_pagina_publicacion TEXT NOT NULL DEFAULT '',
-      ADD COLUMN IF NOT EXISTS linea_snapshot JSONB NOT NULL DEFAULT '{}'::jsonb;
-    ALTER TABLE produccion_contenidos
-      ADD COLUMN IF NOT EXISTS id_contrato TEXT, ADD COLUMN IF NOT EXISTS id_linea_contrato TEXT,
-      ADD COLUMN IF NOT EXISTS nombre_contenido TEXT NOT NULL DEFAULT '',
-      ADD COLUMN IF NOT EXISTS tipo_contenido TEXT NOT NULL DEFAULT '',
-      ADD COLUMN IF NOT EXISTS fecha_publicacion TEXT NOT NULL DEFAULT '',
-      ADD COLUMN IF NOT EXISTS ano_publicacion TEXT NOT NULL DEFAULT '',
-      ADD COLUMN IF NOT EXISTS servicio TEXT NOT NULL DEFAULT '',
-      ADD COLUMN IF NOT EXISTS contenido_especifico_id TEXT NOT NULL DEFAULT '';
-  `);
   const lineas = await client.query(`SELECT * FROM comercial_propuestas_lineas WHERE id_propuesta=$1 ORDER BY numero_linea_propuesta`, [propuesta.id_propuesta]);
   const contentIds = [];
   for (const linea of lineas.rows) {
@@ -488,7 +436,7 @@ async function loadProposalExtras(client, proposalIds) {
 
 export async function getPropuestas(filters = {}) {
   const pool = getPgPool();
-  await ensureWizardSchema(pool);
+
   const values = [];
   const where = [];
 
@@ -542,7 +490,7 @@ export async function getPropuestas(filters = {}) {
 
 export async function getPropuestaById(idPropuesta) {
   const pool = getPgPool();
-  await ensureWizardSchema(pool);
+
   const { rows } = await pool.query(
     `
       SELECT p.*, c.*, ct.id_contacto, ct.nombre_completo_contacto, ct.email_contacto, ct.cargo_contacto, ct.telefono_contacto,
@@ -572,27 +520,47 @@ export async function getPropuestaById(idPropuesta) {
 }
 
 async function replaceLineas(client, idPropuesta, lineas = []) {
-  await client.query(`ALTER TABLE comercial_propuestas_lineas ADD COLUMN IF NOT EXISTS id_publicacion TEXT`);
-  await client.query(`ALTER TABLE comercial_propuestas_lineas ADD COLUMN IF NOT EXISTS tipo_descuento_producto TEXT NOT NULL DEFAULT 'porcentaje'`);
-  await client.query(`ALTER TABLE comercial_propuestas_lineas ADD COLUMN IF NOT EXISTS especificaciones_linea TEXT NOT NULL DEFAULT ''`);
-  await client.query(`ALTER TABLE comercial_propuestas_lineas ADD COLUMN IF NOT EXISTS modo_precio TEXT NOT NULL DEFAULT 'calculado'`);
-  await client.query(`ALTER TABLE comercial_propuestas_lineas ADD COLUMN IF NOT EXISTS precio_total_personalizado NUMERIC`);
-  await client.query(`ALTER TABLE comercial_propuestas_lineas ADD COLUMN IF NOT EXISTS id_pagina_publicacion TEXT NOT NULL DEFAULT ''`);
   const previousRows=await client.query('SELECT id_linea_propuesta,id_pagina_publicacion,especificaciones_linea FROM comercial_propuestas_lineas WHERE id_propuesta=$1',[idPropuesta]);
   const previousById=new Map(previousRows.rows.map(row=>[row.id_linea_propuesta,row]));
   const pageIds=[...new Set(lineas.map(line=>line?.id_pagina_publicacion).filter(Boolean))];
   const pages=pageIds.length?await client.query('SELECT id_pagina_publicacion,pagina_preferente FROM servicios_paginas_revista WHERE id_pagina_publicacion=ANY($1::text[])',[pageIds]):{rows:[]};
   const pagesById=new Map(pages.rows.map(page=>[page.id_pagina_publicacion,page]));
   await client.query("DELETE FROM comercial_propuestas_lineas WHERE id_propuesta = $1", [idPropuesta]);
+  const rows = [];
   for (let index = 0; index < lineas.length; index += 1) {
     const linea = lineas[index] ?? {};
     const page=pagesById.get(linea.id_pagina_publicacion);
     const prior=previousById.get(linea.id_linea_propuesta);
     const specification=String(page?.pagina_preferente||'').startsWith('pag_pref_') && prior?.id_pagina_publicacion===linea.id_pagina_publicacion
       ? prior.especificaciones_linea : linea.especificaciones_linea ?? '';
-    await client.query(
-      `
-        INSERT INTO comercial_propuestas_lineas (
+    rows.push([
+        linea.id_linea_propuesta || generateId("linprop"),
+        idPropuesta,
+        Number(linea.numero_linea_propuesta ?? index + 1),
+        linea.id_servicio ?? "",
+        linea.id_publicacion ?? linea.publicacion_id ?? "",
+        linea.medio ?? "",
+        linea.publicacion ?? "",
+        linea.producto ?? "",
+        asNumber(linea.precio_tarifa),
+        asNumber(linea.descuento_producto),
+        linea.tipo_descuento_producto ?? "porcentaje",
+        asNumber(linea.precio_unitario),
+        asNumber(linea.unidades, 1),
+        linea.descripcion_linea ?? "",
+        linea.deadline_publicacion ?? "",
+        linea.fecha_publicacion_publicacion ?? "",
+        specification,
+        linea.modo_precio ?? "calculado",
+        linea.precio_total_personalizado == null ? null : asNumber(linea.precio_total_personalizado),
+        linea.id_pagina_publicacion ?? "",
+      ]);
+  }
+  // 500 rows = 10,000 parameters, below PostgreSQL's parameter limit. Keep the caller's transaction.
+  for (let offset = 0; offset < rows.length; offset += 500) {
+    const batch = rows.slice(offset, offset + 500);
+    const placeholders = batch.map((row, index) => '(' + row.map((_, column) => '$' + (index * 20 + column + 1)).join(',') + ')').join(',');
+    await client.query(`INSERT INTO comercial_propuestas_lineas (
           id_linea_propuesta,
           id_propuesta,
           numero_linea_propuesta,
@@ -614,31 +582,7 @@ async function replaceLineas(client, idPropuesta, lineas = []) {
           precio_total_personalizado,
           id_pagina_publicacion
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
-      `,
-      [
-        linea.id_linea_propuesta || generateId("linprop"),
-        idPropuesta,
-        Number(linea.numero_linea_propuesta ?? index + 1),
-        linea.id_servicio ?? "",
-        linea.id_publicacion ?? linea.publicacion_id ?? "",
-        linea.medio ?? "",
-        linea.publicacion ?? "",
-        linea.producto ?? "",
-        asNumber(linea.precio_tarifa),
-        asNumber(linea.descuento_producto),
-        linea.tipo_descuento_producto ?? "porcentaje",
-        asNumber(linea.precio_unitario),
-        asNumber(linea.unidades, 1),
-        linea.descripcion_linea ?? "",
-        linea.deadline_publicacion ?? "",
-        linea.fecha_publicacion_publicacion ?? "",
-        specification,
-        linea.modo_precio ?? "calculado",
-        linea.precio_total_personalizado == null ? null : asNumber(linea.precio_total_personalizado),
-        linea.id_pagina_publicacion ?? "",
-      ],
-    );
+      VALUES ${placeholders}`, batch.flat());
   }
 }
 
@@ -682,7 +626,7 @@ export async function createPropuesta(payload, actorId = "") {
 
   try {
     await client.query("BEGIN");
-    await ensureWizardSchema(client);
+
     const data = {
       id_propuesta: idPropuesta,
       estado_propuesta: "Borrador",
@@ -731,7 +675,7 @@ export async function updatePropuesta(idPropuesta, payload, actorId = "") {
 
   try {
     await client.query("BEGIN");
-    await ensureWizardSchema(client);
+
     const { rows: beforeRows } = await client.query("SELECT * FROM comercial_propuestas_db WHERE id_propuesta = $1 LIMIT 1", [idPropuesta]);
     const before = beforeRows[0] || null;
     if (payload.id_agente_propuesta !== undefined) await assertCommercialAgent(client, payload.id_agente_propuesta, before?.id_agente_propuesta);

@@ -1,8 +1,6 @@
-import {singleFlight} from '../../database/singleFlight.js';
 import {magazineEvents,magazineDate} from '../../../app/config/magazineEvents.js';
 import { getPgPool } from "../../database/pgClient.js";
 
-let schemaReady = false;
 let contenidosRevistasTableCache = null;
 
 const basePagePreferences = [
@@ -76,199 +74,6 @@ function normalizeRevista(row) {
   };
 }
 
-const ensurePublicacionesSchema = singleFlight(initializeSchema);
-
-async function initializeSchema(pool = getPgPool()) {
-  if (schemaReady) return;
-  await pool.query(`ALTER TABLE servicios_publicaciones ADD COLUMN IF NOT EXISTS fecha_pedir_materiales TEXT NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS deadline_real_materiales TEXT NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS fecha_envio_imprenta TEXT NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS fecha_estimada_impresion TEXT NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS fecha_envio_revistas TEXT NOT NULL DEFAULT ''`);
-  await pool.query(`
-    ALTER TABLE servicios_revistas
-      ADD COLUMN IF NOT EXISTS impresa_o_digital TEXT NOT NULL DEFAULT 'digital';
-  `);
-  await pool.query(`
-    ALTER TABLE servicios_publicaciones
-      ADD COLUMN IF NOT EXISTS tipo_publicacion TEXT NOT NULL DEFAULT '',
-      ADD COLUMN IF NOT EXISTS revista_id TEXT,
-      ADD COLUMN IF NOT EXISTS newsletter_id TEXT,
-      ADD COLUMN IF NOT EXISTS numero_publicacion TEXT NOT NULL DEFAULT '',
-      ADD COLUMN IF NOT EXISTS version_publicacion TEXT NOT NULL DEFAULT '',
-      ADD COLUMN IF NOT EXISTS deadline_materiales TEXT NOT NULL DEFAULT '',
-      ADD COLUMN IF NOT EXISTS contenido_editorial TEXT NOT NULL DEFAULT '',
-      ADD COLUMN IF NOT EXISTS num_paginas INTEGER NOT NULL DEFAULT 0,
-      ADD COLUMN IF NOT EXISTS link TEXT NOT NULL DEFAULT '';
-  `);
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS servicios_paginas_revista (
-      id_pagina_publicacion TEXT PRIMARY KEY,
-      publication_id TEXT NOT NULL,
-      pagina_actual INTEGER NOT NULL,
-      has_content BOOLEAN NOT NULL DEFAULT FALSE,
-      id_contenido TEXT,
-      id_cuenta TEXT,
-      nombre_mostrado TEXT NOT NULL DEFAULT '',
-      tipo TEXT NOT NULL DEFAULT '',
-      pagina_preferente TEXT NOT NULL DEFAULT '',
-      ordinal TEXT NOT NULL DEFAULT '1/1',
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      UNIQUE (publication_id, pagina_actual)
-    )
-  `);
-  await pool.query(`
-    ALTER TABLE servicios_paginas_revista
-      ADD COLUMN IF NOT EXISTS nombre_mostrado TEXT NOT NULL DEFAULT '',
-      ADD COLUMN IF NOT EXISTS tipo TEXT NOT NULL DEFAULT '',
-      ADD COLUMN IF NOT EXISTS pagina_preferente TEXT NOT NULL DEFAULT '',
-      ADD COLUMN IF NOT EXISTS ordinal TEXT NOT NULL DEFAULT '1/1'
-  `);
-  await pool.query(`
-    DO $$
-    BEGIN
-      IF EXISTS (
-        SELECT 1 FROM information_schema.tables
-        WHERE table_schema='public' AND table_name='publicaciones_paginas_db'
-      ) THEN
-        INSERT INTO servicios_paginas_revista (
-          id_pagina_publicacion, publication_id, pagina_actual, has_content, id_contenido, id_cuenta,
-          nombre_mostrado, tipo, ordinal, created_at, updated_at
-        )
-        SELECT
-          id_pagina_publicacion, publication_id, pagina_actual, has_content, id_contenido, id_cuenta,
-          nombre_mostrado, tipo, ordinal, created_at, updated_at
-        FROM publicaciones_paginas_db
-        ON CONFLICT (publication_id, pagina_actual) DO UPDATE
-        SET has_content=EXCLUDED.has_content,
-            id_contenido=EXCLUDED.id_contenido,
-            id_cuenta=EXCLUDED.id_cuenta,
-            nombre_mostrado=EXCLUDED.nombre_mostrado,
-            tipo=EXCLUDED.tipo,
-            ordinal=EXCLUDED.ordinal,
-            updated_at=EXCLUDED.updated_at;
-        DROP TABLE publicaciones_paginas_db;
-      END IF;
-    END $$;
-  `);
-  await pool.query(`CREATE INDEX IF NOT EXISTS publicaciones_db_tipo_publicacion_idx ON servicios_publicaciones (tipo_publicacion);`);
-  await pool.query(`CREATE INDEX IF NOT EXISTS publicaciones_db_revista_id_idx ON servicios_publicaciones (revista_id);`);
-  await pool.query(`
-    INSERT INTO servicios_publicaciones (
-      id_publicacion,
-      nombre_publicacion,
-      fecha_publicacion,
-      estado_publicacion,
-      medio_publicacion,
-      edicion_publicacion,
-      detalle_publicacion,
-      tipo_publicacion,
-      revista_id,
-      numero_publicacion,
-      deadline_materiales
-    )
-    SELECT
-      'pub_' || r.id_revista,
-      concat_ws(' ', r.revista, r.edicion, NULLIF(r.publicacion, '')),
-      COALESCE(r.fecha_publicacion, ''),
-      'pendiente de publicar',
-      'revista',
-      COALESCE(r.edicion, ''),
-      COALESCE(r.revista, ''),
-      'revista',
-      r.id_revista,
-      COALESCE(r.publicacion, ''),
-      COALESCE(r.deadline_materiales, '')
-    FROM servicios_revistas r
-    WHERE COALESCE(r.id_revista, '') <> ''
-    ON CONFLICT (id_publicacion) DO NOTHING
-  `);
-  await pool.query(`
-    WITH base_pages(pagina_actual, pagina_preferente) AS (
-      VALUES
-        (-1, 'portada'),
-        (0, 'interior_portada'),
-        (1, 'pag_pref_1'),
-        (2, 'pag_pref_2'),
-        (3, 'pag_pref_3'),
-        (4, 'sumario'),
-        (5, 'pag_pref_5'),
-        (6, 'indice'),
-        (7, 'pag_pref_5')
-    ),
-    revista_publicaciones AS (
-      SELECT id_publicacion
-      FROM servicios_publicaciones
-      WHERE tipo_publicacion = 'revista' OR (tipo_publicacion = '' AND medio_publicacion ILIKE '%revista%')
-    )
-    INSERT INTO servicios_paginas_revista (id_pagina_publicacion, publication_id, pagina_actual, pagina_preferente, tipo)
-    SELECT
-      'pag_' || rp.id_publicacion || '_' || bp.pagina_actual,
-      rp.id_publicacion,
-      bp.pagina_actual,
-      bp.pagina_preferente,
-      CASE
-        WHEN bp.pagina_preferente = 'portada' THEN 'Portada'
-        WHEN bp.pagina_preferente = 'indice' THEN 'Indice'
-        WHEN bp.pagina_preferente = 'sumario' THEN 'Sumario'
-        WHEN bp.pagina_preferente = 'interior_portada' THEN 'Interior portada'
-        WHEN bp.pagina_preferente LIKE 'pag_pref_%' THEN 'Anuncio'
-        ELSE ''
-      END
-    FROM revista_publicaciones rp
-    CROSS JOIN base_pages bp
-    ON CONFLICT (publication_id, pagina_actual) DO UPDATE
-    SET pagina_preferente = CASE
-      WHEN servicios_paginas_revista.pagina_preferente = '' THEN EXCLUDED.pagina_preferente
-      ELSE servicios_paginas_revista.pagina_preferente
-    END
-  `);
-  await pool.query(`
-    UPDATE servicios_paginas_revista
-    SET tipo = CASE
-      WHEN pagina_preferente = 'portada' THEN 'Portada'
-      WHEN pagina_preferente = 'indice' THEN 'Indice'
-      WHEN pagina_preferente = 'sumario' THEN 'Sumario'
-      WHEN pagina_preferente = 'interior_portada' THEN 'Interior portada'
-      WHEN pagina_preferente LIKE 'pag_pref_%' THEN 'Anuncio'
-      ELSE tipo
-    END,
-    updated_at = NOW()
-    WHERE pagina_preferente IN ('portada', 'indice', 'sumario', 'interior_portada')
-       OR pagina_preferente LIKE 'pag_pref_%'
-  `);
-  await pool.query(`
-    WITH counts AS (
-      SELECT publication_id, COUNT(*)::int AS page_count, MAX(pagina_actual)::int AS max_page
-      FROM servicios_paginas_revista
-      GROUP BY publication_id
-    ),
-    even_counts AS (
-      SELECT publication_id, max_page + 1 AS next_page
-      FROM counts
-      WHERE page_count % 2 = 0
-    )
-    INSERT INTO servicios_paginas_revista (id_pagina_publicacion, publication_id, pagina_actual, pagina_preferente, tipo)
-    SELECT
-      'pag_' || publication_id || '_' || next_page,
-      publication_id,
-      next_page,
-      'pag_pref_' || next_page,
-      'Anuncio'
-    FROM even_counts
-    ON CONFLICT (publication_id, pagina_actual) DO NOTHING
-  `);
-  await pool.query(`
-    UPDATE servicios_publicaciones p
-    SET num_paginas = pages.page_count,
-        updated_at = NOW()
-    FROM (
-      SELECT publication_id, COUNT(*)::int AS page_count
-      FROM servicios_paginas_revista
-      GROUP BY publication_id
-    ) pages
-    WHERE p.id_publicacion = pages.publication_id
-      AND (p.tipo_publicacion = 'revista' OR (p.tipo_publicacion = '' AND p.medio_publicacion ILIKE '%revista%'))
-  `);
-  schemaReady = true;
-}
 
 async function hasContenidosRevistasTable(pool = getPgPool()) {
   if (contenidosRevistasTableCache !== null) return contenidosRevistasTableCache;
@@ -285,7 +90,6 @@ async function hasContenidosRevistasTable(pool = getPgPool()) {
 
 export async function getRevistas() {
   const pool = getPgPool();
-  await ensurePublicacionesSchema(pool);
   const { rows } = await pool.query(`
     SELECT
       r.*,
@@ -324,7 +128,6 @@ export async function getRevistas() {
 
 export async function getRevistaById(idRevista) {
   const pool = getPgPool();
-  await ensurePublicacionesSchema(pool);
   const hasPlanillo = await hasContenidosRevistasTable(pool);
   const { rows } = await pool.query(
     hasPlanillo ? `
@@ -396,7 +199,6 @@ export async function getRevistaById(idRevista) {
 export async function updateRevista(idRevista, data = {}) {
   data=validatedMagazineDates(data);
   const pool = getPgPool();
-  await ensurePublicacionesSchema(pool);
 
   const revistaFields = ["especial", "edicion", "revista", "impresa_o_digital"];
   const revistaValues = [];
@@ -468,7 +270,6 @@ async function resolvePublicationId(idPublicacion, pool = getPgPool()) {
 
 export async function getPaginasPublicacion(idPublicacion) {
   const pool = getPgPool();
-  await ensurePublicacionesSchema(pool);
   const resolvedId = await resolvePublicationId(idPublicacion, pool);
   if (!resolvedId) return null;
   const [publication, pages] = await Promise.all([
@@ -493,7 +294,6 @@ export async function getPaginasPublicacion(idPublicacion) {
 
 export async function setNumeroPaginas(idPublicacion, requestedPages) {
   const pool = getPgPool();
-  await ensurePublicacionesSchema(pool);
   const resolvedId = await resolvePublicationId(idPublicacion, pool);
   if (!resolvedId) return null;
   const numPaginas = normalizePageCount(requestedPages);
@@ -524,7 +324,6 @@ export async function setNumeroPaginas(idPublicacion, requestedPages) {
 
 export async function updatePaginaPublicacion(idPublicacion, idPagina, data = {}) {
   const pool = getPgPool();
-  await ensurePublicacionesSchema(pool);
   const resolvedId = await resolvePublicationId(idPublicacion, pool);
   if (!resolvedId) return null;
   const currentResult = await pool.query(
@@ -566,7 +365,6 @@ function pageId(publicationId, pageNumber) {
 
 export async function assignContentToPages(idPublicacion, data = {}) {
   const pool = getPgPool();
-  await ensurePublicacionesSchema(pool);
   const resolvedId = await resolvePublicationId(idPublicacion, pool);
   if (!resolvedId) return null;
   const selectedIds = [...new Set(Array.isArray(data.page_ids) ? data.page_ids : [])];
@@ -656,7 +454,6 @@ export async function assignContentToPages(idPublicacion, data = {}) {
 
 export async function insertPagesAfterRow(idPublicacion, data = {}) {
   const pool = getPgPool();
-  await ensurePublicacionesSchema(pool);
   const resolvedId = await resolvePublicationId(idPublicacion, pool);
   if (!resolvedId) return null;
   const afterPage = Number(data.after_pagina_actual);
@@ -712,7 +509,6 @@ export async function insertPagesAfterRow(idPublicacion, data = {}) {
 
 export async function deletePublicationPages(idPublicacion, data = {}) {
   const pool = getPgPool();
-  await ensurePublicacionesSchema(pool);
   const resolvedId = await resolvePublicationId(idPublicacion, pool);
   if (!resolvedId) return null;
   const requestedIds = [...new Set(Array.isArray(data.page_ids) ? data.page_ids : [])];
@@ -762,7 +558,6 @@ export async function deletePublicationPages(idPublicacion, data = {}) {
 export async function createRevista(data = {}) {
   data=validatedMagazineDates(data);
   const pool = getPgPool();
-  await ensurePublicacionesSchema(pool);
   if (!data.id_revista && data.revista && (data.publicacion || data.numero_publicacion)) {
     const existing = await pool.query(`SELECT r.id_revista FROM servicios_revistas r
       JOIN servicios_publicaciones p ON p.revista_id=r.id_revista AND p.tipo_publicacion='revista'
