@@ -40,7 +40,7 @@ export const dashboardMenu: DashboardMenuModule[] = [
     label: "Producción",
     children: [
       page("Hoja de producción", "/dashboard/produccion/hoja_produccion"),
-      page("Control redacción", "/dashboard/produccion/control_redaccion"),
+      page("Artículos", "/dashboard/produccion/articulos"),
       page("Contenidos", "/dashboard/produccion/contenidos"),
       page("Revistas", "/dashboard/produccion/revistas"),
     ],

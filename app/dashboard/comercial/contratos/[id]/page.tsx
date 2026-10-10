@@ -197,6 +197,7 @@ const ResumenContrato: FC = () => {
 
         <section className="bg-white">
           <h2 className="px-4 py-3 text-base font-semibold text-blue-950">Contenido del contrato</h2>
+          {!!contrato.contenidos_extra?.length&&<div className="mx-4 mb-4 rounded border border-blue-200 bg-blue-50 p-3"><h3 className="mb-2 font-medium text-blue-950">Agregados extra post-contrato</h3><p className="mb-2 text-sm">Contenidos añadidos después de la firma, fuera de las líneas y los importes contratados.</p>{contrato.contenidos_extra.map((extra:any)=><Link key={extra.id_contenido} href={`/dashboard/produccion/contenidos/${encodeURIComponent(extra.id_contenido)}`} className="mb-1 block cursor-pointer text-blue-900 hover:underline">{extra.nombre_contenido} · {extra.cliente_hoja} · {extra.estado_contenido}</Link>)}</div>}
           <div className="overflow-x-auto">
             <SortableTable className="min-w-full">
               <thead className="bg-blue-950 text-white">

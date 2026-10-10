@@ -562,9 +562,10 @@ export async function createRevista(data = {}) {
     const existing = await pool.query(`SELECT r.id_revista FROM servicios_revistas r
       JOIN servicios_publicaciones p ON p.revista_id=r.id_revista AND p.tipo_publicacion='revista'
       WHERE lower(btrim(r.revista))=lower(btrim($1)) AND lower(btrim(r.edicion))=lower(btrim($2))
-        AND btrim(p.numero_publicacion)=$3 LIMIT 1`,
-      [data.revista, data.edicion || '', String(data.publicacion || data.numero_publicacion)]);
-    if (existing.rowCount) throw new Error('Ya existe esa revista para la región y el número indicados.');
+        AND btrim(p.numero_publicacion)=$3 AND lower(COALESCE(p.version_publicacion,r.impresa_o_digital,''))=lower($4)
+        AND lower(COALESCE(r.especial,''))=lower($5) LIMIT 1`,
+      [data.revista, data.edicion || '', String(data.publicacion || data.numero_publicacion),data.impresa_o_digital||data.version_publicacion||'digital',data.especial||'']);
+    if (existing.rowCount) throw new Error('Ya existe esa revista para la edición, número, formato y especial indicados.');
   }
   const idRevista = data.id_revista?.trim() || `rev_${Date.now()}`;
   const idPublicacion = data.id_publicacion?.trim() || `pub_${idRevista}_${Date.now()}`;

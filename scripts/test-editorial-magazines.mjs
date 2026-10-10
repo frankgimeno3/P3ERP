@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {articleMatchesMagazine,magazineEdition,isSpecialMagazine} from '../app/config/editorialMagazine.js';
+const a={revista:'VENTANAS',espana_previsto_numero:'216, 217 DIGITAL',latam_previsto_numero:'91',especial_numero:'ESPECIAL PROTECCIÓN SOLAR'};
+const magazine={revista:'Revista Ventanas, Puertas, Cerramientos y Protección Solar',edicion:'Iberia',numero_publicacion:'217'};
+assert(articleMatchesMagazine(a,magazine));
+assert(!articleMatchesMagazine(a,{...magazine,numero_publicacion:'218'}));
+assert(!articleMatchesMagazine(a,{...magazine,edicion:'América Latina'}));
+assert(articleMatchesMagazine(a,{...magazine,edicion:'América Latina',numero_publicacion:'91'}));
+assert(!articleMatchesMagazine(a,{...magazine,revista:'Revista del Vidrio Plano'}));
+const special={...magazine,especial:'ESPECIAL PROTECCIÓN SOLAR',numero_publicacion:'1'};
+assert(isSpecialMagazine(special));assert.equal(magazineEdition(special),'ESPECIALES');assert(articleMatchesMagazine(a,special));
+assert(!articleMatchesMagazine({...a,especial_numero:''},special));
+assert(!isSpecialMagazine({...magazine,especial:'No'}));
+console.log('PASS: ediciones, sector, varios números, especiales y exclusión de falsos positivos.');

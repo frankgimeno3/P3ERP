@@ -3,6 +3,7 @@ import { getPgPool } from '../../database/pgClient.js';
 import { getRevistas, getRevistaById } from '../revista/RevistaRepository.js';
 import { assertObjectExistsInS3, createPresignedUpload } from '../mediateca/S3Service.js';
 import { normalizeMediatecaRouteSegment } from '../mediateca/MediatecaRepository.js';
+import {articleMatchesMagazine} from '../../../app/config/editorialMagazine.js';
 
 const states = new Set(['no revisado produccion', 'incidencia', 'ok produccion']);
 const clean = value => normalizeMediatecaRouteSegment(value);
@@ -98,12 +99,7 @@ function contentTypes(content) {
 }
 
 function matchesEditorial(article, revista) {
-  const sector = magazineSector(revista).toUpperCase();
-  const region = magazineRegion(revista);
-  if (sector === 'OTRO' || region === 'Otro' || String(article.revista || '').toUpperCase() !== sector) return false;
-  const field = region === 'España' ? 'espana_previsto_numero' : 'latam_previsto_numero';
-  const number = String(article[field] || '').match(/\d+/)?.[0];
-  return number === String(revista.numero_publicacion || revista.numero || '');
+  return articleMatchesMagazine(article,revista);
 }
 
 export async function getMagazineList() {
@@ -117,7 +113,7 @@ export async function getContentMagazineOptions(idContenido) {
   const magazines = await getMagazineList();
   const explicit = await getPgPool().query('SELECT DISTINCT id_revista FROM produccion_revistas_contenidos WHERE id_contenido=$1', [idContenido]);
   const linked = new Set(explicit.rows.map(row => row.id_revista));
-  const article = (await getPgPool().query(`SELECT revista,espana_previsto_numero,latam_previsto_numero
+  const article = (await getPgPool().query(`SELECT revista,espana_previsto_numero,latam_previsto_numero,especial_numero,hueco_previsto
     FROM produccion_control_redaccion WHERE id_contenido=$1`, [idContenido])).rows[0];
   return magazines.filter(revista => linked.has(revista.id_revista)
     || content.id_publicacion === revista.id_publicacion
@@ -129,7 +125,6 @@ export async function getContentMagazineOptions(idContenido) {
 export async function getMagazineManagement(idRevista) {
   const revista = await getRevistaById(idRevista);
   if (!revista) return null;
-  const numberField=magazineRegion(revista)==='América'?'latam_previsto_numero':'espana_previsto_numero';
   const number=String(revista.numero_publicacion||'').replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
   const { rows: contents } = await getPgPool().query(`SELECT c.*,cu.nombre_empresa,a.nombre_completo_agente
     FROM produccion_contenidos c
@@ -138,11 +133,11 @@ export async function getMagazineManagement(idRevista) {
     WHERE c.hoja_prod=true AND (c.id_publicacion=$1 OR c.contenido_especifico_id=$1
       OR EXISTS(SELECT 1 FROM produccion_revistas_contenidos rc WHERE rc.id_contenido=c.id_contenido AND rc.id_revista=$2)
       OR c.publicacion_num_web ~ $3
-      OR EXISTS(SELECT 1 FROM produccion_control_redaccion e WHERE e.id_contenido=c.id_contenido AND upper(e.revista)=upper($4) AND substring(e.${numberField} from '[0-9]+')=$5))
-    ORDER BY c.id_contenido`,[revista.id_publicacion,revista.id_revista,number?`(?:[^0-9]|^)${number}$`:'a^',magazineSector(revista),String(revista.numero_publicacion||'')]);
+      OR EXISTS(SELECT 1 FROM produccion_control_redaccion e WHERE e.id_contenido=c.id_contenido))
+    ORDER BY c.id_contenido`,[revista.id_publicacion,revista.id_revista,number?`(?:[^0-9]|^)${number}$`:'a^']);
   const links = await getPgPool().query('SELECT id_contenido,tipo FROM produccion_revistas_contenidos WHERE id_revista=$1', [revista.id_revista]);
-  const editorials = await getPgPool().query(`SELECT id_contenido,revista,espana_previsto_numero,latam_previsto_numero
-    FROM produccion_control_redaccion WHERE id_contenido IS NOT NULL AND upper(revista)=upper($1) AND substring(${numberField} from '[0-9]+')=$2`,[magazineSector(revista),String(revista.numero_publicacion||'')]);
+  const editorials = await getPgPool().query(`SELECT id_contenido,revista,espana_previsto_numero,latam_previsto_numero,especial_numero,hueco_previsto
+    FROM produccion_control_redaccion WHERE id_contenido IS NOT NULL`);
   const editorialIds = new Set(editorials.rows.filter(article => matchesEditorial(article, revista)).map(article => article.id_contenido));
   const byContent = new Map();
   for (const link of links.rows) {

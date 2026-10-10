@@ -47,10 +47,11 @@ export function validateArticle(data){
  if(row.estado==='Publicado'&&destinations.length===1)row.publicaciones_estado[destinations[0].key]=true;
  const flags=Object.values(row.publicaciones_estado);
  if(row.estado==='Publicado'&&!flags.every(Boolean))fail('Confirma la publicación en todos los números previstos antes de marcar Publicado.');
- if(row.estado==='Parcialmente publicado'&&!flags.some(Boolean))fail('Indica en qu? número se ha publicado el artículo.');
+ if(row.estado==='Parcialmente publicado'&&!flags.some(Boolean))fail('Indica en qué número se ha publicado el artículo.');
  if(flags.every(Boolean))row.estado='Publicado';else if(flags.some(Boolean))row.estado='Parcialmente publicado';
  if(typeof data.estado_publicacion_vidrioperfil!=='boolean')fail('El estado de publicación en Vidrioperfil debe ser una casilla marcada o desmarcada.');
  row.estado_publicacion_vidrioperfil=data.estado_publicacion_vidrioperfil?'Sí':'No';
  if(data.id_cuenta)row.id_cuenta=String(data.id_cuenta);
+ if(data.id_contrato_extra!==undefined)row.id_contrato_extra=String(data.id_contrato_extra||'').trim();
  return row;
 }

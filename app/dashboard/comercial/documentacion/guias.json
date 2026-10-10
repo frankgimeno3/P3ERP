@@ -93,7 +93,8 @@
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
       "En la ficha del contrato, Crear nueva propuesta copia la cuenta, contacto, servicios, importes y condiciones a un borrador independiente. Usa el agente de la sesión, fecha de hoy y validez de 30 días; renueva las fechas de los cobros conservando sus intervalos. Revisa y edita el borrador antes de enviarlo.",
       "Los servicios facturados desde PDF se relacionan con las líneas del contrato cuando publicación y medio permiten una coincidencia única. Se completan las descripciones y productos ausentes conservando las tarifas, contenidos y asociaciones existentes.",
-      "Los contratos se numeran autom?ticamente como Caa.000.000. Sus ?rdenes utilizan el c?digo del contrato seguido de n?mero de cobro/total, tambi?n al aceptar propuestas o reemplazar ?rdenes."
+      "Los contratos se numeran autom?ticamente como Caa.000.000. Sus ?rdenes utilizan el c?digo del contrato seguido de n?mero de cobro/total, tambi?n al aceptar propuestas o reemplazar ?rdenes.",
+      "Los agregados extra post-contrato se muestran separados del contenido firmado, con enlace a su ficha. No se incluyen en las líneas ni en los importes originales."
     ]
   },
   "/dashboard/comercial/documentacion": {
@@ -115,7 +116,8 @@
       "Pulsa una fila para abrir /hoja_produccion/[id]. Puedes editar especificaciones en un área de texto, Publicación / Nº web, agente por nombre, fecha límite con día, mes y año separados y estado. Pulsa Guardar cambios para conservar la edición. También puedes subir materiales. Volver regresa a la hoja de producción.",
       "Las pestañas incluyen el año actual y todos los años presentes en los contenidos. Anteriores conserva los contenidos históricos importados; Sin año permite localizar los que aún no tienen fecha. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados.",
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
-      "Los contenidos nuevos reciben un c?digo hp_aa_000.000 del servidor. Se conservan los identificadores num?ricos procedentes de la hoja antigua y la referencia original cuando se corrige un c?digo duplicado."
+      "Los contenidos nuevos reciben un c?digo hp_aa_000.000 del servidor. Se conservan los identificadores num?ricos procedentes de la hoja antigua y la referencia original cuando se corrige un c?digo duplicado.",
+      "Cada año, Anteriores y Sin año tienen las pestañas Revista (principal) y Otros antes de los filtros. Revista omite Tipo revista/servicio y Caduca (web). Otros muestra Material y Tipo de servicio, sin Anuncio, Artículo ni Página. La división utiliza el destino y la publicación del contenido."
     ]
   },
   "/dashboard/produccion/revistas": {
@@ -127,7 +129,8 @@
       "Agregar revista crea un número pendiente de publicar. Desde Pendientes, Abrir accede a /dashboard/produccion/revistas/[id_revista]. El estado se modifica exclusivamente dentro de la ficha.",
       "Calendario muestra 24 meses desde el actual, con semanas de lunes a domingo y etiquetas de eventos por día. A la derecha, el panel fijo permite filtrar eventos y editar sus fechas con dd / mm / yyyy.",
       "Cada número conserva en la base de datos las fechas de petición y recordatorio de materiales, deadline previsto y real, envío a imprenta, impresión estimada y envío de revistas.",
-      "Consultar el listado o el calendario no modifica las páginas, los recuentos ni las fechas de actualización de las publicaciones."
+      "Consultar el listado o el calendario no modifica las páginas, los recuentos ni las fechas de actualización de las publicaciones.",
+      "La tabla distingue Número, Formato (digital/impresa), Especial y Fecha de publicación sin mostrar el identificador. Vidrio y Ventanas disponen de América Latina, Iberia y ESPECIALES; los especiales quedan excluidos de las ediciones regulares. Cada ficha muestra los artículos correspondientes con estado, cuenta, título y páginas, incluyendo todos los números previstos y especiales."
     ]
   },
   "/dashboard/produccion/contenidos": {
@@ -142,7 +145,8 @@
       "Todos los contenidos muestra los registros de producción; abre la tarjeta Filtros y pulsa una fila para entrar en el detalle del contenido.",
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
       "Al abrir una revista se accede directamente a /dashboard/produccion/contenidos/revistas/[id_revista]/contenidos.",
-      "Los contenidos nuevos reciben un c?digo hp_aa_000.000 del servidor. Se conservan los identificadores num?ricos procedentes de la hoja antigua y la referencia original cuando se corrige un c?digo duplicado."
+      "Los contenidos nuevos reciben un c?digo hp_aa_000.000 del servidor. Se conservan los identificadores num?ricos procedentes de la hoja antigua y la referencia original cuando se corrige un c?digo duplicado.",
+      "Artículos reutiliza el mismo catálogo que la página Artículos del menú, antes Control de redacción: no crea una segunda lista. Todo artículo tiene un contenido asociado y puede llevar un vínculo extra post-contrato."
     ]
   },
   "/dashboard/produccion/contenidos/[id]": {
@@ -578,14 +582,9 @@
     ]
   },
   "/dashboard/produccion/control_redaccion": {
-    "summary": "Seguimiento editorial compartido con Contenidos > Artículos.",
+    "summary": "La antigua página Control de redacción redirige a Artículos.",
     "steps": [
-      "Esta vista y la pestaña Artículos de Contenidos usan los mismos registros y estados. Edita una fila y confirma por separado las publicaciones previstas.",
-      "Despliega Filtros, cerrado inicialmente, para localizar artículos, empresas o números de revista. Prioridad y Dónde está siguen disponibles como filtros, pero no aparecen en la tabla.",
-      "Consulta el estado de corrección y la planificación editorial en la tabla.",
-      "Pulsa Limpiar filtros para volver a mostrar todos los registros.",
-      "Añadir contenido para artículo abre un modal con empresa, título, estado, responsable, revista, páginas y publicación en Vidrioperfil (casilla). Debes rellenar al menos un destino previsto: España, Latam, Especial o Hueco. Revista puede quedar en blanco; los responsables son Ricardo, Frank o Paco. Al guardar aparece el artículo en la tabla. Cierra con ×, Cancelar o Escape. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados.",
-      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
+      "Se conservan todos los registros y enlaces históricos. Abre Artículos desde el menú Producción."
     ]
   },
   "/dashboard/operaciones/agentes/asuntos": {
@@ -943,6 +942,15 @@
       "Si hay un ticket que justifica un vencimiento, vincúlalos con importes exactamente iguales para contabilizar ese gasto una sola vez.",
       "Las suscripciones de clientes a revistas mantienen su gestión independiente en Clientes → Suscripciones.",
       "El formato visual de Administración comparte controles y pestañas: pestañas principales sobre fondo blanco, contenido azul claro y subpestañas con contenido blanco."
+    ]
+  },
+  "/dashboard/produccion/articulos": {
+    "summary": "Gestiona artículos editoriales, que son contenidos independientes del contrato, con seguimiento de pendientes y publicados.",
+    "steps": [
+      "Pendientes es la vista principal; Publicados conserva el archivo sin borrar los artículos. Una publicación parcial sigue pendiente hasta completar todos los números previstos.",
+      "Añadir artículo abre un modal con cuenta, título, estado, responsable, fechas dd/mm/yyyy, páginas y destinos España, Latam, Especial y Hueco. El artículo crea un único contenido y las versiones impresa y digital muestran el mismo artículo del número.",
+      "Puede vincularse opcionalmente como extra post-contrato a un contrato de su cuenta. Los extras se guardan separados de las líneas firmadas y no modifican importes ni generan cobros. Retirar o cambiar el vínculo mantiene sincronizada la ficha del contrato.",
+      "Los filtros están agrupados en una tarjeta inicialmente cerrada. No se borran registros al moverlos a Publicados."
     ]
   }
 }

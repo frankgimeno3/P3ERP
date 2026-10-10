@@ -19,6 +19,8 @@ function normalizeHojaProd(row) {
   const paginaMatch = String(row.especificaciones_contenido ?? "").match(/p[áa]gina\s*([0-9]+)/i);
 
   return {
+    es_revista: row.tipo_publicacion==='revista'||Boolean(row.destino_revista)||/revista|vidrio plano|ventanas|hueco|quién es quién/i.test(String(row.tipo_revista_servicio||'')+' '+String(row.nombre_publicacion||'')),
+    material: row.estado_material_contenido||[row.anuncio_hoja,row.articulo_hoja].filter(v=>v&&!/no procede/i.test(v)).join(' · '),
     id_contenido: row.id_contenido,
     codigo_crm: row.codigo_crm_hoja || row.id_cuenta || "",
     agente: row.nombre_completo_agente || row.id_agente || "",
@@ -164,7 +166,7 @@ export async function getHojaProduccionContenidos(filters = {}) {
         c.*,
         ${contenidoEspecificoExpr} AS contenido_especifico_id,
         ${servicioExpr} AS servicio,
-        p.nombre_publicacion,
+        p.nombre_publicacion,p.tipo_publicacion,
         COALESCE(p.fecha_publicacion, ${fechaContenidoExpr}, '') AS fecha_publicacion,
         s.nombre_servicio_es AS servicio_nombre,
         a.nombre_completo_agente,

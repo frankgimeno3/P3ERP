@@ -108,7 +108,7 @@ export async function getContratoById(idContrato) {
 
   if (!rows[0]) return null;
 
-  const [lineas, facturas, ordenes] = await Promise.all([
+  const [lineas, facturas, ordenes, extras] = await Promise.all([
     pool.query(
       `
         SELECT l.*,s.nombre_servicio_es AS producto_documento_es
@@ -131,6 +131,7 @@ export async function getContratoById(idContrato) {
       `,
       [idContrato],
     ),
+    pool.query(`SELECT c.id_contenido,c.nombre_contenido,c.cliente_hoja,c.estado_contenido FROM produccion_contenidos c WHERE c.id_contenido IN (SELECT jsonb_array_elements_text(COALESCE(to_jsonb(con)->'agregados_extra_post_contrato','[]'::jsonb)) FROM comercial_contratos con WHERE con.id_contrato=$1) ORDER BY c.id_contenido`,[idContrato]),
   ]);
 
   return normalizeContrato({
@@ -138,6 +139,7 @@ export async function getContratoById(idContrato) {
     lineas_contrato: lineas.rows.map(normalizeLinea),
     ordenes: ordenes.rows.map(normalizeOrden),
     facturas: facturas.rows,
+    contenidos_extra: extras.rows,
   });
 }
 

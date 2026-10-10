@@ -227,6 +227,8 @@ Indexes:
 
 ### comercial_contratos
 
+`agregados_extra_post_contrato jsonb NOT NULL DEFAULT '[]'` conserva IDs de contenidos editoriales extra, separados de las líneas firmadas y los importes. `produccion_control_redaccion.id_contrato_extra` identifica el vínculo opcional de cada artículo; las altas, cambios y retiradas sincronizan ambos dentro de una transacción. Cada artículo dispone de un único `id_contenido` real en `produccion_contenidos`, de tipo `articulo`, incluso si no tiene contrato. Migración: `20261010_0002_editorial_contract_extras.sql`.
+
 | # | Column | Type | Nullable | Default |
 |---:|---|---|---|---|
 | 1 | id_contrato | text | NO |  |

@@ -1,4 +1,5 @@
 "use client";
+import ModuleTabs from '@/app/components/ModuleTabs';
 import SortableTable from '@/app/components/SortableTable';
 
 import { matchesTableFilter } from "@/app/lib/dateFilters";
@@ -12,6 +13,8 @@ import MiddleNav from "../../../general_components/componentes_recurrentes/Middl
 import { HojaProduccionService } from "@/app/service/HojaProduccionService";
 
 interface HojaProduccionContenido {
+  es_revista: boolean;
+  material: string;
   id_contenido: string;
   codigo_crm: string;
   agente: string;
@@ -49,10 +52,14 @@ const columns: [keyof HojaProduccionContenido, string][] = [
   ["comentarios", "Comentarios"],
 ];
 
-const tableColumns = columns.filter(([field]) => !["codigo_crm", "publicacion_num_web", "factura", "comentarios"].includes(field));
+const baseTableColumns = columns.filter(([field]) => !["codigo_crm", "publicacion_num_web", "factura", "comentarios"].includes(field));
 
 const Materiales: FC = () => {
   const router = useRouter();
+  const [kind,setKind]=useState('revista');
+  const activeColumns: [keyof HojaProduccionContenido,string][] = kind==='revista'?columns.filter(([key])=>!['tipo','caducidad'].includes(key)):columns.filter(([key])=>!['anuncio','articulo','pagina'].includes(key)).map(([key,label])=>[key,key==='tipo'?'Tipo de servicio':label]);
+  if(kind==='otros')activeColumns.splice(activeColumns.findIndex(([key])=>key==='estado'),0,['material','Material']);
+  const tableColumns=activeColumns.filter(([key])=>baseTableColumns.some(([field])=>field===key)||key==='material');
   const currentYear = new Intl.DateTimeFormat('en', {year:'numeric',timeZone:'Europe/Madrid'}).format(new Date());
   const [year, setYear] = useState(currentYear);
   const [contenidos, setContenidos] = useState<HojaProduccionContenido[]>([]);
@@ -86,13 +93,14 @@ const Materiales: FC = () => {
   };
 
   const contenidosFiltrados = contenidos.filter((contenido) => {
+    if(Boolean(contenido.es_revista)!==(kind==='revista'))return false;
     if ((contenido.ano_publicacion || 'Sin año') !== year) return false;
     const estado = String(contenido.estado || "").toLowerCase();
     const hasContrato = Boolean(String(contenido.contrato || "").trim());
-    const isPublished = estado.includes("publicad");
+    const isPublished = estado === "publicado" || estado === "publicada";
     if (!showPublished && isPublished) return false;
     if (!showOutOfContract && !hasContrato) return false;
-    return columns.every(([field]) => !filters[field]?.trim() || matchesTableFilter(String(contenido[field] ?? "").toLowerCase(), filters[field].trim().toLowerCase()));
+    return activeColumns.every(([field]) => !filters[field]?.trim() || matchesTableFilter(String(contenido[field] ?? "").toLowerCase(), filters[field].trim().toLowerCase()));
   });
 
   return (
@@ -124,10 +132,12 @@ const Materiales: FC = () => {
             </div>
           </div>
 
+          <ModuleTabs sub label="Destino de producción" value={kind} items={[{value:'revista',label:'Revista'},{value:'otros',label:'Otros'}]} onChange={value=>{setKind(value);setFilters({});}}/>
+          <div role="tabpanel" className="rounded-b-lg border border-blue-200 bg-blue-50 p-4">
           <TableFilters>
 
             <div className="contents">
-              {columns.map(([field, label]) => (
+              {activeColumns.map(([field, label]) => (
                 <label key={field} className="text-[13px]">
                   <span className="mb-1 block text-[11px] font-extralight text-gray-500">{label}</span>
                   {["agente", "estado", "tipo", "anuncio", "articulo"].includes(field) ? (
@@ -186,6 +196,7 @@ const Materiales: FC = () => {
             {loading && <p className="mt-4 text-center text-gray-500">Cargando contenidos...</p>}
             {!loading && error && <p className="mt-4 text-center text-red-600">{error}</p>}
             {!loading && !error && contenidosFiltrados.length === 0 && <p className="mt-4 text-center text-gray-500">No hay contenidos de hoja de produccion para {year}.</p>}
+          </div>
           </div>
         </div>
       </div>
