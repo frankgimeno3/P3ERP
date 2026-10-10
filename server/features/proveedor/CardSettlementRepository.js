@@ -1,7 +1,6 @@
-import { randomUUID } from 'node:crypto';
 import { getPgPool } from '../../database/pgClient.js';
 import { ProveedorError, supplierTransaction } from './SupplierAdminRepository.js';
-import { cents, isoDate, nextPeriod, settlementForecast, snapshotToken } from './CardSettlement.js';
+import { cents, isoDate, settlementForecast, snapshotToken } from './CardSettlement.js';
 import { insertRecurringCharge } from '../prevision/RecurringChargeRepository.js';
 
 const fail=message=>{throw new ProveedorError(message,409);};
@@ -15,7 +14,7 @@ export async function cardData(id,db=getPgPool()) {
   const card=(await db.query("SELECT *,to_char(inicio_periodo,'YYYY-MM-DD') inicio_periodo,to_char(proximo_cierre,'YYYY-MM-DD') proximo_cierre,to_char(proxima_liquidacion,'YYYY-MM-DD') proxima_liquidacion FROM tesoreria_tarjetas WHERE id_tarjeta=$1",[id])).rows[0];
   if(!card)throw new ProveedorError('Tarjeta no encontrada.',404);
   for(const key of ['inicio_periodo','proximo_cierre','proxima_liquidacion'])card[key]=isoDate(card[key]);
-  const tickets=(await db.query(`SELECT t.id_ticket,t.id_tarjeta,t.id_vencimiento_tarjeta,t.importe_total,t.documento_src,t.ambito,
+  const tickets=(await db.query(`SELECT t.id_ticket,t.id_tarjeta,t.id_liquidacion_tarjeta,t.id_vencimiento_tarjeta,t.importe_total,t.documento_src,t.ambito,t.forma_pago,t.estado_revision,t.clasificacion,t.comentarios,t.updated_at,
     to_char(p3_income_date(t.fecha_ticket),'YYYY-MM-DD') fecha,COALESCE(p.nombre_proveedor,t.nombre_personalizado_proveedor) proveedor
     FROM administracion_tickets t LEFT JOIN administracion_proveedores p USING(id_proveedor) WHERE t.id_tarjeta=$1 ORDER BY p3_income_date(t.fecha_ticket),t.id_ticket`,[id])).rows;
   const charges=(await db.query('SELECT * FROM tesoreria_cargos_recurrentes WHERE id_tarjeta=$1 AND activo ORDER BY id_cargo_recurrente',[id])).rows;
@@ -24,7 +23,9 @@ export async function cardData(id,db=getPgPool()) {
     AND NOT EXISTS(SELECT 1 FROM tesoreria_vencimientos_aplicaciones a WHERE a.id_vencimiento=v.id) ORDER BY v.fecha,v.id`,[id])).rows;
   const history=(await db.query(`SELECT l.*,to_char(l.inicio,'YYYY-MM-DD') inicio,to_char(l.cierre,'YYYY-MM-DD') cierre,to_char(l.fecha,'YYYY-MM-DD') fecha,COALESCE((SELECT jsonb_agg(m.id_linea_banco ORDER BY m.id_linea_banco) FROM tesoreria_tarjetas_movimientos m WHERE m.id_liquidacion=l.id),'[]'::jsonb) movimientos
     FROM tesoreria_tarjetas_liquidaciones l WHERE id_tarjeta=$1 ORDER BY created_at DESC,id`,[id])).rows;
-  return {card,tickets,charges,dues,history,next:settlementForecast(card,tickets,dues)};
+  const draft=history.find(h=>h.estado==='pendiente'&&h.fecha.slice(0,7)===card.proxima_liquidacion?.slice(0,7));
+  const next=draft?(await import('./LiquidacionesRepository.js')).periodForecast({card,tickets,dues,history},draft):settlementForecast(card,tickets,dues);
+  return {card,tickets,charges,dues,history,next};
 }
 
 export async function associateCardCharge(id,body) {
@@ -55,13 +56,15 @@ export async function associateCardTicket(id,body) {
     if(body.id_vencimiento_tarjeta){
       const due=(await db.query('SELECT v.*,to_char(v.fecha,\'YYYY-MM-DD\') fecha FROM tesoreria_cargos_vencimientos v JOIN tesoreria_cargos_recurrentes c USING(id_cargo_recurrente) WHERE v.id=$1 AND c.id_tarjeta=$2 AND c.activo',[body.id_vencimiento_tarjeta,id])).rows[0];
       if(!due||due.fecha<next.inicio||due.fecha>next.cierre||ticket.fecha>next.cierre)fail('El ticket y el vencimiento deben pertenecer a la próxima liquidación.');
+      if(cents(due.importe)!==cents(ticket.importe_total))fail('El ticket debe tener exactamente el importe de la previsión de suscripción.');
     }
     await db.query("UPDATE administracion_tickets SET forma_pago='tarjeta',id_tarjeta=$2,tarjeta_ultimos_digitos=$3,tarjeta_banco=$4,tarjeta_nombre=$5,tarjeta_tipo=$6,id_vencimiento_tarjeta=$7 WHERE id_ticket=$1",[ticket.id_ticket,id,card.ultimos_digitos,card.banco,card.nombre,card.tipo,body.id_vencimiento_tarjeta||null]);
     return {ok:true};
   });
 }
 
-export async function settleCard(id,body,actor='') {
+export async function settleCard(id,body) {
+  if(body.action!=='preview')fail('Usa Liquidaciones para importar el PDF y revisar todos sus movimientos.');
   return supplierTransaction(async db=>{
     await db.query("SELECT pg_advisory_xact_lock(hashtext('laboral:pagos'))");
     const ids=Array.isArray(body.ids)?[...new Set(body.ids)]:[];
@@ -80,44 +83,30 @@ export async function settleCard(id,body,actor='') {
     const real=lines.reduce((sum,l)=>sum+Math.abs(cents(l.importe)),0)/100;
     const token=snapshotToken({card:data.card,forecast,lines,charges:data.charges});
     const preview={...forecast,real,diferencia:(cents(real)-cents(forecast.total))/100,token,movimientos:lines.map(l=>({id:l.id_linea_banco,concepto:l.concepto,importe:l.importe,fecha:l.fecha_valor}))};
-    if(body.action==='preview')return preview;
-    if(body.action!=='confirm'||body.token!==token)fail('La previsión o los movimientos han cambiado. Revisa de nuevo antes de confirmar.');
-    const comment=String(body.comentario||'').trim();
-    if(comment.length>10000||preview.diferencia!==0&&!comment)fail('Explica la diferencia entre el cargo bancario y la previsión.');
-    const settlementId=randomUUID();
-    await db.query(`INSERT INTO tesoreria_tarjetas_liquidaciones(id,id_tarjeta,inicio,cierre,fecha,previsto,real,detalle,comentario,actor)
-      VALUES($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9,$10)`,[settlementId,id,forecast.inicio,forecast.cierre,forecast.fecha,forecast.total,real,JSON.stringify({...preview,card:data.card,charges:data.charges}),comment,actor]);
-    for(const line of lines)await db.query('INSERT INTO tesoreria_tarjetas_movimientos(id_linea_banco,id_liquidacion) VALUES($1,$2)',[line.id_linea_banco,settlementId]);
-    await db.query('UPDATE tesoreria_movimientos_bancarios SET estado_revision=true,updated_at=now() WHERE id_linea_banco=ANY($1::text[])',[ids]);
-    const next=nextPeriod(data.card);
-    await db.query('UPDATE tesoreria_tarjetas SET inicio_periodo=$2,proximo_cierre=$3,proxima_liquidacion=$4,updated_at=now() WHERE id_tarjeta=$1',[id,next.inicio_periodo,next.proximo_cierre,next.proxima_liquidacion]);
-    return {ok:true,id:settlementId};
+    return preview;
   });
 }
 
 export async function reopenCardSettlements(db,ids) {
-  const settlements=(await db.query('SELECT DISTINCT l.* FROM tesoreria_tarjetas_liquidaciones l JOIN tesoreria_tarjetas_movimientos m ON m.id_liquidacion=l.id WHERE m.id_linea_banco=ANY($1::text[])',[ids])).rows;
+  const settlements=(await db.query("SELECT DISTINCT l.*,to_char(l.inicio,'YYYY-MM-DD') inicio,to_char(l.cierre,'YYYY-MM-DD') cierre,to_char(l.fecha,'YYYY-MM-DD') fecha FROM tesoreria_tarjetas_liquidaciones l JOIN tesoreria_tarjetas_movimientos m ON m.id_liquidacion=l.id WHERE m.id_linea_banco=ANY($1::text[])",[ids])).rows;
   for(const l of settlements){
     const members=(await db.query('SELECT id_linea_banco FROM tesoreria_tarjetas_movimientos WHERE id_liquidacion=$1',[l.id])).rows;
     if(members.some(m=>!ids.includes(m.id_linea_banco)))fail('Selecciona todos los movimientos de la liquidación para reabrirla.');
     if((await db.query("SELECT 1 FROM tesoreria_tarjetas_liquidaciones WHERE id_tarjeta=$1 AND estado='revisada' AND cierre>$2",[l.id_tarjeta,l.cierre])).rowCount)fail('Solo se puede reabrir la última liquidación de cada tarjeta.');
     await db.query('UPDATE tesoreria_tarjetas SET inicio_periodo=$2,proximo_cierre=$3,proxima_liquidacion=$4,updated_at=now() WHERE id_tarjeta=$1',[l.id_tarjeta,l.inicio,l.cierre,l.fecha]);
-    await db.query("UPDATE tesoreria_tarjetas_liquidaciones SET estado='anulada' WHERE id=$1",[l.id]);
-    await db.query('DELETE FROM tesoreria_tarjetas_movimientos WHERE id_liquidacion=$1',[l.id]);
+    if((await db.query('SELECT 1 FROM tesoreria_tarjetas_documentos WHERE id_liquidacion=$1',[l.id])).rowCount){
+      await db.query("UPDATE tesoreria_tarjetas_liquidaciones SET estado='pendiente',version=version+1,updated_at=now() WHERE id=$1",[l.id]);
+      await db.query("UPDATE administracion_tickets SET estado_revision='pendiente',updated_at=now() WHERE id_ticket IN (SELECT id_ticket FROM tesoreria_tarjetas_lineas WHERE id_liquidacion=$1)",[l.id]);
+    }else{
+      await db.query("UPDATE tesoreria_tarjetas_liquidaciones SET estado='anulada' WHERE id=$1",[l.id]);
+      await db.query('DELETE FROM tesoreria_tarjetas_movimientos WHERE id_liquidacion=$1',[l.id]);
+    }
   }
 }
 
 export async function cardLiquidity(from,until,db=getPgPool()) {
-  const cards=(await db.query("SELECT id_tarjeta FROM tesoreria_tarjetas WHERE proxima_liquidacion IS NOT NULL ORDER BY id_tarjeta")).rows;
-  const totals={Sabadell:0,Santander:0};
-  for(const {id_tarjeta} of cards){
-    const data=await cardData(id_tarjeta,db);
-    let card=data.card;
-    for(let n=0;n<1200&&card.proxima_liquidacion<=until;n++){
-      const forecast=settlementForecast(card,data.tickets,data.dues);
-      if(forecast.fecha>=from)totals[card.banco]=(totals[card.banco]||0)+cents(forecast.total);
-      card=nextPeriod(card);
-    }
-  }
-  return Object.fromEntries(Object.entries(totals).map(([key,value])=>[key,value/100]));
+ const {cardForecastPeriods}=await import('./CardForecastProjection.js');
+ const periods=await cardForecastPeriods(from,until,db),totals={Sabadell:0,Santander:0};
+ for(const p of periods)totals[p.bank]=(totals[p.bank]||0)+cents(p.total);
+ return Object.fromEntries(Object.entries(totals).map(([key,value])=>[key,value/100]));
 }

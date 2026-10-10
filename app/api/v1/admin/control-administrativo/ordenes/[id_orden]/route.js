@@ -1,10 +1,11 @@
+import {resolveIdentifier} from '@/server/features/identifiers/IdentifierAliases.js';
 import { requestActor } from "../../../../../../../server/features/comentario/AccountActivity.js";
 import { NextResponse } from "next/server";
 import { updateAdministrativeOrder } from "../../../../../../../server/features/factura/FacturaClienteRepository.js";
 import { getOrdenAdministrativaById } from "../../../../../../../server/features/orden/OrdenRepository.js";
 
 export const runtime = "nodejs";
-const getId = async (params) => (await params)?.id_orden;
+const getId = async (params) => resolveIdentifier('orden',(await params)?.id_orden);
 export async function GET(_request, { params }) {
   const id = await getId(params);
   const row = await getOrdenAdministrativaById(id);

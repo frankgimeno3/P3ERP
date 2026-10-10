@@ -27,6 +27,7 @@ type Linea = {
   tipo_ingreso?: string;
   id_agente?: string;
   nombre_agente?: string;
+  traspaso_propio?: {id_linea_cargo:string|null;id_linea_abono:string|null};
   id_cargo_recurrente?: number | null;
   descripcion_cargo_recurrente?: string;
 };
@@ -160,7 +161,7 @@ export default function RevisionLineasPage() {
                 <td className="p-3"><a href={`/dashboard/direccion/tesoreria/extractos/conciliacion/${encodeURIComponent(row.id_linea_banco)}`} className="cursor-pointer rounded text-blue-900 hover:bg-blue-50 hover:underline focus-visible:outline focus-visible:outline-2">{row.concepto}</a>{possibleDuplicates.has(row.id_linea_banco) && <span className="mt-1 block text-xs text-rose-700">Posible duplicado</span>}</td>
                 <td className="p-3 text-right">{formatMoney(row.importe)}</td>
                 <td className="p-3">
-                  {row.id_agente ? `Nómina · ${row.nombre_agente || row.id_agente}` : row.nombre_proveedor ||
+                  {row.traspaso_propio ? `Traspaso propio${row.traspaso_propio.id_linea_cargo&&row.traspaso_propio.id_linea_abono?' · ambos bancos':' · contrapartida sin localizar'}` : row.id_agente ? `Nómina · ${row.nombre_agente || row.id_agente}` : row.nombre_proveedor ||
                     (row.remesa_ids?.length ? 'Remesas: '+row.remesa_ids.join(', ') : '') || row.nombre_cuenta ||
                     row.id_proveedor ||
                     row.id_cuenta || (

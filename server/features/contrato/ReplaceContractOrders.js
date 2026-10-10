@@ -1,3 +1,4 @@
+import {allocateOrderIdentifier} from '../identifiers/BusinessIdentifiers.js';
 import {randomUUID} from 'node:crypto';
 import {getPgPool} from '../../database/pgClient.js';
 import {lockIncome,ensureOrderReceipt,syncInvoiceCollection} from '../prevision/IncomeReconciliation.js';
@@ -35,7 +36,7 @@ export async function replaceContractOrders(idContrato,selectedIds,newOrders,act
     }
     const created=[];let allocated=0;
     for(let i=0;i<values.length;i++){
-      const v=values[i],number=Number(max)+i+1,paymentId='cc_'+randomUUID().replaceAll('-','').slice(0,24),orderId='ord_'+randomUUID().replaceAll('-','').slice(0,24);
+      const v=values[i],number=Number(max)+i+1,paymentId='cc_'+randomUUID().replaceAll('-','').slice(0,24),orderId=await allocateOrderIdentifier(db,{contractId:idContrato,number,total:Number(max)+values.length});
       const base=i===values.length-1?baseOld-allocated:Math.round(baseOld*v.total/totalOld);allocated+=base;
       await db.query(`INSERT INTO comercial_contratos_cobros(id_cobro_contrato,id_contrato,numero_cobro,fecha_cobro,importe_cobro,forma_cobro,banco_cobro)
         VALUES($1,$2,$3,$4,$5,$6,$7)`,[paymentId,idContrato,number,v.date,v.total/100,v.method,v.bank]);

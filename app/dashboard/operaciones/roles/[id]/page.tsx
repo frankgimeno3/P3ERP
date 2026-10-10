@@ -14,7 +14,7 @@ const dashboardRoutes = [
   '/dashboard/administracion/ferias/[id_feria]',
   '/dashboard/administracion/pendiente-cobro',
   '/dashboard/administracion/proveedores',
-  '/dashboard/administracion/proveedores/tickets',
+  '/dashboard/administracion/liquidaciones/tickets',
   '/dashboard/administracion/suscripciones',
   '/dashboard/comercial/contactos',
   '/dashboard/comercial/contactos/crear',

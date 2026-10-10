@@ -1,3 +1,4 @@
+import {resolveIdentifier} from '@/server/features/identifiers/IdentifierAliases.js';
 import { NextResponse } from "next/server";
 import {
   deleteContenidoProduccion,
@@ -9,7 +10,7 @@ export const runtime = "nodejs";
 
 async function getIdContenido(context) {
   const params = await context.params;
-  return params?.id_contenido;
+  return resolveIdentifier('contenido',params?.id_contenido);
 }
 
 export async function GET(_request, context) {

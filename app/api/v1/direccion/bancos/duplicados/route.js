@@ -3,6 +3,7 @@ import { getPgPool } from '../../../../../../server/database/pgClient.js';
 
 import { rememberDuplicateDiscard } from '@/server/features/banco/BankReviewMemoryRepository.js';
 import { requestActor } from '@/server/features/comentario/AccountActivity.js';
+import {readInternalTransfers} from '@/server/features/banco/InternalTransfers.js';
 
 export const runtime = 'nodejs';
 const duplicateQuery = `
@@ -10,7 +11,7 @@ const duplicateQuery = `
     SELECT fecha_operativa, importe
     FROM tesoreria_movimientos_bancarios
     GROUP BY fecha_operativa, importe
-    HAVING COUNT(*) > 1 AND NOT BOOL_AND(duplicado_descartado)
+    HAVING COUNT(*) > 1 AND NOT BOOL_AND(duplicado_descartado) AND NOT BOOL_AND(estado_revision)
   )
   SELECT json_agg(row_to_json(lb) ORDER BY lb.id_linea_banco) AS lineas
   FROM grupos g
@@ -26,9 +27,15 @@ export async function POST(request) {
 export async function DELETE(request) {
   try {
     const body = await request.json();
-    if (body.id) { const { rows } = await getPgPool().query(`DELETE FROM tesoreria_movimientos_bancarios WHERE id_linea_banco=$1 RETURNING id_linea_banco`, [body.id]); return NextResponse.json({ eliminadas: rows.map(r => r.id_linea_banco) }); }
+    const transfers=await readInternalTransfers(),protectedIds=transfers.flatMap(t=>[t.id_linea_cargo,t.id_linea_abono]).filter(Boolean);
+    if (body.id) {
+      if(protectedIds.includes(body.id))return NextResponse.json({message:'El movimiento pertenece a un traspaso propio; conserva también su contrapartida.'},{status:409});
+      const { rows } = await getPgPool().query(`DELETE FROM tesoreria_movimientos_bancarios WHERE id_linea_banco=$1 AND NOT estado_revision RETURNING id_linea_banco`, [body.id]);
+      if(!rows.length)return NextResponse.json({message:'Un movimiento revisado no se elimina como duplicado. Reabre su revisión antes de corregirlo.'},{status:409});
+      return NextResponse.json({ eliminadas: rows.map(r => r.id_linea_banco) });
+    }
     if (body.onePerGroup) {
-      const { rows } = await getPgPool().query(`DELETE FROM tesoreria_movimientos_bancarios lb USING (SELECT fecha_operativa,importe,(array_agg(id_linea_banco ORDER BY id_linea_banco DESC))[1] id FROM tesoreria_movimientos_bancarios GROUP BY fecha_operativa,importe HAVING COUNT(*)>1 AND NOT BOOL_AND(duplicado_descartado)) d WHERE lb.id_linea_banco=d.id RETURNING lb.id_linea_banco`);
+      const { rows } = await getPgPool().query(`DELETE FROM tesoreria_movimientos_bancarios lb USING (SELECT fecha_operativa,importe,(array_agg(id_linea_banco ORDER BY id_linea_banco DESC) FILTER(WHERE NOT estado_revision AND NOT (id_linea_banco=ANY($1::text[]))))[1] id FROM tesoreria_movimientos_bancarios GROUP BY fecha_operativa,importe HAVING COUNT(*)>1 AND NOT BOOL_AND(duplicado_descartado)) d WHERE lb.id_linea_banco=d.id AND NOT lb.estado_revision RETURNING lb.id_linea_banco`,[protectedIds]);
       return NextResponse.json({ eliminadas: rows.map(r => r.id_linea_banco) });
     }
     return NextResponse.json({ message: 'Indica qué duplicado eliminar' }, { status: 400 });

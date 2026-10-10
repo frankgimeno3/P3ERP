@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+import {allocateOrderIdentifier} from '../identifiers/BusinessIdentifiers.js';
 import { ensureOrderReceipt, incomeCents, syncOrderCollections } from '../prevision/IncomeReconciliation.js';
 import { parseImportDate } from '../prevision/ReceiptExcel.js';
 import { orderActivity } from '../comentario/AccountActivity.js';
@@ -35,7 +35,7 @@ export async function syncInvoiceOrders(db, invoiceId, actorId = '') {
       if (previous.cobrada || reviewed) throw new Error('Desmarca primero el cobro de la orden ' + previous.id_orden + ' antes de cambiar sus datos de pago.');
     }
     if (receipt?.id_remesa && !/recibo/i.test(patch.forma_cobro)) throw new Error('Retira primero el recibo de su remesa antes de cambiarlo a otra forma de cobro.');
-    const orderId = previous?.id_orden || 'ord_' + randomUUID().replaceAll('-', '').slice(0, 24);
+    const orderId = previous?.id_orden || await allocateOrderIdentifier(db,{contractId:invoice.id_contrato,number:Number(payment.numero_cobro),total:Math.max(...payments.map(p=>Number(p.numero_cobro)))});
     if (!previous) {
       const row = {id_orden: orderId, id_contrato: invoice.id_contrato, numero_cobro: payment.numero_cobro, etiqueta_cobro: 'Cobro ' + payment.numero_cobro, ...patch};
       const keys = Object.keys(row);

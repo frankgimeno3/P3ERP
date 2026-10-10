@@ -6,6 +6,7 @@ import env from '@next/env';
 import {getPgPool} from '../server/database/pgClient.js';
 import {importReceipts,getRemesas} from '../server/features/prevision/ReceiptImportRepository.js';
 import {saveBankWorkflow} from '../server/features/banco/BankReviewWorkflow.js';
+import {reconcileDocumentedIncome} from '../server/features/prevision/DocumentedIncomeReconciliation.js';
 import {importAdministrativeOrders} from '../server/features/orden/AdministrativeImportRepository.js';
 import {getLiquidityForecast} from "../server/features/prevision/LiquidityRepository.js";
 import {getPrevisionIngresosOrdenes,getOrdenesAdministrativas} from "../server/features/orden/OrdenRepository.js";
@@ -48,32 +49,32 @@ try{
   assert.equal((await getRemesas())[0].cobrada,false);
   assert.equal((await db.query('SELECT * FROM administracion_facturas_clientes')).rows[0].cobrada,false);
   await review('banc_sab_26_000.000.001',{incomeType:'remesa',remesaIds:['REM-1']});
-  await importAdministrativeOrders([{id_orden:'TRANSFER',id_cuenta:'client',id_factura:'600',forma_cobro:'transferencia',numero_cobro:1,cobro_total:50,fecha_teorica_cobro:'15/09/2026',datos_importacion:{custom:'Keep'}}],'actor',pool);
-  await importAdministrativeOrders([{id_orden:'TRANSFER',etiqueta_cobro:'Updated',datos_importacion:{}}],'actor',pool);
-  assert.equal((await db.query("SELECT * FROM tesoreria_ordenes WHERE id_orden='TRANSFER'")).rows[0].cobro_total,'50');
-  assert.equal((await db.query("SELECT * FROM tesoreria_ordenes WHERE id_orden='TRANSFER'")).rows[0].datos_importacion.custom,'Keep');
+  await importAdministrativeOrders([{id_orden:'O26.900.001-1/1',id_cuenta:'client',id_factura:'600',forma_cobro:'transferencia',numero_cobro:1,cobro_total:50,fecha_teorica_cobro:'15/09/2026',datos_importacion:{custom:'Keep'}}],'actor',pool);
+  await importAdministrativeOrders([{id_orden:'O26.900.001-1/1',etiqueta_cobro:'Updated',datos_importacion:{}}],'actor',pool);
+  assert.equal((await db.query("SELECT * FROM tesoreria_ordenes WHERE id_orden='O26.900.001-1/1'")).rows[0].cobro_total,'50');
+  assert.equal((await db.query("SELECT * FROM tesoreria_ordenes WHERE id_orden='O26.900.001-1/1'")).rows[0].datos_importacion.custom,'Keep');
   assert.equal((await db.query('SELECT count(*)::int n FROM tesoreria_ordenes')).rows[0].n,3);
-  await review('banc_san_26_000.000.003',{incomeType:'transferencia',entityType:'cliente',entityId:'client',orderId:'TRANSFER'});
-  assert.equal((await db.query("SELECT * FROM tesoreria_ordenes WHERE id_orden='TRANSFER'")).rows[0].cobrada,true);
-  await assert.rejects(updateAdministrativeOrder('TRANSFER',{cobrada:false},'actor'),/revisión bancaria/);
+  await review('banc_san_26_000.000.003',{incomeType:'transferencia',entityType:'cliente',entityId:'client',orderId:'O26.900.001-1/1'});
+  assert.equal((await db.query("SELECT * FROM tesoreria_ordenes WHERE id_orden='O26.900.001-1/1'")).rows[0].cobrada,true);
+  await assert.rejects(updateAdministrativeOrder('O26.900.001-1/1',{cobrada:false},'actor'),/revisión bancaria/);
   await importAdministrativeOrders([
-    {id_orden:'GROUP-A',id_cuenta:'client',forma_cobro:'transferencia',cobro_total:30},
-    {id_orden:'GROUP-B',id_cuenta:'client',forma_cobro:'transferencia',cobro_total:70},
-    {id_orden:'OTHER-CLIENT',id_cuenta:'client2',forma_cobro:'transferencia',cobro_total:70},
+    {id_orden:'O26.900.002-1/1',id_cuenta:'client',forma_cobro:'transferencia',cobro_total:30},
+    {id_orden:'O26.900.003-1/1',id_cuenta:'client',forma_cobro:'transferencia',cobro_total:70},
+    {id_orden:'O26.900.004-1/1',id_cuenta:'client2',forma_cobro:'transferencia',cobro_total:70},
   ],'actor',pool);
   await db.query("INSERT INTO tesoreria_movimientos_bancarios(id_linea_banco,importe,banco,fecha_valor) VALUES('banc_sab_26_000.000.095',100,'Sabadell','15/09/2026')");
-  await assert.rejects(review('banc_sab_26_000.000.095',{incomeType:'transferencia',entityId:'client',orderIds:['GROUP-A','OTHER-CLIENT']}),/misma cuenta/);
-  await assert.rejects(review('banc_sab_26_000.000.095',{incomeType:'transferencia',entityId:'client',orderIds:['GROUP-A']}),/importe/);
-  await assert.rejects(review('banc_sab_26_000.000.095',{incomeType:'transferencia',entityId:'client',orderIds:['GROUP-A','missing']}),/existentes/);
+  await assert.rejects(review('banc_sab_26_000.000.095',{incomeType:'transferencia',entityId:'client',orderIds:['O26.900.002-1/1','O26.900.004-1/1']}),/misma cuenta/);
+  await assert.rejects(review('banc_sab_26_000.000.095',{incomeType:'transferencia',entityId:'client',orderIds:['O26.900.002-1/1']}),/importe/);
+  await assert.rejects(review('banc_sab_26_000.000.095',{incomeType:'transferencia',entityId:'client',orderIds:['O26.900.002-1/1','missing']}),/existentes/);
   assert.equal((await bank('banc_sab_26_000.000.095')).estado_revision,false);
-  await review('banc_sab_26_000.000.095',{incomeType:'transferencia',entityId:'client',orderIds:['GROUP-A','GROUP-B']});
+  await review('banc_sab_26_000.000.095',{incomeType:'transferencia',entityId:'client',orderIds:['O26.900.002-1/1','O26.900.003-1/1']});
   assert.equal((await bank('banc_sab_26_000.000.095')).id_orden,null);
   assert.equal((await bank('banc_sab_26_000.000.095')).id_cuenta,'client');
   assert.equal((await db.query("SELECT count(*)::int n FROM tesoreria_aplicaciones_cobro WHERE id_linea_banco='banc_sab_26_000.000.095'")).rows[0].n,2);
   await saveBankWorkflow({action:'unreview',ids:['banc_sab_26_000.000.095']},'actor');
-  assert((await db.query("SELECT * FROM tesoreria_ordenes WHERE id_orden IN('GROUP-A','GROUP-B')")).rows.every(o=>!o.cobrada));
-  await review('banc_sab_26_000.000.095',{incomeType:'transferencia',entityId:'client',orderIds:['GROUP-A','GROUP-B']});
-  assert((await db.query("SELECT * FROM tesoreria_ordenes WHERE id_orden IN('GROUP-A','GROUP-B')")).rows.every(o=>o.cobrada));
+  assert((await db.query("SELECT * FROM tesoreria_ordenes WHERE id_orden IN('O26.900.002-1/1','O26.900.003-1/1')")).rows.every(o=>!o.cobrada));
+  await review('banc_sab_26_000.000.095',{incomeType:'transferencia',entityId:'client',orderIds:['O26.900.002-1/1','O26.900.003-1/1']});
+  assert((await db.query("SELECT * FROM tesoreria_ordenes WHERE id_orden IN('O26.900.002-1/1','O26.900.003-1/1')")).rows.every(o=>o.cobrada));
   await importReceipts([receipt('701-001',25,'REM-A'),receipt('702-001',75,'REM-B')],pool,'actor');
   await db.query("INSERT INTO tesoreria_movimientos_bancarios(id_linea_banco,importe,banco,fecha_valor) VALUES('banc_sab_26_000.000.004',100,'Sabadell','15/09/2026')");
   await review('banc_sab_26_000.000.004',{incomeType:'remesa',remesaIds:['REM-A','REM-B']});
@@ -84,6 +85,22 @@ try{
   const items=await Promise.all(batchIds.map(async(id,i)=>({id,version:(await bank(id)).updated_at,incomeType:'remesa',remesaIds:[i===0?'REM-C':'REM-D']})));
   await saveBankWorkflow({mode:'review',ids:batchIds,items},'actor');
   assert((await getRemesas()).filter(r=>['REM-C','REM-D'].includes(r.id_remesa)).every(r=>r.cobrada));
+  // Documented net receipts preserve cash and the outstanding balance; an
+  // overpayment settles the order without changing its expected amount.
+  await db.query("INSERT INTO tesoreria_ordenes(id_orden,id_cuenta,forma_cobro,cobro_total,base_imponible) VALUES('NET','client','transferencia',100,100),('OVER','client','transferencia',100,100)");
+  await db.query("INSERT INTO tesoreria_movimientos_bancarios(id_linea_banco,importe,banco,fecha_valor) VALUES('banc_sab_26_000.000.080',80,'Sabadell','09/10/2026'),('banc_sab_26_000.000.120',120,'Sabadell','09/10/2026')");
+  await assert.rejects(reconcileDocumentedIncome(db,'banc_sab_26_000.000.080',{account:'client',reason:'Document test',allocations:[{orderId:'NET',amount:100}]}),/actual bank cash/);
+  await assert.rejects(reconcileDocumentedIncome(db,'banc_sab_26_000.000.080',{account:'client2',reason:'Document test',allocations:[{orderId:'NET',amount:80}]}),/match/);
+  await reconcileDocumentedIncome(db,'banc_sab_26_000.000.080',{account:'client',reason:'Documented net receipt',allocations:[{orderId:'NET',amount:80}]});
+  const net=(await getOrdenesAdministrativas()).find(o=>o.id_orden==='NET');
+  assert.equal(net.cobrada,false);assert.equal(net.importe_pendiente,20);
+  await reconcileDocumentedIncome(db,'banc_sab_26_000.000.120',{account:'client',reason:'Documented overpayment',allocations:[{orderId:'OVER',amount:120}]});
+  const over=(await db.query("SELECT * FROM tesoreria_ordenes WHERE id_orden='OVER'")).rows[0];
+  assert.equal(over.cobrada,true);assert.equal(Number(over.cobro_total),100);
+  assert.equal(Number((await db.query("SELECT importe FROM tesoreria_aplicaciones_cobro WHERE id_orden='OVER'")).rows[0].importe),120);
+  await assert.rejects(reconcileDocumentedIncome(db,'banc_sab_26_000.000.080',{account:'client',reason:'Replay',allocations:[{orderId:'NET',amount:80}]}),/available/);
+  await saveBankWorkflow({action:'unreview',ids:['banc_sab_26_000.000.120']},'actor');
+  assert.equal((await db.query("SELECT cobrada FROM tesoreria_ordenes WHERE id_orden='OVER'")).rows[0].cobrada,false);
   const comments=(await db.query('SELECT * FROM general_comentarios')).rows;
   assert(comments.some(c=>c.contenido_comentario.includes('Usuario real') && c.contenido_comentario.includes('confirmado el cobro')));
   // Proposal lifecycle, draft invoice and receipt generation remain in one transaction.

@@ -1,0 +1,16 @@
+'use client';
+import RecurringChargeForm from '../RecurringChargeForm';
+import { money, select, type ReviewLineContext } from './ReviewPhaseContext';
+
+export default function ReviewChargeFields({ context, draft: d, calculation: c }: ReviewLineContext) {
+  const { phase, mode, data, patch, entityName, charges } = context;
+  return <>{phase === 3 && <>
+          {d.entityType === 'cliente' ? <label>Orden de cobro (opcional)<select className={select} value={d.orderId} onChange={e => patch(d.id, {orderId:e.target.value})}><option value="">Sin orden</option>{data.orders.filter((o: any) => o.id_cuenta === d.entityId && !o.cancelada).map((o: any) => <option key={o.id_orden} value={o.id_orden}>{o.id_orden} · {money(o.cobro_total)} · {o.fecha_teorica_cobro}</option>)}</select></label> : <>
+            {d.entityType === 'nomina' && <div className="space-y-2"><button type="button" role="switch" aria-label="Ex-Empleado" aria-checked={!!d.formerEmployee} className="flex cursor-pointer items-center gap-3 rounded p-3 hover:bg-blue-50" onClick={()=>patch(d.id,{formerEmployee:!d.formerEmployee,chargeId:'',create:false,paymentId:'',increase:false,formerNet:''})}><span className={`relative h-6 w-11 rounded-full ${d.formerEmployee?'bg-blue-950':'bg-slate-400'}`}><span className={`absolute left-1 top-1 h-4 w-4 rounded-full bg-white transition-transform ${d.formerEmployee?'translate-x-5':''}`}/></span>{d.formerEmployee?'Ex-Empleado':'Empleado actual'}</button>{d.formerEmployee&&<p>Ex-Empleado: no se permite crear ni asociar un cargo recurrente. Puedes continuar sin introducirlo.</p>}</div>}
+            {!(d.entityType === 'nomina' && d.formerEmployee) && <><label>Cargo recurrente<select className={select} value={d.create ? 'new' : d.chargeId} onChange={e => patch(d.id, { create:e.target.value === 'new', chargeId:e.target.value === 'new' ? '' : e.target.value, ruleIndex:0, increase:false })}><option value="">{charges(d).length ? 'Selecciona o continúa sin asociar' : 'No hay cargos previstos registrados'}</option>{charges(d).map((r: any) => <option key={r.id_cargo_recurrente} value={r.id_cargo_recurrente}>{r.id_cargo_recurrente} · {r.programacion.map((p: any) => `${p.descripcion || ''} ${money(p.total_iva)}`).join(' / ')}</option>)}<option value="new">Crear cargo previsto asociado a {entityName(d)}</option></select></label>
+            {d.create && <RecurringChargeForm value={d.chargeDraft} onChange={v => patch(d.id,{chargeDraft:v})} payroll={d.entityType === 'nomina'} vat={d.vat} onVatChange={v => patch(d.id,{vat:v})} />}
+            {c.charge?.programacion?.length > 1 && <label>Regla correspondiente<select className={select} value={d.ruleIndex} onChange={e => patch(d.id,{ruleIndex:Number(e.target.value)})}>{c.charge.programacion.map((r: any, i: number) => <option key={i} value={i}>{r.descripcion} · {money(r.total_iva)} · {r.dia ? `${r.dia}/${r.mes}/${r.anio || ''}` : `Cada ${r.cada} ${r.unidad}`}</option>)}</select></label>}
+            </>}
+            {d.entityType === 'nomina' && mode === 'review' && <p>Cada movimiento conserva su mes y año según su fecha bancaria. En Liquidación de nóminas puedes ajustar el periodo y distinguir nóminas de anticipos individualmente.</p>}         </>}
+        </>}</>;
+}

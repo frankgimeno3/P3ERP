@@ -15,6 +15,8 @@ try {
  assert.equal(old.planned.find(c=>c.rowId==='payments:46:hosting').amount,25226);assert.equal(old.planned.find(c=>c.rowId==='payments:46:soporte').amount,41423);
  for(const s of old.sheets){const parents=s.payments.filter(r=>/^VISA/.test(r.label)&&!r.cardPart);for(const r of parents)assert.ok(s.columns.every((c,i)=>c.kind!=='forecast'||r.values[i]===null));}
  const seed=JSON.stringify(old.sheets);const next=nextJuanSheets(old.sheets,2028,[],[]);assert.equal(JSON.stringify(old.sheets),seed);assert.equal(next[0].year,2028);
+ const withTransfer=structuredClone(old.sheets);withTransfer[0].payments.push({id:'payments:transfer:test',internalTransferId:'test',label:'Traspaso puntual',values:withTransfer[0].columns.map(c=>c.month===12&&c.kind==='forecast'?10000:null)});
+ const following=nextJuanSheets(withTransfer,2028,[],[]);assert(!following[0].payments.some(r=>r.internalTransferId),'One-off transfers are never copied as annual recurrences');assert(following[0].payments.every(r=>!r.cellDetails),'Prior year statement breakdowns cannot appear as new year actuals');
  const output=ts.transpileModule(fs.readFileSync('app/config/roleAccess.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText;
  const exports={};new Function('exports',output)(exports);
  assert.equal(exports.normalizeRole('direccion'),'direccion');assert.ok(exports.canAccessDashboardPath('direccion','/dashboard/direccion/tesoreria/prevision-liquidez/vista-juan'));assert.ok(exports.canAccessApiPath('direccion','/api/v1/direccion/prevision-liquidez/vista-juan','PATCH'));

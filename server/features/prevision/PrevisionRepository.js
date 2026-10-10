@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import {invoiceIdentifier,allocateOrderIdentifier} from '../identifiers/BusinessIdentifiers.js';
 import { getPgPool } from "../../database/pgClient.js";
 import { ensureOrderReceipt, lockIncome, incomeError } from './IncomeReconciliation.js';
 import { orderActivity } from '../comentario/AccountActivity.js';
@@ -40,7 +40,7 @@ export async function ensureAdditionalOrder(db, row, actorId='') {
   if(row.asociado_factura && row.numero_factura){
     const matches=(await db.query('SELECT * FROM administracion_facturas_clientes WHERE id_factura_cliente=$1 OR numero_factura=$1',[row.numero_factura])).rows;
     if(matches.length>1)incomeError('Varias facturas coinciden con '+row.numero_factura);
-    invoice=matches[0] || (await db.query("INSERT INTO administracion_facturas_clientes(id_factura_cliente,numero_factura,id_cuenta,estado) VALUES($1,$2,$3,'en proceso') RETURNING *",['fac_excel_'+row.numero_factura,row.numero_factura,row.id_cuenta || null])).rows[0];
+    invoice=matches[0] || (await db.query("INSERT INTO administracion_facturas_clientes(id_factura_cliente,numero_factura,id_cuenta,estado) VALUES($1,$2,$3,'en proceso') RETURNING *",[invoiceIdentifier(row.numero_factura),row.numero_factura,row.id_cuenta || null])).rows[0];
   }
   const next=invoice?Number((await db.query('SELECT COALESCE(max(numero_cobro),0)+1 n FROM tesoreria_ordenes WHERE id_factura=$1',[invoice.id_factura_cliente])).rows[0].n):1;
   await db.query(`INSERT INTO tesoreria_ordenes(id_orden,id_cuenta,id_factura,numero_cobro,etiqueta_cobro,fecha_teorica_cobro,forma_cobro,banco_cobro,base_imponible,cobro_total,datos_importacion)
@@ -54,7 +54,7 @@ export async function createIngresoAdicional(data = {}, actorId='') {
   const db=await pool.connect();
   try{
   await db.query('BEGIN');await lockIncome(db);
-  const id = `ing_ad_${randomUUID().replaceAll("-", "").slice(0, 20)}`;
+  const id = await allocateOrderIdentifier(db,{date:data.fecha_teorica});
   const { rows } = await db.query(`
     INSERT INTO tesoreria_ingresos_adicionales
       (id_ingreso_adicional,id_cuenta,cliente_manual,tipo_ingreso,asociado_factura,numero_factura,fecha_teorica,forma_cobro,banco,base_imponible)

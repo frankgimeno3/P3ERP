@@ -2,7 +2,8 @@ import env from '@next/env';
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {join,resolve} from 'node:path';
 import {getPgPool} from '../server/database/pgClient.js';
-import {lockIncome,incomeCents,receiptOrderId,ensureOrderReceipt,syncInvoiceCollection} from '../server/features/prevision/IncomeReconciliation.js';
+import {allocateOrderIdentifier} from '../server/features/identifiers/BusinessIdentifiers.js';
+import {lockIncome,incomeCents,ensureOrderReceipt,syncInvoiceCollection} from '../server/features/prevision/IncomeReconciliation.js';
 import {accountActivity,orderActivity} from '../server/features/comentario/AccountActivity.js';
 
 // Explicitly confirmed review: the PDF fixes the liability, historical collections survive.
@@ -44,7 +45,8 @@ try{
         await ensureOrderReceipt(db,order.id_orden);
         await orderActivity(db,order.id_orden,'','ha ajustado el saldo pendiente al total del PDF, conservando los cobros históricos.');
       }else if(w.due&&!w.pending.length){
-        const numero=Math.max(0,...w.orders.map(o=>Number(o.numero_cobro)))+1,id=receiptOrderId('saldo-pdf:'+invoice.id_factura_cliente);
+        const numero=Math.max(0,...w.orders.map(o=>Number(o.numero_cobro)))+1;
+        const id=await allocateOrderIdentifier(db,{contractId:w.orders[0]?.id_contrato||'',invoiceId:invoice.id_factura_cliente,number:numero,date:source.cobros.at(-1)?.fecha});
         const date=source.cobros.at(-1)?.fecha||null,total=w.due/100,base=Math.round(total*source.base/source.total*100)/100;
         const contract=w.orders[0]?.id_contrato||null,paymentId=contract?'cc_'+id:null;
         if(contract)await db.query(`INSERT INTO comercial_contratos_cobros(id_cobro_contrato,id_contrato,numero_cobro,importe_cobro,fecha_cobro,forma_cobro,banco_cobro,observaciones_cobro)

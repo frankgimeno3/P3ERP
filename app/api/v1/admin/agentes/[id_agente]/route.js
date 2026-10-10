@@ -1,3 +1,4 @@
+import {resolveIdentifier} from '@/server/features/identifiers/IdentifierAliases.js';
 import { NextResponse } from "next/server";
 import { createEndpoint } from "../../../../../../server/createEndpoint.js";
 import { deleteAgente, getAgenteByEmail, updateAgenteRoles } from "../../../../../../server/features/agente/AgenteRepository.js";
@@ -7,7 +8,7 @@ export const runtime = "nodejs";
 
 export async function PUT(request, { params }) {
   try {
-    const { id_agente: idAgente } = await params;
+    const idAgente=await resolveIdentifier('agente',(await params).id_agente);
     const body = await request.json();
 
     if (!idAgente) {
@@ -48,7 +49,7 @@ export const DELETE = createEndpoint(async (request, _body, { params }) => {
     return NextResponse.json({ message: "No tienes permisos para borrar usuarios" }, { status: 403 });
   }
 
-  const { id_agente: idAgente } = await params;
+  const idAgente=await resolveIdentifier('agente',(await params).id_agente);
   try {
     const deleted = await deleteAgente(idAgente, async (agente) => {
       if (agente.email_agente) await deleteCognitoUser(agente.email_agente);

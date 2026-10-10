@@ -1,0 +1,12 @@
+import env from '@next/env';import {getPgPool} from '../server/database/pgClient.js';import {insertRecurringCharge} from '../server/features/prevision/RecurringChargeRepository.js';
+env.loadEnvConfig(process.cwd());const pool=getPgPool(),db=await pool.connect();const apply=process.argv.includes('--apply');
+const parts=[['A-23',96.31],['B-05',54.90],['B-06',54.90],['B-15',96.31],['C-15',96.17],['C-16',96.17],['C-25',96.17],['C-47',20.22]];
+try{await db.query('BEGIN');await db.query("SELECT pg_advisory_xact_lock(hashtext('laboral:pagos'))");
+const supplier='prov_cce302a1999e40e6a8e4556712f70fac';
+const existing=(await db.query("SELECT * FROM tesoreria_cargos_recurrentes WHERE programacion::text LIKE '%casp-derrama-20261015%'")).rows;
+const body={tipo_cargo:'proveedor',id_proveedor:supplier,banco_pago:'Sabadell',tipo_programacion:'fechas',termina_planificacion:true,programacion:parts.map(([plaza,amount])=>({id_regla:`casp-derrama-20261015-${plaza}`,dia:15,mes:10,anio:2026,base_imponible:amount,total_iva:amount,tipo_iva:0,importe_iva:0,contains_iva:false,descripcion:`Casp 50–52 · derrama extraordinaria · plaza ${plaza}`,comentarios:'Adecuaciones y mantenimiento, vado permanente 2026 y proyecto eléctrico. PDF de comunidad; usuario confirma ocho plazas y total 611,15 EUR. B-05=2PP5 y B-06=2PP6. Cargo único: no repetir ni extender.'}))};
+if(parts.reduce((n,p)=>n+Math.round(p[1]*100),0)!==61115)throw Error('Total incorrecto');
+if(existing.length){await db.query('ROLLBACK');console.log(JSON.stringify({alreadyCreated:existing.map(x=>x.id_cargo_recurrente)}));}
+else if(!apply){await db.query('ROLLBACK');console.log(JSON.stringify({preview:body,total:611.15}));}
+else{if(!(await db.query('SELECT 1 FROM administracion_proveedores WHERE id_proveedor=$1',[supplier])).rowCount)throw Error('Proveedor no encontrado');const charge=await insertRecurringCharge(db,body);const dues=(await db.query('SELECT * FROM tesoreria_cargos_vencimientos WHERE id_cargo_recurrente=$1',[charge.id_cargo_recurrente])).rows;if(dues.length!==8||dues.reduce((n,x)=>n+Math.round(Number(x.importe)*100),0)!==61115)throw Error('Vencimientos incorrectos');await db.query('COMMIT');console.log(JSON.stringify({created:charge.id_cargo_recurrente,bank:charge.banco_pago,total:611.15,dues:dues.length,oneoff:charge.termina_planificacion}));}
+}catch(e){await db.query('ROLLBACK');throw e;}finally{db.release();await pool.end();}

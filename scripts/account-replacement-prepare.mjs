@@ -2,7 +2,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import assert from 'node:assert/strict';
-import {createHash} from 'node:crypto';
 const folder=path.resolve(process.env.USERPROFILE,'OneDrive/Escritorio/respaldo-cuentas-20260916');
 assert(!fs.existsSync(path.join(folder,'replacement-result.json')), 'Replacement already committed: preserve the imported data artifact');
 const read=n=>JSON.parse(fs.readFileSync(path.join(folder,`${n}.json`),'utf8'));
@@ -25,7 +24,8 @@ const agents=[],mapping={};
 for(const name of [...new Set(source.map(r=>r.AGENTE.trim()).filter(Boolean))].sort()){
   const existing=oldAgents.filter(a=>norm(a.nombre_completo_agente)===norm(name));
   assert(existing.length<=1,`Agente ambiguo: ${name}`);
-  const id=known[norm(name)]||existing[0]?.id_agente||`ag_import_${createHash('sha256').update(norm(name)).digest('hex').slice(0,20)}`;
+  const id=known[norm(name)]||existing[0]?.id_agente;
+  assert(id,`AGENTE sin identidad confirmada: ${name}. Clasificar el grupo CRM o crear la persona con el generador de agentes antes de importar.`);
   mapping[name]=id;
   if(!oldAgents.some(a=>a.id_agente===id))agents.push({...defaults('agentes_db'),id_agente:id,nombre_agente:name,nombre_completo_agente:name,rol_agente:'base',estado_agente:'activo',is_empleado_account:false});
 }

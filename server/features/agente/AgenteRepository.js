@@ -1,5 +1,5 @@
 import { getPgPool } from "../../database/pgClient.js";
-import { randomUUID } from "node:crypto";
+import {allocateAgentIdentifier} from '../identifiers/BusinessIdentifiers.js';
 
 function normalizeAgente(row) {
   return {
@@ -102,7 +102,7 @@ export async function createAgenteDraft(email) {
       await client.query("ROLLBACK");
       return null;
     }
-    const id = `ag_${randomUUID().replaceAll("-", "").slice(0, 20)}`;
+    const id = await allocateAgentIdentifier(client);
     const { rows } = await client.query(
       `INSERT INTO agentes_db (id_agente, email_agente, nombre_agente, apellidos_agente, nombre_completo_agente, rol_agente, estado_agente)
        VALUES ($1, lower(btrim($2)), '', '', '', 'base', 'borrador') RETURNING *`,

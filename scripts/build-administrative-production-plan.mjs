@@ -64,15 +64,17 @@ for(const code of new Set([...Object.keys(adminGroups),...Object.keys(production
  if(adjustment)entry.datos_importacion.ajuste_autorizado={...adjustment,base_calculada:base,bases_originales:bases};
  contracts.set(code,entry);tables.comercial_contratos.push(entry);
 }
-const orderGroups=group(admin,r=>text(r.ORDEN)),orderNumbers=new Map();
+const orderTotals=group(admin,r=>contractCode(r['CONTRATO ASOCIADO'])),orderNumbers=new Map();
 for(const row of admin){
  const code=contractCode(row['CONTRATO ASOCIADO']),contract=contracts.get(code),acc=account(row);
- const original=text(row.ORDEN),orderId=orderGroups[original].length>1||!contractCode(original.split('-')[0])?`${original||'SIN-ORDEN'}~fila${row.sourceRow}`:original;
+ const original=text(row.ORDEN);
  const total=money(row['IMPORTE CON IVA']),exchange=contract?.es_intercambio===true;
  const rate=contract?.datos_importacion.iva_porcentaje;
  const rawBase=money(row['IMPORTE TOTAL BI CONTRATO']);
  const base=exchange?0:rate!=null?money(total/(1+rate/100)):rawBase;
  const number=(orderNumbers.get(code||'')||0)+1;orderNumbers.set(code||'',number);
+ const orderId=code?`${code}-${number}/${orderTotals[code].length}`:original;
+ if(!/^[CO]\d{2}\.\d{3}\.\d{3}-\d+\/\d+$/.test(orderId))throw Error(`No se genera un ID artificial para la fila ${row.sourceRow}: resuelve primero la orden sin contrato.`);
  const invoice=/^(?:\d+|P\d+)$/.test(text(row.FACTURA))?text(row.FACTURA):null;
  const method=exchange?'intercambio':total===0?'sin cobro monetario':text(row['FORMA DE COBRO']).startsWith('TRANSF')?'transferencia':text(row['FORMA DE COBRO']).toLowerCase();
  const bank=/SAN/.test(text(row['FORMA DE COBRO']))?'Santander':/SAB/.test(text(row['FORMA DE COBRO']))?'Sabadell':null;
@@ -100,9 +102,13 @@ for(const [invoice,orders] of Object.entries(group(tables.tesoreria_ordenes.filt
  tables.administracion_lineas_factura.push({id_linea_factura:id('lf_excel',invoice),id_factura_cliente:invoice,posicion:1,concepto:'Importe global según control administrativo',descripcion:'Sin desglose de precios unitarios. Contratos: '+(cids.join(', ')||'sin contrato registrado'),cantidad:1,precio_unitario:0,precio_no_desglosado:true,base_imponible:base,importe_total:total,iva_porcentaje:rate,personalizada:true});
 }
 for(const [remesa,receipts] of Object.entries(group(tables.tesoreria_recibos_importados.filter(r=>r.id_remesa),r=>r.id_remesa)))tables.tesoreria_remesas.push({id_remesa:remesa,importe_declarado:money(receipts.reduce((s,r)=>s+r.importe_recibo,0))});
-const contentIds=group(production,r=>text(r.IDENTIFICADOR));
+const usedContentIds=new Set();
+let nextContentNumber=Math.max(0,...production.map(r=>Number(text(r.IDENTIFICADOR).match(/^hp_26_(\d{3}\.\d{3})$/)?.[1].replace('.',''))||0));
 for(const row of production){
- const original=text(row.IDENTIFICADOR),contentId=contentIds[original].length>1?`${original}~fila${row.sourceRow}`:original;
+ const original=text(row.IDENTIFICADOR);
+ let contentId=original;
+ if(usedContentIds.has(contentId)){const serial=String(++nextContentNumber).padStart(6,'0');contentId=`hp_26_${serial.slice(0,3)}.${serial.slice(3)}`;}
+ usedContentIds.add(contentId);
  const acc=account(row),code=contractCode(row.CONTRATO),contract=contracts.get(code),lineId=contract?id('lc_excel',row.sheet+':'+row.sourceRow):null;
  const publication=text(row['PUBLICACION / Nº WEB']||row['PUBLICACION / Nº RICARDO']);
  const content={id_contenido:contentId,id_cuenta:acc.id_cuenta,id_agente:agent[text(row.AGENTE)]||null,id_contrato:code,id_linea_contrato:lineId,hoja_prod:true,ano_publicacion:row.sheet==='Anteriores'?'Anteriores':'2026',codigo_crm_hoja:text(row['CODIGO CRM']),cliente_hoja:acc.nombre_empresa,publicacion_num_web:publication,tipo_revista_servicio:text(row['TIPO REVISTA / SERVICIO']),especificaciones_contenido:text(row['CONTENIDO/-']),anuncio_hoja:text(row.ANUNCIO),articulo_hoja:text(row.ARTICULO),estado_contenido:text(row.ESTADO),factura_hoja:text(row.FACTURA),pagina_hoja:text(row.PAGINA),caduca_web:date(row['CADUCA (web)']||row.CADUCA)||text(row['CADUCA (web)']||row.CADUCA),comentarios_hoja:text(row.Comentarios),nombre_contenido:[publication,row['CONTENIDO/-']].filter(Boolean).join(' · '),datos_importacion:{archivo:'Hoja de produccion.xlsx',hoja:row.sheet,fila:row.sourceRow,original:row}};

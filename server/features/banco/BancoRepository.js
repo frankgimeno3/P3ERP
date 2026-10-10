@@ -1,5 +1,6 @@
 import { getPgPool } from "../../database/pgClient.js";
 import { supplierTransaction, ProveedorError } from '../proveedor/SupplierAdminRepository.js';
+import {readInternalTransfers} from './InternalTransfers.js';
 
 function numberOrZero(value) {
   return value === null || value === undefined ? 0 : Number(value);
@@ -100,7 +101,8 @@ export async function getLineasBanco() {
     ORDER BY lb.id_linea_banco DESC
   `);
 
-  return rows.map(normalizeLineaBanco);
+  const transfers=await readInternalTransfers(pool);
+  return rows.map(row=>({...normalizeLineaBanco(row),traspaso_propio:transfers.find(t=>[t.id_linea_cargo,t.id_linea_abono].includes(row.id_linea_banco))||null}));
 }
 
 export async function getLineaBancoById(idLineaBanco) {
@@ -115,7 +117,8 @@ export async function getLineaBancoById(idLineaBanco) {
     LEFT JOIN agentes_db a ON a.id_agente = lb.id_agente
     WHERE lb.id_linea_banco = $1
   `, [idLineaBanco]);
-  return rows[0] ? normalizeLineaBanco(rows[0]) : null;
+  if(!rows[0])return null;
+  return {...normalizeLineaBanco(rows[0]),traspaso_propio:(await readInternalTransfers(pool)).find(t=>[t.id_linea_cargo,t.id_linea_abono].includes(idLineaBanco))||null};
 }
 
 export async function createLineasBanco(lineas = []) {
@@ -216,6 +219,7 @@ export async function updateLineaBanco(idLineaBanco, data = {}) {
   await pool.query("SELECT pg_advisory_xact_lock(hashtext('laboral:pagos'))");
   const before = (await pool.query('SELECT * FROM tesoreria_movimientos_bancarios WHERE id_linea_banco=$1 FOR UPDATE', [idLineaBanco])).rows[0];
   if (!before) return null;
+  if(['estado_revision','duplicado_descartado','id_orden','id_cuenta','id_proveedor','id_agente','id_pago','id_cargo_recurrente','importe','banco','fecha_operativa','fecha_valor'].some(key=>data[key]!==undefined&&String(data[key]??'')!==String(before[key]??''))&&(await readInternalTransfers(pool)).some(t=>[t.id_linea_cargo,t.id_linea_abono].includes(idLineaBanco)))throw new ProveedorError('Gestiona el movimiento y su contrapartida desde Traspaso propio.',409);
   if(['estado_revision','id_orden','id_cuenta','id_proveedor','id_agente','id_pago','id_cargo_recurrente'].some(key=>data[key]!==undefined&&String(data[key]??'')!==String(before[key]??''))&&(await pool.query('SELECT 1 FROM tesoreria_tarjetas_movimientos WHERE id_linea_banco=$1',[idLineaBanco])).rowCount)throw new ProveedorError('Utiliza la revisión bancaria para reabrir la liquidación de tarjeta.',409);
   if(data.id_cargo_recurrente&&(await pool.query('SELECT 1 FROM tesoreria_cargos_recurrentes WHERE id_cargo_recurrente=$1 AND id_tarjeta IS NOT NULL',[data.id_cargo_recurrente])).rowCount)throw new ProveedorError('Este cargo se paga con tarjeta. Usa Liquidación tarjeta.',409);
   if (Number(before.importe) > 0 && ['estado_revision','id_orden','id_cuenta','id_proveedor','id_agente','id_pago','id_cargo_recurrente'].some(key=>data[key] !== undefined && String(data[key] ?? '') !== String(before[key] ?? ''))) {

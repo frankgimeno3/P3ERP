@@ -1,3 +1,4 @@
+import {resolveIdentifier} from '../identifiers/IdentifierAliases.js';
 import { syncInvoiceOrders } from './InvoiceOrders.js';
 import {invoiceRegionalTotals} from './InvoiceCustomerMatching.js';
 import {applyCreditNote} from './CreditNotes.js';
@@ -167,6 +168,7 @@ export async function getCustomerInvoices(filters = {}) {
 }
 
 export async function getCustomerInvoice(idFactura) {
+  idFactura=await resolveIdentifier('factura',idFactura);
   const pool = getPgPool();
   await ensureSchema(pool);
   const { rows } = await pool.query(`
@@ -601,6 +603,7 @@ export async function updateAdministrativeOrder(idOrden, data = {}, actorId = ""
     const row = (await db.query('SELECT o.*,f.ya_contabilizada FROM tesoreria_ordenes o LEFT JOIN administracion_facturas_clientes f ON f.id_factura_cliente=o.id_factura WHERE o.id_orden=$1 FOR UPDATE OF o',[idOrden])).rows[0];
     if (!row) { await db.query('COMMIT'); return null; }
     if(row.cancelada)throw new Error('La orden está cancelada y se conserva solo para consulta.');
+    if(row.datos_importacion?.cierre_cobro?.activo)throw new Error('Reabre la gestión del cobro antes de editar la orden.');
     const locked=Boolean(row.ya_contabilizada);
     if(data.cobro_total!==undefined && (!Number.isFinite(Number(data.cobro_total)) || Number(data.cobro_total)<0))throw new Error('Indica un importe válido, igual o superior a cero.');
     if(data.con_iva!==undefined && typeof data.con_iva!=='boolean')throw new Error('Indica si el importe incluye IVA.');

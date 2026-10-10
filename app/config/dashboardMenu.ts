@@ -50,7 +50,11 @@ export const dashboardMenu: DashboardMenuModule[] = [
     label: "Administración",
     children: [
       page("Ferias", "/dashboard/administracion/ferias"),
-      page("Tarjetas", "/dashboard/administracion/tarjetas"),
+      group("liquidaciones", "Liquidaciones", [
+        page("Tarjetas", "/dashboard/administracion/liquidaciones/tarjetas"),
+        page("Tickets", "/dashboard/administracion/liquidaciones/tickets"),
+        page("Suscripciones", "/dashboard/administracion/liquidaciones/suscripciones"),
+      ]),
       group("clientes", "Clientes", [
         page("Control administrativo", "/dashboard/administracion/control-administrativo"),
         page("Facturas clientes", "/dashboard/administracion/facturas-clientes"),
@@ -59,7 +63,6 @@ export const dashboardMenu: DashboardMenuModule[] = [
       ]),
       group("proveedores", "Proveedores", [
         page("Facturas proveedores", "/dashboard/administracion/facturas-proveedores"),
-        page("Tickets", "/dashboard/administracion/proveedores/tickets"),
         page("Proveedores", "/dashboard/administracion/proveedores"),
       ]),
     ],

@@ -1,3 +1,5 @@
+import {invoiceIdentifier} from '../identifiers/BusinessIdentifiers.js';
+import {resolveIdentifier} from '../identifiers/IdentifierAliases.js';
 import { getPgPool } from '../../database/pgClient.js';
 import { orderActivity } from '../comentario/AccountActivity.js';
 import { ensureOrderReceipt, lockIncome, syncOrderCollections, incomeError } from '../prevision/IncomeReconciliation.js';
@@ -8,7 +10,10 @@ export async function importAdministrativeOrders(rows, actorId='', pool=getPgPoo
     await db.query('BEGIN');await db.query("SET LOCAL lock_timeout='3s'");await lockIncome(db);
     for(const incoming of [...rows].sort((a,b)=>a.id_orden.localeCompare(b.id_orden))){
       const row={...incoming};
+      row.id_orden=await resolveIdentifier('orden',row.id_orden,db);
       const before=(await db.query('SELECT * FROM tesoreria_ordenes WHERE id_orden=$1 FOR UPDATE',[row.id_orden])).rows[0];
+      if(!before&&!/^[CO]\d{2}\.\d{3}\.\d{3}-\d+\/\d+$/.test(row.id_orden))incomeError('La orden no sigue el formato estándar. Resuelve su código antes de importarla.');
+      if(row.id_contrato&&row.id_orden.split('-')[0]!==row.id_contrato)incomeError('El código de orden no corresponde al contrato indicado.');
       if(before?.cancelada)incomeError('La orden '+row.id_orden+' está cancelada y no se puede sobrescribir.');
       if(!row.id_cuenta && row.datos_importacion?.cliente){
         const matches=(await db.query('SELECT id_cuenta FROM comercial_cuentas WHERE id_cuenta=$1 OR lower(btrim(nombre_empresa))=lower($1) OR lower(btrim(nombre_fiscal))=lower($1)',[row.datos_importacion.cliente])).rows;
@@ -19,7 +24,7 @@ export async function importAdministrativeOrders(rows, actorId='', pool=getPgPoo
         const found=(await db.query('SELECT * FROM administracion_facturas_clientes WHERE id_factura_cliente=$1 OR numero_factura=$1',[row.id_factura])).rows;
         if(found.length>1)incomeError('Varias facturas coinciden con '+row.id_factura+'.');
         if(found.length)row.id_factura=found[0].id_factura_cliente;
-        else row.id_factura=(await db.query("INSERT INTO administracion_facturas_clientes(id_factura_cliente,numero_factura,id_cuenta,estado) VALUES($1,$2,$3,'en proceso') RETURNING id_factura_cliente",['fac_excel_'+row.id_factura,row.id_factura,row.id_cuenta || before?.id_cuenta || null])).rows[0].id_factura_cliente;
+        else row.id_factura=(await db.query("INSERT INTO administracion_facturas_clientes(id_factura_cliente,numero_factura,id_cuenta,estado) VALUES($1,$2,$3,'en proceso') RETURNING id_factura_cliente",[invoiceIdentifier(row.id_factura),row.id_factura,row.id_cuenta || before?.id_cuenta || null])).rows[0].id_factura_cliente;
       }
       row.datos_importacion={...(before?.datos_importacion || {}),...row.datos_importacion};
       const changed=Object.keys(row).filter(k=>k!=='id_orden' && (k==='datos_importacion'?JSON.stringify(row[k])!==JSON.stringify(before?.[k] || {}):String(row[k] ?? '')!==String(before?.[k] ?? '')));

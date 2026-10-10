@@ -4,6 +4,8 @@ import { updateAdministrativeOrder } from "../../../../../../server/features/fac
 import {requestActor} from "../../../../../../server/features/comentario/AccountActivity.js";
 import {previewOrderCancellation,cancelAdministrativeOrder} from "../../../../../../server/features/orden/OrderCancellation.js";
 
+import { changeOrderCollectionClosure } from '../../../../../../server/features/orden/OrderCollectionClosure.js';
+
 export const runtime = "nodejs";
 
 export async function GET(request) {
@@ -44,6 +46,10 @@ export async function POST(request) {
   try {
     const id=new URL(request.url).searchParams.get('id');
     const data=await request.json();
+    if (id && ['cerrar_cobro','reabrir_cobro'].includes(data.action)) {
+      await changeOrderCollectionClosure(id, data, requestActor(request));
+      return NextResponse.json(await getOrdenAdministrativaById(id));
+    }
     if(!id || data.action!=='cancelar')return NextResponse.json({message:'Solicitud de cancelación no válida'},{status:400});
     const result=await cancelAdministrativeOrder(id,data.version,requestActor(request));
     return result?NextResponse.json(await getOrdenAdministrativaById(id)):NextResponse.json({message:'Orden no encontrada'},{status:404});

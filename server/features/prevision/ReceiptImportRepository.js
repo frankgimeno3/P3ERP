@@ -1,6 +1,7 @@
+import {invoiceIdentifier,allocateOrderIdentifier} from '../identifiers/BusinessIdentifiers.js';
 import { getPgPool } from '../../database/pgClient.js';
 import { orderActivity } from '../comentario/AccountActivity.js';
-import { incomeError, lockIncome, receiptOrderId, syncOrderCollections } from './IncomeReconciliation.js';
+import { incomeError, lockIncome, syncOrderCollections } from './IncomeReconciliation.js';
 
 export async function getImportedReceipts() {
   return (await getPgPool().query("SELECT r.*,m.importe_total,COALESCE(m.remesa_en_carpeta,r.remesa_en_carpeta) remesa_en_carpeta FROM tesoreria_recibos_importados r LEFT JOIN prevision_remesas_resumen m ON m.id_remesa=r.id_remesa ORDER BY r.numero_factura,r.numero_cobro")).rows;
@@ -9,7 +10,7 @@ export async function getRemesas() {
   return (await getPgPool().query('SELECT * FROM prevision_remesas_resumen ORDER BY created_at DESC,id_remesa')).rows;
 }
 
-export async function saveReceipt(db, row, actorId = '') {
+export async function saveReceipt(db, row, actorId = '', totalPayments = Number(row.numero_cobro)) {
   const existingReceipts = (await db.query('SELECT * FROM tesoreria_recibos_importados WHERE numero_recibo=$1 OR (numero_factura=$2 AND numero_cobro=$3) FOR UPDATE', [row.numero_recibo,row.numero_factura,row.numero_cobro])).rows;
   if(existingReceipts.length>1)incomeError('Hay varios recibos para la factura '+row.numero_factura+' y el cobro '+row.numero_cobro+'. Resuelve la coincidencia antes de importar.');
   const previous = existingReceipts[0];
@@ -17,7 +18,7 @@ export async function saveReceipt(db, row, actorId = '') {
   if (invoice.length > 1) incomeError('Hay varias facturas con número ' + row.numero_factura + '. Resuelve la coincidencia antes de importar.');
   const accounts = row.cliente ? (await db.query("SELECT id_cuenta FROM comercial_cuentas WHERE id_cuenta=$1 OR lower(btrim(nombre_empresa))=lower($1) OR lower(btrim(nombre_fiscal))=lower($1)", [row.cliente])).rows : [];
   const account = accounts.length === 1 ? accounts[0].id_cuenta : null;
-  if (!invoice.length) invoice = (await db.query("INSERT INTO administracion_facturas_clientes(id_factura_cliente,numero_factura,id_cuenta,estado) VALUES($1,$2,$3,'en proceso') RETURNING *", ['fac_excel_' + row.numero_factura,row.numero_factura,account])).rows;
+  if (!invoice.length) invoice = (await db.query("INSERT INTO administracion_facturas_clientes(id_factura_cliente,numero_factura,id_cuenta,estado) VALUES($1,$2,$3,'en proceso') RETURNING *", [invoiceIdentifier(row.numero_factura),row.numero_factura,account])).rows;
   const fact = invoice[0];
   const candidates = previous?.id_orden ? (await db.query('SELECT * FROM tesoreria_ordenes WHERE id_orden=$1 FOR UPDATE', [previous.id_orden])).rows
     : (await db.query('SELECT * FROM tesoreria_ordenes WHERE (id_factura=$1 OR id_factura=$2) AND numero_cobro=$3 ORDER BY id_orden FOR UPDATE', [fact.id_factura_cliente,row.numero_factura,row.numero_cobro])).rows;
@@ -25,8 +26,8 @@ export async function saveReceipt(db, row, actorId = '') {
   let order = candidates[0];
   if(order?.cancelada)incomeError('La orden '+order.id_orden+' está cancelada.');
   if (order && order.forma_cobro && !/recibo/i.test(order.forma_cobro)) incomeError('La orden ' + order.id_orden + ' no es de recibo. Corrige su forma de cobro antes de importar.');
-  if (!order) order = (await db.query("INSERT INTO tesoreria_ordenes(id_orden,id_factura,numero_cobro,id_cuenta,forma_cobro,cobro_total,fecha_teorica_cobro,etiqueta_cobro) VALUES($1,$2,$3,$4,'recibo',$5,$6,$7) RETURNING *",
-    [receiptOrderId(row.numero_recibo),fact.id_factura_cliente,row.numero_cobro,fact.id_cuenta || account,row.importe_recibo,row.fecha_teorica,'Recibo ' + row.numero_recibo])).rows[0];
+  if (!order) order = (await db.query("INSERT INTO tesoreria_ordenes(id_orden,id_factura,numero_cobro,id_cuenta,forma_cobro,cobro_total,fecha_teorica_cobro,etiqueta_cobro,id_contrato) VALUES($1,$2,$3,$4,'recibo',$5,$6,$7,$8) RETURNING *",
+    [await allocateOrderIdentifier(db,{contractId:fact.id_contrato||'',invoiceId:fact.id_factura_cliente,date:row.fecha_teorica,number:Number(row.numero_cobro),total:totalPayments}),fact.id_factura_cliente,row.numero_cobro,fact.id_cuenta || account,row.importe_recibo,row.fecha_teorica,'Recibo ' + row.numero_recibo,fact.id_contrato||null])).rows[0];
   const linked = previous || (await db.query('SELECT * FROM tesoreria_recibos_importados WHERE id_orden=$1 FOR UPDATE', [order.id_orden])).rows[0];
   const remesaId = row.numero_remesa || linked?.id_remesa || null;
   if (linked?.id_remesa && remesaId !== linked.id_remesa && (await db.query('SELECT 1 FROM tesoreria_aplicaciones_cobro a JOIN tesoreria_movimientos_bancarios b USING(id_linea_banco) WHERE a.id_orden=$1 AND b.estado_revision LIMIT 1', [order.id_orden])).rowCount) incomeError('Desmarca primero la revisión bancaria para cambiar la remesa del recibo ' + row.numero_recibo + '.');
@@ -75,7 +76,7 @@ export async function importReceipts(rows, pool = getPgPool(), actorId = '') {
     await db.query('BEGIN');
     await db.query("SET LOCAL lock_timeout='3s'");
     await lockIncome(db);
-    for (const row of [...rows].sort((a,b)=>a.numero_recibo.localeCompare(b.numero_recibo))) await saveReceipt(db,row,actorId);
+    for (const row of [...rows].sort((a,b)=>a.numero_recibo.localeCompare(b.numero_recibo))) await saveReceipt(db,row,actorId,Math.max(...rows.filter(r=>r.numero_factura===row.numero_factura).map(r=>Number(r.numero_cobro))));
     await db.query('COMMIT');
     return { imported: rows.length };
   } catch (error) { await db.query('ROLLBACK'); throw error; }

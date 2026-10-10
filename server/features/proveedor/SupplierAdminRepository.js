@@ -1,3 +1,4 @@
+import {resolveIdentifier} from '../identifiers/IdentifierAliases.js';
 import Joi from 'joi';
 import { randomUUID } from 'node:crypto';
 import { getPgPool } from '../../database/pgClient.js';
@@ -38,6 +39,7 @@ export function supplierData(body, creating = false, canonicalize = true) {
   return value;
 }
 export async function findSupplier(id, db = getPgPool()) {
+  id=await resolveIdentifier('proveedor',id,db);
   const clean = String(id || '').replace(/,+$/, '');
   const { rows } = await db.query(`SELECT * FROM administracion_proveedores WHERE id_proveedor=$1 UNION ALL SELECT p.* FROM administracion_proveedores p JOIN administracion_historial_fusiones_proveedores u ON p.id_proveedor=u.id_proveedor WHERE u.id_anterior=$1 LIMIT 1`, [clean]);
   if (!rows[0]) throw new ProveedorError('Proveedor no encontrado.',404);

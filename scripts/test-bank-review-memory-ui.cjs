@@ -1,11 +1,14 @@
-/* eslint-disable @typescript-eslint/no-require-imports -- isolated TSX harness */
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),Module=require('node:module'),ts=require('typescript');
 const {JSDOM}=require(process.env.P3_SELECTOR_TEST_MODULES ? path.join(process.env.P3_SELECTOR_TEST_MODULES,'jsdom') : 'jsdom');
 const dom=new JSDOM('<div id="root"></div>',{url:'http://localhost'});
 Object.assign(global,{window:dom.window,document:dom.window.document,navigator:dom.window.navigator,HTMLElement:dom.window.HTMLElement,IS_REACT_ACT_ENVIRONMENT:true});
 dom.window.HTMLElement.prototype.scrollIntoView=function(){};
 const React=require('react'),{createRoot}=require('react-dom/client'),{act}=React;
-function load(file){const filename=path.resolve(file),m=new Module(filename,module);m.filename=filename;m.paths=module.paths;const original=m.require.bind(m);m.require=id=>id==='@/app/components/SearchableSelect'?load('app/components/SearchableSelect.tsx'):id.startsWith('./')?load(path.join(path.dirname(file),id+'.tsx')):original(id);m._compile(ts.transpileModule(fs.readFileSync(filename,'utf8'),{compilerOptions:{jsx:ts.JsxEmit.ReactJSX,module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true}}).outputText,filename);return m.exports;}
+function load(file) {
+ const filename=path.resolve(file),m=new Module(filename,module);m.filename=filename;m.paths=module.paths;const original=m.require.bind(m);
+ m.require=id=>{if(id.startsWith('@/')||id.startsWith('./')||id.startsWith('../')){const base=id.startsWith('@/')?id.slice(2):path.resolve(path.dirname(filename),id);return load(['','.tsx','.ts','.js'].map(ext=>base+ext).find(candidate=>fs.existsSync(candidate)&&fs.statSync(candidate).isFile()));}return original(id);};
+ m._compile(ts.transpileModule(fs.readFileSync(filename,'utf8'),{compilerOptions:{jsx:ts.JsxEmit.ReactJSX,module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true}}).outputText,filename);return m.exports;
+}
 const Wizard=load('app/dashboard/direccion/tesoreria/BankReviewWizard.tsx').default;
 const Insights=load('app/dashboard/direccion/tesoreria/BankReviewInsights.tsx').default;
 const lines=[{id_linea_banco:'first',importe:-50,fecha_valor:'02/04/2026',id_cargo_recurrente:'1',id_proveedor:'supplier',concepto:'Recibo comunidad local 154'}];
@@ -78,9 +81,14 @@ function Harness({selected=lines}){const [value,setValue]=React.useState({alloca
   assert(document.querySelector('[aria-label="Importes del movimiento supplier-payment"]'));
   await selectValue(field('Cargo recurrente'),'new');
   assert.equal(field('Banco de pago').value,'Santander');
-  assert.equal(field('Total IVA').value,'121.00');assert.equal(field('Base imponible').value,'100.00');
+  assert.equal(field('Total IVA').value,'121.00');
+  const vatFields=[...document.querySelectorAll('fieldset')].find(n=>n.querySelector('[role=combobox]'));
+  await act(async()=>vatFields.querySelector('[role=combobox]').click());
+  await act(async()=>[...document.querySelectorAll('[role=option]')].at(1).click());
+  await write(vatFields.querySelector('input[inputmode=decimal]'),'21');
+  assert(vatFields.textContent.includes('100,00'));
   assert.equal(field('Descripción').value,'Factura mensual');
-  await write(field('Total IVA'),'242');assert.equal(field('Base imponible').value,'200.00');
+  await write(field('Total IVA'),'242');assert(vatFields.textContent.includes('200,00'));
   await write(field('Descripción'),'Descripción editada');
   await write(field('Comentarios del movimiento'),'Comentario editado');
   await selectValue(field('Banco de pago'),'Sabadell');
@@ -138,7 +146,10 @@ function Harness({selected=lines}){const [value,setValue]=React.useState({alloca
 
   await renderWizard('charge-phases',supplierLines,{mode:'charge'});
   assert.equal(phaseNames().length,2);assert(phaseNames()[0].startsWith('Fase 1:'));
-  await selectValue(field('Cargo recurrente'),'new');await click('Continuar');
+  await selectValue(field('Cargo recurrente'),'new');
+  await act(async()=>document.querySelector('fieldset [role=combobox]').click());
+  await act(async()=>document.querySelector('[role=option]').click());
+  await click('Continuar');
   assert.equal(document.querySelector('h2').textContent,'Confirmar asociación');
   await click('Confirmar');assert.equal(saved.mode,'charge');
 

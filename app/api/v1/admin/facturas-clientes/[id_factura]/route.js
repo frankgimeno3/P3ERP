@@ -1,10 +1,11 @@
+import {resolveIdentifier} from '@/server/features/identifiers/IdentifierAliases.js';
 import { requestActor } from "../../../../../../server/features/comentario/AccountActivity.js";
 import { NextResponse } from "next/server";
 import { getCustomerInvoice, updateCustomerInvoice } from "../../../../../../server/features/factura/FacturaClienteRepository.js";
 import {deleteDraftInvoice} from "../../../../../../server/features/factura/DraftInvoiceDeletion.js";
 
 export const runtime = "nodejs";
-const getId = async (params) => (await params)?.id_factura;
+const getId = async (params) => resolveIdentifier('factura',(await params)?.id_factura);
 export async function GET(_request, { params }) {
   try {
     const data = await getCustomerInvoice(await getId(params));

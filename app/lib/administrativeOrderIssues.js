@@ -4,7 +4,7 @@ export const administrativeIssueTabs = [
 ];
 const missing=value=>!String(value??'').trim()||['-','no procede','sin determinar'].includes(String(value).trim().toLowerCase());
 export function administrativeOrderIssues(order){
-  if(order.cancelada)return [];
+  if(order.cancelada || order.datos_importacion?.cierre_cobro?.activo)return [];
   const issues=[];
   const monetary=!order.datos_importacion?.sin_cobro_monetario&&!['intercambio','gratuito'].includes(String(order.forma_cobro||'').toLowerCase());
   if(missing(order.id_contrato))issues.push('contrato');

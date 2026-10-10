@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {parseCsvRecords} from '../app/lib/parseCsv.js';
+import {commentDate,prepareVtigerComments} from '../server/features/comentario/VtigerCommentImport.js';
+assert.deepEqual(parseCsvRecords('a,b\r\n"multi\nline","say ""yes"""'),[['a','b'],['multi\nline','say "yes"']]);
+assert.throws(()=>parseCsvRecords('a\n"unfinished'),/incompleto/);
+assert.equal(commentDate('25-02-2026 09:29 AM'),'2026-02-25T08:29:00.000Z');
+assert.equal(commentDate('09-10-2026 12:01 PM'),'2026-10-09T10:01:00.000Z');
+assert.throws(()=>commentDate('31-02-2026 09:00 AM'),/imposible/);
+const csv='Comentarios Comentario,Comentarios Related To,Comentarios Autor,Comentarios Fecha de Creación,Comentarios Acción,Cuentas Acción\n"Texto, literal",Empresa,Autor a@b.es,09-10-2026 10:00 AM,123,x';
+const accounts=[{id_cuenta:'a',nombre_empresa:'Empresa'}];
+const p=prepareVtigerComments(csv,accounts,[{id_agente:'author',email_agente:'a@b.es'}]);
+assert.equal(p.comments[0].id_original_autor,'author');assert.equal(p.comments[0].contenido_comentario,'Texto, literal');
+assert.equal(prepareVtigerComments(csv,accounts).comments[0].id_comentario,p.comments[0].id_comentario);
+assert.equal(prepareVtigerComments(csv,[]).unresolved.length,1);
+assert.equal(prepareVtigerComments(csv,[...accounts,{id_cuenta:'b',nombre_empresa:'Empresa'}]).unresolved.length,1);
+console.log('PASS: strict multiline CSV, source IDs, Madrid dates, original text/authors and ambiguous account detection.');

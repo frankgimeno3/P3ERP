@@ -1,3 +1,4 @@
+import {resolveIdentifier} from '@/server/features/identifiers/IdentifierAliases.js';
 import { NextResponse } from "next/server";
 import { getCuentaEventos } from "../../../../../../../server/features/registroEventos/RegistroEventosRepository.js";
 
@@ -6,7 +7,7 @@ export const runtime = "nodejs";
 export async function GET(_request, context) {
   try {
     const params = await context.params;
-    const idCuenta = params?.id_cuenta;
+    const idCuenta = await resolveIdentifier('cuenta',params?.id_cuenta);
     if (!idCuenta) {
       return NextResponse.json({ message: "id_cuenta es obligatorio" }, { status: 400 });
     }

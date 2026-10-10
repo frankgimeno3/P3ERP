@@ -5,4 +5,8 @@ const charges=[{id_tarjeta:'card',banco_pago:'Sabadell',vencimientos:[{fecha:'20
 let sheets=make();projectJuanCardBudgets(sheets,charges);assert.deepEqual(sheets[0].payments.map(r=>r.values[0]),[13000,137000]);
 sheets=make();sheets[0].payments[1].budgetIsEnvelope=false;sheets[0].payments[1].values[0]=20000;projectJuanCardBudgets(sheets,charges);assert.deepEqual(sheets[0].payments.map(r=>r.values[0]),[13000,20000]);
 sheets=make();sheets[0].closedMonths=[10];projectJuanCardBudgets(sheets,charges);assert.deepEqual(sheets[0].payments.map(r=>r.values[0]),[0,150000]);
-console.log('PASS: monthly/annual subscriptions deducted from initial card envelope once; explicitly edited variable adds separately; closed months retain their snapshot.');
+sheets=make();projectJuanCardBudgets(sheets,charges,[{bank:'Sabadell',cardId:'card',cardName:'Visa',fecha:'2026-10-05',cierre:'2026-09-30',items:[{tipo:'ticket',id:'t1',id_vencimiento:'due1',descripcion:'Software con ticket',fecha:'2026-09-15',importe:30},{tipo:'ticket',id:'t2',descripcion:'Compra',fecha:'2026-09-20',importe:50},{tipo:'otro',id:'o1',descripcion:'Otro',fecha:'2026-09-29',importe:10}]}]);
+assert.deepEqual(sheets[0].payments.map(r=>r.values[0]),[3000,5000,142000]);
+assert.equal(sheets[0].payments[0].cellDetails[0][0].date,'2026-10-05');assert.equal(sheets[0].payments[0].cellDetails[0].length,1);
+assert.equal(sheets[0].payments[2].cellDetails[0].at(-1).amount,141000);
+console.log('PASS: subscriptions counted once with linked tickets; categories use bank charge month and keep detailed breakdown; existing Juan budget reserve and closed snapshots preserved.');

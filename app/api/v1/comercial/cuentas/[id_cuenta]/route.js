@@ -1,3 +1,4 @@
+import {resolveIdentifier} from '@/server/features/identifiers/IdentifierAliases.js';
 import { NextResponse } from "next/server";
 import { deleteCuenta, getCuentaById, updateCuenta } from "../../../../../../server/features/cuenta/CuentaRepository.js";
 
@@ -5,7 +6,7 @@ export const runtime = "nodejs";
 
 async function getIdCuenta(context) {
   const params = await context.params;
-  return params?.id_cuenta;
+  return resolveIdentifier('cuenta',params?.id_cuenta);
 }
 
 export async function GET(_request, context) {

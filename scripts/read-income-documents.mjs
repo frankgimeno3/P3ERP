@@ -1,0 +1,3 @@
+import env from '@next/env';import fs from 'node:fs/promises';import {getPgPool} from '../server/database/pgClient.js';
+env.loadEnvConfig(process.cwd());const pool=getPgPool();
+try{for(const table of ['administracion_facturas_clientes','tesoreria_ordenes']){const rows=(await pool.query(`SELECT * FROM ${table} WHERE ${table==='tesoreria_ordenes'?"id_orden IN ('C26.000.096-1/1','C26.000.073-1/1','C26.000.009-8/8','C25.000.162-1/1')":"numero_factura IN ('526096','526138','526114','626001','525237','526102')"}`)).rows;console.log(JSON.stringify({table,rows}));}console.log(JSON.stringify({tables:(await pool.query("SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_name LIKE '%document%'")).rows}));}finally{await pool.end();}

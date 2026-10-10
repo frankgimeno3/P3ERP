@@ -38,6 +38,10 @@ const monthly=charge(3,{programacion:[{id_regla:'end',cada:1,unidad:'meses',inic
 assert.deepEqual(generateOccurrences([monthly],'2026-01-01','2026-03-31').occurrences.map(o=>o.fecha),['2026-01-31','2026-02-28','2026-03-31']);
 const annual=charge(4,{tipo_programacion:'fechas',programacion:[{id_regla:'annual',dia:1,mes:3,total_iva:50}]});
 assert.equal(generateOccurrences([annual],'2025-01-01','2026-12-31').occurrences.length,2);
+const externalHistory=run([row('current','01/06/2026',{id_cargo_recurrente:4})],{charges:[annual]});
+assert(externalHistory.occurrences.some(o=>o.fecha==='2025-03-01'),'External historical dues remain available');
+assert(!externalHistory.history.some(h=>h.detail?.includes('2025-03-01')&&h.detail.includes('sin asociar')),'External 2025 dues do not create outstanding warnings');
+assert(externalHistory.history.some(h=>h.detail?.includes('2026-03-01')&&h.detail.includes('sin asociar')),'Current dues still require review');
 const c2=charge(2), distinct=[{...a,id_cargo_recurrente:1,id_proveedor:'supplier'},{...b,id_cargo_recurrente:2,id_proveedor:'supplier'}];
 const reusable=run(distinct,{charges:[c,c2]}).alerts[0].reusable;
 assert(reusable);

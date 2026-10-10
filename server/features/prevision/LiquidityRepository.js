@@ -2,6 +2,7 @@
 import { parseImportDate } from './ReceiptExcel.js';
 import { cents, generateOccurrences, ruleStart } from '../banco/BankReviewAnalysis.js';
 import { cardLiquidity } from '../proveedor/CardSettlementRepository.js';
+import {readInternalTransfers} from '../banco/InternalTransfers.js';
 const bank = value => ['Sabadell','Santander'].includes(value) ? value : 'Sin asignar';
 
 // Actual payroll replaces its employee/month estimate. Paid advances are deducted once.
@@ -45,11 +46,14 @@ export async function getLiquidityForecast(date, pool=getPgPool()) {
     SELECT CASE WHEN banco_cobro IN ('Sabadell','Santander') THEN banco_cobro ELSE 'Sin asignar' END banco,
       SUM(GREATEST(0,COALESCE(cobro_total,0)-COALESCE((SELECT sum(a.importe) FROM tesoreria_aplicaciones_cobro a JOIN tesoreria_movimientos_bancarios m USING(id_linea_banco) WHERE a.id_orden=o.id_orden AND m.estado_revision),0))) importe
     FROM tesoreria_ordenes o,limits
-    WHERE NOT cancelada AND NOT COALESCE(cobrada,false) AND p3_income_date(fecha_teorica_cobro) BETWEEN today AND until GROUP BY 1
+    WHERE NOT cancelada AND NOT COALESCE(cobrada,false) AND NOT COALESCE((datos_importacion->'cierre_cobro'->>'activo')::boolean,false) AND p3_income_date(fecha_teorica_cobro) BETWEEN today AND until GROUP BY 1
    ), pagos AS (
     SELECT CASE WHEN cuenta_pago IN ('Sabadell','Santander') THEN cuenta_pago ELSE 'Sin asignar' END banco,
-      GREATEST(0,COALESCE(total_pago,0)-COALESCE((SELECT sum(abs(m.importe)) FROM tesoreria_movimientos_bancarios m WHERE m.id_pago=p.id_pago AND m.importe<0),0)) importe
-    FROM tesoreria_pagos_previstos p,limits WHERE p3_income_date(fecha_pago) BETWEEN today AND until
+      GREATEST(0,COALESCE(total_pago,0)-paid.amount-CASE WHEN p.cierre_pago->>'activo'='true'
+        AND (p.cierre_pago->>'previsto')::numeric=p.total_pago AND (p.cierre_pago->>'real')::numeric=paid.amount
+        AND (p.cierre_pago->>'diferencia')::numeric=p.total_pago-paid.amount AND paid.amount<=p.total_pago
+        THEN (p.cierre_pago->>'diferencia')::numeric ELSE 0 END) importe
+    FROM tesoreria_pagos_previstos p CROSS JOIN LATERAL(SELECT COALESCE(sum(abs(m.importe)),0) amount FROM tesoreria_movimientos_bancarios m WHERE m.id_pago=p.id_pago AND m.importe<0 AND m.estado_revision AND NOT m.duplicado_descartado) paid,limits WHERE p3_income_date(fecha_pago) BETWEEN today AND until
    ), vencimientos AS (
     SELECT COALESCE(c.banco_pago,'Sin asignar') banco,
       GREATEST(0,v.importe-COALESCE((SELECT sum(a.importe) FROM tesoreria_vencimientos_aplicaciones a JOIN tesoreria_movimientos_bancarios m USING(id_linea_banco) WHERE a.id_vencimiento=v.id AND m.id_cargo_recurrente=v.id_cargo_recurrente AND m.importe<0),0)) importe
@@ -65,9 +69,15 @@ export async function getLiquidityForecast(date, pool=getPgPool()) {
     (SELECT COALESCE(jsonb_agg(n),'[]'::jsonb) FROM laboral_nominas n) payrolls,
     (SELECT COALESCE(jsonb_agg(a),'[]'::jsonb) FROM laboral_anticipos a WHERE estado='pagado') advances,
     (SELECT count(*)::int FROM tesoreria_movimientos_bancarios m JOIN tesoreria_cargos_recurrentes c USING(id_cargo_recurrente)
-      WHERE c.activo AND c.tipo_cargo IN ('proveedor','otro') AND m.importe<0 AND NOT EXISTS(SELECT 1 FROM tesoreria_vencimientos_aplicaciones a WHERE a.id_linea_banco=m.id_linea_banco)) unapplied,
+      WHERE c.activo AND c.tipo_cargo IN ('proveedor','otro') AND m.importe<0
+        AND p3_income_date(COALESCE(NULLIF(m.fecha_operativa,''),m.fecha_valor))>='2026-01-01'
+        AND NOT EXISTS(SELECT 1 FROM tesoreria_vencimientos_aplicaciones a WHERE a.id_linea_banco=m.id_linea_banco)) unapplied,
     (SELECT count(*)::int FROM tesoreria_cargos_recurrentes c WHERE c.activo AND c.tipo_cargo IN ('proveedor','otro') AND NOT c.termina_planificacion AND (c.planificado_hasta IS NULL OR c.planificado_hasta<p3_income_date($1))) incomplete`,[until])).rows[0];
   const result=Object.fromEntries(rows.map(r=>[r.banco,Number(r.total)]));
+  for(const transfer of (await readInternalTransfers(pool)).filter(t=>t.estado==='previsto'&&t.fecha>=rows[0].today&&t.fecha<=rows[0].until)) {
+    result[transfer.banco_origen]-=Number(transfer.importe);
+    result[transfer.banco_destino]+=Number(transfer.importe);
+  }
   const cards=await cardLiquidity(rows[0].today,rows[0].until,pool);
   for(const [name,amount] of Object.entries(cards))result[name]-=amount;
   for(const payroll of forecastPayroll(snapshot.charges,snapshot.payrolls,snapshot.advances,rows[0].today,rows[0].until)) result[payroll.bank]-=payroll.amount;

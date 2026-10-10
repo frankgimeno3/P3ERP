@@ -13,14 +13,15 @@ const accountMatches=(r,existing)=>{const override=decisions.accountOverrides?.[
 const orderPlans=[],issues=[];
 for(const r of admin){
  const code=text(r.ORDEN),invoice=text(r.FACTURA),crm=text(r['CODIGO CRM']);
- let matches=before.tesoreria_ordenes.filter(o=>o.id_orden===code);
+ let matches=before.tesoreria_ordenes.filter(o=>o.id_orden===code&&(!invoice||text(o.id_factura)===invoice||before.administracion_facturas_clientes.some(f=>f.id_factura_cliente===o.id_factura&&text(f.numero_factura)===invoice)));
  if(!matches.length)matches=before.tesoreria_ordenes.filter(o=>{const prev=o.datos_importacion?.original;return prev&&text(prev.ORDEN)===code&&text(prev['CODIGO CRM'])===crm&&text(prev.FACTURA)===invoice&&text(prev['Nº RECIBO'])===text(r['Nº RECIBO'])&&date(prev['FECHA DE COBRO PREVISTA']||prev['FECHA DE COBRO ORDEN segun factura'])===date(r['FECHA DE COBRO PREVISTA']||r['FECHA DE COBRO ORDEN segun factura']);});
  if(matches.length>1){issues.push({type:'order_identity',row:r.sourceRow,code,matches:matches.map(o=>o.id_orden)});continue;}
  const existing=matches[0];if(!existing&&code.startsWith(decisions.omitIncidentOrdersStartingWith||'__none__')){issues.push({type:'previously_excluded',row:r.sourceRow,code});continue;}const accounts=accountMatches(r,existing);
  if(accounts.length!==1){issues.push({type:'account',row:r.sourceRow,code,crm,client:r.CLIENTE,matches:accounts.map(a=>a.id_cuenta)});continue;}
  const total=Number(r['IMPORTE CON IVA']),method=/TRANSF/i.test(text(r['FORMA DE COBRO']))?'transferencia':text(r['FORMA DE COBRO']).toLowerCase(),bank=/recibo|remesa/i.test(method)?'Sabadell':/SAN/i.test(text(r['FORMA DE COBRO']))?'Santander':/SAB/i.test(text(r['FORMA DE COBRO']))?'Sabadell':existing?.banco_cobro||null;
  const contract=/^C\d{2}\.\d{3}\.\d{3}$/.test(text(r['CONTRATO ASOCIADO']))?text(r['CONTRATO ASOCIADO']):null;
- const data={id_orden:existing?.id_orden||(/^C\d{2}\.\d{3}\.\d{3}-.+$/.test(code)?code:`${code}~fila${r.sourceRow}`),id_cuenta:accounts[0].id_cuenta,id_contrato:contract,invoice:/^(\d+|P\d+)$/.test(invoice)?invoice:null,cobro_total:total,forma_cobro:method,banco_cobro:bank,fecha_teorica_cobro:date(r['FECHA DE COBRO PREVISTA'])||date(r['FECHA DE COBRO ORDEN segun factura']),source_paid:/^cobrada$/i.test(text(r.ESTADO)),source_cancelled:/anulad/i.test(text(r.ESTADO)),raw:r};
+ if(!existing&&!/^[CO]\d{2}\.\d{3}\.\d{3}-\d+\/\d+$/.test(code)){issues.push({type:'invalid_order_identifier',row:r.sourceRow,code,invoice});continue;}
+ const data={id_orden:existing?.id_orden||code,id_cuenta:accounts[0].id_cuenta,id_contrato:contract,invoice:/^(\d+|P\d+)$/.test(invoice)?invoice:null,cobro_total:total,forma_cobro:method,banco_cobro:bank,fecha_teorica_cobro:date(r['FECHA DE COBRO PREVISTA'])||date(r['FECHA DE COBRO ORDEN segun factura']),source_paid:/^cobrada$/i.test(text(r.ESTADO)),source_cancelled:/anulad/i.test(text(r.ESTADO)),raw:r};
  const changes=existing?['id_cuenta','id_contrato','cobro_total','forma_cobro','banco_cobro','fecha_teorica_cobro'].filter(k=>k==='cobro_total'?cents(existing[k])!==cents(data[k]):text(existing[k])!==text(data[k])):[];
  if(existing&&data.invoice!==text(existing.id_factura)&&data.invoice!==before.administracion_facturas_clientes.find(f=>f.id_factura_cliente===existing.id_factura)?.numero_factura)changes.push('invoice');
  if(existing&&existing.cobrada!==data.source_paid)changes.push('source_paid');

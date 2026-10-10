@@ -1,5 +1,5 @@
 import { getPgPool } from "../../database/pgClient.js";
-import { randomUUID } from "node:crypto";
+import {allocateContactIdentifier} from '../identifiers/BusinessIdentifiers.js';
 import { addCuentaEvento, addContactoEvento, formatChangeDetail } from "../registroEventos/RegistroEventosRepository.js";
 
 function normalizeContacto(row) {
@@ -30,9 +30,6 @@ function normalizeContacto(row) {
   };
 }
 
-function createContactoId() {
-  return `cont_${new Date().getFullYear().toString().slice(-2)}_${randomUUID().slice(0, 8)}`;
-}
 
 async function clearDetachedPrincipal(idContacto,client=getPgPool()) {
   await client.query("UPDATE comercial_cuentas c SET datos_comerciales=datos_comerciales-'contacto_principal',updated_at=now() WHERE datos_comerciales->>'contacto_principal'=$1 AND NOT EXISTS(SELECT 1 FROM comercial_contactos p WHERE p.id_contacto=$1 AND p.id_cuenta=c.id_cuenta)",[idContacto]);
@@ -84,7 +81,8 @@ export async function getContactos(filters = {}) {
 
 export async function createContacto(data = {}) {
   const pool = getPgPool();
-  const idContacto = data.id_contacto?.trim() || createContactoId();
+  let idContacto = data.id_contacto?.trim() || "";
+  if(idContacto && !/^CON[0-9]+$/.test(idContacto))throw Object.assign(new Error("El ID del contacto debe seguir la serie CON."),{status:400});
   const nombre = data.nombre_contacto?.trim() || "";
   const apellidos = data.apellidos_contacto?.trim() || "";
   const nombreCompleto = data.nombre_completo_contacto?.trim() || `${nombre} ${apellidos}`.trim();
@@ -93,6 +91,8 @@ export async function createContacto(data = {}) {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
+    const generated = await allocateContactIdentifier(client);
+    idContacto ||= generated;
     await client.query(`
       ALTER TABLE comercial_contactos
         ADD COLUMN IF NOT EXISTS linkedin_cuenta TEXT NOT NULL DEFAULT '',

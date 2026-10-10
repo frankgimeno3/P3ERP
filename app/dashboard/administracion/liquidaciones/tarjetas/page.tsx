@@ -1,0 +1,10 @@
+'use client';
+import LiquidacionesFrame from '../LiquidacionesFrame';
+import {useEffect,useState} from 'react';
+import {useRouter} from 'next/navigation';
+import {api,button,CardEditor,CardTable,date} from '../../tarjetas/CardComponents';
+export default function CardsPage(){
+ const router=useRouter();const [cards,setCards]=useState<any[]>([]),[tab,setTab]=useState('p3'),[open,setOpen]=useState(false),[error,setError]=useState('');
+ useEffect(()=>{api('/api/v1/admin/tarjetas').then(setCards).catch(e=>setError(e.message));},[]);
+ return <LiquidacionesFrame title="Tarjetas" ><header className="flex justify-between"><h1 className="text-2xl font-semibold">Liquidaciones · Tarjetas</h1><button className={button} onClick={()=>setOpen(true)}>Nueva tarjeta</button></header><div role="tablist" className="flex gap-3">{[['p3','Tarjetas de empresa'],['personal','Tarjetas personales']].map(([key,name])=><button key={key} role="tab" aria-selected={tab===key} className={`${button} ${tab===key?'font-semibold bg-blue-50':''}`} onClick={()=>setTab(key)}>{name}</button>)}</div>{error&&<p role="alert" className="text-red-700">{error}</p>}<section role="tabpanel" aria-label={tab==='p3'?'Tarjetas de empresa':'Tarjetas personales'}><div data-tab-content><CardTable onRow={c=>router.push(`/dashboard/administracion/liquidaciones/tarjetas/${encodeURIComponent(c.id_tarjeta)}`)} filterFields={{banco:['Sabadell','Santander'],proxima_liquidacion:'date',estado:['activa','obsoleta']}} rows={cards.filter(c=>c.tipo===tab).map(c=>({...c,proxima_liquidacion:date(c.proxima_liquidacion),periodicidad:`Cada ${c.periodicidad_meses} mes(es)`}))} columns={[{key:'codigo',label:'Código'},{key:'nombre',label:'Nombre'},{key:'banco',label:'Banco'},{key:'ultimos_digitos',label:'Últimos dígitos'},{key:'periodicidad',label:'Periodicidad'},{key:'proxima_liquidacion',label:'Próxima liquidación'},{key:'estado',label:'Estado'}]}/></div></section>{open&&<CardEditor card={{tipo:tab}} close={()=>setOpen(false)} done={c=>router.push(`/dashboard/administracion/liquidaciones/tarjetas/${encodeURIComponent(c.id_tarjeta)}`)}/>}</LiquidacionesFrame>;
+}

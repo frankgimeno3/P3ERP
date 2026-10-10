@@ -41,7 +41,8 @@
       "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados.",
       "La tabla consulta solo la pagina actual y el total del servidor. Los filtros se combinan y las respuestas de consultas anteriores se descartan.",
       "Abre una cuenta y entra en Tareas para gestionar sus acciones y responsables.",
-      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
+      "Las cuentas nuevas reciben autom?ticamente un ID ACC seguido de n?mero al guardar; el c?digo Edisoft y la referencia de origen CRM se conservan por separado."
     ]
   },
   "/dashboard/comercial/contactos": {
@@ -53,7 +54,8 @@
       "Usa el alta de contacto para registrar una nueva persona y vincularla a una cuenta.",
       "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados.",
       "La paginacion se realiza en el servidor. Durante una nueva consulta se conserva la tabla anterior y se muestra Actualizando contactos. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados.",
-      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
+      "Los contactos nuevos reciben autom?ticamente un ID CON seguido de n?mero al guardar."
     ]
   },
   "/dashboard/comercial/propuestas": {
@@ -70,7 +72,8 @@
       "En Plantillas crea y edita productos en español y, si hace falta, versiones en otros idiomas. En la fase Servicios usa una versión del mismo idioma de la propuesta para sustituir o añadir productos.",
       "Buscar cuenta abre una tabla con filtros y 30 cuentas por pagina. Al elegir una cuenta se selecciona su contacto principal o el primero; si no tiene contactos se activa automaticamente el contacto manual.",
       "Mis propuestas usa el agente de la sesion actual. Si no hay agente asociado no se muestran propuestas de otro agente. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados.",
-      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
+      "Al aceptar una propuesta, el servidor reserva el siguiente c?digo de contrato Caa.000.000 y las ?rdenes correspondientes; repetir la operaci?n conserva los registros ya asociados."
     ]
   },
   "/dashboard/comercial/contratos": {
@@ -89,7 +92,8 @@
       "Al crear un contrato independiente, Intercambio sin cobro monetario permite registrar el valor ofrecido y las condiciones sin generar cobros. Se muestran en los datos y en el documento del contrato. Los filtros de cada tabla se muestran juntos en una tarjeta Filtros inicialmente cerrada, con una etiqueta fina encima de cada campo. Cerrarla conserva los filtros aplicados.",
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
       "En la ficha del contrato, Crear nueva propuesta copia la cuenta, contacto, servicios, importes y condiciones a un borrador independiente. Usa el agente de la sesión, fecha de hoy y validez de 30 días; renueva las fechas de los cobros conservando sus intervalos. Revisa y edita el borrador antes de enviarlo.",
-      "Los servicios facturados desde PDF se relacionan con las líneas del contrato cuando publicación y medio permiten una coincidencia única. Se completan las descripciones y productos ausentes conservando las tarifas, contenidos y asociaciones existentes."
+      "Los servicios facturados desde PDF se relacionan con las líneas del contrato cuando publicación y medio permiten una coincidencia única. Se completan las descripciones y productos ausentes conservando las tarifas, contenidos y asociaciones existentes.",
+      "Los contratos se numeran autom?ticamente como Caa.000.000. Sus ?rdenes utilizan el c?digo del contrato seguido de n?mero de cobro/total, tambi?n al aceptar propuestas o reemplazar ?rdenes."
     ]
   },
   "/dashboard/comercial/documentacion": {
@@ -110,7 +114,8 @@
       "El cliente se muestra con el nombre actual de su cuenta vinculada, aunque el Excel original usase otro nombre. El agente es quien sigue ese contenido para obtener materiales y puede ser distinto del agente comercial del contrato.",
       "Pulsa una fila para abrir /hoja_produccion/[id]. Puedes editar especificaciones en un área de texto, Publicación / Nº web, agente por nombre, fecha límite con día, mes y año separados y estado. Pulsa Guardar cambios para conservar la edición. También puedes subir materiales. Volver regresa a la hoja de producción.",
       "Las pestañas incluyen el año actual y todos los años presentes en los contenidos. Anteriores conserva los contenidos históricos importados; Sin año permite localizar los que aún no tienen fecha. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados.",
-      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
+      "Los contenidos nuevos reciben un c?digo hp_aa_000.000 del servidor. Se conservan los identificadores num?ricos procedentes de la hoja antigua y la referencia original cuando se corrige un c?digo duplicado."
     ]
   },
   "/dashboard/produccion/revistas": {
@@ -132,7 +137,8 @@
       "Filtrar por revista muestra primero el número, seguido de revista, región y sector, y permite abrir sus anuncios y artículos.",
       "Todos los contenidos muestra los registros de producción; abre la tarjeta Filtros y pulsa una fila para entrar en el detalle del contenido.",
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
-      "Al abrir una revista se accede directamente a /dashboard/produccion/contenidos/revistas/[id_revista]/contenidos."
+      "Al abrir una revista se accede directamente a /dashboard/produccion/contenidos/revistas/[id_revista]/contenidos.",
+      "Los contenidos nuevos reciben un c?digo hp_aa_000.000 del servidor. Se conservan los identificadores num?ricos procedentes de la hoja antigua y la referencia original cuando se corrige un c?digo duplicado."
     ]
   },
   "/dashboard/produccion/contenidos/[id]": {
@@ -206,7 +212,9 @@
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
       "El enlace Información legal verifactu se muestra al pie de las páginas de Administración.",
       "Las ?rdenes canceladas por una factura abono muestran Abonada y su n?mero de abono. Se conserva la orden sin fecha de pago y deja de estar pendiente de cobro.",
-      "Gestión de órdenes conserva las listas habituales. Pendiente de gestionar muestra subpestañas Sin contrato, Sin importe, Sin forma de cobro, Sin fecha de cobro y Pendientes de facturar. Las órdenes siguen en Gestión de órdenes y pueden aparecer en varios motivos. Las canceladas no requieren gestión; los intercambios no necesitan importe ni cobro monetario. Subir Excel, Agregar contrato e Importación masiva se reúnen en una misma fila."
+      "Gestión de órdenes conserva las listas habituales. Pendiente de gestionar muestra subpestañas Sin contrato, Sin importe, Sin forma de cobro, Sin fecha de cobro y Pendientes de facturar. Las órdenes siguen en Gestión de órdenes y pueden aparecer en varios motivos. Las canceladas no requieren gestión; los intercambios no necesitan importe ni cobro monetario. Subir Excel, Agregar contrato e Importación masiva se reúnen en una misma fila.",
+      "Cerrar cobro por acuerdo permite asumir una diferencia con motivo obligatorio, sin cambiar el importe facturado ni el dinero cobrado. La orden queda cerrada para la gestión y sale de pendientes y previsiones. Reabrir gestión del cobro restaura el saldo pendiente; ambos cambios quedan registrados.",
+      "Los c?digos de ?rdenes importadas se comprueban antes de crear registros. Las correcciones de identificador conservan los importes, estados y asociaciones."
     ]
   },
   "/dashboard/administracion/facturas-clientes": {
@@ -243,7 +251,8 @@
       "Registra o comprueba el cobro cuando se produzca.",
       "Solo se muestran ordenes activas con importe monetario pendiente positivo. Los pagos parciales descuentan lo cobrado y las canceladas se excluyen. Todos los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen juntos, con etiquetas finas encima de cada campo; cerrarla conserva los filtros aplicados. filtros y pestana se conservan en la URL.",
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
-      "El enlace Información legal verifactu se muestra al pie de las páginas de Administración."
+      "El enlace Información legal verifactu se muestra al pie de las páginas de Administración.",
+      "Los cobros cerrados por acuerdo o como histórico externo no aparecen como pendientes. Se conservan sus importes, cobros reales y motivo en el detalle de la orden."
     ]
   },
   "/dashboard/administracion/suscripciones": {
@@ -273,7 +282,8 @@
       "Eliminar proveedor pide confirmación: desvincula y conserva facturas, tickets, pagos, cargos recurrentes y movimientos; elimina los precios y productos/servicios propios. Tener registros asociados ya no bloquea el borrado con un 409.",
       "Al editar un proveedor se conserva el nombre introducido, sin aplicar equivalencias de importación. La ficha muestra la respuesta guardada en RDS y confirma el guardado; los errores de validación se muestran con su detalle.",
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
-      "El enlace Información legal verifactu se muestra al pie de las páginas de Administración."
+      "El enlace Información legal verifactu se muestra al pie de las páginas de Administración.",
+      "El identificador t?cnico de cada proveedor es autom?tico; las referencias antiguas de proveedores importados se conservan para localizar su ficha."
     ]
   },
   "/dashboard/administracion/facturas-proveedores": {
@@ -290,32 +300,15 @@
     ]
   },
   "/dashboard/administracion/proveedores/tickets": {
-    "summary": "Registra tickets y justificantes de gastos de proveedor.",
+    "summary": "Los tickets se gestionan en Administración → Liquidaciones → Tickets.",
     "steps": [
-      "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
-      "Consulta los tickets P3 y GM ya registrados. El pago con tarjeta enlaza con su ficha de Administración > Tarjetas.",
-      "Al añadir un ticket, elige proveedor, fecha, importes, efectivo o una tarjeta activa, y adjunta PDF, JPG o PNG de hasta 15 MB. El ticket queda asociado a esa tarjeta. Si corresponde a una suscripción prevista, vincúlalo a su vencimiento en la pestaña Tickets de la tarjeta para evitar contar ambos importes.",
-      "Pulsa Añadir para introducir un nuevo justificante. Desde Tickets en la ficha del proveedor puedes iniciar el mismo formulario con el proveedor preseleccionado.",
-      "Comprueba proveedor, concepto, importes y fecha antes de guardar.",
-      "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape.",
-      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
-      "El enlace Información legal verifactu se muestra al pie de las páginas de Administración."
+      "Esta ruta redirige al listado centralizado. La ficha del proveedor mantiene Añadir ticket con el proveedor seleccionado."
     ]
   },
   "/dashboard/administracion/tarjetas": {
-    "summary": "Gestiona tarjetas, sus tickets, suscripciones y liquidaciones bancarias.",
+    "summary": "Esta ruta redirige a Administración → Liquidaciones → Tarjetas.",
     "steps": [
-      "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
-      "Crea una tarjeta con código único, nombre, últimos cuatro dígitos, banco Sabadell o Santander, tipo, estado y descripción. Se conservan las tarjetas registradas anteriormente; configura su calendario antes de liquidarlas.",
-      "Indica la periodicidad en meses, inicio del período abierto, próximo cierre y fecha del cargo bancario mediante dd, mm y yyyy. Los ciclos siguientes conservan los días elegidos y usan el último día en meses más cortos. Tras liquidar, el calendario y el banco quedan protegidos.",
-      "La ficha muestra sus datos y cuatro pestañas: Tickets, Cargos recurrentes (suscripciones), Liquidaciones anteriores y Próxima liquidación.",
-      "Tickets permite añadir un justificante o asignar uno existente sin tarjeta. Puedes vincular un ticket a un vencimiento de suscripción del período abierto: su importe real sustituye esa previsión, sin sumarlos dos veces. No se pueden cambiar tickets de períodos cerrados.",
-      "En suscripciones, asocia un cargo previsto de proveedor u Otro, crea uno nuevo o edita su programación. Una suscripción solo pertenece a una tarjeta. Sus vencimientos se incluyen en el cierre correspondiente y salen del banco en la fecha de liquidación, sin computar también como pagos directos.",
-      "Próxima liquidación muestra tickets y suscripciones del período abierto, con su total actualizado. En Conciliación, selecciona uno o varios cargos de esa misma liquidación y pulsa Liquidación tarjeta. Elige la tarjeta y revisa el desglose y la diferencia con el banco; si hay diferencia, explica el motivo.",
-      "Confirmar guarda la previsión de ese momento y el importe real, marca los movimientos como revisados y abre el período siguiente. Liquidaciones anteriores conserva ese desglose aunque después cambien las suscripciones. Si los datos cambian mientras revisas, debes cargar de nuevo la previsión.",
-      "Para reabrir, abre uno de los movimientos de la última liquidación desde su revisión bancaria y pulsa Reabrir liquidación. La confirmación afecta a todos sus movimientos. La liquidación anterior queda anulada en el histórico y ese período vuelve a ser el próximo. Esta revisión requiere acceso a Dirección. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados.",
-      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
-      "El enlace Información legal verifactu se muestra al pie de las páginas de Administración."
+      "Utiliza /dashboard/administracion/liquidaciones/tarjetas; las tarjetas y sus datos se conservan."
     ]
   },
   "/dashboard/operaciones/data": {
@@ -422,18 +415,24 @@
       "Para ingresos, Identificar cobros exige elegir Transferencia, Remesa u Otro. Transferencia selecciona una orden pendiente; Remesa permite buscar una o varias remesas registradas, sin seleccionar recibos individuales. Cada movimiento de una revisión múltiple conserva su selección. Después se pasa directamente a Revisión final, sin pantallas de cargos previstos ni anticipos.",
       "Cuadrar por fecha e importe filtra las remesas pendientes cuyo total coincide con el movimiento y cuya fecha es la más cercana dentro de siete días. Revisa y selecciona la coincidencia antes de continuar.",
       "Al confirmar, la suma debe coincidir exactamente con el ingreso. Se actualizan estados y fechas de cobro de las órdenes y recibos vinculados, las remesas y la factura, con comentario del usuario en la cuenta. Desmarcar la revisión recalcula esos estados; un cobro ya conciliado no puede duplicarse.",
+      "Las conciliaciones respaldadas por justificantes conservan el ingreso bancario real: un pago parcial deja saldo pendiente y un pago superior cubre la orden sin cambiar su importe previsto. Las diferencias asumidas o comisiones documentadas pueden cerrarse para gestión con su motivo, conservando los importes reales y la posibilidad de reabrir el saldo.",
       "En Asignado a, Otro aparece al final para revisar cargos sin proveedor, cliente ni empleado. Permite un comentario y asociar un cargo previsto de tipo Otro. Si existe una asignación anterior, confirma su sustitución o conserva ese movimiento omitiéndolo.",
       "Conciliación sustituye al nombre Revisión de líneas. En Otro puedes seleccionar o crear un cargo previsto de tipo Otro sin destinatario, y asociar sus vencimientos mediante el análisis. Las asociaciones se conservan al volver a conciliar.",
       "La ruta de Conciliación es /dashboard/direccion/tesoreria/extractos/conciliacion. Los detalles de movimientos y Duplicados se abren dentro de esta ruta. La URL se escribe sin tilde; el menú mantiene el nombre Conciliación. Las direcciones antiguas de revision y conciliación redirigen conservando la subruta y los filtros de la URL.",
       "Los movimientos revisados y asociados actualizan automáticamente el realizado y el pendiente de la previsión del ERP. Reabrir un movimiento retira su efecto hasta que vuelva a revisarse. Los filtros de cada tabla se muestran juntos en una tarjeta Filtros inicialmente cerrada, con una etiqueta fina encima de cada campo. Cerrarla conserva los filtros aplicados.",
-      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
+      "Los vencimientos sin asociar de 2025 o anteriores se conservan como histórico externo y no generan avisos pendientes. Al crear un cargo, indica si contiene IVA y, cuando corresponda, su porcentaje; las cuotas de comunidad confirmadas sin IVA conservan todo el importe como base.",
+      "Traspaso propio abre un modal para emparejar un cargo y un ingreso entre Sabadell y Santander por importe opuesto y fecha cercana. Se revisan ambos con una sola operación; reabrir uno reabre los dos. Puede confirmarse que falta la contrapartida sin inventar un ingreso. Las previsiones de traspasos son puntuales; se vinculan cuando llega el movimiento. No generan cobros comerciales ni cargos recurrentes.",
+      "Duplicados conserva los movimientos ya revisados y las dos líneas de un traspaso propio. Los grupos completos revisados no se vuelven a proponer para borrar por tener la misma fecha e importe.",
+      "Liquidación tarjeta guarda los cargos seleccionados como trabajo pendiente y abre la página de Administración → Liquidaciones. El cierre requiere importar el PDF de detalle, revisar sus movimientos y cuadrar exactamente su suma con Tesorería."
     ]
   },
   "/dashboard/direccion/tesoreria/prevision-liquidez": {
     "summary": "Una previsión de liquidez compartida con la Vista Juan.",
     "steps": [
+      "Previsiones tarjetas, a la derecha de las pestañas Previsión de ingresos y Previsión de cargos, abre Administración → Liquidaciones → Tarjetas.",
       "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
-      "Vista Juan · Excel editable, en la parte superior, abre una presentación alternativa de los mismos datos. No hay escenarios independientes ni botón Actualizar previsión. Los cambios propios actualizan la página al guardarse; para ver cambios externos, recarga.",
+      "Vista Juan · Desglose por celda, en la parte superior, abre una presentación alternativa de los mismos datos. No hay escenarios independientes ni botón Actualizar previsión. Los cambios propios actualizan la página al guardarse; para ver cambios externos, recarga.",
       "Elige la fecha con día, mes y año separados. El resumen corresponde al cierre del mes elegido; los ingresos y cargos muestran previsto, realizado y pendiente. Todos los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen juntos, con etiquetas finas encima de cada campo; cerrarla conserva los filtros aplicados.",
       "Añadir ingreso o gasto abre el mismo asistente que el + de la hoja. Pulsa el concepto para consultar los cargos recurrentes asociados, sus proveedores o empleados y sus vencimientos. Editar un importe modifica el mismo vencimiento en ambas vistas; retirar conserva el histórico.",
       "Al crear o editar una programación de proveedor se pregunta ¿Contiene IVA? No establece base imponible igual al total. Sí exige indicar el porcentaje incluido y calcula base = total / (1 + porcentaje / 100), con redondeo a céntimos. Las nóminas usan importe neto sin IVA. No se presupone un porcentaje para datos antiguos.",
@@ -443,7 +442,8 @@
       "Los recibos y remesas nuevos sin banco se asignan automáticamente a Sabadell. La asignación es un valor inicial: puedes seleccionar otro banco posteriormente. Los recibos pendientes existentes se han unificado en Sabadell; se conserva el histórico de cobros realizados.",
       "Existe una sola previsión del ERP: los cargos y órdenes vinculados son su fuente; los grupos y conceptos pendientes tienen presupuestos compartidos. Editar la tabla o Vista Juan cambia el mismo registro. Los detalles cubren el presupuesto del grupo y nunca se suman de nuevo. La conciliación alimenta el realizado sin una aplicación manual adicional.",
       "Los pagos documentados de facturas son editables desde su concepto. El importe total debe coincidir con los vencimientos; los pagos ya conciliados quedan protegidos. Una factura sustituye una estimacion solo cuando se vincula explicitamente a su vencimiento. Los pagos sin banco se muestran aparte y se pueden abrir para asignarlo.",
-      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
+      "Traspasos propios permite crear y cancelar una previsión puntual entre bancos. La salida y entrada tienen el mismo importe; no alteran la liquidez conjunta. La conciliación empareja ambos movimientos y consume la previsión una sola vez."
     ]
   },
   "/dashboard/direccion/tesoreria/prevision-ingresos": {
@@ -461,7 +461,9 @@
       "Número de remesa, Remesa en carpeta e Importe remesa solo sustituyen datos anteriores cuando llega un nuevo valor. Las remesas se registran y agrupan sus recibos; su total visible se calcula dinámicamente sumando los importes de sus órdenes.",
       "La revisión bancaria confirma el cobro y la fecha real de órdenes, recibos y remesas, y actualiza el total cobrado de la factura. Los cambios quedan en los comentarios de la cuenta asociada.",
       "Los ingresos previstos proceden de las órdenes pendientes: recibos y transferencias, sin recurrencia. Los cambios de importe, fecha y banco realizados al preparar la factura se reflejan en esas órdenes y en liquidez. Agrupar recibos en una remesa no suma un ingreso adicional.",
-      "Al importar recibos, la coincidencia se comprueba por referencia y por número de factura y cobro. Una referencia antigua se actualiza conservando su orden, sin duplicar el ingreso. Si hay varias coincidencias, se requiere resolverlas antes de importar. Los recibos sin remesa permanecen pendientes de remesar; registrar una remesa no confirma su cobro."
+      "Al importar recibos, la coincidencia se comprueba por referencia y por número de factura y cobro. Una referencia antigua se actualiza conservando su orden, sin duplicar el ingreso. Si hay varias coincidencias, se requiere resolverlas antes de importar. Los recibos sin remesa permanecen pendientes de remesar; registrar una remesa no confirma su cobro.",
+      "El estado Cerrada por acuerdo distingue el cierre de gestión de un cobro real. Su saldo no se suma como ingreso previsto; el histórico y los importes originales se conservan.",
+      "Un recibo puede registrarse sin remesa. Es el flujo normal: la remesa se asigna después al agrupar recibos por fecha para preparar el fichero que se envía al banco."
     ]
   },
   "/dashboard/direccion/tesoreria/prevision-cargos": {
@@ -517,7 +519,7 @@
     "summary": "Una previsión de liquidez compartida con la Vista Juan.",
     "steps": [
       "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
-      "Vista Juan · Excel editable, en la parte superior, abre una presentación alternativa de los mismos datos. No hay escenarios independientes ni botón Actualizar previsión. Los cambios propios actualizan la página al guardarse; para ver cambios externos, recarga.",
+      "Vista Juan · Desglose por celda, en la parte superior, abre una presentación alternativa de los mismos datos. No hay escenarios independientes ni botón Actualizar previsión. Los cambios propios actualizan la página al guardarse; para ver cambios externos, recarga.",
       "Elige la fecha con día, mes y año separados. El resumen corresponde al cierre del mes elegido; los ingresos y cargos muestran previsto, realizado y pendiente. Todos los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen juntos, con etiquetas finas encima de cada campo; cerrarla conserva los filtros aplicados.",
       "Añadir ingreso o gasto abre el mismo asistente que el + de la hoja. Pulsa el concepto para consultar los cargos recurrentes asociados, sus proveedores o empleados y sus vencimientos. Editar un importe modifica el mismo vencimiento en ambas vistas; retirar conserva el histórico.",
       "Al crear o editar una programación de proveedor se pregunta ¿Contiene IVA? No establece base imponible igual al total. Sí exige indicar el porcentaje incluido y calcula base = total / (1 + porcentaje / 100), con redondeo a céntimos. Las nóminas usan importe neto sin IVA. No se presupone un porcentaje para datos antiguos.",
@@ -525,7 +527,8 @@
       "Los cargos activos del banco se reutilizan y sus vencimientos se reflejan al cargar. Los cargos de tarjeta pertenecen al desglose de suscripciones; el gasto variable se mantiene separado. Los cargos sin banco no se asignan automáticamente.",
       "El saldo inicial desconocido y los extractos parciales se señalan: no acreditan un cierre bancario. La revisión de fin de mes se realiza desde la Vista Juan y conserva lo pendiente.",
       "Los recibos y remesas nuevos sin banco se asignan automáticamente a Sabadell. La asignación es un valor inicial: puedes seleccionar otro banco posteriormente. Los recibos pendientes existentes se han unificado en Sabadell; se conserva el histórico de cobros realizados.",
-      "Existe una sola previsión del ERP: los cargos y órdenes vinculados son su fuente; los grupos y conceptos pendientes tienen presupuestos compartidos. Editar la tabla o Vista Juan cambia el mismo registro. Los detalles cubren el presupuesto del grupo y nunca se suman de nuevo. La conciliación alimenta el realizado sin una aplicación manual adicional."
+      "Existe una sola previsión del ERP: los cargos y órdenes vinculados son su fuente; los grupos y conceptos pendientes tienen presupuestos compartidos. Editar la tabla o Vista Juan cambia el mismo registro. Los detalles cubren el presupuesto del grupo y nunca se suman de nuevo. La conciliación alimenta el realizado sin una aplicación manual adicional.",
+      "Traspasos propios permite crear y cancelar una previsión puntual entre bancos. La salida y entrada tienen el mismo importe; no alteran la liquidez conjunta. La conciliación empareja ambos movimientos y consume la previsión una sola vez."
     ]
   },
   "/dashboard/direccion/previsiones/prevision-ingresos": {
@@ -716,7 +719,8 @@
       "Los recibos y remesas nuevos sin banco se asignan automáticamente a Sabadell. La asignación es un valor inicial: puedes seleccionar otro banco posteriormente. Los recibos pendientes existentes se han unificado en Sabadell; se conserva el histórico de cobros realizados.",
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
       "El enlace Información legal verifactu se muestra al pie de las páginas de Administración.",
-      "Las ?rdenes canceladas por una factura abono muestran Abonada y su n?mero de abono. Se conserva la orden sin fecha de pago y deja de estar pendiente de cobro."
+      "Las ?rdenes canceladas por una factura abono muestran Abonada y su n?mero de abono. Se conserva la orden sin fecha de pago y deja de estar pendiente de cobro.",
+      "Cerrar cobro por acuerdo permite asumir una diferencia con motivo obligatorio, sin cambiar el importe facturado ni el dinero cobrado. La orden queda cerrada para la gestión y sale de pendientes y previsiones. Reabrir gestión del cobro restaura el saldo pendiente; ambos cambios quedan registrados."
     ]
   },
   "/": {
@@ -759,11 +763,11 @@
   },
   "/dashboard/direccion/tesoreria/prevision-liquidez/vista-juan": {
     "title": "Vista Juan · Previsión de liquidez",
-    "summary": "Hoja editable de Sabadell y Santander: añadir, vincular y ajustar previsiones recurrentes desde la propia hoja.",
+    "summary": "Previsión de Sabadell y Santander con importes desglosados en un modal por celda.",
     "steps": [
       "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "Las hojas originales de 2026 aportan el histórico de enero a septiembre y su saldo inicial. Son referencias del contable; no crean movimientos bancarios. El archivo original se conserva.",
-      "Vista Juan · Excel editable, en la parte superior, abre una presentación alternativa de los mismos datos. No hay escenarios independientes ni botón Actualizar previsión. Los cambios propios actualizan la página al guardarse; para ver cambios externos, recarga.",
+      "Vista Juan · Desglose por celda, en la parte superior, abre una presentación alternativa de los mismos datos. No hay escenarios independientes ni botón Actualizar previsión. Los cambios propios actualizan la página al guardarse; para ver cambios externos, recarga.",
       "Al crear o editar una programación de proveedor se pregunta ¿Contiene IVA? No establece base imponible igual al total. Sí exige indicar el porcentaje incluido y calcula base = total / (1 + porcentaje / 100), con redondeo a céntimos. Las nóminas usan importe neto sin IVA. No se presupone un porcentaje para datos antiguos.",
       "Las pestañas contienen Sabadell y Santander del año actual y del siguiente. Desde el 1 de octubre, al abrir o recargar la página, se prepara automáticamente la base revisable del siguiente año. En 2026 están BSAB 2026, BSAN 2026, BSAB 2027 y BSAN 2027. Cada año nuevo tiene realizado y previsto para los doce meses; no se inventan realizados ni saldo inicial.",
       "Anteriores contiene una subpestaña por año anterior con datos. Está vacío porque no se importó 2025. El cambio de año archiva las pestañas sin borrar sus datos.",
@@ -776,7 +780,6 @@
       "Los ingresos concretos proceden de Control administrativo → Órdenes. Se incluyen dentro del presupuesto de su banco, mes y forma de cobro, sin sumarlos dos veces. Si las órdenes superan el presupuesto, la previsión incluye el importe necesario y señala la diferencia. Las órdenes sin banco requieren asignación. El + crea un presupuesto recurrente, sin generar órdenes ficticias.",
       "Las tarjetas separan SUSCRIPCIONES y GASTO VARIABLE. Los cargos de tarjeta identificados se agregan por vencimiento. Inicialmente se descuentan del presupuesto variable original para evitar duplicados; cuando se edita el variable pasa a ser gasto adicional explícito. Sin servicios configurados no se inventan suscripciones. Efectivo y traspasos conservan sus grupos.",
       "Revisión de fin de mes está inicialmente plegada. Un cierre de 200 € previstos y 150 € aplicados deja 150 € realizados y 50 € pendientes: no da por pagado lo pendiente. Solo se consolida un mes terminado con extracto y asociaciones revisadas. Los meses futuros y el histórico sin columna prevista no admiten este cierre. Reabrir permite revisar otra vez; cerrar no acredita por sí solo el saldo bancario.",
-      "Enter o salir de la celda guarda el importe; Escape cancela la edición. Se admiten coma o punto decimal. Los totales y diferencias se recalculan en céntimos. Si otra persona ha cambiado la hoja, recarga antes de guardar.",
       "Las nóminas se vinculan a empleados: Charly es Carlos Lamiel, Paco es Gimeno, Frank queda en 5.458 € y Melanie en 1.100,95 €. Víctor Joven Castillo es empleado activo y tiene previsión mensual de 1.200 €; se conserva su primer mes parcial.",
       "Se reutilizan los alquileres de Pedro Brillas y los cargos de Softline, Bitavis y DAE. Securitas se separa en Llúria 49,78 €, Breda 58,95 € y Bruc 57,60 €. PIXUP añade hosting 252,26 € el 24/11/2026 y soporte 414,23 € el 29/12/2026 con sus cargos existentes.",
       "Las comisiones son Sabadell 3/2/1 € para octubre–diciembre y Santander 15 €/mes el día 26 estimado. Las antiguas recurrencias de Sabadell de 20 y 1.300 € están desactivadas con histórico conservado. El servicio de información anual queda separado en 48,40 €, con siguiente fecha estimada el 2 de enero.",
@@ -785,7 +788,11 @@
       "Los recibos y remesas nuevos sin banco se asignan automáticamente a Sabadell. La asignación es un valor inicial: puedes seleccionar otro banco posteriormente. Los recibos pendientes existentes se han unificado en Sabadell; se conserva el histórico de cobros realizados.",
       "Existe una sola previsión del ERP: los cargos y órdenes vinculados son su fuente; los grupos y conceptos pendientes tienen presupuestos compartidos. Editar la tabla o Vista Juan cambia el mismo registro. Los detalles cubren el presupuesto del grupo y nunca se suman de nuevo. La conciliación alimenta el realizado sin una aplicación manual adicional.",
       "Los pagos documentados de facturas son editables desde su concepto. El importe total debe coincidir con los vencimientos; los pagos ya conciliados quedan protegidos. Una factura sustituye una estimacion solo cuando se vincula explicitamente a su vencimiento. Los pagos sin banco se muestran aparte y se pueden abrir para asignarlo.",
-      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
+      "Pulsa un importe para abrir un modal con A + B + ... + N = M. M es la suma y no tiene input. Cada cargo previsto muestra nombre, fecha y periodicidad y puede editarse por separado. Si solo hay un cargo editable, su importe puede modificarse en el modal. Los documentos y movimientos bancarios registrados conservan su importe de origen. Guardar actualiza los vencimientos juntos; se impiden cambios sobre datos modificados por otra persona. El modal se cierra con × o Escape.",
+      "IBI Barcelona conserva el grupo de Juan con nueve cargos trimestrales independientes y las plazas y referencias catastrales conocidas. Para diciembre de 2026 se conserva el presupuesto de 160 euros: 151,04 euros de importes históricos estimados y 8,96 euros de reserva sin identificar. Los realizados de marzo, junio y septiembre se desglosan en los nueve movimientos de cada pago; no se asignan a plazas sin referencia y no se eliminan cargos con igual importe.",
+      "Julio de Barcelona conserva sus cinco cargos, incluidos dos de 68,16 euros. Juan acredita el total de 406,42 euros en AJ.BCN-ICIRC + TASA BASURA; el tributo, vehículo o inmueble individual queda pendiente de detalle. Una diferencia de pago asumida se muestra separada: conserva el total documental y el pago real, y deja de cerrar el pendiente si se reabre la revisión bancaria.",
+      "Las tarjetas muestran por separado suscripciones, tickets variables y otros gastos, con el desglose individual al pulsar la celda. Sus importes proceden de Liquidaciones y se sitúan en el mes de cargo al banco. Las reservas de presupuesto se identifican hasta detallar los gastos; un ticket de suscripción no se suma dos veces."
     ]
   },
   "/dashboard/direccion/tesoreria/conciliacion": {
@@ -794,7 +801,8 @@
     "steps": [
       "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "Esta dirección abre la misma pantalla que /dashboard/direccion/tesoreria/extractos/conciliacion. Los detalles de movimientos y los enlaces internos conservan esa ruta principal.",
-      "Los movimientos revisados y asociados actualizan automáticamente el realizado y el pendiente de la previsión del ERP. Reabrir un movimiento retira su efecto hasta que vuelva a revisarse. Los filtros de cada tabla se muestran juntos en una tarjeta Filtros inicialmente cerrada, con una etiqueta fina encima de cada campo. Cerrarla conserva los filtros aplicados."
+      "Los movimientos revisados y asociados actualizan automáticamente el realizado y el pendiente de la previsión del ERP. Reabrir un movimiento retira su efecto hasta que vuelva a revisarse. Los filtros de cada tabla se muestran juntos en una tarjeta Filtros inicialmente cerrada, con una etiqueta fina encima de cada campo. Cerrarla conserva los filtros aplicados.",
+      "Traspaso propio abre un modal para emparejar un cargo y un ingreso entre Sabadell y Santander por importe opuesto y fecha cercana. Se revisan ambos con una sola operación; reabrir uno reabre los dos. Puede confirmarse que falta la contrapartida sin inventar un ingreso. Las previsiones de traspasos son puntuales; se vinculan cuando llega el movimiento. No generan cobros comerciales ni cargos recurrentes."
     ]
   },
   "/dashboard/mediateca": {
@@ -870,6 +878,48 @@
       "La cascada adelanta contenidos completos de una página, saltando los bloques de varias páginas sin alterar sus posiciones. Retira huecos finales conservando un total par; un hueco sin contenido posterior elegible debe permanecer. El modal muestra todas las páginas afectadas antes de confirmar.",
       "Cada operación muestra las posiciones afectadas y se guarda automáticamente, con control de ediciones simultáneas. El planillo previo no modifica el definitivo ni los contratos.",
       "Publicar asignaciones definitivas abre una revision de paginas antes de confirmar. La version debe seguir vigente; la publicacion es atomica y repetirla no duplica las asignaciones. Los contratos y contenidos se conservan. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados."
+    ]
+  },
+  "/dashboard/administracion/liquidaciones/tarjetas": {
+    "summary": "Gestiona tarjetas de empresa y personales, sus liquidaciones mensuales y sus gastos previstos.",
+    "steps": [
+      "Las pestañas se unen a su panel de contenido. El azul identifica la selección y el fondo azul claro delimita el contenido de cada pestaña; las tablas usan la cabecera azul del ERP. Las fichas y liquidaciones conservan esta presentación y la navegación superior.",
+      "Las páginas Tarjetas, Tickets y Suscripciones están agrupadas en Administración → Liquidaciones. Las rutas antiguas de tarjetas y tickets redirigen a las nuevas conservando los datos.",
+      "Tarjetas de empresa conserva las tarjetas existentes. Tarjetas personales incluye PASS Gimeno y Santander Personal Gimeno; configura sus dígitos reales, banco de cargo y calendario antes de utilizarlas.",
+      "Los filtros están reunidos en una tarjeta inicialmente cerrada. Banco ofrece Sabadell y Santander, Estado muestra las opciones disponibles y Próxima liquidación usa DD, MM y AAAA separados.",
+      "Pulsa una fila para abrir Detalles, Liquidaciones o Suscripciones asociadas. Puedes editar el calendario, consultar los períodos y asociar o crear suscripciones.",
+      "Liquidaciones muestra una fila por mes y año de cargo, importe previsto inicial, importe real y estado pendiente de puntear o punteada/revisada. Crea el período con sus fechas reales de inicio, cierre y cargo: no tiene que coincidir con el mes natural.",
+      "Importar liquidación abre tres fases: subir PDF y elegir banco; comprobar el formato y la suma; revisar los datos y confirmar su importación. Se reconocen los documentos originales comprobados de Sabadell y Santander. Los formatos incompletos, documentos de otra tarjeta y sumas incompatibles se bloquean.",
+      "Asocia cada movimiento a un ticket, vencimiento de suscripción u otro gasto. Pendiente de recibir ticket conserva la incidencia abierta. No hay ticket exige explicar la ausencia y recoger el gasto en la previsión. Se conservan devoluciones y comisiones con sus signos reales.",
+      "Guardar cambios conserva el trabajo aunque existan incidencias. Marcar liquidación como revisada requiere guardar primero, revisar los tickets y cuadrar exactamente cada asociación y la suma del PDF con el cargo total de Tesorería. Una diferencia entre documentos bancarios bloquea el cierre aunque exista un comentario.",
+      "Explica las desviaciones respecto a la previsión inicial y actualiza sus componentes. Los tickets no cargados pueden pasar a efectivo, cambiar de tarjeta o quedar no válidos ni asociables mientras estén pendientes de revisión. Un vencimiento de suscripción no cargado puede retirarse de este período con una explicación, conservando los demás períodos.",
+      "Al cerrar se revisan los tickets conciliados y los cargos de Tesorería en una misma operación. Para reabrir la última liquidación, usa su movimiento bancario en Conciliación: las importaciones nuevas conservan el PDF y las asociaciones como trabajo pendiente.",
+      "Juan desglosa suscripciones, tickets variables y otros gastos en el mes de cargo bancario. Un ticket vinculado a una suscripción sustituye su justificante sin sumar el gasto dos veces. La reserva original de Juan permanece identificada hasta detallar los gastos pendientes."
+    ]
+  },
+  "/dashboard/administracion/liquidaciones/tickets": {
+    "summary": "Centraliza los tickets de empresa y personales, sus archivos y asociaciones.",
+    "steps": [
+      "Las pestañas de empresa y personales delimitan su panel azul claro. Dentro de empresa, las subpestañas Tarjeta y Efectivo comparten una franja azul y el contenido seleccionado aparece en un panel blanco interior. Las fichas y el alta mantienen los estilos y la navegación del ERP.",
+      "Tickets de empresa se divide en Tickets de tarjeta y Tickets de efectivo. Tickets personales reúne los justificantes personales.",
+      "Añadir ticket permite adjuntar PDF, JPG o PNG, indicar fecha, importe y pago. El alta desde un proveedor conserva ese proveedor y aparece en este listado centralizado.",
+      "Pulsa el ticket para visualizar su justificante, editar datos y gestionar sus asociaciones. Las fechas utilizan DD, MM y AAAA separados.",
+      "Los estados son pendiente de puntear, punteado y revisado; la clasificación distingue asociable y no válido ni asociable. Los tickets personales pueden registrarse sin proveedor.",
+      "Antes de cerrar una liquidación, puntea los tickets asociados. Mientras estén pendientes puedes pasarlos a efectivo, asignarlos a otra tarjeta y a una liquidación concreta o retirarlos como no asociables. Elegir el período expresamente permite respetar la anotación tardía del banco sin cambiar la fecha del justificante; ambas previsiones se recalculan sin duplicarlo.",
+      "Para justificar una suscripción, selecciona su vencimiento. Los importes deben coincidir exactamente. Corrige el ticket o la previsión antes de validar; si no existe justificante, retira el ticket y explica la ausencia desde la liquidación.",
+      "Los tickets de liquidaciones revisadas están protegidos. Reabre la liquidación antes de modificarlos. Los filtros están juntos en una tarjeta inicialmente cerrada."
+    ]
+  },
+  "/dashboard/administracion/liquidaciones/suscripciones": {
+    "summary": "Programa cargos recurrentes de tarjetas que alimentan sus liquidaciones.",
+    "steps": [
+      "El listado, sus formularios y la pestaña de suscripciones de cada tarjeta comparten la navegación superior, los paneles y las cabeceras azules del ERP.",
+      "Consulta la tabla general, con concepto, tarjeta, importes previstos, periodicidad, fecha prevista y estado; los filtros se agrupan en una tarjeta inicialmente cerrada.",
+      "Nueva suscripción abre un modal con tarjeta, proveedor opcional, importe, tratamiento del IVA, periodicidad y fechas. También puedes crearla o asociar un cargo recurrente existente desde Suscripciones asociadas de una tarjeta.",
+      "Una suscripción pertenece a una tarjeta. Sus vencimientos alimentan las liquidaciones respetando sus cierres y se pagan en la fecha del cargo total bancario; no se duplican como pagos directos al proveedor.",
+      "Editar permite modificar su programación con el componente común de cargos previstos. Desactivar excluye sus previsiones activas; Activar vuelve a incluirlas. Las liquidaciones ya revisadas conservan su desglose.",
+      "Si hay un ticket que justifica un vencimiento, vincúlalos con importes exactamente iguales para contabilizar ese gasto una sola vez.",
+      "Las suscripciones de clientes a revistas mantienen su gestión independiente en Clientes → Suscripciones."
     ]
   }
 }

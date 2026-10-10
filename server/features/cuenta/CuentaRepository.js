@@ -1,5 +1,7 @@
+import {resolveIdentifier} from '../identifiers/IdentifierAliases.js';
 import { assertCommercialAgent } from "../agente/CommercialAgent.js";
 import { cuentaOrderBy } from './CuentaSorting.js';
+import {allocateAccountIdentifier} from '../identifiers/BusinessIdentifiers.js';
 import { getPgPool } from "../../database/pgClient.js";
 import { addCuentaEvento, formatChangeDetail } from "../registroEventos/RegistroEventosRepository.js";
 
@@ -189,6 +191,7 @@ export async function getCuentaCountries() {
 }
 
 export async function getCuentaById(idCuenta) {
+  idCuenta=await resolveIdentifier('cuenta',idCuenta);
   const pool = getPgPool();
   const { rows } = await pool.query(
     `SELECT * FROM ${tableName} WHERE id_cuenta = $1 LIMIT 1`,
@@ -199,9 +202,11 @@ export async function getCuentaById(idCuenta) {
 }
 
 export async function createCuenta(cuentaData) {
+  const requestedId = String(cuentaData.id_cuenta || '').trim();
+  if(requestedId && !/^ACC[0-9]+$/.test(requestedId))throw Object.assign(new Error('El ID de cuenta debe seguir la serie ACC.'),{status:400});
   const pool = getPgPool();
   await assertCommercialAgent(pool, cuentaData.id_agente);
-  const columns = writableColumns.filter((column) => cuentaData[column] !== undefined);
+  const columns = writableColumns.filter((column) => column === "id_cuenta" || cuentaData[column] !== undefined);
   const values = columns.map((column) => normalizeValue(column, cuentaData[column]));
   const placeholders = columns.map((column, index) => {
     const placeholder = `$${index + 1}`;
@@ -211,6 +216,8 @@ export async function createCuenta(cuentaData) {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
+    const generated = await allocateAccountIdentifier(client);
+    values[columns.indexOf("id_cuenta")] = requestedId || generated;
     const { rows } = await client.query(
       `
         INSERT INTO ${tableName} (${columns.join(", ")})
@@ -242,6 +249,7 @@ export async function createCuenta(cuentaData) {
 export async function updateCuenta(idCuenta, cuentaData) {
   const pool = getPgPool();
   const before = await getCuentaById(idCuenta);
+  idCuenta = before?.id_cuenta || idCuenta;
   if (cuentaData.id_agente !== undefined) await assertCommercialAgent(pool, cuentaData.id_agente, before?.id_agente);
   const columns = writableColumns.filter((column) => column !== "id_cuenta" && cuentaData[column] !== undefined);
   const values = columns.map((column) => normalizeValue(column, cuentaData[column]));

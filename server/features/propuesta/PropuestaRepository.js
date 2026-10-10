@@ -1,4 +1,5 @@
 import { assertCommercialAgent } from "../agente/CommercialAgent.js";
+import {allocateContractIdentifier,allocateContentIdentifier,allocateOrderIdentifier} from '../identifiers/BusinessIdentifiers.js';
 import crypto from "node:crypto";
 import { getPgPool } from "../../database/pgClient.js";
 import { addCuentaEntityEvent, formatChangeDetail } from "../registroEventos/RegistroEventosRepository.js";
@@ -238,7 +239,7 @@ function todaySpanishWords() {
 
 
 function stableId(prefix, value) {
-  return `${prefix}_${crypto.createHash("sha1").update(String(value)).digest("hex").slice(0, 16)}`;
+  return `${prefix}_${crypto.createHash("sha256").update(String(value)).digest("hex").slice(0, 24)}`;
 }
 
 async function assertProposalReadyForAcceptance(client, propuesta) {
@@ -274,7 +275,9 @@ async function finalizeProposal(client, propuesta, status, actorId = "") {
   if (!accepted) { await accountActivity(client,propuesta.id_cuenta_propuesta,actorId,`ha rechazado la propuesta ${propuesta.id_propuesta}.`); return; }
   await assertProposalReadyForAcceptance(client, propuesta);
 
-  const idContrato = `con_${propuesta.id_propuesta}`;
+  const existingContracts=(await client.query('SELECT id_contrato FROM comercial_contratos WHERE id_propuesta=$1',[propuesta.id_propuesta])).rows;
+  if(existingContracts.length>1)throw new Error('La propuesta tiene varios contratos asociados.');
+  const idContrato = existingContracts[0]?.id_contrato || await allocateContractIdentifier(client);
   if((await client.query('SELECT 1 FROM tesoreria_ordenes WHERE id_contrato=$1 AND cancelada LIMIT 1',[idContrato])).rowCount)throw new Error('Esta propuesta tiene órdenes canceladas. Crea una nueva propuesta para generar nuevas órdenes.');
   await client.query(
     `INSERT INTO comercial_contratos (
@@ -299,8 +302,12 @@ async function finalizeProposal(client, propuesta, status, actorId = "") {
   const lineas = await client.query(`SELECT * FROM comercial_propuestas_lineas WHERE id_propuesta=$1 ORDER BY numero_linea_propuesta`, [propuesta.id_propuesta]);
   const contentIds = [];
   for (const linea of lineas.rows) {
-    const idLinea = stableId("lcon", linea.id_linea_propuesta);
-    const idContenido = stableId("cont", linea.id_linea_propuesta);
+    const existingLines=(await client.query('SELECT id_linea_contrato FROM comercial_contratos_lineas WHERE id_contrato=$1 AND id_linea_propuesta=$2',[idContrato,linea.id_linea_propuesta])).rows;
+    if(existingLines.length>1)throw new Error('La línea de propuesta tiene varios servicios asociados.');
+    const idLinea = existingLines[0]?.id_linea_contrato || stableId('lc',linea.id_linea_propuesta);
+    const existingContents=(await client.query('SELECT id_contenido FROM produccion_contenidos WHERE id_linea_contrato=$1',[idLinea])).rows;
+    if(existingContents.length>1)throw new Error('La línea tiene varios contenidos asociados.');
+    const idContenido = existingContents[0]?.id_contenido || await allocateContentIdentifier(client,linea.fecha_publicacion_publicacion);
     contentIds.push(idContenido);
     await client.query(
       `INSERT INTO comercial_contratos_lineas (
@@ -348,8 +355,11 @@ async function finalizeProposal(client, propuesta, status, actorId = "") {
   );
   const orderIds = [];
   for (const payment of proposalPayments.rows) {
-    const idCobroContrato = stableId("ccon", payment.id_cobro_propuesta);
-    const idOrden = stableId("ord", payment.id_cobro_propuesta);
+    const previousPayment=(await client.query('SELECT id_cobro_contrato FROM comercial_contratos_cobros WHERE id_contrato=$1 AND id_cobro_propuesta=$2',[idContrato,payment.id_cobro_propuesta])).rows;
+    const previousOrder=(await client.query('SELECT id_orden FROM tesoreria_ordenes WHERE id_contrato=$1 AND id_cobro_propuesta=$2',[idContrato,payment.id_cobro_propuesta])).rows;
+    if(previousPayment.length>1||previousOrder.length>1)throw new Error('El cobro tiene varias asociaciones.');
+    const idCobroContrato = previousPayment[0]?.id_cobro_contrato || stableId('cc',payment.id_cobro_propuesta);
+    const idOrden = previousOrder[0]?.id_orden || await allocateOrderIdentifier(client,{contractId:idContrato,number:Number(payment.numero_cobro),total:Math.max(...proposalPayments.rows.map(p=>Number(p.numero_cobro)))});
     const bank = /santander/i.test(payment.banco_cobro || "") ? "Santander" : "Sabadell";
     const total = Number(propuesta.importe_propuesta_con_iva || 0);
     const base = Number(propuesta.importe_total_bi_propuesta || 0);

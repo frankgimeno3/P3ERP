@@ -1,0 +1,1 @@
+﻿import env from '@next/env';import {getPgPool} from '../server/database/pgClient.js';env.loadEnvConfig(process.cwd());const p=getPgPool();try{console.log(JSON.stringify((await p.query("SELECT id_orden,id_factura,cobro_total,fecha_teorica_cobro,cobrada,datos_importacion FROM tesoreria_ordenes WHERE id_factura IN ('526087','526106')")).rows));}finally{await p.end()}

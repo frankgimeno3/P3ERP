@@ -1,4 +1,6 @@
 "use client";
+import JuanCellModal from '../../JuanCellModal';
+import {juanCellParts} from '@/server/features/prevision/JuanCellBreakdown';
 import SortableTable from '@/app/components/SortableTable';
 
 import {request} from '@/app/lib/request';
@@ -19,36 +21,22 @@ const months=['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO',
 const money=(cents:number|null)=>cents===null?'':(cents/100).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
 const sum=(values:(number|null)[])=>values.reduce<number>((total,value)=>total+(value??0),0);
 
-function AmountCell({value,label,forecast,disabled,onSave}:{value:number|null;label:string;forecast?:boolean;disabled:boolean;onSave:(value:number|null)=>Promise<void>}) {
-  const [editing,setEditing]=useState(false),[draft,setDraft]=useState(''),[error,setError]=useState('');
-  useEffect(()=>{if(!editing)setDraft(value===null?'':(value/100).toFixed(2).replace('.',','));},[value,editing]);
-  const save=async()=>{
-    const text=draft.trim().replace(/€/g,'').replace(/\s/g,'');
-    const normalized=text.includes(',')?text.replace(/\./g,'').replace(',','.'):text;
-    if(text&&!/^-?\d+(\.\d{1,2})?$/.test(normalized)){setError('Usa un importe con hasta dos decimales.');return;}
-    const next=text?Math.round(Number(normalized)*100):null;
-    if(next===value){setEditing(false);return;}
-    await onSave(next);setEditing(false);
-  };
-  return <td className={`${forecast?'forecast ':''}${(value??0)<0?'negative ':''}${error?'invalid':''}`}>
-    <input aria-label={label} title={error||label} inputMode="decimal" disabled={disabled} value={editing?draft:money(value)}
-      onFocus={()=>{setEditing(true);setDraft(value===null?'':(value/100).toFixed(2).replace('.',','));setError('');}}
-      onChange={event=>{setDraft(event.target.value);setError('');}}
-      onBlur={()=>{void save().catch(()=>setEditing(false));}} onKeyDown={event=>{if(event.key==='Enter')event.currentTarget.blur();if(event.key==='Escape'){setDraft(value===null?'':(value/100).toFixed(2).replace('.',','));setEditing(false);setError('');}}} />
-  </td>;
-}
+function AmountCell({value,label,forecast,disabled,onOpen}:{value:number|null;label:string;forecast?:boolean;disabled:boolean;onOpen:()=>void}) {return <td className={forecast?'forecast':''}><button type="button" aria-label={label} title={label} disabled={disabled} onClick={onOpen} className="w-full cursor-pointer rounded px-1 py-2 text-right hover:bg-blue-100 disabled:cursor-default">{money(value)||'?'}</button></td>;}
 
 export default function JuanPage(){
   const [year,setYear]=useState(new Date().getFullYear()),[archive,setArchive]=useState(false),[years,setYears]=useState<number[]>([]),[currentYear,setCurrentYear]=useState(new Date().getFullYear()),[closeMonth,setCloseMonth]=useState(10);
   const [data,setData]=useState<Workbook|null>(null),[selected,setSelected]=useState(0),[error,setError]=useState(''),[busy,setBusy]=useState(false),[saved,setSaved]=useState(''),[review,setReview]=useState(false);
   const [detail,setDetail]=useState<{row:Row;section:'income'|'payments'}|null>(null),[adding,setAdding]=useState<'income'|'payments'|null>(null);
+  const [cell,setCell]=useState<{row:Row;section:'income'|'payments'|'checks';column:number}|null>(null);
+  const closeCell=useCallback(()=>setCell(null),[]);
+  useEffect(()=>{setCell(null);},[year,selected]);
   const closeInvoice=useCallback(()=>setDetail(null),[]);
   const load=useCallback(async(signal?:AbortSignal)=>{setError('');try{const response=await request(`/api/v1/direccion/prevision-liquidez/vista-juan?year=${year}`,{cache:'no-store',signal});const body=await response.json();if(!response.ok)throw Error(body.message);if(signal?.aborted)return;setData(body);setYears(body.years||[]);setCurrentYear(body.currentYear);}catch(e){if(e instanceof Error&&e.name==='AbortError')return;setError(e instanceof Error?e.message:'No se pudo cargar la hoja.');}},[year]);
   useEffect(()=>{const controller=new AbortController();setDetail(null);setAdding(null);setData(null);void load(controller.signal);return()=>controller.abort();},[load]);
-  const save=async(section:string,rowId:string,column:number,value:number|null)=>{
+  const save=async(section:string,rowId:string,column:number,value:number|null,components?:{id:string;amount:number}[])=>{
     if(!data||busy)return;
     setBusy(true);setError('');setSaved('');
-    try{const response=await request('/api/v1/direccion/prevision-liquidez/vista-juan',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({year,version:data.version,bank:data.sheets[selected].bank,section,rowId,column,value})});const body=await response.json();if(!response.ok)throw Error(body.message);setData(body);setSaved('Guardado');window.dispatchEvent(new Event('p3:forecast-changed'));}
+    try{const response=await request('/api/v1/direccion/prevision-liquidez/vista-juan',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({year,version:data.version,bank:data.sheets[selected].bank,section,rowId,column,value,components})});const body=await response.json();if(!response.ok)throw Error(body.message);setData(body);setSaved('Guardado');window.dispatchEvent(new Event('p3:forecast-changed'));}
     catch(e){setError(e instanceof Error?e.message:'No se pudo guardar.');throw e;}
     finally{setBusy(false);}
   };
@@ -70,7 +58,7 @@ export default function JuanPage(){
       <div className="juan-tabs" role="tablist" aria-label="Bancos y años">{years.filter(y=>y>=currentYear).flatMap(y=>['BSAB','BSAN'].map((bank,index)=><button key={`${y}:${bank}`} role="tab" aria-selected={!archive&&year===y&&selected===index} disabled={busy} onClick={()=>{setArchive(false);setSelected(index);setYear(y);}} className={!archive&&year===y&&selected===index?'active':''}>{bank} {y}</button>))}<button role="tab" aria-selected={archive} className={archive?'active':''} onClick={()=>setArchive(!archive)}>Anteriores</button></div>
       {archive&&<div className="juan-tabs" role="tablist" aria-label="Años anteriores">{years.filter(y=>y<currentYear).length?years.filter(y=>y<currentYear).map(y=><button key={y} role="tab" aria-selected={year===y} onClick={()=>setYear(y)}>{y}</button>):<p className="juan-hint">Todavía no hay años anteriores importados.</p>}{year<currentYear&&['BSAB','BSAN'].map((bank,index)=><button key={bank} onClick={()=>setSelected(index)}>{bank} {year}</button>)}</div>}
       {(!archive||year<currentYear)&&<>
-      <p className="juan-hint">Edita un importe y pulsa Enter o sal de la celda para guardar. Rojo: previsto. Vacío: sin dato. Los totales se calculan automáticamente.</p>
+      <p className="juan-hint">Pulsa un importe para abrir su desglose. Modifica los cargos individuales en el modal; el total es su suma. Rojo: previsto. Vacío: sin dato. Los totales se calculan automáticamente.</p>
       <p className="juan-hint">Pulsa el concepto de una fila para ver su proveedor o empleado, el cargo asociado y el desglose del grupo. Los conflictos se conservan hasta decidir qué dato es correcto.</p>
       <p className="juan-hint">El + antes de cada total añade una previsión recurrente. Cambiar o borrar un importe previsto ajusta ese mes también en el cargo vinculado del ERP. Las suscripciones se calculan desde las tarjetas.</p>
       {sheet.income.some(r=>r.opening&&r.values.every(v=>v===null))&&<p className="juan-hint">Base revisable del año anterior y programación vigente. No se duplican cargos del ERP. Saldo inicial pendiente del cierre de diciembre; el acumulado muestra una variación provisional.</p>}
@@ -92,7 +80,7 @@ export default function JuanPage(){
         <h1>{sheet.bank==='Sabadell'?'BANC SABADELL':'SANTANDER'} {sheet.year} <span>{sheet.iban}</span></h1>
         {(['income','payments'] as const).map(section=><SortableTable key={section} className="juan-grid">
           {header(section)}
-          <tbody>{sheet[section].map(row=><tr key={row.id}><th><button className="juan-row-detail" type="button" disabled={busy} onClick={()=>setDetail({row,section})} title="Ver cargos recurrentes y proveedor">{row.label}</button></th><td className="day">{row.day}</td>{row.values.map((value,i)=><AmountCell key={`${sheet.bank}:${row.id}:${i}`} value={value} label={`${row.label}, ${months[sheet.columns[i].month-1]}, ${sheet.columns[i].kind==='actual'?'realizado':'previsto'}`} forecast={sheet.columns[i].kind==='forecast'} disabled={busy||Boolean(sheet.closedMonths?.includes(sheet.columns[i].month))||Boolean(row.invoicePaymentId)||(row.cardPart==='subscriptions'&&sheet.columns[i].kind==='forecast')} onSave={value=>save(section,row.id,i,value)} />)}<td className="spacer"/><td>{money(sum(row.values))}</td></tr>)}
+          <tbody>{sheet[section].map(row=><tr key={row.id}><th><button className="juan-row-detail" type="button" disabled={busy} onClick={()=>setDetail({row,section})} title="Ver cargos recurrentes y proveedor">{row.label}</button></th><td className="day">{row.day}</td>{row.values.map((value,i)=><AmountCell key={`${sheet.bank}:${row.id}:${i}`} value={value} label={`${row.label}, ${months[sheet.columns[i].month-1]}, ${sheet.columns[i].kind==='actual'?'realizado':'previsto'}`} forecast={sheet.columns[i].kind==='forecast'} disabled={busy} onOpen={()=>setCell({row,section,column:i})} />)}<td className="spacer"/><td>{money(sum(row.values))}</td></tr>)}
             <tr className="juan-add-row"><th><button type="button" disabled={busy} aria-label={`Añadir ${section==='income'?'ingreso':'gasto'} recurrente`} onClick={()=>setAdding(section)}>+</button></th><td colSpan={sheet.columns.length+1}/><td className="spacer"/><td/></tr>
             {totalRow(section==='income'?'TOTAL INGRESOS':'TOTAL PAGOS',totals[section])}
           </tbody>
@@ -100,7 +88,7 @@ export default function JuanPage(){
         <SortableTable className="juan-grid juan-balances"><tbody>
           {totalRow('TOTAL INGRESOS − PAGOS DEL MES',totals.net,'total')}
           {totalRow(sheet.income.some(r=>r.opening&&r.values.some(v=>v!==null))?'SALDO BANCARIO ACUMULADO PREVISTO':'VARIACIÓN ACUMULADA · SALDO INICIAL PENDIENTE',totals.balances,'total',false)}
-          <tr className="check"><th colSpan={2}>COMPROBACIÓN: SALDO A ÚLTIMO DÍA DEL MES</th>{sheet.checks.map((value,i)=><AmountCell key={`${sheet.bank}:check:${i}`} value={value} label={`Comprobación ${months[sheet.columns[i].month-1]} ${sheet.columns[i].kind}`} disabled={busy||Boolean(sheet.closedMonths?.includes(sheet.columns[i].month))} onSave={value=>save('checks','',i,value)}/>)}<td className="spacer"/><td/></tr>
+          <tr className="check"><th colSpan={2}>COMPROBACIÓN: SALDO A ÚLTIMO DÍA DEL MES</th>{sheet.checks.map((value,i)=><AmountCell key={`${sheet.bank}:check:${i}`} value={value} label={`Comprobación ${months[sheet.columns[i].month-1]} ${sheet.columns[i].kind}`} disabled={busy||Boolean(sheet.closedMonths?.includes(sheet.columns[i].month))} onOpen={()=>setCell({row:{id:'',label:'Comprobación',day:null,opening:true,values:sheet.checks},section:'checks',column:i})}/>)}<td className="spacer"/><td/></tr>
           {totalRow('DIFERENCIA CON COMPROBACIÓN',totals.differences,'check',false)}
           {totalRow('PREVISIONES PENDIENTES DE COBRO',sheet.columns.map(column=>column.kind==='forecast'?data.planned.filter(cell=>cell.bank===sheet.bank&&cell.month===column.month&&cell.section==='income').reduce((total,cell)=>total+cell.pending,0):null),'erp',false)}
           {totalRow('PREVISIONES PENDIENTES DE PAGO',sheet.columns.map(column=>column.kind==='forecast'?data.planned.filter(cell=>cell.bank===sheet.bank&&cell.month===column.month&&cell.section==='payments').reduce((total,cell)=>total+cell.pending,0):null),'erp',false)}
@@ -109,6 +97,7 @@ export default function JuanPage(){
           {totalRow('DIFERENCIA EXCEL − EXTRACTO ERP',sheet.columns.map((column,i)=>{const row=data.balances.find(value=>value.bank===sheet.bank&&value.month===column.month);return row?totals.balances[i]-Math.round(Number(row.saldo)*100):null;}),'erp',false)}
         </tbody></SortableTable>
       </div>
+      {cell&&<JuanCellModal label={`${cell.row.label} ? ${months[sheet.columns[cell.column].month-1]}`} parts={cell.section==='checks'?[{id:'single',label:'Saldo de comprobaci?n',amount:cell.row.values[cell.column]??0,editable:true}]:juanCellParts(data,sheet,cell.section,cell.row,cell.column)} disabled={busy||Boolean(sheet.closedMonths?.includes(sheet.columns[cell.column].month))} onClose={closeCell} onSave={(value,components)=>save(cell.section,cell.row.id,cell.column,value,cell.section==='checks'?undefined:components)}/>}
       {detail?.row.invoicePaymentId&&<InvoicePaymentsModal id={detail.row.invoicePaymentId} onClose={closeInvoice} onSaved={()=>{setDetail(null);void load();window.dispatchEvent(new Event('p3:forecast-changed'));}}/>}
       {detail&&!detail.row.invoicePaymentId&&<JuanRowDetails year={year} bank={sheet.bank} rowId={detail.row.id} label={detail.row.label} section={detail.section} day={detail.row.day} recurring={detail.row.recurring} version={data.version} budgets={months.map((_,i)=>(sheet[detail.section].find(r=>r.id===detail.row.id)||detail.row).values[sheet.columns.findIndex(c=>c.month===i+1&&c.kind==='forecast')]??null)} associations={data.associations} charges={data.charges as JuanCharge[]} orders={data.orders} onSaved={async()=>{await load();window.dispatchEvent(new Event('p3:forecast-changed'));}} onClose={()=>setDetail(null)}/>}
       {adding&&<JuanAddRow year={year} bank={sheet.bank} section={adding} version={data.version} charges={data.charges as JuanCharge[]} onSaved={async()=>{await load();window.dispatchEvent(new Event('p3:forecast-changed'));}} onClose={()=>setAdding(null)}/>}

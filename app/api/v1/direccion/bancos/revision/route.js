@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { saveBankWorkflow } from '@/server/features/banco/BankReviewWorkflow.js';
+import {readInternalTransfers} from '@/server/features/banco/InternalTransfers.js';
 import { requestActor } from '@/server/features/comentario/AccountActivity.js';
 import { getPgPool } from '../../../../../../server/database/pgClient.js';
 import { findPayrollCharge, insertRecurringCharge } from '../../../../../../server/features/prevision/RecurringChargeRepository.js';
@@ -28,6 +29,7 @@ export async function PUT(request) {
           return NextResponse.json({ message: 'El destinatario no existe o no es una cuenta de empleado.' }, { status: 400 });
         }
         const { rows: lines } = await client.query('SELECT * FROM tesoreria_movimientos_bancarios WHERE id_linea_banco=ANY($1::text[]) FOR UPDATE', [ids]);
+        if((await readInternalTransfers(client)).some(t=>[t.id_linea_cargo,t.id_linea_abono].some(id=>ids.includes(id))))throw Error('Gestiona este movimiento y su contrapartida desde Traspaso propio.');
         if((await client.query('SELECT 1 FROM tesoreria_tarjetas_movimientos WHERE id_linea_banco=ANY($1::text[]) LIMIT 1',[ids])).rowCount)throw Object.assign(new Error('Reabre primero la liquidación de tarjeta.'),{status:409});
         if (lines.length !== new Set(ids).size) {
           await client.query('ROLLBACK');

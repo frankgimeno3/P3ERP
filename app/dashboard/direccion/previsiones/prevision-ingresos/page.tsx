@@ -43,7 +43,7 @@ const remesaDateFormatter = new Intl.DateTimeFormat("es-ES", { year: "numeric", 
 const normalize = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s/g, "");
 const cellValue = (row: any, column: Column) => {
   const value = row[column.key];
-  if (column.key === "cobrada") return value ? "Cobrada" : "Pendiente";
+  if (column.key === "cobrada") return row.cobro_cerrado ? "Cerrada por acuerdo" : value ? "Cobrada" : "Pendiente";
   if (column.key === "id_factura") return row.numero_factura || value || "-";
   if (column.key === "created_at" || column.key === "updated_at") {
     const date = typeof value === "string" && value.trim() ? new Date(value) : new Date(NaN);

@@ -1,7 +1,8 @@
 import {createHash} from 'node:crypto';
 import {getPgPool} from '../../database/pgClient.js';
 import {invoiceRegionalTotals} from './InvoiceCustomerMatching.js';
-import {lockIncome,receiptOrderId,ensureOrderReceipt,syncInvoiceCollection} from '../prevision/IncomeReconciliation.js';
+import {lockIncome,ensureOrderReceipt,syncInvoiceCollection} from '../prevision/IncomeReconciliation.js';
+import {allocateOrderIdentifier} from '../identifiers/BusinessIdentifiers.js';
 import {accountActivity} from '../comentario/AccountActivity.js';
 
 const cents=value=>Math.round(Number(value||0)*100);
@@ -102,8 +103,9 @@ export async function importPublicidadPdf(rows,{pool=getPgPool(),readDocument,be
         const {payment}=assignment;let order=assignment.order;
         const base=Math.round(payment.importe*source.base/source.total*100)/100;
         if(!order){
-          const orderId=receiptOrderId(source.numero+'-'+String(payment.numero).padStart(3,'0'));
-          order=(await db.query(`INSERT INTO tesoreria_ordenes(id_orden,id_factura,id_cuenta,numero_cobro,etiqueta_cobro,forma_cobro,banco_cobro,cobro_total,base_imponible,con_iva,fecha_teorica_cobro) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *`,[orderId,invoice.id_factura_cliente,invoice.id_cuenta,payment.numero,'Vencimiento '+payment.numero+' factura '+source.numero,source.forma,source.banco,payment.importe,base,source.iva>0,payment.fecha])).rows[0];result.newOrders++;
+          const contractId=item.contracts.length===1?item.contracts[0]:null;
+          const orderId=await allocateOrderIdentifier(db,{contractId:contractId||'',invoiceId:invoice.id_factura_cliente,number:Number(payment.numero),total:Math.max(...source.cobros.map(p=>Number(p.numero))),date:source.fecha});
+          order=(await db.query(`INSERT INTO tesoreria_ordenes(id_orden,id_factura,id_cuenta,numero_cobro,etiqueta_cobro,forma_cobro,banco_cobro,cobro_total,base_imponible,con_iva,fecha_teorica_cobro,id_contrato) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *`,[orderId,invoice.id_factura_cliente,invoice.id_cuenta,payment.numero,'Vencimiento '+payment.numero+' factura '+source.numero,source.forma,source.banco,payment.importe,base,source.iva>0,payment.fecha,contractId])).rows[0];result.newOrders++;
         }else{
           // Paid amounts and bank reconciliation survive documentary enrichment.
           const bank=order.cobrada||order.cobro_revision_bancaria||order.revisada?order.banco_cobro||source.banco:source.banco;

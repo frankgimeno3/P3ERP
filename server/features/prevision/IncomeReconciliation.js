@@ -1,10 +1,8 @@
-import { createHash } from 'node:crypto';
 import { orderActivity } from '../comentario/AccountActivity.js';
 
 export const incomeError = message => { const error = new Error(message); error.status = 409; throw error; };
 export const incomeCents = value => Math.round(Number(value || 0) * 100);
 export const lockIncome = db => db.query("SELECT pg_advisory_xact_lock(hashtext('ingresos:conciliacion'))");
-export const receiptOrderId = number => `ord_rec_${createHash('sha256').update(number).digest('hex').slice(0, 24)}`;
 
 export async function ensureOrderReceipt(db, orderId, actorId = '') {
   const order = (await db.query(`SELECT o.*,COALESCE(NULLIF(f.numero_factura,''),NULLIF(o.id_factura,'')) numero_factura,
@@ -36,8 +34,10 @@ export async function ensureOrderReceipt(db, orderId, actorId = '') {
 export async function syncInvoiceCollection(db, invoiceIds) {
   for (const id of [...new Set(invoiceIds.filter(Boolean))].sort()) {
     await db.query(`UPDATE administracion_facturas_clientes f SET
-      cobrada=s.cobrada,importe_cobrado=s.importe,fecha_real_cobro=s.fecha
+      cobrada=s.cobrada,importe_cobrado=s.importe,fecha_real_cobro=s.fecha,
+      datos_importacion=COALESCE(f.datos_importacion,'{}'::jsonb)||jsonb_build_object('gestion_cobro_cerrada',s.gestion_cerrada)
       FROM (SELECT COALESCE(bool_and(o.cobrada),false) cobrada,
+        COALESCE(bool_and(o.cobrada OR COALESCE((o.datos_importacion->'cierre_cobro'->>'activo')::boolean,false)),false) AND COALESCE(bool_or(COALESCE((o.datos_importacion->'cierre_cobro'->>'activo')::boolean,false)),false) gestion_cerrada,
         COALESCE(sum(CASE WHEN o.cobro_revision_bancaria THEN COALESCE(payments.importe,0) WHEN o.cobrada THEN COALESCE(o.cobro_total,0) ELSE 0 END),0) importe,
         CASE WHEN bool_and(o.cobrada) THEN to_char(max(p3_income_date(o.fecha_real_cobro)),'DD/MM/YYYY') END fecha
         FROM tesoreria_ordenes o LEFT JOIN LATERAL(SELECT sum(a.importe) importe FROM tesoreria_aplicaciones_cobro a
@@ -57,7 +57,7 @@ export async function syncOrderCollections(db, orderIds, actorId = '') {
       string_agg(DISTINCT b.banco,',') FILTER(WHERE b.estado_revision) banco
       FROM tesoreria_aplicaciones_cobro a JOIN tesoreria_movimientos_bancarios b ON b.id_linea_banco=a.id_linea_banco WHERE a.id_orden=$1`, [id])).rows[0];
     if (!totals.records && !order.cobro_revision_bancaria) { invoices.push(order.id_factura); continue; }
-    const paid = incomeCents(order.cobro_total) > 0 && incomeCents(totals.total) === incomeCents(order.cobro_total);
+    const paid = incomeCents(order.cobro_total) > 0 && incomeCents(totals.total) >= incomeCents(order.cobro_total);
     const date = paid ? totals.fecha || '' : '';
     await db.query(`UPDATE tesoreria_ordenes SET cobrada=$2,fecha_real_cobro=$3,cobro_revision_bancaria=TRUE,
       banco_cobro=CASE WHEN $4 IN ('Sabadell','Santander') THEN $4 ELSE banco_cobro END,
@@ -93,6 +93,7 @@ export async function reconcileBankIncome(db, line, item, actorId = '') {
     if (owners.some(owner=>!owner.id_cuenta || item.entityId !== owner.id_cuenta)) incomeError('Todas las órdenes de la transferencia deben corresponder a la misma cuenta.');
   } else if (item.orderId || item.orderIds?.length || item.remesaIds?.length) incomeError('Otros ingresos no admiten órdenes ni remesas asociadas.');
   for (const order of orders) {
+    if (order.datos_importacion?.cierre_cobro?.activo) incomeError(`La gestión del cobro ${order.id_orden} está cerrada. Reábrela antes de conciliar un ingreso.`);
     if(order.cancelada)incomeError(`La orden ${order.id_orden} está cancelada.`);
     if (!(Number(order.cobro_total) > 0)) incomeError(`La orden ${order.id_orden} no tiene un importe positivo.`);
     const existing = (await db.query(`SELECT a.id_linea_banco FROM tesoreria_aplicaciones_cobro a JOIN tesoreria_movimientos_bancarios b USING(id_linea_banco)

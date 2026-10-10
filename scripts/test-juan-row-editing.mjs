@@ -9,6 +9,7 @@ import {generateOccurrences} from '../server/features/banco/BankReviewAnalysis.j
 import {nextJuanSheets} from '../server/features/prevision/JuanAnnual.js';
 import {planNext} from '../server/features/prevision/RecurringChargePlanning.js';
 import {syncJuanOperationalRows} from '../server/features/prevision/JuanOperationalSync.js';
+import {juanCellParts} from '../server/features/prevision/JuanCellBreakdown.js';
 env.loadEnvConfig(process.cwd());const pool=getPgPool(),db=await pool.connect();
 try {
  await db.query('BEGIN');const schema='test_juan_edit_'+randomUUID().replaceAll('-','');await db.query(`CREATE SCHEMA ${schema}`);await db.query(`SET LOCAL search_path TO ${schema},public`);
@@ -51,5 +52,14 @@ try {
  const syncId=`payments:erp:${syncCharge.id_cargo_recurrente}`;assert.equal(b.sheets[0].payments.filter(r=>r.id===syncId).length,1);assert.equal(b.sheets[0].payments.find(r=>r.id===syncId).values[23],12100);
  const syncVersion=b.version;await syncJuanOperationalRows(2027,adapter);b=await getJuanWorkbook(adapter,2027);assert.equal(b.version,syncVersion,'Reload must not duplicate a charge or change the book');
  await db.query('UPDATE tesoreria_cargos_recurrentes SET activo=false WHERE id_cargo_recurrente=$1',[syncCharge.id_cargo_recurrente]);b=await getJuanWorkbook(adapter,2027);assert.equal(b.sheets[0].payments.find(r=>r.id===syncId).values[23],null);
- console.log('PASS: shared charge synchronization and deactivation, recurrence creation, annual carry, supplier matching, month edits and historical preservation. Isolated test data rolled back.');
+ const grouped=[];
+ for(const amount of [20,30]){b=await saveJuanRow({year:2027,version:b.version,bank:'Sabadell',section:'payments',label:`Grupo prueba ${amount}`,providerId:'test_provider',rule:{contains_iva:false,cada:1,unidad:'meses',total_iva:amount,inicio_dia:10,inicio_mes:1,inicio_anio:2027}},adapter);grouped.push(b.sheets[0].payments.find(r=>r.label===`Grupo prueba ${amount}`));}
+ const groupIds=grouped.map(r=>b.associations.find(a=>a.row_id===r.id).charge_ids[0]);
+ await db.query("UPDATE tesoreria_prevision_juan_asociaciones SET status='group',charge_ids=$2::jsonb,evidence='{\"aggregate_charges\":true}'::jsonb WHERE workbook_id='juan-2027' AND bank='Sabadell' AND row_id=$1",[grouped[0].id,JSON.stringify(groupIds)]);
+ b=await getJuanWorkbook(adapter,2027);let gs=b.sheets[0],gr=gs.payments.find(r=>r.id===grouped[0].id);const parts=juanCellParts(b,gs,'payments',gr,1);assert.equal(parts.length,2);assert.equal(gr.values[1],5000);
+ await assert.rejects(editJuanCell({year:2027,version:b.version,bank:'Sabadell',section:'payments',rowId:gr.id,column:1,value:6000},adapter),/desglose/);
+ const components=parts.map((p,i)=>({id:p.id,amount:i?3500:2500}));
+ await assert.rejects(editJuanCell({year:2027,version:b.version,bank:'Sabadell',section:'payments',rowId:gr.id,column:1,value:1,components},adapter),/suma/);
+ b=await editJuanCell({year:2027,version:b.version,bank:'Sabadell',section:'payments',rowId:gr.id,column:1,value:6000,components},adapter);gs=b.sheets[0];gr=gs.payments.find(r=>r.id===grouped[0].id);assert.equal(gr.values[1],6000);assert.equal(gr.values[3],5000,'Other months remain unchanged');
+ console.log('PASS: shared charge synchronization, recurrence creation, annual carry, supplier matching, atomic grouped component edits, total validation and historical preservation. Isolated test data rolled back.');
 }finally{await db.query('ROLLBACK');db.release();await pool.end();}

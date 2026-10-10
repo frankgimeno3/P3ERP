@@ -176,7 +176,7 @@ export function analyzeBankReview({ lines, selectedIds, charges = [], storedOccu
     const rows = apps.map(a => lineMap.get(a.id_linea_banco));
     if (paid > cents(o.importe) && rows.some(l => selected.has(l.id_linea_banco))) add('overpaid', rows, 'Vencimiento aplicado por encima de su importe', 'Hay más importe bancario asociado que importe previsto.', { occurrenceId: o.id, expected: cents(o.importe) });
     // State only what the data establishes; imported statement coverage is not recorded.
-    if (!o.orphaned && o.fecha <= end && o.fecha < today && o.remaining > 0) history.push({ ids: [], occurrenceId: o.id, detail: `${o.descripcion} · ${o.fecha} · ${o.remaining.toFixed(2)} € sin asociar. No acredita un impago: puede faltar el extracto o la asociación.` });
+    if (!o.orphaned && o.fecha >= '2026-01-01' && o.fecha <= end && o.fecha < today && o.remaining > 0) history.push({ ids: [], occurrenceId: o.id, detail: `${o.descripcion} · ${o.fecha} · ${o.remaining.toFixed(2)} € sin asociar. No acredita un impago: puede faltar el extracto o la asociación.` });
   }
   const visibleLines = lines.filter(l => selected.has(l.id_linea_banco) || alerts.some(a => a.ids.includes(l.id_linea_banco)) || history.some(h => h.ids.includes(l.id_linea_banco)) || resolved.some(r => r.ids.includes(l.id_linea_banco)));
   const coincidences = Object.fromEntries(selectedLines.map(l => [l.id_linea_banco, Object.fromEntries(visibleLines.filter(other=>!selected.has(other.id_linea_banco)).map(other=>[other.id_linea_banco,coincidenceReasons(l,other)]))]));

@@ -1,7 +1,8 @@
+import {resolveIdentifier} from '@/server/features/identifiers/IdentifierAliases.js';
 import { deleteTarjeta, saveTarjeta } from '@/server/features/proveedor/TarjetaRepository.js';
 import { adminError } from '@/server/features/proveedor/SupplierAdminRepository.js';
 import { cardData } from '@/server/features/proveedor/CardSettlementRepository.js';
 export const runtime = 'nodejs';
-export async function GET(_request,{params}) { try { return Response.json(await cardData((await params).id_tarjeta)); } catch (error) { return adminError(error); } }
-export async function PUT(request,{params}) { try { return Response.json(await saveTarjeta((await params).id_tarjeta,await request.json())); } catch (error) { return adminError(error); } }
-export async function DELETE(_request,{params}) { try { return Response.json(await deleteTarjeta((await params).id_tarjeta)); } catch (error) { return adminError(error); } }
+export async function GET(_request,{params}) { try { return Response.json(await cardData(await resolveIdentifier('tarjeta',(await params).id_tarjeta))); } catch (error) { return adminError(error); } }
+export async function PUT(request,{params}) { try { return Response.json(await saveTarjeta(await resolveIdentifier('tarjeta',(await params).id_tarjeta),await request.json())); } catch (error) { return adminError(error); } }
+export async function DELETE(_request,{params}) { try { return Response.json(await deleteTarjeta(await resolveIdentifier('tarjeta',(await params).id_tarjeta))); } catch (error) { return adminError(error); } }

@@ -47,6 +47,11 @@ export async function bulkImport({type,policy,rows,choices={},token,commit=false
       const decision=choices[row.row] || (before?policy:'create');
       if(!['create','update','skip','block'].includes(decision))fail('Decisión no válida para la fila '+row.row,400);
       const errors=row.errors.filter(error=>error!=='Identificador repetido en el archivo.');
+      if(!before){
+        const formats={contratos:/^C\d{2}\.\d{3}\.\d{3}$/,ordenes:/^[CO]\d{2}\.\d{3}\.\d{3}-\d+\/\d+$/,facturas:/^(?:\d+|[AP]\d+)$/};
+        if(!formats[type].test(String(data[schema.id]||'')))errors.push('El identificador no sigue el formato estándar de '+schema.label.toLowerCase()+'.');
+        if(type==='ordenes'&&merged.id_contrato&&String(data.id_orden).split('-')[0]!==merged.id_contrato)errors.push('El código de orden no corresponde a su contrato.');
+      }
       if(decision==='skip')return {row:row.row,id:data[schema.id] || '',action:'skip',errors:[],changes:[],data,before};
       if(data[schema.id]&&rows.some((other,i)=>i!==index&&active[i]&&other.data[schema.id]===data[schema.id]))errors.push('Identificador repetido: conserva una sola fila y salta las demás.');
       if(before && decision==='block')errors.push('El identificador ya existe: elige actualizar o saltar esta fila.');

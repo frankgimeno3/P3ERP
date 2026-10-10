@@ -7,10 +7,12 @@ export function nextJuanSheets(previous,year,charges=[],associations=[]) {
   sheet.year=year;sheet.name=`${sheet.bank==='Sabadell'?'BSAB':'BSAN'} ${year}`;
   sheet.columns=Array.from({length:24},(_,i)=>({month:Math.floor(i/2)+1,kind:i%2?'forecast':'actual'}));
   sheet.checks=Array(24).fill(null);delete sheet.controls;sheet.closedMonths=[];
+  for(const section of ['income','payments'])sheet[section]=sheet[section].filter(row=>!row.internalTransferId);
   for(const section of ['income','payments'])for(const row of sheet[section]) {
    const original=source[section].find(r=>r.id===row.id);
    const future=source.columns.flatMap((c,i)=>c.kind==='forecast'&&original.values[i]>0?[{month:c.month,amount:original.values[i]}]:[]);
    row.values=Array(24).fill(null);row.seeded=true;
+   delete row.cellDetails;
    if(row.opening){row.label=`SALDO 01-01-${year} · pendiente de cierre`;continue;}
    if(section==='income'&&row.recurring) {
     const dues=generateOccurrences([{id_cargo_recurrente:row.id,tipo_cargo:'otro',tipo_programacion:'periodicidad',programacion:[row.recurring]}],`${year}-01-01`,`${year}-12-31`).occurrences;
@@ -62,7 +64,7 @@ export async function ensureJuanYears(pool,now=new Date()) {
     const charge=charges.find(c=>a.charge_ids?.length===1&&String(c.id_cargo_recurrente)===a.charge_ids[0]);
     const canonical=charge&&generateOccurrences([{...charge,tipo_cargo:charge.tipo_cargo==='nomina'?'otro':charge.tipo_cargo}],`${year}-01-01`,`${year}-12-31`).occurrences.length>0;
     const status=a.status==='group'?'group':canonical?'matched':'projected';
-    await db.query('INSERT INTO tesoreria_prevision_juan_asociaciones(workbook_id,bank,row_id,status,provider_id,employee_id,charge_ids,evidence) VALUES($1,$2,$3,$4,$5,$6,$7::jsonb,$8::jsonb)',[`juan-${year}`,a.bank,a.row_id,status,a.provider_id,a.employee_id,JSON.stringify(a.charge_ids),JSON.stringify({reason:canonical?'Previsión vinculada a la programación vigente del ERP.':'Base copiada del año anterior: importe y periodicidad estimados, pendientes de revisión. No es un vencimiento nuevo del ERP.',conflicts:[],candidates:[],seedYear:year-1})]);
+    await db.query('INSERT INTO tesoreria_prevision_juan_asociaciones(workbook_id,bank,row_id,status,provider_id,employee_id,charge_ids,evidence) VALUES($1,$2,$3,$4,$5,$6,$7::jsonb,$8::jsonb)',[`juan-${year}`,a.bank,a.row_id,status,a.provider_id,a.employee_id,JSON.stringify(a.charge_ids),JSON.stringify({reason:canonical?'Previsión vinculada a la programación vigente del ERP.':'Base copiada del año anterior: importe y periodicidad estimados, pendientes de revisión. No es un vencimiento nuevo del ERP.',conflicts:[],candidates:[],seedYear:year-1,...(a.evidence?.aggregate_charges?{aggregate_charges:true}:{})})]);
     if(canonical)for(const cell of sheets.find(s=>s.bank===a.bank).columns.filter(c=>c.kind==='forecast'))await db.query('INSERT INTO tesoreria_prevision_juan_enlaces(workbook_id,cell_key,section,target_id,status,note) VALUES($1,$2,$3,$4,$5,$6)',[`juan-${year}`,`${a.bank}:${a.row_id}:${cell.month}`,'payments',String(charge.id_cargo_recurrente),'matched','Programación vigente del ERP']);
    }
   }

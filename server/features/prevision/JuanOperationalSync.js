@@ -15,7 +15,7 @@ export async function syncJuanOperationalRows(year,pool=getPgPool()) {
   const associations=(await db.query('SELECT * FROM tesoreria_prevision_juan_asociaciones WHERE workbook_id=$1',[id])).rows;
   const charges=(await db.query(`SELECT c.*,p.nombre_proveedor,COALESCE(NULLIF(a.nombre_completo_agente,''),trim(concat_ws(' ',a.nombre_agente,a.apellidos_agente))) nombre_agente FROM tesoreria_cargos_recurrentes c LEFT JOIN administracion_proveedores p USING(id_proveedor) LEFT JOIN agentes_db a ON a.id_agente=c.id_agente WHERE c.activo AND c.id_tarjeta IS NULL AND c.banco_pago IN ('Sabadell','Santander') ORDER BY c.id_cargo_recurrente`)).rows;
   let changed=false;
-  const orders=(await db.query(`SELECT banco_cobro,forma_cobro FROM tesoreria_ordenes WHERE NOT cancelada AND NOT COALESCE(cobrada,false) AND p3_income_date(fecha_teorica_cobro) BETWEEN $1::date AND $2::date`,[`${year}-${year===2026?'10':'01'}-01`,`${year}-12-31`])).rows;
+  const orders=(await db.query(`SELECT banco_cobro,forma_cobro FROM tesoreria_ordenes WHERE NOT cancelada AND NOT COALESCE(cobrada,false) AND NOT COALESCE((datos_importacion->'cierre_cobro'->>'activo')::boolean,false) AND p3_income_date(fecha_teorica_cobro) BETWEEN $1::date AND $2::date`,[`${year}-${year===2026?'10':'01'}-01`,`${year}-12-31`])).rows;
   for(const sheet of book.sheets)for(const mode of new Set(orders.filter(o=>o.banco_cobro===sheet.bank).map(o=>incomeMode(o.forma_cobro)))) {
    if(sheet.income.some(r=>incomeRowMode(r.label)===mode))continue;
    const row={id:`income:erp:${mode}`,label:mode==='receipt'?'REMESAS RECIBOS PREVISTAS DE COBRO':mode==='transfer'?'TRANSFERENCIAS PREVISTAS DE COBRO':'OTROS INGRESOS PREVISTAS DE COBRO',day:null,opening:false,values:sheet.columns.map(()=>null)};

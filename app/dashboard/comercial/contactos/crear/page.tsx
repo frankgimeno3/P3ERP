@@ -33,7 +33,7 @@ type ContactForm = {
 };
 
 const initialForm = (): ContactForm => ({
-  id_contacto: `cont_${Date.now().toString(36)}`,
+  id_contacto: "",
   id_cuenta: "",
   nombre_empresa: "",
   nombre_contacto: "",
@@ -147,7 +147,7 @@ export default function CrearContacto() {
           {step === 2 && (
             <section className="space-y-5">
               <h2 className="text-lg font-bold text-slate-800">Datos obligatorios</h2>
-              <TextField label="ID contacto (solo lectura)" value={form.id_contacto} readOnly />
+              <TextField label="ID contacto (solo lectura)" value={form.id_contacto || "Se asignar? al guardar (CON?)"} readOnly />
               {linked && <TextField label="ID cuenta (solo lectura)" value={form.id_cuenta} readOnly />}
               <TextField label="Nombre" required value={form.nombre_contacto} onChange={(value) => update({ nombre_contacto: value })} placeholder="Nombre" />
               <TextField label="Apellidos" value={form.apellidos_contacto} onChange={(value) => update({ apellidos_contacto: value })} placeholder="Apellidos" />

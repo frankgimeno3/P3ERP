@@ -41,7 +41,7 @@ export default function JuanRowDetails({year=2026,bank,rowId,label,section,budge
    {section==='payments'&&!linked.length&&!grouped&&<button className={button} onClick={()=>setPhase('charge')}>Vincular o preparar cargo recurrente</button>}
    {association?.evidence?.reason&&<p className="my-3 text-sm text-slate-600">{association.evidence.reason}</p>}
    {association&&!association.charge_ids.length&&association.status!=='group'&&<p className="my-2 text-sm text-amber-800">El importe pertenece al presupuesto del ERP. Su proveedor, contrato o desglose fiscal puede completarse sin crear otra previsión.</p>}
-   <p className="my-3 text-sm">Los importes de cada mes se editan directamente en la hoja. Cambiar un mes ajusta ese vencimiento; la frecuencia y los demás meses se conservan.</p>
+   <p className="my-3 text-sm">Pulsa el importe de un mes para abrir su modal y editar los cargos individuales. El total es su suma; la frecuencia y los demás meses se conservan.</p>
    {!grouped&&!/^SALDO/.test(label)&&<button className={button} onClick={()=>setPhase('remove')}>Retirar previsiones de esta fila</button>}
   </>}
  </section></div>;

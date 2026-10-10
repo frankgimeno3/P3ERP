@@ -1,3 +1,4 @@
+import {allocateAccountIdentifier,allocateOrderIdentifier,invoiceIdentifier} from '../identifiers/BusinessIdentifiers.js';
 import {createHash} from 'node:crypto';
 import XLSX from 'xlsx';
 import {getPgPool} from '../../database/pgClient.js';
@@ -18,6 +19,7 @@ export function parseInvoiceRegister(buffer,filename='REGISTRO FACTURAS.xlsx'){
     matrix.slice(1).forEach((raw,index)=>{
       if(raw.every(value=>value==null||!String(value).trim()))return;
       const numero=String(raw[0]||'').trim(),cliente=String(raw[3]||'').trim();
+      if(numero)invoiceIdentifier(numero);
       if(numero&&raw.slice(1).every(value=>value==null||!String(value).trim())){reserved.push({sheet,row:index+2,numero});return;}
       const date=typeof raw[1]==='number'?XLSX.SSF.parse_date_code(raw[1]):null;
       const totals=raw.slice(4,7).map(value=>value==null||value===''?0:Number(value));
@@ -82,11 +84,17 @@ export async function importInvoiceRegister(rows,{apply=false,actorId='',pool=ge
     const backup={facturas:plan.filter(item=>item.before).map(item=>item.before),ordenes:plan.flatMap(item=>item.orders),recibos:plan.flatMap(item=>item.receipts),lineas:(await db.query('SELECT * FROM administracion_lineas_factura WHERE id_factura_cliente=ANY($1::text[])',[plan.map(item=>item.invoiceId)])).rows};
     if(!apply){await db.query('ROLLBACK');return {summary,backup};}
     if(beforeApply)await beforeApply(backup);
+    const createdAccounts=new Map();
     for(const item of plan){
       const {row,before,invoiceId}=item;
       if(item.newAccount){
-        item.accountId='ACC_REG_'+digest(row.codigo||row.cliente);
-        await db.query(`INSERT INTO comercial_cuentas(id_cuenta,nombre_empresa,id_edisoft,descripcion_cuenta) VALUES($1,$2,$3,$4) ON CONFLICT(id_cuenta) DO NOTHING`,[item.accountId,row.cliente,row.codigo,'Creada desde el registro de facturas. Datos fiscales pendientes de completar.']);
+        const identity=row.codigo?'codigo:'+row.codigo:'nombre:'+norm(row.cliente);
+        item.accountId=createdAccounts.get(identity);
+        if(!item.accountId){
+          item.accountId=await allocateAccountIdentifier(db);
+          await db.query(`INSERT INTO comercial_cuentas(id_cuenta,nombre_empresa,id_edisoft,descripcion_cuenta) VALUES($1,$2,$3,$4)`,[item.accountId,row.cliente,row.codigo,'Creada desde el registro de facturas. Datos fiscales pendientes de completar.']);
+          createdAccounts.set(identity,item.accountId);
+        }
       }
       const metadata={...before?.datos_importacion?.registro_facturas,...row.source,discrepancia_ordenes:item.warning,contratos:item.contracts};
       if(before?.datos_importacion?.registro_facturas?.anterior)metadata.anterior=before.datos_importacion.registro_facturas.anterior;
@@ -116,7 +124,7 @@ export async function importInvoiceRegister(rows,{apply=false,actorId='',pool=ge
         }
       }
       if(item.createOrder){
-        const orderId='ord_fac_reg_'+digest(invoiceId);
+        const orderId=await allocateOrderIdentifier(db,{invoiceId,date:row.fecha});
         await db.query(`INSERT INTO tesoreria_ordenes(id_orden,id_factura,id_cuenta,numero_cobro,etiqueta_cobro,forma_cobro,base_imponible,cobro_total,con_iva,datos_importacion) VALUES($1,$2,$3,1,$4,$5,$6,$7,$8,$9::jsonb) ON CONFLICT(id_orden) DO NOTHING`,[orderId,invoiceId,item.accountId,'Factura '+row.numero,row.forma,row.base,row.total,Boolean(row.nacional),JSON.stringify({registro_facturas:row.source,vencimiento_pendiente:true})]);item.orderIds.push(orderId);
       }
       for(const orderId of item.orderIds){await db.query("UPDATE tesoreria_ordenes SET id_factura=$2,id_cuenta=COALESCE(NULLIF(id_cuenta,''),$3),updated_at=CASE WHEN id_factura IS DISTINCT FROM $2 THEN now() ELSE updated_at END WHERE id_orden=$1",[orderId,invoiceId,item.accountId]);await ensureOrderReceipt(db,orderId,actorId);}
@@ -125,6 +133,7 @@ export async function importInvoiceRegister(rows,{apply=false,actorId='',pool=ge
       if(!before||changed.length)await addCuentaEvento({idCuenta:item.accountId,idAgente:actorId,detalles:`${before?'Actualizada':'Importada'} factura ${row.numero} desde ${row.source.archivo}, ${row.source.hoja}, fila ${row.source.fila}.`},db);
       const view=summary.invoices.find(invoice=>invoice.id===invoiceId);view.cuenta=item.accountId;view.ordenes=item.orderIds;
     }
+    summary.newAccounts=createdAccounts.size;
     await db.query('COMMIT');return {summary,backup};
   }catch(error){await db.query('ROLLBACK');throw error;}finally{db.release();}
 }

@@ -1,3 +1,4 @@
+import {resolveIdentifier} from '../identifiers/IdentifierAliases.js';
 import { getPgPool } from "../../database/pgClient.js";
 
 function numberOrZero(value) {
@@ -7,8 +8,11 @@ function numberOrZero(value) {
 function normalizeOrden(row) {
   return {
     id_orden: row.id_orden,
+    updated_at: row.updated_at,
+    cobro_cerrado: Boolean(row.datos_importacion?.cierre_cobro?.activo),
+    cierre_cobro: row.datos_importacion?.cierre_cobro || null,
     cancelada: Boolean(row.cancelada),
-    estado: row.cancelada ? 'Cancelada' : row.datos_importacion?.sin_cobro_monetario ? 'Sin cobro monetario' : row.cobrada ? 'Cobrada' : 'Pendiente de cobro',
+    estado: row.cancelada ? 'Cancelada' : row.datos_importacion?.cierre_cobro?.activo ? 'Cerrada por acuerdo' : row.datos_importacion?.sin_cobro_monetario ? 'Sin cobro monetario' : row.cobrada ? 'Cobrada' : 'Pendiente de cobro',
     cancelada_at: row.cancelada_at,
     cancelacion_detalle: row.cancelacion_detalle || {},
     id_agente: row.agente_orden_id || '',
@@ -40,7 +44,7 @@ function normalizeOrden(row) {
     ya_contabilizada: Boolean(row.ya_contabilizada),
     base_imponible: numberOrZero(row.base_imponible),
     cobro_total: numberOrZero(row.cobro_total),
-    importe_pendiente: row.cobrada || row.cancelada ? 0 : Math.max(0, Math.round((numberOrZero(row.cobro_total) - numberOrZero(row.importe_aplicado)) * 100) / 100),
+    importe_pendiente: row.cobrada || row.cancelada || row.datos_importacion?.cierre_cobro?.activo ? 0 : Math.max(0, Math.round((numberOrZero(row.cobro_total) - numberOrZero(row.importe_aplicado)) * 100) / 100),
     id_contrato: row.id_contrato ?? "",
     id_factura: row.id_factura ?? "",
     cliente: row.nombre_empresa || row.cliente_recibo || row.datos_importacion?.cliente || row.id_cuenta || row.id_cuenta_contrato || "",
@@ -50,7 +54,7 @@ function normalizeOrden(row) {
 
 const ordenesSelect = `
   SELECT
-    o.id_orden,
+    o.id_orden,o.updated_at,
     o.cancelada,o.cancelada_at,o.cancelacion_detalle,o.id_contacto_cobro,o.comentarios,o.con_iva,
     COALESCE(NULLIF(o.id_agente,''),aceptacion.id_agente,c.id_agente_contrato) agente_orden_id,
     substring(o.id_orden from '(\\d+/\\d+)$') numero_orden,
@@ -129,6 +133,7 @@ export async function getOrdenesAdministrativas(filters = {}) {
 }
 
 export async function getOrdenAdministrativaById(idOrden) {
+  idOrden=await resolveIdentifier('orden',idOrden);
   const pool = getPgPool();
   const { rows } = await pool.query(`${ordenesSelect} WHERE o.id_orden = $1 LIMIT 1`, [idOrden]);
   if (!rows[0]) return null;

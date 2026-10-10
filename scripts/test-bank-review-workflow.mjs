@@ -33,10 +33,11 @@ try {
     INSERT INTO agentes_db VALUES('employee',true);INSERT INTO administracion_proveedores VALUES('supplier'),('other');INSERT INTO comercial_cuentas VALUES('client');
     INSERT INTO tesoreria_ordenes VALUES('order','client',NULL);INSERT INTO tesoreria_pagos_previstos VALUES('payment','supplier');
     INSERT INTO tesoreria_movimientos_bancarios(id_linea_banco,importe) VALUES('advance',-200),('salary',-800),('extra',-1050),('raise',-1100),('supplier',-121),('supplier2',-121),('income',50),('bad',-800);`);
+  await db.query('ALTER TABLE tesoreria_pagos_previstos ADD id_vencimiento text; ALTER TABLE tesoreria_cargos_recurrentes ADD id_tarjeta text');
   // Income tables are isolated alongside the payroll fixtures.
-  for (const table of ['administracion_facturas_clientes','tesoreria_recibos_importados','tesoreria_remesas','general_comentarios','general_eventos','cuentas_registro_eventos']) await db.query(`CREATE TABLE ${table} (LIKE public.${table} INCLUDING ALL)`);
+  for (const table of ['administracion_facturas_clientes','tesoreria_recibos_importados','tesoreria_remesas','general_comentarios','general_eventos','cuentas_registro_eventos','tesoreria_tarjetas_movimientos','tesoreria_tarjetas_liquidaciones','administracion_tickets','administracion_facturas_proveedores']) await db.query(`CREATE TABLE ${table} (LIKE public.${table} INCLUDING ALL)`);
   await db.query(`ALTER TABLE tesoreria_ordenes ADD id_factura text,ADD numero_cobro integer,ADD forma_cobro text,
-    ADD cobro_total numeric,ADD cobrada boolean DEFAULT false,ADD fecha_real_cobro text,ADD fecha_teorica_cobro text,ADD banco_cobro text,ADD updated_at timestamptz DEFAULT now();
+    ADD cobro_total numeric,ADD cobrada boolean DEFAULT false,ADD fecha_real_cobro text,ADD fecha_teorica_cobro text,ADD banco_cobro text,ADD datos_importacion jsonb DEFAULT '{}'::jsonb,ADD updated_at timestamptz DEFAULT now();
     ALTER TABLE comercial_cuentas ADD nombre_empresa text;
     ALTER TABLE tesoreria_movimientos_bancarios ADD fecha_operativa text;
     UPDATE tesoreria_ordenes SET cobro_total=50,forma_cobro='transferencia' WHERE id_orden='order';
@@ -51,6 +52,7 @@ try {
   await db.query("ALTER TABLE agentes_db ADD nombre_completo_agente text, ADD nombre_agente text, ADD apellidos_agente text; ALTER TABLE tesoreria_cargos_recurrentes ADD created_at timestamptz DEFAULT now()");
   await db.query(readLegacyMigrationSql('database/migrations/20260911_0002_employee_payroll_tasks.sql'));
   await db.query(readLegacyMigrationSql('database/migrations/20260911_0003_payroll_history_identity.sql'));
+  await db.query(fs.readFileSync('database/migrations/20261008_0001_vtiger_tasks.sql','utf8'));
   await db.query(fs.readFileSync('database/migrations/20260920_0001_bank_review_memory.sql','utf8'));
   await db.query(fs.readFileSync('database/migrations/20260920_0002_recurring_charge_horizon.sql','utf8'));
   pool.connect=async()=>adapter;

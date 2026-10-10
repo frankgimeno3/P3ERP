@@ -1196,3 +1196,56 @@ Migración `20261006_0002_account_tasks.sql`:
 ### Planificación de números de revista
 
 `servicios_publicaciones` conserva por número las fechas `fecha_pedir_materiales`, `fecha_recordatorio`, `deadline_materiales` (previsto), `deadline_real_materiales`, `fecha_envio_imprenta`, `fecha_estimada_impresion` y `fecha_envio_revistas`. Valores dd/mm/yyyy o vacíos; migración `20261006_0004_magazine_event_dates.sql`.
+# Traspasos propios (2026-10-09)
+
+`tesoreria_traspasos_propios` almacena previsiones puntuales y su revisión entre
+Sabadell y Santander: origen, destino, importe, fecha, estado, motivo y actor.
+`id_linea_cargo` e `id_linea_abono` son únicos y referencian el extracto. La revisión
+confirma ambas líneas en una transacción; reabrir una reabre su pareja. Una línea
+sin contrapartida puede quedar revisada con la ausencia explícita. `prevision`
+distingue las previsiones creadas de los traspasos históricos identificados.
+Migración: `20261009_0001_internal_transfers.sql`.
+
+`tesoreria_pagos_previstos.cierre_pago` conserva la diferencia de un pago asumida
+explícitamente, con previsto, real, diferencia y motivo. No cambia los importes
+del documento ni del banco. Solo cierra el pendiente mientras el pago real
+revisado y el previsto coincidan con la evidencia del cierre.
+Migración: `20261009_0002_payment_difference_closure.sql`.
+
+### Liquidaciones de tarjetas
+
+Migración `20261009_0003_liquidaciones_workflow.sql`. Reutiliza tarjetas,
+tickets y cargos recurrentes. `tesoreria_tarjetas_liquidaciones` admite borradores
+pendientes, conserva la previsión inicial, el período real y una versión de edición;
+hay una liquidación activa por tarjeta y mes de cargo. Su detalle guarda otras
+previsiones, vencimientos omitidos y el desglose congelado al revisar.
+
+`tesoreria_tarjetas_documentos` conserva el PDF original, su SHA-256 único y la
+extracción validada. `tesoreria_tarjetas_lineas` conserva sus movimientos firmados
+y asociaciones únicas a ticket o vencimiento, u otras previsiones del período.
+Los estados distinguen pendiente, conciliado, pendiente de ticket y ausencia
+justificada de ticket. `tesoreria_tarjetas_movimientos` vincula el cargo total del
+extracto, cuyo importe debe coincidir exactamente con la suma del PDF.
+
+Los tickets añaden revisión, clasificación, comentarios y versión `updated_at`.
+`id_liquidacion_tarjeta` permite asignar expresamente un ticket a un período distinto
+sin alterar la fecha del justificante, por ejemplo cuando el banco lo anota después.
+Los personales permiten proveedor vacío. Una revisión bloquea cambios en sus
+tickets y conserva su desglose; reabrirla conserva el documento y las asociaciones.
+La proyección de Juan y Tesorería usa las fechas de cargo y evita sumar por separado
+una suscripción y el ticket que la justifica.
+
+### Identificadores y referencias históricas
+
+`general_identificadores_alias` conserva la entidad, código anterior, código
+actual y motivo de cada renumeración. No sustituye los datos originales de las
+importaciones. Las claves actuales tienen prioridad cuando una referencia
+histórica coincide con otro código que sigue vigente.
+
+Las altas e importaciones comparten asignadores transaccionales en
+`server/features/identifiers/BusinessIdentifiers.js`: cuentas `ACCn`, contactos
+`CONn`, agentes `ag_aa_nnnn`, contratos `Caa.nnn.nnn`, órdenes del contrato
+`Caa.nnn.nnn-i/N` y contenidos nuevos `hp_aa_nnn.nnn`. Se respetan los códigos
+numéricos de contenidos que proceden del sistema anterior. Los proveedores
+utilizan `prov_` seguido de UUID sin guiones; las tarjetas utilizan UUID.
+El número oficial de factura se conserva separado de la identidad de un borrador.

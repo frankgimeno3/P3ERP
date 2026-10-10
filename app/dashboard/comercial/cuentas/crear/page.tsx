@@ -37,7 +37,7 @@ type CuentaForm = {
 };
 
 const initialForm = (): CuentaForm => ({
-  id_cuenta: `cuenta_${Date.now().toString(36)}`,
+  id_cuenta: "",
   nombre_empresa: "",
   id_agente: "",
   pais_cuenta: "",
@@ -161,7 +161,7 @@ export default function CrearCuenta() {
                   <h2 className="text-lg font-semibold text-blue-950">Datos obligatorios</h2>
                   <p className="mt-1 text-sm text-gray-500">Informacion basica para identificar la cuenta.</p>
                 </div>
-                <TextField label="ID de cuenta (solo lectura)" value={form.id_cuenta} readOnly />
+                <TextField label="ID de cuenta (solo lectura)" value={form.id_cuenta || "Se asignar? al guardar (ACC?)"} readOnly />
                 <TextField label="Nombre de la cuenta" required value={form.nombre_empresa} onChange={(value) => update({ nombre_empresa: value })} placeholder="Empresa o nombre de la cuenta" />
                 <CountryField
                   value={form.pais_cuenta}
