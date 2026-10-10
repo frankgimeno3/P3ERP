@@ -1249,3 +1249,17 @@ Las altas e importaciones comparten asignadores transaccionales en
 numéricos de contenidos que proceden del sistema anterior. Los proveedores
 utilizan `prov_` seguido de UUID sin guiones; las tarjetas utilizan UUID.
 El número oficial de factura se conserva separado de la identidad de un borrador.
+
+### Seguimiento de artículos por número previsto
+
+La migración `20261010_0001_editorial_article_workflow.sql` amplía
+`produccion_control_redaccion` sin sustituir sus artículos: `id_cuenta` vincula
+la cuenta, `pasado_produccion_dia` conserva la fecha de paso a producción y
+`publicaciones_estado` guarda los números previstos publicados. Sus claves
+combinan el campo de destino y el número, por ejemplo
+`espana_previsto_numero:217` y `latam_previsto_numero:91`.
+
+Mientras falte cualquier número previsto, una publicación parcial sigue pendiente.
+Vidrioperfil se registra de forma independiente. Las vistas de Contenidos y
+Control de redacción comparten registros. Las altas reciben identificadores
+`hp_aa_nnn.nnn`; editar un artículo vinculado sincroniza su contenido existente.

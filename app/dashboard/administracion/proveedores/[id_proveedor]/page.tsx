@@ -133,10 +133,11 @@ export default function ProveedorPage({
         )}
 
         {/* Tabs */}
-        <div className="mb-6 flex gap-1 flex-wrap">
+        <div role="tablist" aria-label="Proveedor" className="flex flex-wrap">
           {tabs.map((t) => (
             <button
               key={t.id}
+              role="tab" aria-selected={tab === t.id}
               type="button"
               onClick={() => {
                 setTab(t.id as TabType);
@@ -153,6 +154,7 @@ export default function ProveedorPage({
           ))}
         </div>
 
+        <section role="tabpanel">
         {tab !== "datos" && <SupplierActions supplier={proveedor} tab={tab} onChargesChange={setRecurringCharges} onEditCharge={setEditingCharge} refreshVersion={chargesVersion} />}
         {editingCharge && proveedor && <RecurringChargeManageModal endpoint={`/api/v1/admin/proveedores/${encodeURIComponent(proveedor.id_proveedor)}/cargos-recurrentes/${editingCharge}`} id={editingCharge} action="edit" onClose={()=>setEditingCharge(null)} onSaved={()=>{setEditingCharge(null);setChargesVersion(value=>value+1);}} />}
         {/* Content */}
@@ -288,7 +290,7 @@ export default function ProveedorPage({
           </div>
         )}
         {showDelete&&<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"><section role="dialog" aria-modal="true" aria-label="Eliminar proveedor" className="max-w-xl space-y-4 rounded bg-white p-6"><header className="flex justify-between"><h2 className="text-xl font-semibold">Eliminar proveedor</h2><button aria-label="Cerrar" className="cursor-pointer rounded px-3 text-2xl hover:bg-blue-50" onClick={()=>setShowDelete(false)}>×</button></header><p>¿Confirmas eliminar {proveedor?.nombre_proveedor}?</p><p>Se conservarán sus facturas, tickets, pagos, cargos recurrentes y movimientos, que quedarán desvinculados. Se eliminarán sus precios y productos/servicios propios.</p>{error&&<p role="alert" className="text-red-700">{error}</p>}<button disabled={deleting} className="rounded bg-red-700 px-4 py-2 text-white enabled:cursor-pointer enabled:hover:bg-red-800 disabled:opacity-50" onClick={handleDeleteProveedor}>{deleting?'Eliminando…':'Confirmar eliminación'}</button></section></div>}
-      </main>
+      </section></main>
     </div>
   );
 }

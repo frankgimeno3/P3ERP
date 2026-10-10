@@ -1,4 +1,5 @@
 "use client";
+import ModuleTabs from "@/app/components/ModuleTabs";
 import SubscriptionRenewalModal from "./SubscriptionRenewalModal";
 import apiClient from "@/app/apiClient";
 import SearchableSelect from "@/app/components/SearchableSelect";
@@ -165,27 +166,13 @@ export default function SuscripcionesAdministracionPage() {
       <MiddleNav tituloprincipal="Suscripciones" />
       <div className="min-h-screen w-full bg-gray-100 px-12 py-8 text-gray-600">
         <div className="mb-4 flex flex-col gap-3">
-          <div className="flex flex-row">
-            {tabs.map((tab, index) => (
-              <button
-                key={tab.key}
-                type="button"
-                onClick={() => setActiveTab(tab.key)}
-                className={`w-52 cursor-pointer rounded-tr-lg p-3 text-center text-sm transition-all duration-300 ${
-                  activeTab === tab.key ? "z-30 rounded-tl-lg bg-blue-950 text-white" : "z-10 bg-white text-gray-700 hover:bg-gray-200"
-                }`}
-                style={{ marginLeft: index === 0 ? "0px" : "-5px" }}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
+          <ModuleTabs label="Suscripciones de clientes" items={tabs.map(t=>({value:t.key,label:t.label}))} value={activeTab} onChange={value=>setActiveTab(value as typeof activeTab)}/>
           <button type="button" onClick={() => setShowCreateModal(true)} className="w-fit cursor-pointer rounded bg-blue-950 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-900">
             Agregar suscriptor
           </button>
         </div>
 
-        <div className="space-y-3">
+        <div role="tabpanel" className="space-y-3">
           {error && <div className="border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
           {loading && <div className="bg-white p-6 text-sm text-gray-500">Cargando suscripciones...</div>}
           {!loading && suscripciones.length === 0 && (

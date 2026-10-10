@@ -131,8 +131,12 @@
     ]
   },
   "/dashboard/produccion/contenidos": {
-    "summary": "Consulta contenidos de producción por revista o en un listado completo.",
+    "summary": "Contenidos y artículos de producción con seguimiento por número previsto.",
     "steps": [
+      "Contenidos conserva Filtrar por revista y Todos los contenidos. Artículos reutiliza Control de redacción, con Pendientes como vista inicial y Publicados sin columna Estado.",
+      "Pulsa una fila de artículos para editar ubicación, cuenta, título, estado, responsable (Frank, Paco o Ricardo), fecha de paso a producción, portada (Vidrio, Ventanas u Otro), números previstos y páginas.",
+      "Confirma la publicación de cada número previsto. Si solo han salido algunos, el estado es Parcialmente publicado y sigue en Pendientes; al completar todos pasa a Publicados. La publicación en Vidrioperfil se registra por separado.",
+      "Los estados importados se conservan en origen. Pendiente o Pendiente de pasar se muestran como Pendiente pasar producción; Hecho se muestra como Corregido, sin marcarlo publicado.",
       "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "Filtrar por revista muestra primero el número, seguido de revista, región y sector, y permite abrir sus anuncios y artículos.",
       "Todos los contenidos muestra los registros de producción; abre la tarjeta Filtros y pulsa una fila para entrar en el detalle del contenido.",
@@ -180,7 +184,8 @@
       "Agregar Edición abre el formulario de una edición y Agregar nueva feria crea un registro del catálogo.",
       "En la ficha de una edición puedes guardar los apartados de intercambio, logística y entidades asociadas. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados.",
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
-      "El enlace Información legal verifactu se muestra al pie de las páginas de Administración."
+      "El enlace Información legal verifactu se muestra al pie de las páginas de Administración.",
+      "El formato visual de Administración comparte controles y pestañas: pestañas principales sobre fondo blanco, contenido azul claro y subpestañas con contenido blanco."
     ]
   },
   "/dashboard/administracion/ferias/catalogo/[id]": {
@@ -188,7 +193,8 @@
     "steps": [
       "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "Consulta país, periodicidad, temática y descripción. Las ediciones de esa feria tienen sus propias fechas y apartados de gestión.",
-      "El enlace Información legal verifactu se muestra al pie de las páginas de Administración."
+      "El enlace Información legal verifactu se muestra al pie de las páginas de Administración.",
+      "El formato visual de Administración comparte controles y pestañas: pestañas principales sobre fondo blanco, contenido azul claro y subpestañas con contenido blanco."
     ]
   },
   "/dashboard/administracion/control-administrativo": {
@@ -214,7 +220,8 @@
       "Las ?rdenes canceladas por una factura abono muestran Abonada y su n?mero de abono. Se conserva la orden sin fecha de pago y deja de estar pendiente de cobro.",
       "Gestión de órdenes conserva las listas habituales. Pendiente de gestionar muestra subpestañas Sin contrato, Sin importe, Sin forma de cobro, Sin fecha de cobro y Pendientes de facturar. Las órdenes siguen en Gestión de órdenes y pueden aparecer en varios motivos. Las canceladas no requieren gestión; los intercambios no necesitan importe ni cobro monetario. Subir Excel, Agregar contrato e Importación masiva se reúnen en una misma fila.",
       "Cerrar cobro por acuerdo permite asumir una diferencia con motivo obligatorio, sin cambiar el importe facturado ni el dinero cobrado. La orden queda cerrada para la gestión y sale de pendientes y previsiones. Reabrir gestión del cobro restaura el saldo pendiente; ambos cambios quedan registrados.",
-      "Los c?digos de ?rdenes importadas se comprueban antes de crear registros. Las correcciones de identificador conservan los importes, estados y asociaciones."
+      "Los c?digos de ?rdenes importadas se comprueban antes de crear registros. Las correcciones de identificador conservan los importes, estados y asociaciones.",
+      "El formato visual de Administración comparte controles y pestañas: pestañas principales sobre fondo blanco, contenido azul claro y subpestañas con contenido blanco."
     ]
   },
   "/dashboard/administracion/facturas-clientes": {
@@ -239,12 +246,14 @@
       "Los PDF originales de facturas y recibos se abren desde Documentos originales en la ficha. La lectura de esos documentos completa datos fiscales, servicios, forma de pago y vencimientos. Los avisos indican diferencias con cobros confirmados, abonos o formas especiales que requieren revisión. El IBAN de un recibo corresponde al cliente; el banco de cobro de las remesas es independiente.",
       "Crear factura abono abre un borrador negativo asociado a una factura numerada, tambi?n importada. Usa prefijo A y fecha; en emisi?n fiscal se utiliza una serie distinta y una rectificativa por diferencias. Al finalizar o aplicar el abono se reduce el saldo pendiente: las ?rdenes abonadas se conservan canceladas y sin fecha de pago; los cobros previos no se alteran. Repetir la aplicaci?n no duplica efectos. No se permite superar el total original; los recibos remesados y los cobros parciales conciliados requieren revisi?n antes de cambiarlos.",
       "Si el PDF fija un importe mayor que el dinero ya registrado, la diferencia se conserva como saldo pendiente con su orden y cobro de contrato asociados. Los movimientos bancarios y remesas hist?ricos se mantienen; cualquier exceso cobrado se identifica en la ficha.",
-      "Facturas y Contratos sin facturar son pestañas sobre un panel gris claro. Los botones de gestión aparecen arriba a la derecha; debajo, las pestañas Sin fecha y años muestran un panel blanco con la tarjeta de filtros de ancho completo, los estados En proceso y Enviadas y la tabla. La columna N FRA muestra el número documental, conservando el identificador interno para abrir la ficha."
+      "Facturas y Contratos sin facturar son pestañas sobre un panel gris claro. Los botones de gestión aparecen arriba a la derecha; debajo, las pestañas Sin fecha y años muestran un panel blanco con la tarjeta de filtros de ancho completo, los estados En proceso y Enviadas y la tabla. La columna N FRA muestra el número documental, conservando el identificador interno para abrir la ficha.",
+      "El formato visual de Administración comparte controles y pestañas: pestañas principales sobre fondo blanco, contenido azul claro y subpestañas con contenido blanco."
     ]
   },
   "/dashboard/administracion/pendiente-cobro": {
     "summary": "Consulta las órdenes reales de Control administrativo con importe pendiente de cobro.",
     "steps": [
+      "Forma de cobro es un selector con las formas registradas y la opción Todas, dentro de la tarjeta Filtros inicialmente cerrada.",
       "La conciliación del ingreso bancario vinculado a la orden confirma su cobro y la retira de este listado. Deshacer la revisión vuelve a dejarla pendiente. Los gastos de proveedores no liquidan órdenes de cobro de clientes. La página carga las órdenes reales al entrar o recargarla y se actualiza al volver a la pestaña. Las fechas se filtran mediante tres campos dd / mm / yyyy con separadores fijos.",
       "Filtra por cliente, vencimiento o estado.",
       "Revisa los importes y fechas de cada factura.",
@@ -252,7 +261,8 @@
       "Solo se muestran ordenes activas con importe monetario pendiente positivo. Los pagos parciales descuentan lo cobrado y las canceladas se excluyen. Todos los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen juntos, con etiquetas finas encima de cada campo; cerrarla conserva los filtros aplicados. filtros y pestana se conservan en la URL.",
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
       "El enlace Información legal verifactu se muestra al pie de las páginas de Administración.",
-      "Los cobros cerrados por acuerdo o como histórico externo no aparecen como pendientes. Se conservan sus importes, cobros reales y motivo en el detalle de la orden."
+      "Los cobros cerrados por acuerdo o como histórico externo no aparecen como pendientes. Se conservan sus importes, cobros reales y motivo en el detalle de la orden.",
+      "El formato visual de Administración comparte controles y pestañas: pestañas principales sobre fondo blanco, contenido azul claro y subpestañas con contenido blanco."
     ]
   },
   "/dashboard/administracion/suscripciones": {
@@ -263,7 +273,8 @@
       "Actualiza los datos cuando cambien las condiciones.",
       "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape. Los filtros de cada tabla se muestran juntos en una tarjeta Filtros inicialmente cerrada, con una etiqueta fina encima de cada campo. Cerrarla conserva los filtros aplicados.",
       "Al crear se elige la cuenta, revista y edicion, y primer y ultimo numero. El ultimo publicado se calcula dentro de esa coleccion. Renovar permite revisar un nuevo periodo y crear una propuesta con los servicios anteriores; repetirlo reutiliza esa propuesta y no modifica el contrato vigente. No se crea otra renovacion activa para un periodo distinto.",
-      "El enlace Información legal verifactu se muestra al pie de las páginas de Administración."
+      "El enlace Información legal verifactu se muestra al pie de las páginas de Administración.",
+      "El formato visual de Administración comparte controles y pestañas: pestañas principales sobre fondo blanco, contenido azul claro y subpestañas con contenido blanco."
     ]
   },
   "/dashboard/administracion/proveedores": {
@@ -283,7 +294,8 @@
       "Al editar un proveedor se conserva el nombre introducido, sin aplicar equivalencias de importación. La ficha muestra la respuesta guardada en RDS y confirma el guardado; los errores de validación se muestran con su detalle.",
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
       "El enlace Información legal verifactu se muestra al pie de las páginas de Administración.",
-      "El identificador t?cnico de cada proveedor es autom?tico; las referencias antiguas de proveedores importados se conservan para localizar su ficha."
+      "El identificador t?cnico de cada proveedor es autom?tico; las referencias antiguas de proveedores importados se conservan para localizar su ficha.",
+      "El formato visual de Administración comparte controles y pestañas: pestañas principales sobre fondo blanco, contenido azul claro y subpestañas con contenido blanco."
     ]
   },
   "/dashboard/administracion/facturas-proveedores": {
@@ -296,19 +308,22 @@
       "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape. Los filtros de cada tabla se muestran juntos en una tarjeta Filtros inicialmente cerrada, con una etiqueta fina encima de cada campo. Cerrarla conserva los filtros aplicados.",
       "La factura valida fecha, base, total y suma de vencimientos antes de guardarse. Cada pago exige banco y forma valida. Puedes vincular explicitamente el pago al vencimiento estimado que sustituye para evitar duplicarlo. Los PDF se suben en una fase provisional y solo quedan vinculados al confirmar la factura. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados.",
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
-      "El enlace Información legal verifactu se muestra al pie de las páginas de Administración."
+      "El enlace Información legal verifactu se muestra al pie de las páginas de Administración.",
+      "El formato visual de Administración comparte controles y pestañas: pestañas principales sobre fondo blanco, contenido azul claro y subpestañas con contenido blanco."
     ]
   },
   "/dashboard/administracion/proveedores/tickets": {
     "summary": "Los tickets se gestionan en Administración → Liquidaciones → Tickets.",
     "steps": [
-      "Esta ruta redirige al listado centralizado. La ficha del proveedor mantiene Añadir ticket con el proveedor seleccionado."
+      "Esta ruta redirige al listado centralizado. La ficha del proveedor mantiene Añadir ticket con el proveedor seleccionado.",
+      "El formato visual de Administración comparte controles y pestañas: pestañas principales sobre fondo blanco, contenido azul claro y subpestañas con contenido blanco."
     ]
   },
   "/dashboard/administracion/tarjetas": {
     "summary": "Esta ruta redirige a Administración → Liquidaciones → Tarjetas.",
     "steps": [
-      "Utiliza /dashboard/administracion/liquidaciones/tarjetas; las tarjetas y sus datos se conservan."
+      "Utiliza /dashboard/administracion/liquidaciones/tarjetas; las tarjetas y sus datos se conservan.",
+      "El formato visual de Administración comparte controles y pestañas: pestañas principales sobre fondo blanco, contenido azul claro y subpestañas con contenido blanco."
     ]
   },
   "/dashboard/operaciones/data": {
@@ -563,8 +578,9 @@
     ]
   },
   "/dashboard/produccion/control_redaccion": {
-    "summary": "Centraliza y filtra los artículos del control de redacción, su estado, responsable y publicaciones previstas.",
+    "summary": "Seguimiento editorial compartido con Contenidos > Artículos.",
     "steps": [
+      "Esta vista y la pestaña Artículos de Contenidos usan los mismos registros y estados. Edita una fila y confirma por separado las publicaciones previstas.",
       "Despliega Filtros, cerrado inicialmente, para localizar artículos, empresas o números de revista. Prioridad y Dónde está siguen disponibles como filtros, pero no aparecen en la tabla.",
       "Consulta el estado de corrección y la planificación editorial en la tabla.",
       "Pulsa Limpiar filtros para volver a mostrar todos los registros.",
@@ -593,7 +609,8 @@
       "Recibos y transferencias son ingresos previstos de las órdenes, no ingresos recurrentes. Afectan a la liquidez una sola vez según banco y fecha, mientras sigan pendientes. Terminar el asistente prepara la factura; la emisión fiscal mantiene su confirmación específica.",
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
       "El enlace Información legal verifactu se muestra al pie de las páginas de Administración.",
-      "Crear factura abono abre un borrador negativo asociado a una factura numerada, tambi?n importada. Usa prefijo A y fecha; en emisi?n fiscal se utiliza una serie distinta y una rectificativa por diferencias. Al finalizar o aplicar el abono se reduce el saldo pendiente: las ?rdenes abonadas se conservan canceladas y sin fecha de pago; los cobros previos no se alteran. Repetir la aplicaci?n no duplica efectos. No se permite superar el total original; los recibos remesados y los cobros parciales conciliados requieren revisi?n antes de cambiarlos."
+      "Crear factura abono abre un borrador negativo asociado a una factura numerada, tambi?n importada. Usa prefijo A y fecha; en emisi?n fiscal se utiliza una serie distinta y una rectificativa por diferencias. Al finalizar o aplicar el abono se reduce el saldo pendiente: las ?rdenes abonadas se conservan canceladas y sin fecha de pago; los cobros previos no se alteran. Repetir la aplicaci?n no duplica efectos. No se permite superar el total original; los recibos remesados y los cobros parciales conciliados requieren revisi?n antes de cambiarlos.",
+      "El formato visual de Administración comparte controles y pestañas: pestañas principales sobre fondo blanco, contenido azul claro y subpestañas con contenido blanco."
     ]
   },
   "/dashboard/operaciones/data/exportar/cuentas": {
@@ -620,7 +637,8 @@
       "En Servicios se utiliza el mismo selector por canal, servicio y especificaciones y la misma tabla compacta que en propuestas. Puedes ajustar unidades, descuentos y modo de precio; esos datos se conservan en el contrato y al preparar su factura.",
       "En el paso de cobro puedes elegir Intercambio sin cobro monetario y describir sus condiciones. Se conserva el valor de los servicios y se crean contrato y contenidos, sin órdenes de cobro, recibos ni facturas automáticas.",
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
-      "El enlace Información legal verifactu se muestra al pie de las páginas de Administración."
+      "El enlace Información legal verifactu se muestra al pie de las páginas de Administración.",
+      "El formato visual de Administración comparte controles y pestañas: pestañas principales sobre fondo blanco, contenido azul claro y subpestañas con contenido blanco."
     ]
   },
   "/dashboard/administracion/control-administrativo/importacion-masiva": {
@@ -633,7 +651,8 @@
       "La confirmación guarda todo el conjunto válido en una transacción. Si otro usuario modifica los datos después de validar, se exige nueva validación. Celdas vacías o guiones no borran valores y filas ausentes no eliminan registros.",
       "Las facturas se importan en proceso: no se emiten ni envían a VeriFactu. Se bloquean las sobrescrituras de facturas emitidas/contabilizadas y órdenes cobradas o conciliadas. Los contratos importados contienen datos generales; sus órdenes pueden importarse después.",
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
-      "El enlace Información legal verifactu se muestra al pie de las páginas de Administración."
+      "El enlace Información legal verifactu se muestra al pie de las páginas de Administración.",
+      "El formato visual de Administración comparte controles y pestañas: pestañas principales sobre fondo blanco, contenido azul claro y subpestañas con contenido blanco."
     ]
   },
   "/dashboard/operaciones/servicios": {
@@ -720,7 +739,8 @@
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
       "El enlace Información legal verifactu se muestra al pie de las páginas de Administración.",
       "Las ?rdenes canceladas por una factura abono muestran Abonada y su n?mero de abono. Se conserva la orden sin fecha de pago y deja de estar pendiente de cobro.",
-      "Cerrar cobro por acuerdo permite asumir una diferencia con motivo obligatorio, sin cambiar el importe facturado ni el dinero cobrado. La orden queda cerrada para la gestión y sale de pendientes y previsiones. Reabrir gestión del cobro restaura el saldo pendiente; ambos cambios quedan registrados."
+      "Cerrar cobro por acuerdo permite asumir una diferencia con motivo obligatorio, sin cambiar el importe facturado ni el dinero cobrado. La orden queda cerrada para la gestión y sale de pendientes y previsiones. Reabrir gestión del cobro restaura el saldo pendiente; ambos cambios quedan registrados.",
+      "El formato visual de Administración comparte controles y pestañas: pestañas principales sobre fondo blanco, contenido azul claro y subpestañas con contenido blanco."
     ]
   },
   "/": {
@@ -894,7 +914,8 @@
       "Guardar cambios conserva el trabajo aunque existan incidencias. Marcar liquidación como revisada requiere guardar primero, revisar los tickets y cuadrar exactamente cada asociación y la suma del PDF con el cargo total de Tesorería. Una diferencia entre documentos bancarios bloquea el cierre aunque exista un comentario.",
       "Explica las desviaciones respecto a la previsión inicial y actualiza sus componentes. Los tickets no cargados pueden pasar a efectivo, cambiar de tarjeta o quedar no válidos ni asociables mientras estén pendientes de revisión. Un vencimiento de suscripción no cargado puede retirarse de este período con una explicación, conservando los demás períodos.",
       "Al cerrar se revisan los tickets conciliados y los cargos de Tesorería en una misma operación. Para reabrir la última liquidación, usa su movimiento bancario en Conciliación: las importaciones nuevas conservan el PDF y las asociaciones como trabajo pendiente.",
-      "Juan desglosa suscripciones, tickets variables y otros gastos en el mes de cargo bancario. Un ticket vinculado a una suscripción sustituye su justificante sin sumar el gasto dos veces. La reserva original de Juan permanece identificada hasta detallar los gastos pendientes."
+      "Juan desglosa suscripciones, tickets variables y otros gastos en el mes de cargo bancario. Un ticket vinculado a una suscripción sustituye su justificante sin sumar el gasto dos veces. La reserva original de Juan permanece identificada hasta detallar los gastos pendientes.",
+      "El formato visual de Administración comparte controles y pestañas: pestañas principales sobre fondo blanco, contenido azul claro y subpestañas con contenido blanco."
     ]
   },
   "/dashboard/administracion/liquidaciones/tickets": {
@@ -907,7 +928,8 @@
       "Los estados son pendiente de puntear, punteado y revisado; la clasificación distingue asociable y no válido ni asociable. Los tickets personales pueden registrarse sin proveedor.",
       "Antes de cerrar una liquidación, puntea los tickets asociados. Mientras estén pendientes puedes pasarlos a efectivo, asignarlos a otra tarjeta y a una liquidación concreta o retirarlos como no asociables. Elegir el período expresamente permite respetar la anotación tardía del banco sin cambiar la fecha del justificante; ambas previsiones se recalculan sin duplicarlo.",
       "Para justificar una suscripción, selecciona su vencimiento. Los importes deben coincidir exactamente. Corrige el ticket o la previsión antes de validar; si no existe justificante, retira el ticket y explica la ausencia desde la liquidación.",
-      "Los tickets de liquidaciones revisadas están protegidos. Reabre la liquidación antes de modificarlos. Los filtros están juntos en una tarjeta inicialmente cerrada."
+      "Los tickets de liquidaciones revisadas están protegidos. Reabre la liquidación antes de modificarlos. Los filtros están juntos en una tarjeta inicialmente cerrada.",
+      "El formato visual de Administración comparte controles y pestañas: pestañas principales sobre fondo blanco, contenido azul claro y subpestañas con contenido blanco."
     ]
   },
   "/dashboard/administracion/liquidaciones/suscripciones": {
@@ -919,7 +941,8 @@
       "Una suscripción pertenece a una tarjeta. Sus vencimientos alimentan las liquidaciones respetando sus cierres y se pagan en la fecha del cargo total bancario; no se duplican como pagos directos al proveedor.",
       "Editar permite modificar su programación con el componente común de cargos previstos. Desactivar excluye sus previsiones activas; Activar vuelve a incluirlas. Las liquidaciones ya revisadas conservan su desglose.",
       "Si hay un ticket que justifica un vencimiento, vincúlalos con importes exactamente iguales para contabilizar ese gasto una sola vez.",
-      "Las suscripciones de clientes a revistas mantienen su gestión independiente en Clientes → Suscripciones."
+      "Las suscripciones de clientes a revistas mantienen su gestión independiente en Clientes → Suscripciones.",
+      "El formato visual de Administración comparte controles y pestañas: pestañas principales sobre fondo blanco, contenido azul claro y subpestañas con contenido blanco."
     ]
   }
 }
