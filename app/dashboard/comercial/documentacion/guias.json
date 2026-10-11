@@ -762,12 +762,12 @@
   "/dashboard/operaciones/tareas": {
     "summary": "Supervisa las tareas por agente, consulta el calendario e importa tareas de vtiger por fases.",
     "steps": [
-      "Alterna Tareas por agente y Calendario. El calendario muestra los meses a la izquierda y filtros y tarjetas a la derecha. Puedes cambiar el año, seleccionar un día y abrir el detalle de cada tarea. Las tareas sin agente asociado aparecen también en una sección propia.",
-      "Importar tareas de vtiger abre un asistente de cuatro fases: cargar CSV, revisar agentes, revisar cuentas y confirmar. Las asociaciones son expresas y opcionales; no se crean agentes ni cuentas. Los responsables y relaciones originales se conservan aunque se dejen sin asociar.",
+      "Alterna Tareas por agente, Calendario y Sin agente. Las tareas sin responsables se muestran exclusivamente en esa pestaña adicional, en lugar de aparecer debajo de los agentes. El calendario muestra los meses a la izquierda y filtros y tarjetas a la derecha. Puedes cambiar el año, seleccionar un día y abrir el detalle de cada tarea.",
+      "Importar tareas de vtiger abre un asistente de cuatro fases: cargar CSV, revisar agentes, revisar cuentas y confirmar. Las coincidencias únicas de nombre o correo se proponen automáticamente; los nombres ambiguos quedan sin asociar. Puedes asignar varios agentes a una tarea, y no se crean agentes ni cuentas. Los responsables y relaciones originales se conservan siempre.",
       "La revisión muestra tareas nuevas, ya registradas y sin asociación. Confirmar guarda el lote completo. Repetir el mismo archivo no duplica ni sobrescribe tareas. Como vtiger no exporta un ID, un registro con campos modificados se considera nuevo. Todos los campos originales se pueden consultar en el detalle, incluidas las descripciones completas y horarios.",
       "Abre un empleado para consultar sus tareas pendientes y terminadas.",
       "Crear tarea asigna una nueva tarea pendiente al empleado de la ficha. El modal se cierra con la cruz o Escape.",
-      "Abre una tarea para editar nombre, descripción y estado. Guarda los cambios para actualizarlos en RDS. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados.",
+      "Abre una tarea para editar nombre, descripción, estado y agentes asociados. Añadir agente permite elegir varios responsables; la cruz retira solo ese vínculo. Cada responsable puede consultar la tarea en su lista y el contador la incluye una sola vez. Guarda para actualizar RDS. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada, con una etiqueta fina encima de cada campo.",
       "Los contadores y listas incluyen las tareas de cuentas. Su estado se actualiza desde el detalle; los datos y responsables se editan en la pestaña Tareas de la cuenta.",
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
     ]
@@ -827,6 +827,9 @@
   "/dashboard/mediateca": {
     "summary": "Archivos y carpetas con eliminacion recuperable.",
     "steps": [
+      "La columna Acceso muestra los roles efectivos de cada carpeta y archivo. Heredado indica que la subcarpeta utiliza los permisos de su padre. Una subcarpeta puede restringir el acceso, pero no ampliarlo; Superadmin conserva acceso. Los roles se eligen entre los existentes del ERP.",
+      "Documentos de Dirección queda restringido a Dirección y Superadmin. Documentos de Administración permite Administración, Operaciones, Dirección y Superadmin. Contratos firmados permite Comercial, Administración, Operaciones, Dirección y Superadmin. Las carpetas generales conservan el acceso compartido salvo restricción específica.",
+      "Las carpetas no autorizadas se ocultan y sus archivos no se pueden consultar ni gestionar mediante la API. Mover exige acceso al origen y al destino. La papelera solo muestra eliminaciones a las que tienes acceso; eliminar una carpeta con descendientes privados también requiere permiso sobre ellos.",
       "La ruta muestra la carpeta actual. Durante una consulta aparece Cargando mediateca; una respuesta antigua no sustituye una carpeta abierta posteriormente.",
       "Eliminar mueve los registros a la papelera y conserva los archivos. Deshacer permite recuperar la ultima eliminacion.",
       "Papelera muestra eliminaciones anteriores y permite restaurarlas despues de recargar. Las carpetas requieren permiso de operaciones; los conflictos de identidad impiden sobrescribir contenido.",

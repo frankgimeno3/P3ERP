@@ -29,9 +29,9 @@ export async function employeePayrolls(id, employee) {
 
 export async function agentTasks(id, employee) {
   const rows = (await getPgPool().query(`SELECT t.*,to_char(t.fecha_inicio,'YYYY-MM-DD"T"HH24:MI:SS') fecha_inicio,to_char(t.fecha_fin,'YYYY-MM-DD"T"HH24:MI:SS') fecha_fin,
-    c.nombre_empresa nombre_cuenta,COALESCE(NULLIF(a.nombre_completo_agente,''),a.nombre_agente,a.id_agente) AS nombre_agente
+    c.nombre_empresa nombre_cuenta,COALESCE((SELECT string_agg(COALESCE(NULLIF(aa.nombre_completo_agente,''),aa.nombre_agente,aa.id_agente),', ' ORDER BY aa.nombre_completo_agente) FROM agentes_db aa WHERE aa.id_agente=t.agente OR t.agentes_asociados ? aa.id_agente),'') AS nombre_agente
     FROM laboral_tareas_empleado t LEFT JOIN agentes_db a ON a.id_agente=t.agente LEFT JOIN comercial_cuentas c ON c.id_cuenta=t.id_cuenta
-    WHERE ($1::text IS NULL OR t.id=$1) AND ($2::text IS NULL OR t.agente=$2) ORDER BY t.created_at DESC`,[id || null,employee || null])).rows;
+    WHERE ($1::text IS NULL OR t.id=$1) AND ($2::text IS NULL OR t.agente=$2 OR t.agentes_asociados ? $2) ORDER BY t.created_at DESC`,[id || null,employee || null])).rows;
   if (id && !rows.length) throw new LaboralError('Tarea no encontrada.',404);
   return id ? rows[0] : rows;
 }
@@ -39,8 +39,9 @@ export async function saveAgentTask(id, body) {
   const nombre = String(body.nombre || '').trim(), descripcion = String(body.descripcion || '');
   if (!nombre || nombre.length>250 || !body.agente || !['pendiente','en_curso','completada','cancelada'].includes(body.estado)) throw new LaboralError('Completa nombre, agente y estado válidos.');
   const db = getPgPool();
-  const result = id ? await db.query(`UPDATE laboral_tareas_empleado SET nombre=$2,estado=$3,descripcion=$4,updated_at=now() WHERE id=$1 AND agente=$5 RETURNING *`,[id,nombre,body.estado,descripcion,body.agente])
-    : await db.query(`INSERT INTO laboral_tareas_empleado(id,nombre,estado,descripcion,agente) VALUES($1,$2,$3,$4,$5) RETURNING *`,[`tarea_${randomUUID().replaceAll('-','')}`,nombre,body.estado,descripcion,body.agente]);
+  const ids=body.agentes_asociados||[body.agente];
+  const result = id ? await db.query(`UPDATE laboral_tareas_empleado SET nombre=$2,estado=$3,descripcion=$4,agente=$5,agentes_asociados=$6::jsonb,updated_at=now() WHERE id=$1 RETURNING *`,[id,nombre,body.estado,descripcion,body.agente,JSON.stringify(ids)])
+    : await db.query(`INSERT INTO laboral_tareas_empleado(id,nombre,estado,descripcion,agente,agentes_asociados) VALUES($1,$2,$3,$4,$5,$6::jsonb) RETURNING *`,[`tarea_${randomUUID().replaceAll('-','')}`,nombre,body.estado,descripcion,body.agente,JSON.stringify(ids)]);
   if (!result.rowCount) throw new LaboralError('Tarea no encontrada para este agente.',404);
   return result.rows[0];
 }

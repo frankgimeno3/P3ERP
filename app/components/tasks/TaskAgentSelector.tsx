@@ -1,0 +1,5 @@
+'use client';
+import SearchableSelect from '@/app/components/SearchableSelect';
+export default function TaskAgentSelector({value,options,onChange,disabled=false}:{value:string[];options:{value:string;label:string}[];onChange:(value:string[])=>void;disabled?:boolean}){
+ return <div><SearchableSelect label="Añadir agente" value="" options={options.filter(o=>!value.includes(o.value))} onChange={id=>{if(id)onChange([...new Set([...value,id])]);}} disabled={disabled}/><div className="mt-2 flex flex-wrap gap-2">{value.map(id=><span key={id} className="inline-flex items-center gap-2 rounded bg-blue-50 px-3 py-1 text-sm text-blue-950">{options.find(o=>o.value===id)?.label||id}<button type="button" aria-label={`Retirar ${options.find(o=>o.value===id)?.label||id}`} disabled={disabled} onClick={()=>onChange(value.filter(v=>v!==id))} className="rounded px-1 enabled:cursor-pointer enabled:hover:bg-blue-200 disabled:cursor-default">×</button></span>)}</div>{!value.length&&<p className="mt-1 text-xs text-gray-500">Sin agente asociado.</p>}</div>;
+}

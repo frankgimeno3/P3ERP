@@ -192,6 +192,7 @@ export async function updateFolder(folderId, data) {
     throw new Error('No se puede cambiar el nombre de esta carpeta principal');
   }
   const roles = Array.isArray(data?.allowed_roles) ? data.allowed_roles.filter(role => typeof role === 'string') : current.allowed_roles;
+  if(roles.some(role=>!['base','comercial','administracion','operaciones','direccion','superadmin'].includes(role)))throw new Error('Selecciona roles existentes del ERP.');
   const { rows } = await pool.query(
     `
       UPDATE mediateca_carpetas

@@ -31,6 +31,14 @@ try{
  assert.equal(own.agente,'owner');assert.equal(own.estado,'pendiente');assert.equal((await readTasks(other)).length,0);
  await assert.rejects(createOwnTask({id:'',role:'base'},{nombre:'Sin sesión'}),e=>e.status===401);
  await assert.rejects(createOwnTask(owner,{nombre:'  '}));
+ const shared=await writeTask(manager,null,{agente:'owner',agentes_asociados:['owner','other','owner'],nombre:'Compartida',descripcion:'Dos responsables',estado:'pendiente'});
+ assert.deepEqual(shared.agentes_asociados,['owner','other']);
+ assert.equal((await readTasks(other,{id:shared.id})).id,shared.id);
+ assert((await readTasks(other)).some(t=>t.id===shared.id));
+ assert.equal((await taskEmployees(manager)).find(a=>a.id_agente==='other').pendientes,1);
+ await assert.rejects(readTasks({id:'external',role:'base'},{id:shared.id}),e=>e.status===403);
+ await writeTask(manager,shared.id,{...shared,agente:'owner',agentes_asociados:['owner']});
+ await assert.rejects(readTasks(other,{id:shared.id}),e=>e.status===403);
  console.log('PASS: self-created tasks always belong to the authenticated agent and start pending.');
  console.log('PASS: own tasks, cross-agent denial, manager create/edit, employee filtering and completed tasks in isolated RDS schema');
 }finally{pool.query=query;await db.query('RESET search_path');await db.query('DROP SCHEMA IF EXISTS '+schema+' CASCADE');db.release();await pool.end();}

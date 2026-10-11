@@ -1,7 +1,7 @@
 import { listMediaTrash, restoreMediaTrash } from '@/server/features/mediateca/MediatecaTrashRepository.js';
 export const runtime = 'nodejs';
-export async function GET() {
-  try { return Response.json(await listMediaTrash()); }
+export async function GET(request) {
+  try { return Response.json(await listMediaTrash(request.headers.get('x-p3-actor-role'))); }
   catch { return Response.json({ message: 'No se pudo cargar la papelera.' }, { status: 500 }); }
 }
 export async function POST(request) {

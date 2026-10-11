@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createFolder, getFolders } from "../../../../../server/features/mediateca/MediatecaRepository.js";
+import {assertMediatecaAccess} from '@/server/features/mediateca/MediatecaAccess.js';
 
 export const runtime = "nodejs";
 
@@ -10,7 +11,8 @@ export async function GET(request) {
       const { ensureMediatecaStructure } = await import('../../../../../server/features/mediateca/MediatecaStructure.js');
       await ensureMediatecaStructure();
     }
-    return NextResponse.json(await getFolders({ path: params.get("path") || "" }));
+    const {access,actor}=await assertMediatecaAccess(request,{path:params.get('path')||''});
+    return NextResponse.json((await getFolders({ path: params.get("path") || "" })).map(folder=>({...folder,effectiveRoles:access.roles(folder.id),accessInherited:!folder.allowedRoles.length})).filter(folder=>folder.effectiveRoles.includes(actor)));
   } catch (error) {
     return NextResponse.json({ message: "Error al cargar carpetas", detail: process.env.NODE_ENV === "development" ? error.message : undefined }, { status: 500 });
   }

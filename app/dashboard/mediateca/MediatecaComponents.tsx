@@ -8,7 +8,7 @@ import Link from "next/link";
 import { MediatecaService } from "@/app/service/MediatecaService";
 import apiClient from '@/app/apiClient';
 
-export type MediatecaFolder = { id: string; name: string; path: string; allowedRoles?: string[] };
+export type MediatecaFolder = { id: string; name: string; path: string; allowedRoles?: string[]; effectiveRoles?: string[]; accessInherited?: boolean };
 const protectedRoots = new Set(['contratos_firmados','documentos_administracion','documentos_direccion','documentos_produccion']);
 export type MediatecaMedia = {
   id: string;
@@ -18,6 +18,7 @@ export type MediatecaMedia = {
   folderPath: string;
   type: "pdf" | "image";
   mimeType?: string;
+  effectiveRoles?: string[];
 };
 
 function joinPath(segments: string[]) {
@@ -240,11 +241,10 @@ function MoveModal({ item, onClose, onDone }: { item: MediatecaMedia; onClose: (
 function EditFolderModal({ folder, onClose, onDone }: { folder: MediatecaFolder; onClose: () => void; onDone: () => void }) {
   const [name, setName] = useState(folder.name);
   const [roles, setRoles] = useState<string[]>(folder.allowedRoles || []);
-  const [roleInput, setRoleInput] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const commonRoles = ["base", "administracion", "operaciones", "superadmin"];
+  const commonRoles = ["base", "comercial", "administracion", "operaciones", "direccion", "superadmin"];
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -269,7 +269,7 @@ function EditFolderModal({ folder, onClose, onDone }: { folder: MediatecaFolder;
         </label>
         
         <div className="text-sm">
-          <label className="block mb-2 font-semibold">Roles permitidos</label>
+          <label className="block mb-2 font-semibold">Roles permitidos</label><p className="mb-2 text-xs text-gray-600">Sin selección se hereda el acceso del padre. Una subcarpeta puede restringirlo, pero no ampliar el acceso de su carpeta principal. Superadmin conserva acceso.</p>
           <div className="space-y-2 mb-3">
             {commonRoles.map((role) => (
               <label key={role} className="flex items-center gap-2 cursor-pointer">
@@ -290,27 +290,6 @@ function EditFolderModal({ folder, onClose, onDone }: { folder: MediatecaFolder;
             ))}
           </div>
           
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={roleInput}
-              onChange={(e) => setRoleInput(e.target.value)}
-              placeholder="Añadir rol personalizado"
-              className="flex-1 rounded-lg border p-2 text-sm"
-            />
-            <button
-              type="button"
-              onClick={() => {
-                if (roleInput.trim() && !roles.includes(roleInput.trim())) {
-                  setRoles([...roles, roleInput.trim()]);
-                  setRoleInput("");
-                }
-              }}
-              className="rounded-lg bg-gray-100 px-3 py-2 text-sm hover:bg-gray-200"
-            >
-              +
-            </button>
-          </div>
 
           {roles.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-2">
@@ -430,7 +409,7 @@ export function MediatecaBrowser({
   const canUseSelection = selected && (selected.type === "image" || allowPdfSelection);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 [&_button:enabled]:cursor-pointer [&_button:enabled]:transition [&_button:enabled]:hover:brightness-95 [&_button:disabled]:cursor-default">
       {loading&&<p role="status" className="text-sm text-blue-950">Cargando mediateca…</p>}
       {error && <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error} <button type="button" disabled={loading} onClick={()=>void load()} className="rounded px-2 underline enabled:cursor-pointer enabled:hover:bg-red-100 disabled:opacity-50">Reintentar</button></div>}
       {trashId && <div role="status" className="rounded border bg-blue-50 p-3">Contenido conservado en la papelera. <button type="button" className="cursor-pointer underline hover:text-blue-950" onClick={async()=>{try{await apiClient.post('/api/v1/mediateca/papelera',{id:trashId});setTrashId('');await load();}catch(cause:any){setError(cause.message);}}}>Deshacer eliminación</button></div>}
@@ -476,7 +455,7 @@ export function MediatecaBrowser({
             <thead className="bg-gray-50 text-left">
               <tr>
                 <th className="p-3">Nombre</th>
-                <th className="p-3">Ruta</th>
+                <th className="p-3">Ruta</th><th className="p-3">Acceso</th>
                 {!picker && <th className="p-3 text-right">Acciones</th>}
               </tr>
             </thead>
@@ -484,11 +463,11 @@ export function MediatecaBrowser({
               {filteredFolders.map((folder) => (
                 <tr key={folder.id} className="border-t hover:bg-blue-50">
                   <td className="p-3">
-                    <button type="button" className="font-medium text-blue-800 hover:underline" onClick={() => setSegments(splitPath(folder.path))}>
+                    <button type="button" className="cursor-pointer font-medium text-blue-800 hover:underline" onClick={() => setSegments(splitPath(folder.path))}>
                       {folder.name}
                     </button>
                   </td>
-                  <td className="p-3 font-mono text-xs text-gray-600">{folder.path}</td>
+                  <td className="p-3 font-mono text-xs text-gray-600">{folder.path}</td><td className="p-3 text-xs">{(folder.effectiveRoles||folder.allowedRoles||[]).join(', ')||'Hereda el acceso de su carpeta principal'}{folder.accessInherited&&<span className="block text-gray-500">Heredado</span>}</td>
                   {!picker && (
                     <td className="p-3 text-right">
                       <div className="flex justify-end gap-2">
@@ -505,7 +484,7 @@ export function MediatecaBrowser({
                   )}
                 </tr>
               ))}
-              {!loading && filteredFolders.length === 0 && <tr><td colSpan={picker ? 2 : 3} className="p-4 text-center text-gray-600">Sin carpetas.</td></tr>}
+              {!loading && filteredFolders.length === 0 && <tr><td colSpan={picker ? 3 : 4} className="p-4 text-center text-gray-600">Sin carpetas.</td></tr>}
             </tbody>
           </SortableTable>
         </div>
@@ -522,6 +501,7 @@ export function MediatecaBrowser({
                 <th className="p-3">Nombre</th>
                 <th className="p-3">Tipo</th>
                 <th className="p-3">Ruta</th>
+                <th className="p-3">Acceso</th>
                 <th className="p-3 text-right">Acciones</th>
               </tr>
             </thead>
@@ -546,7 +526,7 @@ export function MediatecaBrowser({
                       <p className="font-mono text-[10px] text-gray-600">{item.id}</p>
                     </td>
                     <td className="p-3">{item.type === "pdf" ? "PDF" : "Imagen"}</td>
-                    <td className="p-3 font-mono text-xs text-gray-600">{item.folderPath || "(raiz)"}</td>
+                    <td className="p-3 font-mono text-xs text-gray-600">{item.folderPath || "(raiz)"}</td><td className="p-3 text-xs">{(item.effectiveRoles||[]).join(', ')||'Heredado'}</td>
                     <td className="space-x-2 p-3 text-right">
                       {!picker && <button type="button" onClick={() => setRenameTarget(item)} className="rounded bg-gray-100 px-3 py-1 text-xs">Renombrar</button>}
                       {!picker && <button type="button" onClick={() => setMoveTarget(item)} className="rounded bg-gray-100 px-3 py-1 text-xs">Mover</button>}
@@ -555,7 +535,7 @@ export function MediatecaBrowser({
                   </tr>
                 );
               })}
-              {!loading && filteredMedia.length === 0 && <tr><td colSpan={picker ? 6 : 5} className="p-4 text-center text-gray-600">Sin archivos.</td></tr>}
+              {!loading && filteredMedia.length === 0 && <tr><td colSpan={picker ? 7 : 6} className="p-4 text-center text-gray-600">Sin archivos.</td></tr>}
             </tbody>
           </SortableTable>
         </div>

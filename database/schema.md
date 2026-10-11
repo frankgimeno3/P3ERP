@@ -225,6 +225,10 @@ Indexes:
 - contenidos_db_id_publicacion_idx: CREATE INDEX contenidos_db_id_publicacion_idx ON public.produccion_contenidos USING btree (id_publicacion)
 - contenidos_db_hoja_prod_idx: CREATE INDEX contenidos_db_hoja_prod_idx ON public.produccion_contenidos USING btree (hoja_prod)
 
+### Tareas compartidas y acceso a Mediateca
+
+`laboral_tareas_empleado.agentes_asociados jsonb NOT NULL DEFAULT '[]'` contiene IDs de todos los responsables. `agente` conserva el primero para compatibilidad; listas, contadores, calendario y autorización consultan ambos. `mediateca_carpetas.allowed_roles jsonb NOT NULL DEFAULT '[]'` configura roles; vacío hereda, y los permisos efectivos se intersectan con los del padre. Las raíces protegidas tienen valores por defecto y Superadmin conserva acceso. Migración: `20261010_0003_task_assignments_mediateca_roles.sql`.
+
 ### comercial_contratos
 
 `agregados_extra_post_contrato jsonb NOT NULL DEFAULT '[]'` conserva IDs de contenidos editoriales extra, separados de las líneas firmadas y los importes. `produccion_control_redaccion.id_contrato_extra` identifica el vínculo opcional de cada artículo; las altas, cambios y retiradas sincronizan ambos dentro de una transacción. Cada artículo dispone de un único `id_contenido` real en `produccion_contenidos`, de tipo `articulo`, incluso si no tiene contrato. Migración: `20261010_0002_editorial_contract_extras.sql`.

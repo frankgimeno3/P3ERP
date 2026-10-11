@@ -2,6 +2,7 @@ import {getPgPool} from '../../database/pgClient.js';
 import {agentTasks,saveAgentTask} from './EmployeePayrollRepository.js';
 import {managesTasks,requireTaskIdentity} from './TaskAccess.js';
 import {accountTasks,readAccountTask} from '../cuenta/AccountTaskRepository.js';
+import {taskAgentIds} from '../../../app/config/taskAssignments.js';
 export async function createOwnTask(actor,body){
   requireTaskIdentity(actor);
   if(!(await getPgPool().query('SELECT 1 FROM agentes_db WHERE id_agente=$1',[actor.id])).rowCount)throw Object.assign(new Error('Agente no encontrado.'),{status:403});
@@ -10,7 +11,7 @@ export async function createOwnTask(actor,body){
 export async function readTasks(actor,{id,employee}={}) {
   requireTaskIdentity(actor);
   if(id?.startsWith('cta_'))return readAccountTask(actor,id,undefined,getPgPool(),true);
-  if(id){const task=await agentTasks(id);if(task.agente!==actor.id&&!managesTasks(actor.role))throw Object.assign(new Error('No tienes acceso a esta tarea.'),{status:403});return task;}
+  if(id){const task=await agentTasks(id);if(!taskAgentIds(task).includes(actor.id)&&!managesTasks(actor.role))throw Object.assign(new Error('No tienes acceso a esta tarea.'),{status:403});return task;}
   if(employee&&employee!==actor.id)requireTaskIdentity(actor,true);
   return [...await agentTasks(null,employee||actor.id),...await accountTasks(actor,{employee:employee||actor.id})];
 }
@@ -21,13 +22,13 @@ export async function taskEmployees(actor) {
       (SELECT count(*) FROM comercial_cuenta_tarea_agentes ca JOIN comercial_cuenta_tareas ct ON ct.id=ca.id_tarea WHERE ca.id_agente=a.id_agente AND ct.estado IN ('pendiente','en_curso')))::int pendientes,
     (count(t.id) FILTER (WHERE t.estado IN ('completada','cancelada')) +
       (SELECT count(*) FROM comercial_cuenta_tarea_agentes ca JOIN comercial_cuenta_tareas ct ON ct.id=ca.id_tarea WHERE ca.id_agente=a.id_agente AND ct.estado IN ('completada','cancelada')))::int terminadas
-    FROM agentes_db a LEFT JOIN laboral_tareas_empleado t ON t.agente=a.id_agente
-    WHERE COALESCE(a.is_empleado_account,true) OR EXISTS(SELECT 1 FROM laboral_tareas_empleado x WHERE x.agente=a.id_agente AND x.vtiger_original IS NOT NULL) GROUP BY a.id_agente ORDER BY nombre,a.id_agente`)).rows;
+    FROM agentes_db a LEFT JOIN laboral_tareas_empleado t ON t.agente=a.id_agente OR t.agentes_asociados ? a.id_agente
+    WHERE COALESCE(a.is_empleado_account,true) OR EXISTS(SELECT 1 FROM laboral_tareas_empleado x WHERE (x.agente=a.id_agente OR x.agentes_asociados ? a.id_agente) AND x.vtiger_original IS NOT NULL) GROUP BY a.id_agente ORDER BY nombre,a.id_agente`)).rows;
 }
 export async function taskCalendar(actor) {
   requireTaskIdentity(actor,true);
   return [...await agentTasks(),...await accountTasks(actor)].map(task=>({
-    id:task.id,nombre:task.nombre,estado:task.estado,agente:task.agente,
+    id:task.id,nombre:task.nombre,estado:task.estado,agente:task.agente,agentes:taskAgentIds(task),
     nombre_agente:task.nombre_agente,nombre_cuenta:task.nombre_cuenta,
     fecha_inicio:task.fecha_inicio,fecha_fin:task.fecha_fin,fecha_limite:task.fecha_limite,
     vtiger_original:task.vtiger_original?{'Asignado a':task.vtiger_original['Asignado a'],'En relación con':task.vtiger_original['En relación con']}:null
@@ -35,10 +36,17 @@ export async function taskCalendar(actor) {
 }
 export async function writeTask(actor,id,body){
   requireTaskIdentity(actor,true);
+  const ids=Object.hasOwn(body,'agentes_asociados')?body.agentes_asociados:body.agente?[body.agente]:null;
+  if(ids!==null){
+    if(!Array.isArray(ids)||ids.some(id=>typeof id!=='string'||!id))throw Object.assign(new Error('Selecciona agentes válidos.'),{status:400});
+    body={...body,agentes_asociados:[...new Set(ids)],agente:ids[0]||null};
+    const valid=(await getPgPool().query('SELECT id_agente FROM agentes_db WHERE id_agente=ANY($1::text[]) AND COALESCE(is_empleado_account,true)',[body.agentes_asociados])).rows;
+    if(valid.length!==body.agentes_asociados.length)throw Object.assign(new Error('Selecciona agentes empleados válidos.'),{status:400});
+  }
   if(id?.startsWith('tarea_vtiger_')){
     if(!body.updated_at)throw Object.assign(new Error('Recarga la tarea antes de guardar.'),{status:409});
     if(!String(body.nombre||'').trim() || String(body.nombre).length>250 || !['pendiente','en_curso','completada','cancelada'].includes(body.estado))throw Object.assign(new Error('Revisa el nombre y el estado.'),{status:400});
-    return (await getPgPool().query("UPDATE laboral_tareas_empleado SET nombre=$2,descripcion=$3,estado=$4,updated_at=GREATEST(clock_timestamp(),updated_at+interval '1 millisecond') WHERE id=$1 AND date_trunc('milliseconds',updated_at)=$5::timestamptz RETURNING *",[id,body.nombre.trim(),String(body.descripcion||''),body.estado,body.updated_at])).rows[0] || (()=>{throw Object.assign(new Error('La tarea ha cambiado. Recarga antes de guardar.'),{status:409});})();
+    return (await getPgPool().query("UPDATE laboral_tareas_empleado SET nombre=$2,descripcion=$3,estado=$4,agente=CASE WHEN $6::jsonb IS NULL THEN agente ELSE $6::jsonb->>0 END,agentes_asociados=COALESCE($6::jsonb,agentes_asociados),updated_at=GREATEST(clock_timestamp(),updated_at+interval '1 millisecond') WHERE id=$1 AND date_trunc('milliseconds',updated_at)=$5::timestamptz RETURNING *",[id,body.nombre.trim(),String(body.descripcion||''),body.estado,body.updated_at,ids===null?null:JSON.stringify(body.agentes_asociados)])).rows[0] || (()=>{throw Object.assign(new Error('La tarea ha cambiado. Recarga antes de guardar.'),{status:409});})();
   }
   if(!(await getPgPool().query('SELECT 1 FROM agentes_db WHERE id_agente=$1 AND COALESCE(is_empleado_account,true)',[body.agente])).rowCount)throw Object.assign(new Error('Selecciona un agente empleado.'),{status:400});
   return saveAgentTask(id,body);

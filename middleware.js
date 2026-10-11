@@ -7,6 +7,7 @@ import { canAccessApiPath, canAccessDashboardPath, normalizeRole } from "./app/c
 import {loginUrl,loginDestination} from "./app/config/loginRedirect.js";
 import {managesTasks} from './server/features/laboral/TaskAccess.js';
 import {canManageAccountTasks} from './app/config/accountTasks.js';
+import {guardMediatecaRequest} from './server/features/mediateca/MediatecaAccess.js';
 
 let jwks;
 
@@ -100,12 +101,16 @@ export async function middleware(request) {
       const taskId=decodeURIComponent(personalTask[1]);
       const task=taskId.startsWith('cta_')
         ? await pool.query('SELECT t.id FROM comercial_cuenta_tareas t WHERE t.id=$1 AND ($3::boolean OR EXISTS(SELECT 1 FROM comercial_cuenta_tarea_agentes a WHERE a.id_tarea=t.id AND a.id_agente=$2))',[taskId,rows[0]?.id_agente||'',canManageAccountTasks(role)])
-        : await pool.query('SELECT id FROM laboral_tareas_empleado WHERE id=$1 AND agente=$2',[taskId,rows[0]?.id_agente||'']);
+        : await pool.query('SELECT id FROM laboral_tareas_empleado WHERE id=$1 AND (agente=$2 OR agentes_asociados ? $2)',[taskId,rows[0]?.id_agente||'']);
       if(!rows[0]?.id_agente||!task.rowCount)return NextResponse.redirect(new URL('/',request.url));
     }
     const authenticatedHeaders = new Headers(request.headers);
     authenticatedHeaders.set('x-p3-actor-id', rows[0]?.id_agente || '');
     authenticatedHeaders.set('x-p3-actor-role', role);
+    if(pathname.startsWith('/api/v1/mediateca/')){
+      try{await guardMediatecaRequest(new Request(request.url,{method:request.method,headers:authenticatedHeaders,...(request.method==='GET'||request.method==='HEAD'?{}:{body:await request.clone().text()})}));}
+      catch(error){return NextResponse.json({message:error.status?error.message:'No se pudieron comprobar los permisos de la carpeta.'},{status:error.status||503});}
+    }
     response = NextResponse.next({ request: { headers: authenticatedHeaders } });
     const legacyDirectionRoutes = [
       ["/dashboard/direccion/tesoreria/extractos/revision", "/dashboard/direccion/tesoreria/extractos/conciliacion"],

@@ -1,12 +1,14 @@
 import { randomUUID } from 'node:crypto';
 import { getPgPool } from '../../database/pgClient.js';
+import {canAccessTrash} from './MediatecaAccess.js';
 export async function archiveMediaDeletion(db, folders, media) {
   const id = randomUUID();
   await db.query('INSERT INTO mediateca_papelera(id,folders,media) VALUES($1,$2::jsonb,$3::jsonb)', [id, JSON.stringify(folders), JSON.stringify(media)]);
   return id;
 }
-export async function listMediaTrash() {
-  return (await getPgPool().query(`SELECT id,deleted_at,jsonb_array_length(folders) folders_count,jsonb_array_length(media) media_count FROM mediateca_papelera WHERE restored_at IS NULL ORDER BY deleted_at DESC`)).rows;
+export async function listMediaTrash(actor='superadmin') {
+  const rows=(await getPgPool().query(`SELECT id,deleted_at,folders,media,jsonb_array_length(folders) folders_count,jsonb_array_length(media) media_count FROM mediateca_papelera WHERE restored_at IS NULL ORDER BY deleted_at DESC`)).rows;
+  const visible=[];for(const row of rows)if(await canAccessTrash(row,actor))visible.push({id:row.id,deleted_at:row.deleted_at,folders_count:row.folders_count,media_count:row.media_count});return visible;
 }
 export async function restoreMediaTrash(id, canManageFolders = false, pool = getPgPool()) {
   const db = await pool.connect();
@@ -16,7 +18,7 @@ export async function restoreMediaTrash(id, canManageFolders = false, pool = get
     if (!row) throw Object.assign(new Error('No existe esta eliminación pendiente de restaurar.'), { status: 404 });
     if (row.folders.length && !canManageFolders) throw Object.assign(new Error('No tienes permiso para restaurar carpetas.'), { status: 403 });
     // All parents are restored in the same statement; FK checks see the complete set.
-    if (row.folders.length) await db.query('INSERT INTO mediateca_carpetas SELECT * FROM jsonb_populate_recordset(NULL::mediateca_carpetas,$1::jsonb)', [JSON.stringify(row.folders)]);
+    if (row.folders.length) await db.query('INSERT INTO mediateca_carpetas SELECT * FROM jsonb_populate_recordset(NULL::mediateca_carpetas,$1::jsonb)', [JSON.stringify(row.folders.map(folder=>({...folder,allowed_roles:folder.allowed_roles||[]})))]);
     if (row.media.length) await db.query('INSERT INTO mediateca_archivos SELECT * FROM jsonb_populate_recordset(NULL::mediateca_archivos,$1::jsonb)', [JSON.stringify(row.media)]);
     await db.query('UPDATE mediateca_papelera SET restored_at=now() WHERE id=$1', [id]);
     await db.query('COMMIT');
