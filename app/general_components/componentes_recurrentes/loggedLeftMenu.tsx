@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { dashboardMenu, type DashboardMenuEntry } from "@/app/config/dashboardMenu";
-import { canViewModule } from "@/app/config/roleAccess";
+import { canViewModule,canAccessDashboardPath } from "@/app/config/roleAccess";
 import { useCurrentUser } from '@/app/lib/currentUser';
 
 function ArrowIcon({ isOpen }: { isOpen: boolean }) {
@@ -13,6 +13,10 @@ function ArrowIcon({ isOpen }: { isOpen: boolean }) {
       <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
     </svg>
   );
+}
+
+export function visibleEntries(entries:DashboardMenuEntry[],role:unknown):DashboardMenuEntry[]{
+ return entries.flatMap<DashboardMenuEntry>(entry=>{if(entry.type==="page")return canAccessDashboardPath(role,entry.href)?[entry]:[];const children=visibleEntries(entry.children,role);return children.length?[{...entry,children}]:[];});
 }
 
 function entryContainsPath(entry: DashboardMenuEntry, pathname: string): boolean {
@@ -50,7 +54,7 @@ export default function LoggedLeftMenu() {
           <span className="sr-only">Cargando menú…</span>
         </div>
       )}
-      {!collapsed && role !== null && dashboardMenu.filter((module) => canViewModule(role, module.id)).map((module) => (
+      {!collapsed && role !== null && dashboardMenu.map(module=>({...module,children:visibleEntries(module.children,role)})).filter((module) => canViewModule(role, module.id)&&module.children.length).map((module) => (
         <div key={module.id} className="mb-2">
           <button type="button" onClick={() => toggle(module.id)} className="flex w-full cursor-pointer items-center justify-between rounded-r-lg border-l-2 border-transparent py-2 pl-3 pr-3 text-xs font-medium uppercase tracking-wide text-gray-300 transition-colors hover:bg-gray-800 hover:text-gray-100">
             <span>{module.label}</span>

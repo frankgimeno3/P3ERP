@@ -52,7 +52,7 @@ export default function Home() {
     const checkAuth = async () => {
       const authError = new URLSearchParams(window.location.search).get("auth_error");
       if (authError) {
-        setError(authError === "service" ? "El servidor no puede comprobar tus permisos. Revisa la conexión a la base de datos en Vercel." : "El servidor no ha aceptado la sesión. Vuelve a identificarte.");
+        setError(authError === "access" ? "Tu cuenta no tiene un agente activo asociado. Contacta con Administración." : authError === "service" ? "El servidor no puede comprobar tus permisos. Revisa la conexión a la base de datos en Vercel." : "El servidor no ha aceptado la sesión. Vuelve a identificarte.");
         return;
       }
       try {

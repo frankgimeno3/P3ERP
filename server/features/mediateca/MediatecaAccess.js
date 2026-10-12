@@ -1,8 +1,8 @@
 import {getPgPool} from '../../database/pgClient.js';
 import {getFolderIdByPath} from './MediatecaRepository.js';
-export const mediatecaRoles=['base','comercial','administracion','operaciones','direccion','superadmin'];
-const protectedRoles={documentos_direccion:['direccion','superadmin'],documentos_administracion:['administracion','operaciones','direccion','superadmin'],contratos_firmados:['comercial','administracion','operaciones','direccion','superadmin']};
-const role=value=>String(value||'').toLowerCase().normalize('NFD').replace(/\p{M}/gu,'');
+import {appRoles,normalizeRole,canAccessDashboardPath,mediatecaRootPaths} from '../../../app/config/moduleAccess.js';
+export const mediatecaRoles=appRoles;
+const role=normalizeRole;
 export function folderAccess(rows){
  const byId=new Map(rows.map(r=>[r.mediateca_folder_id,r])),cache=new Map();
  function resolve(id,visited=new Set()){
@@ -10,19 +10,20 @@ export function folderAccess(rows){
   if(cache.has(id))return cache.get(id);
   const row=byId.get(id);if(!row||visited.has(id))return ['superadmin'];
   const parent=resolve(row.mediateca_parent_folder_id,new Set([...visited,id]));
-  let configured=Array.isArray(row.allowed_roles)?row.allowed_roles.map(role):[];
-  if(!configured.length&&!row.mediateca_parent_folder_id)configured=protectedRoles[row.mediateca_folder_name]||[];
-  const effective=[...new Set([...parent.filter(r=>!configured.length||configured.includes(r)),'superadmin'])];
+  const configured=Array.isArray(row.allowed_roles)?row.allowed_roles.map(role):[];
+  const path=row.access_path||(!row.mediateca_parent_folder_id?mediatecaRootPaths[row.mediateca_folder_name]:null);
+  const effective=[...new Set([...parent.filter(r=>(!configured.length||configured.includes(r))&&(!path||canAccessDashboardPath(r,path))),'superadmin'])];
   cache.set(id,effective);return effective;
  }
  return {roles:resolve,rows:byId};
 }
 export async function mediatecaAccess(db=getPgPool()){
- return folderAccess((await db.query('SELECT mediateca_folder_id,mediateca_parent_folder_id,mediateca_folder_name,allowed_roles FROM mediateca_carpetas')).rows);
+ return folderAccess((await db.query('SELECT mediateca_folder_id,mediateca_parent_folder_id,mediateca_folder_name,allowed_roles,access_path FROM mediateca_carpetas')).rows);
 }
 export function requestMediatecaRole(request){
- const value=role(request.headers.get('x-p3-actor-role'));
- if(!request.headers.get('x-p3-actor-id')||!mediatecaRoles.includes(value))throw Object.assign(new Error('No autenticado.'),{status:401});
+ const raw=request.headers.get('x-p3-actor-role');
+ const value=role(raw);
+ if(!request.headers.get('x-p3-actor-id')||!mediatecaRoles.includes(raw))throw Object.assign(new Error('No autenticado.'),{status:401});
  return value;
 }
 export async function assertMediatecaAccess(request,{folderId,path,mediaId}={},db=getPgPool()){
@@ -47,7 +48,7 @@ export async function guardMediatecaRequest(request){
   }
   return;
  }
- const media=path.match(/\/media\/([^/]+)$/),folder=path.match(/\/folders\/([^/]+)$/);
+ const media=path.match(/\/media\/([^/]+)(?:\/content)?$/),folder=path.match(/\/folders\/([^/]+)$/);
  if(media&&media[1]!=='presign')await assertMediatecaAccess(request,{mediaId:decodeURIComponent(media[1])});
  else if(folder&&folder[1]!=='by-path'){
   const {folderId,access}=await assertMediatecaAccess(request,{folderId:decodeURIComponent(folder[1])});

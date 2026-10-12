@@ -1,3 +1,4 @@
+import {validFolderAccessPath,mediatecaRootPaths} from '../../../app/config/moduleAccess.js';
 import { archiveMediaDeletion } from './MediatecaTrashRepository.js';
 import crypto from "node:crypto";
 import { getPgPool } from "../../database/pgClient.js";
@@ -26,6 +27,7 @@ function pathSegments(path) {
 }
 
 function buildUrl(row) {
+  if(row.mediateca_s3_key)return `/api/v1/mediateca/media/${encodeURIComponent(row.mediateca_content_id)}/content`;
   if (row.mediateca_content_src) return row.mediateca_content_src;
   const host = String(process.env.NEXT_PUBLIC_CLOUDFRONT_URL || "").replace(/^https?:\/\//, "").replace(/\/+$/, "");
   return host && row.mediateca_s3_key ? `https://${host}/${row.mediateca_s3_key}` : "";
@@ -44,6 +46,7 @@ function normalizeFolder(row, path = "") {
     parentId: row.mediateca_parent_folder_id || null,
     path,
     allowedRoles: row.allowed_roles || [],
+    accessPath: row.access_path || (!row.mediateca_parent_folder_id?mediatecaRootPaths[row.mediateca_folder_name]:null) || null,
   };
 }
 
@@ -193,16 +196,20 @@ export async function updateFolder(folderId, data) {
   }
   const roles = Array.isArray(data?.allowed_roles) ? data.allowed_roles.filter(role => typeof role === 'string') : current.allowed_roles;
   if(roles.some(role=>!['base','comercial','administracion','operaciones','direccion','superadmin'].includes(role)))throw new Error('Selecciona roles existentes del ERP.');
+  const accessPath=Object.hasOwn(data,'access_path')?(data.access_path||null):current.access_path||(!current.mediateca_parent_folder_id?mediatecaRootPaths[current.mediateca_folder_name]:null)||null;
+  if(accessPath&&!validFolderAccessPath(accessPath))throw new Error('Selecciona una ruta válida del ERP.');
+  if(!current.mediateca_parent_folder_id&&protectedNames.has(current.mediateca_folder_name)&&accessPath!==mediatecaRootPaths[current.mediateca_folder_name])throw new Error('La carpeta principal conserva el acceso de su módulo.');
   const { rows } = await pool.query(
     `
       UPDATE mediateca_carpetas
       SET mediateca_folder_name = $2,
           allowed_roles = $3::jsonb,
+          access_path = $4,
           mediateca_folder_updated_at = NOW()
       WHERE mediateca_folder_id = $1
       RETURNING *
     `,
-    [folderId, name, JSON.stringify(roles)],
+    [folderId, name, JSON.stringify(roles),accessPath],
   );
   return normalizeFolder(rows[0], await getFolderPathById(folderId));
 }

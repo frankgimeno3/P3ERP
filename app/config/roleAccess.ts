@@ -1,39 +1,9 @@
 export type AppRole = "base" | "comercial" | "direccion" | "administracion" | "operaciones" | "superadmin";
-
-export const roleRank: Record<AppRole, number> = {
-  base: 0,
-  comercial: 0.5,
-  direccion: 0,
-  administracion: 1,
-  operaciones: 2,
-  superadmin: 3,
-};
-
-export function normalizeRole(role: unknown): AppRole {
-  const value = String(role || "").trim().toLowerCase();
-  if (value === "direccion" || value === "dirección") return "direccion";
-  if (value === "comercial" || value === "administracion" || value === "operaciones" || value === "superadmin") return value;
-  return "base";
-}
-
-export function canViewModule(role: unknown, moduleId: string) {
-  const normalized = normalizeRole(role);
-  if (moduleId === "direccion") return normalized === "superadmin" || normalized === "direccion";
-  if (moduleId === "operaciones") return roleRank[normalized] >= roleRank.operaciones;
-  if (moduleId === "administracion") return roleRank[normalized] >= roleRank.administracion;
-  return true;
-}
-
-export function canAccessDashboardPath(role: unknown, pathname: string) {
-  if (pathname === "/dashboard/comercial/contratos/crear" || pathname.startsWith("/dashboard/comercial/contratos/crear/")) return roleRank[normalizeRole(role)] >= roleRank.administracion;
-  if (pathname.startsWith("/dashboard/direccion")) return canViewModule(role, "direccion");
-  if (pathname.startsWith("/dashboard/operaciones")) return canViewModule(role, "operaciones");
-  if (pathname.startsWith("/dashboard/administracion")) return canViewModule(role, "administracion");
-  return true;
-}
+import {normalizeRole,roleRank} from "./moduleAccess.js";
+export {normalizeRole,roleRank,canViewModule,canAccessDashboardPath} from "./moduleAccess.js";
 
 export function canAccessApiPath(role: unknown, pathname: string, method: string) {
-  const normalized = normalizeRole(role);
+  const normalized = normalizeRole(role) as AppRole;
   if (/^\/api\/v1\/admin\/proveedores\/[^/]+\/(benchmark|cargos-recurrentes)(?:\/[^/]+)?\/?$/.test(pathname)) return normalized === 'direccion' || roleRank[normalized] >= roleRank.administracion;
   if (method === 'POST' && /^\/api\/v1\/tareas\/propias\/?$/.test(pathname)) return true;
   if (pathname.startsWith('/api/v1/tareas') && (method !== 'GET' || pathname === '/api/v1/tareas/agentes')) return normalized === 'direccion' || roleRank[normalized] >= roleRank.operaciones;

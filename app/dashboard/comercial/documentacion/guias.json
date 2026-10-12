@@ -81,7 +81,7 @@
     "steps": [
       "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "Los selectores de agentes permiten Comercial, Dirección, Administración, Operaciones y Superadmin; los agentes Base no pueden seleccionarse.",
-      "Crear contrato solo est? disponible para Administraci?n, Operaciones y Direcci?n. En la ficha se puede cambiar el contacto de la cuenta, iniciar una factura y reemplazar ?rdenes pendientes: las pagadas quedan bloqueadas y las nuevas deben sumar el mismo total.",
+      "Crear contrato solo est? disponible para Administración, Operaciones y Direcci?n. En la ficha se puede cambiar el contacto de la cuenta, iniciar una factura y reemplazar ?rdenes pendientes: las pagadas quedan bloqueadas y las nuevas deben sumar el mismo total.",
       "Pulsa Agregar contrato para introducir cuenta, servicios, cobros y fechas; el alta crea contrato, órdenes, recibos y contenidos de producción. No crea facturas automáticamente.",
       "Localiza el cliente o contrato en el listado. Se muestran como máximo 50 contratos por página; usa Anterior y Siguiente para navegar. Al cambiar filtros o pestaña vuelves a la primera página.",
       "Abre el contrato para revisar empresa, contenidos y condiciones de cobro.",
@@ -353,7 +353,8 @@
       "Dentro de Agentes, Activos es la pestaña inicial y muestra empleados activos; Inactivos reúne empleados no activos, incluidos los bloqueados. No empleados reúne los agentes sin cuenta de empleado, cualquiera que sea su estado. Los filtros por ID, nombre, email y rol se mantienen al cambiar de pestaña. Las tablas no tienen columnas Estado ni Cuenta de empleado.",
       "La ficha del agente contiene Detalles, Nóminas y Tareas. Nóminas muestra su ficha única con historial bancario y la nómina pactada con enlace para editar el cargo recurrente.",
       "Tareas muestra ID, nombre, agente, estado y descripción. Filtra por ID, nombre, descripción o estado; Crear tarea abre un modal que se cierra con × o Escape. Abre cualquier fila para consultar y editar su tarea en una subpágina. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados.",
-      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
+      "El menú lateral, las rutas y la Mediateca comparten los permisos del rol. Las cuentas de Cognito necesitan un agente activo asociado; los emails alternativos registrados para ese agente comparten identidad, tareas y rol."
     ]
   },
   "/dashboard/operaciones/agentes/roles": {
@@ -362,7 +363,8 @@
       "El rol Comercial se sitúa entre Base y Administración y permite seleccionar al agente en la gestión comercial.",
       "Abre un rol existente o crea uno nuevo.",
       "Activa únicamente los accesos requeridos.",
-      "Guarda y comprueba el efecto con un agente que tenga ese rol."
+      "Guarda y comprueba el efecto con un agente que tenga ese rol.",
+      "El menú lateral, las rutas y la Mediateca comparten los permisos del rol. Las cuentas de Cognito necesitan un agente activo asociado; los emails alternativos registrados para ese agente comparten identidad, tareas y rol."
     ]
   },
   "/dashboard/operaciones/gestion_cuentas": {
@@ -828,13 +830,15 @@
     "summary": "Archivos y carpetas con eliminacion recuperable.",
     "steps": [
       "La columna Acceso muestra los roles efectivos de cada carpeta y archivo. Heredado indica que la subcarpeta utiliza los permisos de su padre. Una subcarpeta puede restringir el acceso, pero no ampliarlo; Superadmin conserva acceso. Los roles se eligen entre los existentes del ERP.",
-      "Documentos de Dirección queda restringido a Dirección y Superadmin. Documentos de Administración permite Administración, Operaciones, Dirección y Superadmin. Contratos firmados permite Comercial, Administración, Operaciones, Dirección y Superadmin. Las carpetas generales conservan el acceso compartido salvo restricción específica.",
+      "Documentos de Dirección hereda el módulo Dirección (Dirección y Superadmin). Documentos de Administración hereda Administración (Administración, Operaciones y Superadmin). Contratos firmados hereda Comercial y documentos de producción hereda Producción, actualmente accesibles a todos los roles. Las restricciones adicionales de subcarpetas pueden reducir estos permisos.",
       "Las carpetas no autorizadas se ocultan y sus archivos no se pueden consultar ni gestionar mediante la API. Mover exige acceso al origen y al destino. La papelera solo muestra eliminaciones a las que tienes acceso; eliminar una carpeta con descendientes privados también requiere permiso sobre ellos.",
       "La ruta muestra la carpeta actual. Durante una consulta aparece Cargando mediateca; una respuesta antigua no sustituye una carpeta abierta posteriormente.",
       "Eliminar mueve los registros a la papelera y conserva los archivos. Deshacer permite recuperar la ultima eliminacion.",
       "Papelera muestra eliminaciones anteriores y permite restaurarlas despues de recargar. Las carpetas requieren permiso de operaciones; los conflictos de identidad impiden sobrescribir contenido.",
-      "Los errores muestran Reintentar y conservan el contenido ya cargado. Los filtros de cada tabla se muestran juntos en una tarjeta Filtros inicialmente cerrada, con una etiqueta fina encima de cada campo. Cerrarla conserva los filtros aplicados.",
-      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
+      "Los errores muestran Reintentar y retiran el contenido anterior para evitar mostrar una carpeta sin permiso. Los filtros de cada tabla se muestran juntos en una tarjeta Filtros inicialmente cerrada, con una etiqueta fina encima de cada campo. Cerrarla conserva los filtros aplicados.",
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
+      "El acceso de cada carpeta se vincula a un módulo o ruta del ERP y se cruza con las restricciones de roles heredadas. Si no puedes abrir esa ruta, no ves su carpeta ni accedes a sus archivos. Las raíces protegidas conservan su módulo; al editar una subcarpeta puedes elegir una página para restringir su acceso.",
+      "Los archivos almacenados en S3 se abren desde una ruta del ERP que vuelve a comprobar los permisos; el visor no utiliza una dirección pública permanente de CloudFront."
     ]
   },
   "/dashboard/operaciones/data/importar/cuentas": {

@@ -89,9 +89,13 @@ export async function middleware(request) {
     const email = String(idPayload.email || "").trim();
     const pool = getPgPool();
     const { rows } = email
-      ? await pool.query(`SELECT id_agente, rol_agente FROM agentes_db WHERE lower(btrim(email_agente)) = lower(btrim($1)) ORDER BY updated_at DESC LIMIT 1`, [email])
+      ? await pool.query(`SELECT id_agente, rol_agente, estado_agente FROM agentes_db WHERE (lower(btrim(email_agente)) = lower(btrim($1)) OR cognito_emails ? lower(btrim($1))) ORDER BY updated_at DESC LIMIT 1`, [email])
       : { rows: [] };
-    const role = normalizeRole(rows[0]?.rol_agente);
+    if(!rows[0]?.id_agente||rows[0].estado_agente!=='activo'){
+      if(isApi)return NextResponse.json({message:'Tu cuenta no tiene un agente activo asociado.'},{status:403});
+      return NextResponse.redirect(new URL('/?auth_error=access',request.url));
+    }
+    const role = normalizeRole(rows[0].rol_agente);
 
     if ((pathname === "/" || pathname === "/admin")) return NextResponse.redirect(new URL(loginDestination(request.nextUrl.search),request.url));
     if (pathname.startsWith("/dashboard") && !canAccessDashboardPath(role, pathname)) return forbidden();

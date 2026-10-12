@@ -1,4 +1,6 @@
 "use client";
+import SearchableSelect from '@/app/components/SearchableSelect';
+import {dashboardMenu,type DashboardMenuEntry} from '@/app/config/dashboardMenu';
 import SortableTable from '@/app/components/SortableTable';
 
 import TableFilters from '@/app/components/TableFilters';
@@ -8,7 +10,7 @@ import Link from "next/link";
 import { MediatecaService } from "@/app/service/MediatecaService";
 import apiClient from '@/app/apiClient';
 
-export type MediatecaFolder = { id: string; name: string; path: string; allowedRoles?: string[]; effectiveRoles?: string[]; accessInherited?: boolean };
+export type MediatecaFolder = { id: string; name: string; path: string; allowedRoles?: string[]; effectiveRoles?: string[]; accessInherited?: boolean; accessPath?:string|null };
 const protectedRoots = new Set(['contratos_firmados','documentos_administracion','documentos_direccion','documentos_produccion']);
 export type MediatecaMedia = {
   id: string;
@@ -241,6 +243,8 @@ function MoveModal({ item, onClose, onDone }: { item: MediatecaMedia; onClose: (
 function EditFolderModal({ folder, onClose, onDone }: { folder: MediatecaFolder; onClose: () => void; onDone: () => void }) {
   const [name, setName] = useState(folder.name);
   const [roles, setRoles] = useState<string[]>(folder.allowedRoles || []);
+  const [accessPath,setAccessPath]=useState(folder.accessPath||"inherit");
+  const pathOptions=[{value:"inherit",label:"Heredar módulo y ruta del padre"},...dashboardMenu.flatMap(module=>{const collect=(entries:DashboardMenuEntry[]):{value:string;label:string}[]=>entries.flatMap(entry=>entry.type==="page"?[{value:entry.href,label:module.label+" / "+entry.label}]:collect(entry.children));return [{value:"/dashboard/"+module.id,label:module.label},...collect(module.children)];}).filter(option=>option.value!=="/dashboard/mediateca")];
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -251,7 +255,7 @@ function EditFolderModal({ folder, onClose, onDone }: { folder: MediatecaFolder;
     setSaving(true);
     setError("");
     try {
-      await MediatecaService.updateFolder(folder.id, { name, allowed_roles: roles });
+      await MediatecaService.updateFolder(folder.id, { name, allowed_roles: roles,access_path:accessPath==="inherit"?null:accessPath });
       onDone();
     } catch (err: any) {
       setError(err?.response?.data?.message || "No se ha podido actualizar la carpeta.");
@@ -269,7 +273,7 @@ function EditFolderModal({ folder, onClose, onDone }: { folder: MediatecaFolder;
         </label>
         
         <div className="text-sm">
-          <label className="block mb-2 font-semibold">Roles permitidos</label><p className="mb-2 text-xs text-gray-600">Sin selección se hereda el acceso del padre. Una subcarpeta puede restringirlo, pero no ampliar el acceso de su carpeta principal. Superadmin conserva acceso.</p>
+          <label className="mb-1 block font-light">Acceso vinculado a módulo o página</label><SearchableSelect required label="M?dulo o ruta de acceso" value={accessPath} options={pathOptions} disabled={protectedRoots.has(folder.name)&&!folder.path.includes("/")} onChange={setAccessPath}/><p className="my-2 text-xs text-gray-600">Solo acceden quienes pueden abrir esa ruta en el ERP. Los roles siguientes pueden restringir más el acceso, sin ampliarlo.</p><label className="block mb-2 font-semibold">Roles permitidos</label><p className="mb-2 text-xs text-gray-600">Sin selección se hereda el acceso del padre. Una subcarpeta puede restringirlo, pero no ampliar el acceso de su carpeta principal. Superadmin conserva acceso.</p>
           <div className="space-y-2 mb-3">
             {commonRoles.map((role) => (
               <label key={role} className="flex items-center gap-2 cursor-pointer">
@@ -384,7 +388,8 @@ export function MediatecaBrowser({
       setSelectedId("");
     } catch (err: any) {
       if(version!==loadVersion.current.version)return;
-      setError(err?.message || "No se ha podido cargar la mediateca.");
+      setFolders([]);setMedia([]);setSelectedId("");
+      setError(err?.response?.data?.message || err?.message || "No se ha podido cargar la mediateca.");
     } finally {
       if(version===loadVersion.current.version)setLoading(false);
     }
@@ -467,7 +472,7 @@ export function MediatecaBrowser({
                       {folder.name}
                     </button>
                   </td>
-                  <td className="p-3 font-mono text-xs text-gray-600">{folder.path}</td><td className="p-3 text-xs">{(folder.effectiveRoles||folder.allowedRoles||[]).join(', ')||'Hereda el acceso de su carpeta principal'}{folder.accessInherited&&<span className="block text-gray-500">Heredado</span>}</td>
+                  <td className="p-3 font-mono text-xs text-gray-600">{folder.path}</td><td className="p-3 text-xs">{(folder.effectiveRoles||folder.allowedRoles||[]).join(', ')||'Hereda el acceso de su carpeta principal'}{folder.accessPath&&<span className="block text-gray-500">{folder.accessPath}</span>}{folder.accessInherited&&<span className="block text-gray-500">Heredado</span>}</td>
                   {!picker && (
                     <td className="p-3 text-right">
                       <div className="flex justify-end gap-2">

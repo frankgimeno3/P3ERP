@@ -24,6 +24,7 @@ export default class AuthenticationService {
             const response = await fetch('/api/v1/auth/session', {
                 credentials: 'same-origin', cache: 'no-store', signal: controller.signal,
             });
+            if(response.status===403)throw new Error("Tu cuenta no tiene un agente activo asociado. Contacta con Administración.");
             if (response.status === 401) {
                 throw new Error('El servidor no ha aceptado la sesión. Revisa las cookies y la configuración de Cognito en Vercel.');
             }

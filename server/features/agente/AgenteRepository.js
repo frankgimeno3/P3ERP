@@ -31,7 +31,7 @@ export async function getAgentes() {
 export async function getAgenteByEmail(email) {
   const pool = getPgPool();
   const { rows } = await pool.query(
-    `SELECT * FROM agentes_db WHERE lower(btrim(email_agente)) = lower(btrim($1)) ORDER BY updated_at DESC LIMIT 1`,
+    `SELECT * FROM agentes_db WHERE (lower(btrim(email_agente)) = lower(btrim($1)) OR cognito_emails ? lower(btrim($1))) ORDER BY updated_at DESC LIMIT 1`,
     [email],
   );
   return rows[0] ? normalizeAgente(rows[0]) : null;

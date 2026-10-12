@@ -5,7 +5,7 @@ const {JSDOM}=require(process.env.P3_SELECTOR_TEST_MODULES ? path.join(process.e
 const dom=new JSDOM('<div id="root"></div>',{url:'http://localhost/?next=%2Fdashboard%2Fcomercial%2Fcuentas%2FA%3Ftab%3Dcontactos%23principal'});
 Object.assign(global,{window:dom.window,document:dom.window.document,navigator:dom.window.navigator,localStorage:dom.window.localStorage,HTMLElement:dom.window.HTMLElement,IS_REACT_ACT_ENVIRONMENT:true});
 const React=require('react'),{createRoot}=require('react-dom/client');
-let rejectResponse;let role='operaciones';let databaseFailure=false;let serverSessionFailure=false;const redirects=[],router={replace:url=>redirects.push(url)};
+let rejectResponse;let role='operaciones';let databaseFailure=false;let missingAgent=false;let inactiveAgent=false;let serverSessionFailure=false;const redirects=[],router={replace:url=>redirects.push(url)};
 const cache=new Map();
 function load(file){file=path.resolve(file);if(cache.has(file))return cache.get(file);const mod={exports:{}};
 const js=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{jsx:ts.JsxEmit.ReactJSX,module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true}}).outputText;
@@ -18,7 +18,8 @@ new Function('require','module','exports',js)(id=>{
  if(id.includes('AuthenticationService'))return {__esModule:true,default:{checkSession:async()=>null,login:async()=>({sub:'user'}),checkServerSession:async()=>{if(serverSessionFailure)throw new Error('Servidor no disponible');}}};
  if(id==='axios')return {__esModule:true,default:{create:()=>({interceptors:{request:{use(){}},response:{use(ok,reject){rejectResponse=reject;}}}})}};
  if(id.endsWith('env.js'))return {COGNITO:{CLIENT_ID:'test',REGION:'region',USER_POOL_ID:'pool'}};
- if(id.includes('pgClient'))return {getPgPool:()=>({query:async()=>{if(databaseFailure)throw Object.assign(new Error('Database unavailable'),{code:'ETIMEDOUT'});return {rows:[{rol_agente:role,id_agente:'agent'}]};}})};
+ if(id.includes('MediatecaAccess'))return {guardMediatecaRequest:async()=>{}};
+ if(id.includes('pgClient'))return {getPgPool:()=>({query:async()=>{if(databaseFailure)throw Object.assign(new Error('Database unavailable'),{code:'ETIMEDOUT'});return {rows:missingAgent?[]:[{rol_agente:role,id_agente:'agent',estado_agente:inactiveAgent?'inactivo':'activo'}]};}})};
  if(id==='jose')return {createRemoteJWKSet:()=>({}),jwtVerify:async token=>({payload:token==='id'?{token_use:'id',email:'test@example.test'}:{token_use:'access',client_id:'test'}})};
  if(id.startsWith('@/')||id.startsWith('.')){const base=id.startsWith('@/')?path.resolve(id.slice(2)):path.resolve(path.dirname(file),id);return load([base,base+'.js',base+'.ts',base+'.tsx'].find(p=>fs.existsSync(p)&&fs.statSync(p).isFile()));}
  return require(id);
@@ -48,6 +49,19 @@ new Function('require','module','exports',js)(id=>{
  assert.equal((await middleware(new NextRequest('http://localhost/api/v1/comercial/cuentas'))).status,401);
  const cookie='CognitoIdentityServiceProvider.test.LastAuthUser=user; CognitoIdentityServiceProvider.test.user.accessToken=access; CognitoIdentityServiceProvider.test.user.idToken=id';
  const authenticated=await middleware(new NextRequest('http://localhost'+loginUrl(target),{headers:{cookie}}));assert.equal(authenticated.headers.get('location'),'http://localhost'+target);
+ for(const restricted of ['missing','inactive']){
+  missingAgent=restricted==='missing';inactiveAgent=restricted==='inactive';
+  assert.equal((await middleware(new NextRequest('http://localhost/api/v1/auth/session',{headers:{cookie}}))).status,403);
+  const blocked=await middleware(new NextRequest('http://localhost/dashboard',{headers:{cookie}}));
+  assert.equal(new URL(blocked.headers.get('location')).searchParams.get('auth_error'),'access');
+ }
+ missingAgent=false;inactiveAgent=false;
+ for(const currentRole of ['base','comercial','administracion','operaciones']){
+  role=currentRole;
+  assert.equal((await middleware(new NextRequest('http://localhost/dashboard/direccion/rds',{headers:{cookie}}))).headers.get('location'),'http://localhost/dashboard');
+  assert.equal((await middleware(new NextRequest('http://localhost/api/v1/direccion/bancos/revision',{headers:{cookie}}))).status,403);
+ }
+ role='operaciones';
  databaseFailure=true;
  assert.equal((await middleware(new NextRequest('http://localhost/api/v1/auth/session',{headers:{cookie}}))).status,503);
  const unavailable=await middleware(new NextRequest('http://localhost/dashboard',{headers:{cookie}}));

@@ -1,3 +1,4 @@
+import {normalizeRole} from "@/app/config/roleAccess";
 import {COGNITO} from "../../../env.js";
 import {verifyAccessToken, verifyIdToken} from "../../../server/features/authentication/AuthenticationService.js";
 import {getAgenteByEmail} from "../../../server/features/agente/AgenteRepository.js";
@@ -26,11 +27,12 @@ export async function POST(request) {
         const email = String(idPayload.email || username || "");
         const agent = email ? await getAgenteByEmail(email) : null;
 
+        if(!agent||agent.estado_agente!=="activo")return Response.json({message:"Tu cuenta no tiene un agente activo asociado."},{status:403});
         return Response.json({
             id_agente: agent?.id_agente || null,
             name: agent?.nombre_completo_agente || idPayload.name || email || username,
             email,
-            role: agent?.rol_agente || (Array.isArray(idPayload["cognito:groups"]) ? idPayload["cognito:groups"][0] : "") || "sin rol",
+            role: normalizeRole(agent.rol_agente),
         });
     } catch {
         return new Response("Invalid Token", {status: 401});

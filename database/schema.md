@@ -227,6 +227,8 @@ Indexes:
 
 ### Tareas compartidas y acceso a Mediateca
 
+`mediateca_carpetas.access_path text` vincula una carpeta a un módulo o página del dashboard. Los permisos efectivos intersectan la política de esa ruta, los roles configurados y todos los padres. Las raíces protegidas conservan su ruta. `agentes_db.cognito_emails jsonb NOT NULL DEFAULT '[]'` contiene emails alternativos normalizados de Cognito; se resuelven al mismo agente activo y rol que su email principal. Migración: `20261011_0001_mediateca_route_access.sql`.
+
 `laboral_tareas_empleado.agentes_asociados jsonb NOT NULL DEFAULT '[]'` contiene IDs de todos los responsables. `agente` conserva el primero para compatibilidad; listas, contadores, calendario y autorización consultan ambos. `mediateca_carpetas.allowed_roles jsonb NOT NULL DEFAULT '[]'` configura roles; vacío hereda, y los permisos efectivos se intersectan con los del padre. Las raíces protegidas tienen valores por defecto y Superadmin conserva acceso. Migración: `20261010_0003_task_assignments_mediateca_roles.sql`.
 
 ### comercial_contratos

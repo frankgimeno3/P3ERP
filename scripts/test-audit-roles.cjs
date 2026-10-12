@@ -1,6 +1,6 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),ts=require('typescript');
 const compiled=ts.transpileModule(fs.readFileSync('app/config/roleAccess.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText;
-const mod={exports:{}};new Function('exports','module',compiled)(mod.exports,mod);
+const mod={exports:{}};const core={exports:{}};new Function('exports','module',ts.transpileModule(fs.readFileSync('app/config/moduleAccess.js','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText)(core.exports,core);new Function('require','exports','module',compiled)(()=>core.exports,mod.exports,mod);
 const {canAccessApiPath:can,canAccessDashboardPath:dashboard}=mod.exports;
 for(const role of ['direccion','superadmin']){
  assert(dashboard(role,'/dashboard/direccion/tesoreria/extractos/conciliacion'));
