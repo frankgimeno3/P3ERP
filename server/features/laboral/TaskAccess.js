@@ -1,4 +1,4 @@
-export const managesTasks = role => ['operaciones','superadmin','direccion','dirección'].includes(String(role || '').toLowerCase());
+export const managesTasks = role => ['operaciones','superadmin','contabilidad','direccion','dirección'].includes(String(role || '').toLowerCase());
 export const taskIdentity = request => ({id:request.headers.get('x-p3-actor-id') || '',role:request.headers.get('x-p3-actor-role') || ''});
 export function requireTaskIdentity(actor,management=false) {
   if(!actor.id) throw Object.assign(new Error('No autenticado.'),{status:401});

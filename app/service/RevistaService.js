@@ -2,12 +2,12 @@ import apiClient from "../apiClient.js";
 
 export class RevistaService {
     static async getRevistas() {
-        const response = await apiClient.get('/api/v1/produccion/revistas');
+        const response = await apiClient.get('/api/v1/comercial/catalogo/revistas');
         return response.data;
     }
 
     static async getRevistaById(idRevista) {
-        const response = await apiClient.get(`/api/v1/produccion/revistas/${encodeURIComponent(idRevista)}`);
+        const response = await apiClient.get(`/api/v1/comercial/catalogo/revistas/${encodeURIComponent(idRevista)}`);
         return response.data;
     }
 
@@ -22,7 +22,7 @@ export class RevistaService {
     }
 
     static async getPaginas(idRevista) {
-        return (await apiClient.get(`/api/v1/produccion/revistas/${encodeURIComponent(idRevista)}/paginas`)).data;
+        return (await apiClient.get(`/api/v1/comercial/catalogo/revistas/${encodeURIComponent(idRevista)}/paginas`)).data;
     }
 
     static async setNumeroPaginas(idRevista, numPaginas) {

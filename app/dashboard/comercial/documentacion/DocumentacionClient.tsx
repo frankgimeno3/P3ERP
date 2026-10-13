@@ -36,7 +36,7 @@ export default function DocumentacionClient() {
 
   useEffect(() => {
     let active = true;
-    fetch("/api/v1/produccion/gestiones-produccion", { credentials: "include" })
+    fetch("/api/v1/comercial/catalogo/publicaciones", { credentials: "include" })
       .then((response) => {
         if (!response.ok) throw new Error("No se pudo cargar el calendario");
         return response.json();

@@ -22,8 +22,9 @@ export async function getRoles() {
       WHEN 'comercial' THEN 2
       WHEN 'administracion' THEN 3
       WHEN 'operaciones' THEN 4
-      WHEN 'direccion' THEN 5
-      WHEN 'superadmin' THEN 6
+      WHEN 'contabilidad' THEN 5
+      WHEN 'direccion' THEN 6
+      WHEN 'superadmin' THEN 7
       ELSE 99
     END, nombre_rol ASC, id_rol ASC
   `);

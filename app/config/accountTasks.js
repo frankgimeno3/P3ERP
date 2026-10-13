@@ -10,4 +10,4 @@ export const accountTaskTypes = {
   email: 'Email',
   accion: 'Acción concreta',
 };
-export const canManageAccountTasks = role => ['comercial', 'administracion', 'operaciones', 'direccion', 'superadmin'].includes(String(role || '').trim().toLowerCase());
+export const canManageAccountTasks = role => ['comercial', 'administracion', 'contabilidad', 'operaciones', 'direccion', 'superadmin'].includes(String(role || '').trim().toLowerCase());

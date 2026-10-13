@@ -1,4 +1,5 @@
 "use client";
+import {appRoles} from '@/app/config/moduleAccess';
 import SearchableSelect from '@/app/components/SearchableSelect';
 import {dashboardMenu,type DashboardMenuEntry} from '@/app/config/dashboardMenu';
 import SortableTable from '@/app/components/SortableTable';
@@ -248,7 +249,7 @@ function EditFolderModal({ folder, onClose, onDone }: { folder: MediatecaFolder;
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const commonRoles = ["base", "comercial", "administracion", "operaciones", "direccion", "superadmin"];
+  const commonRoles = appRoles;
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();

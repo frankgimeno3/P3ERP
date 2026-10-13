@@ -24,4 +24,8 @@ for(const role of appRoles){
 const direction=dashboardMenu.find(module=>module.id==='direccion');
 assert(!flatten(visibleEntries(direction.children,'direccion')).includes('/dashboard/operaciones/agentes'));
 assert(flatten(visibleEntries(direction.children,'superadmin')).includes('/dashboard/operaciones/agentes'));
-console.log('PASS: menú recursivo coherente con rutas para los seis roles; grupos vacíos y enlaces restringidos no aparecen.');
+const accounting=dashboardMenu.filter(area=>canViewModule('contabilidad',area.id)).flatMap(area=>flatten(visibleEntries(area.children,'contabilidad')));
+assert(accounting.includes('/dashboard/direccion/tesoreria/extractos'));
+assert(accounting.includes('/dashboard/administracion/pendiente-cobro'));
+assert(!accounting.some(href=>/^\/dashboard\/(operaciones|produccion)(?:\/|$)/.test(href)));
+console.log('PASS: menú recursivo coherente con rutas para todos los roles; grupos vacíos y enlaces restringidos no aparecen.');

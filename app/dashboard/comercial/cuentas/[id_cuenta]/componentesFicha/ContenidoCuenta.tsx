@@ -6,7 +6,7 @@ import TableFilters from '@/app/components/TableFilters';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { FC, useEffect, useMemo, useState } from 'react';
-import { ContenidoService } from '@/app/service/ContenidoService';
+import apiClient from '@/app/apiClient';
 
 interface ContenidoCuentaProps {
   id_cuenta: string;
@@ -39,7 +39,7 @@ const ContenidoCuenta: FC<ContenidoCuentaProps> = ({ id_cuenta }) => {
 
     setLoading(true);
     setError('');
-    ContenidoService.getContenidos({ id_cuenta, estado, tipo_valor })
+    apiClient.get(`/api/v1/comercial/cuentas/${encodeURIComponent(id_cuenta)}/contenidos`,{params:{estado,tipo_valor}}).then(response=>response.data)
       .then((data) => setContenidos(Array.isArray(data) ? data : []))
       .catch((error) => {
         console.error('Error fetching contenidos de cuenta:', error);

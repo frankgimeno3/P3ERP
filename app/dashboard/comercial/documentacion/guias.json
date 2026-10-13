@@ -354,7 +354,8 @@
       "La ficha del agente contiene Detalles, Nóminas y Tareas. Nóminas muestra su ficha única con historial bancario y la nómina pactada con enlace para editar el cargo recurrente.",
       "Tareas muestra ID, nombre, agente, estado y descripción. Filtra por ID, nombre, descripción o estado; Crear tarea abre un modal que se cierra con × o Escape. Abre cualquier fila para consultar y editar su tarea en una subpágina. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados.",
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
-      "El menú lateral, las rutas y la Mediateca comparten los permisos del rol. Las cuentas de Cognito necesitan un agente activo asociado; los emails alternativos registrados para ese agente comparten identidad, tareas y rol."
+      "El menú lateral, las rutas y la Mediateca comparten los permisos del rol. Las cuentas de Cognito necesitan un agente activo asociado; los emails alternativos registrados para ese agente comparten identidad, tareas y rol.",
+      "Contabilidad permite Comercial, Administración y Dirección, y bloquea Operaciones y Producción. Juan (contavidrioperfil@gmail.com) es el único agente con este rol. La restricción se aplica al menú, rutas, API y Mediateca."
     ]
   },
   "/dashboard/operaciones/agentes/roles": {
@@ -364,7 +365,8 @@
       "Abre un rol existente o crea uno nuevo.",
       "Activa únicamente los accesos requeridos.",
       "Guarda y comprueba el efecto con un agente que tenga ese rol.",
-      "El menú lateral, las rutas y la Mediateca comparten los permisos del rol. Las cuentas de Cognito necesitan un agente activo asociado; los emails alternativos registrados para ese agente comparten identidad, tareas y rol."
+      "El menú lateral, las rutas y la Mediateca comparten los permisos del rol. Las cuentas de Cognito necesitan un agente activo asociado; los emails alternativos registrados para ese agente comparten identidad, tareas y rol.",
+      "Contabilidad permite Comercial, Administración y Dirección, y bloquea Operaciones y Producción. Juan (contavidrioperfil@gmail.com) es el único agente con este rol. La restricción se aplica al menú, rutas, API y Mediateca."
     ]
   },
   "/dashboard/operaciones/gestion_cuentas": {
@@ -838,7 +840,8 @@
       "Los errores muestran Reintentar y retiran el contenido anterior para evitar mostrar una carpeta sin permiso. Los filtros de cada tabla se muestran juntos en una tarjeta Filtros inicialmente cerrada, con una etiqueta fina encima de cada campo. Cerrarla conserva los filtros aplicados.",
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
       "El acceso de cada carpeta se vincula a un módulo o ruta del ERP y se cruza con las restricciones de roles heredadas. Si no puedes abrir esa ruta, no ves su carpeta ni accedes a sus archivos. Las raíces protegidas conservan su módulo; al editar una subcarpeta puedes elegir una página para restringir su acceso.",
-      "Los archivos almacenados en S3 se abren desde una ruta del ERP que vuelve a comprobar los permisos; el visor no utiliza una dirección pública permanente de CloudFront."
+      "Los archivos almacenados en S3 se abren desde una ruta del ERP que vuelve a comprobar los permisos; el visor no utiliza una dirección pública permanente de CloudFront.",
+      "El rol Contabilidad accede a documentos de Administración, Dirección y Comercial; no ve documentos de Producción ni carpetas vinculadas a Operaciones."
     ]
   },
   "/dashboard/operaciones/data/importar/cuentas": {

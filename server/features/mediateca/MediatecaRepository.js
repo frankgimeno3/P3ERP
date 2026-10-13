@@ -1,4 +1,4 @@
-import {validFolderAccessPath,mediatecaRootPaths} from '../../../app/config/moduleAccess.js';
+import {validFolderAccessPath,mediatecaRootPaths,appRoles} from '../../../app/config/moduleAccess.js';
 import { archiveMediaDeletion } from './MediatecaTrashRepository.js';
 import crypto from "node:crypto";
 import { getPgPool } from "../../database/pgClient.js";
@@ -195,7 +195,7 @@ export async function updateFolder(folderId, data) {
     throw new Error('No se puede cambiar el nombre de esta carpeta principal');
   }
   const roles = Array.isArray(data?.allowed_roles) ? data.allowed_roles.filter(role => typeof role === 'string') : current.allowed_roles;
-  if(roles.some(role=>!['base','comercial','administracion','operaciones','direccion','superadmin'].includes(role)))throw new Error('Selecciona roles existentes del ERP.');
+  if(roles.some(role=>!appRoles.includes(role)))throw new Error('Selecciona roles existentes del ERP.');
   const accessPath=Object.hasOwn(data,'access_path')?(data.access_path||null):current.access_path||(!current.mediateca_parent_folder_id?mediatecaRootPaths[current.mediateca_folder_name]:null)||null;
   if(accessPath&&!validFolderAccessPath(accessPath))throw new Error('Selecciona una ruta válida del ERP.');
   if(!current.mediateca_parent_folder_id&&protectedNames.has(current.mediateca_folder_name)&&accessPath!==mediatecaRootPaths[current.mediateca_folder_name])throw new Error('La carpeta principal conserva el acceso de su módulo.');

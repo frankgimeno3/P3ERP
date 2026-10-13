@@ -16,6 +16,16 @@ assert(modules.roles('admin-child').includes('administracion'));
 assert(!modules.roles('operation-route').includes('administracion'));
 assert(modules.roles('operation-route').includes('operaciones'));
 assert(!modules.roles('create-contract').includes('base'));
+const accounting=folderAccess([
+ {mediateca_folder_id:'production',mediateca_folder_name:'documentos_produccion',mediateca_parent_folder_id:null,allowed_roles:[]},
+ {mediateca_folder_id:'direction',mediateca_folder_name:'documentos_direccion',mediateca_parent_folder_id:null,allowed_roles:[]},
+ {mediateca_folder_id:'administration',mediateca_folder_name:'documentos_administracion',mediateca_parent_folder_id:null,allowed_roles:[]},
+ {mediateca_folder_id:'ops',mediateca_parent_folder_id:'administration',access_path:'/dashboard/operaciones/tareas',allowed_roles:['contabilidad']},
+]);
+assert(accounting.roles('direction').includes('contabilidad'));
+assert(accounting.roles('administration').includes('contabilidad'));
+assert(!accounting.roles('production').includes('contabilidad'));
+assert(!accounting.roles('ops').includes('contabilidad'));
 assert.deepEqual(access.roles('child'),['direccion','superadmin']);assert(!access.roles('attempt').includes('base'));assert(access.roles('public').includes('base'));
 const db={query:async(sql)=>({rows:sql.includes('mediateca_archivos')?[{mediateca_folder_id:'child'}]:rows})};
 const request=(role,path,method='GET',body)=>new Request('https://p3.test/api/v1/mediateca/'+path,{method,headers:{'x-p3-actor-id':'test','x-p3-actor-role':role},...(body?{body:JSON.stringify(body)}:{})});

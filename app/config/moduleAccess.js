@@ -1,11 +1,12 @@
-export const appRoles = ['base', 'comercial', 'direccion', 'administracion', 'operaciones', 'superadmin'];
-export const roleRank = {base:0, comercial:0.5, direccion:0, administracion:1, operaciones:2, superadmin:3};
+export const appRoles = ['base', 'comercial', 'direccion', 'administracion', 'contabilidad', 'operaciones', 'superadmin'];
+export const roleRank = {base:0, comercial:0.5, direccion:0, administracion:1, contabilidad:1, operaciones:2, superadmin:3};
 export function normalizeRole(role) {
   const value=String(role||'').trim().toLowerCase().normalize('NFD').replace(/\p{M}/gu,'');
   return appRoles.includes(value)?value:'base';
 }
 export function canViewModule(role,moduleId) {
   const normalized=normalizeRole(role);
+  if(normalized==='contabilidad')return !['operaciones','produccion'].includes(moduleId);
   if(moduleId==='direccion')return ['superadmin','direccion'].includes(normalized);
   if(moduleId==='operaciones')return roleRank[normalized]>=roleRank.operaciones;
   if(moduleId==='administracion')return roleRank[normalized]>=roleRank.administracion;
@@ -14,7 +15,7 @@ export function canViewModule(role,moduleId) {
 const within=(path,root)=>path===root||path.startsWith(root+'/');
 export function canAccessDashboardPath(role,pathname) {
   if(within(pathname,'/dashboard/comercial/contratos/crear'))return roleRank[normalizeRole(role)]>=roleRank.administracion;
-  for(const area of ['direccion','operaciones','administracion'])if(within(pathname,'/dashboard/'+area))return canViewModule(role,area);
+  for(const area of ['direccion','operaciones','administracion','produccion'])if(within(pathname,'/dashboard/'+area))return canViewModule(role,area);
   return true;
 }
 export const mediatecaRootPaths={

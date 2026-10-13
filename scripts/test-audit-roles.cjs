@@ -17,4 +17,14 @@ assert(!can('base','/api/v1/admin/proveedores/provider/benchmark','PUT'));
 assert(!can('administracion','/api/v1/direccion/bancos/revision','PUT'));
 assert(!can('direccion','/api/v1/admin/user-wizard','POST'));
 assert(!dashboard('base','/dashboard/direccion/tesoreria/extractos/conciliacion'));
+for(const area of ['comercial','administracion','direccion'])assert(dashboard('contabilidad','/dashboard/'+area));
+for(const area of ['operaciones','produccion']){
+ assert(!dashboard('contabilidad','/dashboard/'+area));
+ for(const method of ['GET','POST','PUT','PATCH','DELETE'])assert(!can('contabilidad','/api/v1/'+area+'/servicios',method));
+}
+for(const url of ['/api/v1/direccion/bancos/revision','/api/v1/direccion/laboral/nominas','/api/v1/direccion/copias-seguridad','/api/v1/direccion/ordenes-cobro'])for(const method of ['GET','POST','PUT'])assert(can('contabilidad',url,method));
+assert(can('contabilidad','/api/v1/admin/facturas-clientes','POST'));
+assert(!can('contabilidad','/api/v1/admin/user-wizard','POST'));
+assert(can('contabilidad','/api/v1/comercial/catalogo/servicios','GET'));
+assert(can('contabilidad','/api/v1/comercial/catalogo/revistas','GET'));
 console.log('PASS roles: all reconciliation resources available to Direction, supplier-scoped capabilities and privileged operations remain restricted.');
