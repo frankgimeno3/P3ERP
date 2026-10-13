@@ -752,7 +752,8 @@
       "El enlace Información legal verifactu se muestra al pie de las páginas de Administración.",
       "Las ?rdenes canceladas por una factura abono muestran Abonada y su n?mero de abono. Se conserva la orden sin fecha de pago y deja de estar pendiente de cobro.",
       "Cerrar cobro por acuerdo permite asumir una diferencia con motivo obligatorio, sin cambiar el importe facturado ni el dinero cobrado. La orden queda cerrada para la gestión y sale de pendientes y previsiones. Reabrir gestión del cobro restaura el saldo pendiente; ambos cambios quedan registrados.",
-      "El formato visual de Administración comparte controles y pestañas: pestañas principales sobre fondo blanco, contenido azul claro y subpestañas con contenido blanco."
+      "El formato visual de Administración comparte controles y pestañas: pestañas principales sobre fondo blanco, contenido azul claro y subpestañas con contenido blanco.",
+      "Marcar una propuesta como Enviada o Aceptada genera un comentario en su cuenta. La aceptación reúne en un solo comentario la propuesta, el contrato, las órdenes y los contenidos generados. Las modificaciones de contratos y órdenes agrupan todos los cambios encadenados de una misma operación en un único comentario por cuenta, con valores anteriores y nuevos; el Registro de eventos conserva además el detalle."
     ]
   },
   "/": {
