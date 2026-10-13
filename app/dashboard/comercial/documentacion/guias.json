@@ -501,10 +501,10 @@
     ]
   },
   "/dashboard/direccion/rds": {
-    "summary": "Consulta la finalidad y la estructura actual de cada tabla RDS.",
+    "summary": "Consulta la finalidad y la estructura actual de las tablas y vistas de RDS.",
     "steps": [
-      "Abre una tabla para ver sus columnas, tipos, claves, valores por defecto y descripciones.",
-      "La estructura se consulta en PostgreSQL al abrir la página; los cambios de esquema aparecen automáticamente. Las descripciones funcionales se mantienen como comentarios de tabla en RDS.",
+      "Abre una tabla o vista para ver sus columnas, tipos, claves primarias, referencias a otras tablas, valores por defecto y descripciones.",
+      "La estructura se consulta directamente en PostgreSQL al abrir la página; los cambios de esquema aparecen automáticamente. La fecha Consultado indica cuándo se obtuvo el esquema. Las descripciones funcionales se completan con el catálogo del ERP y los comentarios de RDS.",
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
     ]
   },

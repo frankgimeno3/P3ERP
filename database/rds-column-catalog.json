@@ -1,0 +1,89 @@
+{
+  "agentes_db": {
+    "cognito_emails": "Emails alternativos normalizados de Cognito que resuelven al mismo agente y rol que su email principal.",
+    "is_empleado_account": "Indica si el agente pertenece a la gestión de empleados; los colaboradores externos pueden tener acceso sin figurar en nómina.",
+    "rol_agente": "Rol que determina el menú, rutas, API y acceso heredado a Mediateca, incluido Contabilidad.",
+    "estado_agente": "Solo los agentes activos pueden acceder al ERP mediante Cognito."
+  },
+  "comercial_contratos": {"agregados_extra_post_contrato": "IDs de contenidos añadidos como extras después del contrato; se vinculan sin alterar sus líneas pactadas."},
+  "laboral_tareas_empleado": {
+    "agentes_asociados": "Lista de IDs de todos los responsables de la tarea, sin duplicados. El campo agente conserva el primero por compatibilidad.",
+    "vtiger_original": "Datos originales de la tarea importada de vtiger, conservados para trazabilidad.",
+    "agente": "Primer responsable; las consultas de acceso y contadores incluyen también agentes_asociados."
+  },
+  "mediateca_carpetas": {
+    "allowed_roles": "Restricción adicional de roles. Vacío hereda; no amplía permisos del padre ni de la ruta vinculada.",
+    "access_path": "Módulo o página del dashboard cuyo permiso se exige para acceder a la carpeta y sus archivos."
+  },
+  "administracion_tickets": {
+    "estado_revision": "Estado de punteo del ticket; se sincroniza con la revisión de su liquidación cuando corresponde.",
+    "clasificacion": "Clasificación para distinguir tickets asociables de gastos que no pueden vincularse a una liquidación.",
+    "id_liquidacion_tarjeta": "Liquidación a cuya previsión pertenece el ticket de tarjeta.",
+    "comentarios": "Notas e incidencias documentales del ticket."
+  },
+  "tesoreria_pagos_previstos": {"cierre_pago": "Decisión de cierre con diferencia asumida; conserva los importes previstos y pagados reales."},
+  "administracion_facturas_documentos": {
+    "id_documento": "Identificador del documento de factura.",
+    "id_factura_cliente": "Factura de cliente a la que pertenece el documento.",
+    "nombre": "Nombre original del archivo.",
+    "sha256": "Huella del contenido para identificar archivos repetidos.",
+    "contenido": "Contenido binario del PDF original."
+  },
+  "administracion_facturas_subidas": {
+    "id": "Identificador de la subida.","s3_key": "Clave del archivo en S3.","url": "Dirección registrada del archivo.",
+    "actor": "Usuario que realizó la subida.","state": "Estado: pending, consumed, deleting o removed.","invoice_id": "Factura vinculada tras procesar el archivo."
+  },
+  "comercial_cuenta_tarea_agentes": {"id_tarea": "Tarea de cuenta asignada.","id_agente": "Agente responsable; una tarea puede tener varios."},
+  "comercial_cuenta_tareas": {
+    "id": "Identificador de la tarea de cuenta.","id_cuenta": "Cuenta comercial a la que pertenece.","nombre": "Título de la tarea.",
+    "tipo": "Tipo de acción comercial o seguimiento.","descripcion": "Instrucciones y detalles de la tarea.","referencia": "Referencia de apoyo para la acción.",
+    "fecha_limite": "Fecha límite prevista.","estado": "Estado de ejecución de la tarea."
+  },
+  "contenidos_revistas_db": {
+    "contenido_revista_id": "Identificador de la asignación definitiva.","revista_id": "Revista que contiene la página.","contenido_id": "Contenido publicado o asignado.",
+    "numero_pagina": "Posición de la página en la revista según la numeración del planillo.","tipo_pagina": "Tipo de ubicación editorial.","pagina_del_contenido": "Orden de la página dentro de un contenido de varias páginas."
+  },
+  "general_identificadores_alias": {
+    "entidad": "Tipo de entidad cuyo identificador se normalizó.","id_anterior": "Identificador previo que debe seguir resolviéndose.","id_actual": "Identificador normalizado vigente.","motivo": "Motivo y evidencia de la renumeración."
+  },
+  "mediateca_papelera": {
+    "id": "Identificador de la eliminación recuperable.","deleted_at": "Momento de eliminación.","folders": "Registros completos de las carpetas eliminadas, con permisos y jerarquía.","media": "Registros completos de los archivos eliminados.","restored_at": "Momento de restauración; vacío si sigue en la papelera."
+  },
+  "operaciones_importaciones_aplicadas": {
+    "fingerprint": "Identificador estable del lote aplicado.","payload_hash": "Huella de los datos del lote.","result": "Resultado registrado para reconocer una importación repetida."
+  },
+  "produccion_planillos_previos": {
+    "id_revista": "Revista cuyo planillo se prepara.","plan": "Distribución editable de bloques y páginas.","version": "Versión usada para detectar ediciones concurrentes."
+  },
+  "produccion_planillos_publicaciones": {
+    "id_revista": "Revista del planillo publicado.","version": "Versión del planillo publicada.","plan": "Copia del plan publicado.","published_at": "Momento de publicación de esta versión."
+  },
+  "tesoreria_presupuestos_liquidez": {
+    "anio": "Año del presupuesto.","banco": "Banco al que corresponde la previsión.","seccion": "Sección de ingresos o cargos.","concepto_id": "Identificador estable del concepto presupuestado.","mes": "Mes del presupuesto.","importe": "Importe presupuestado para el mes.","concepto": "Nombre visible del concepto."
+  },
+  "tesoreria_prevision_juan": {
+    "id": "Identificador del libro de previsión.","source_name": "Nombre del archivo de origen.","sheets": "Hojas y desgloses editables; sus importes se guardan en céntimos.","original_sheets": "Copia de las hojas importadas, conservada como evidencia.","version": "Versión para controlar cambios concurrentes."
+  },
+  "tesoreria_prevision_juan_aplicaciones": {
+    "workbook_id": "Libro de Juan conciliado.","cell_key": "Clave de la celda de previsión.","id_linea_banco": "Movimiento bancario aplicado.","importe": "Importe aplicado del movimiento a esta celda."
+  },
+  "tesoreria_prevision_juan_asociaciones": {
+    "workbook_id": "Libro de Juan.","bank": "Banco de la hoja.","row_id": "Fila del concepto previsto.","status": "Estado de asociación de la fila.","provider_id": "Proveedor vinculado.","employee_id": "Empleado vinculado.","charge_ids": "IDs de cargos previstos asociados a la fila.","evidence": "Evidencias que sustentan la asociación."
+  },
+  "tesoreria_prevision_juan_enlaces": {
+    "workbook_id": "Libro de Juan.","cell_key": "Clave de la celda vinculada.","section": "Sección: income o payments.","target_id": "Identificador de la previsión del ERP vinculada.","status": "Estado del vínculo.","note": "Notas de la asociación."
+  },
+  "tesoreria_tarjetas_liquidaciones": {
+    "id": "Identificador de la liquidación.","id_tarjeta": "Tarjeta liquidada.","inicio": "Inicio del periodo de movimientos, que puede diferir del mes natural.","cierre": "Fecha de cierre del periodo.","fecha": "Fecha de cargo prevista de la liquidación.","previsto": "Importe previsto por tickets, suscripciones y otros conceptos, sin duplicados.","real": "Importe bancario real; vacío mientras no esté disponible.","detalle": "Desglose y trabajo de conciliación guardado.","comentario": "Explicación de incidencias y desviaciones.","actor": "Usuario que registró la liquidación o su revisión.","estado": "Pendiente, revisada o anulada.","version": "Versión para detectar modificaciones concurrentes."
+  },
+  "tesoreria_tarjetas_documentos": {
+    "id_liquidacion": "Liquidación a la que pertenece el PDF.","nombre": "Nombre del documento bancario.","sha256": "Huella para impedir importar el mismo PDF dos veces.","contenido": "PDF original en formato binario.","extraccion": "Información extraída del PDF para revisión antes de conciliar."
+  },
+  "tesoreria_tarjetas_lineas": {
+    "id": "Identificador del movimiento individual de tarjeta.","id_liquidacion": "Liquidación bancaria que contiene la línea.","posicion": "Orden de la línea en el PDF importado.","fecha": "Fecha de la operación.","fecha_valor": "Fecha valor bancaria.","concepto": "Concepto descrito por el banco.","importe": "Importe real del movimiento.","estado": "Pendiente, conciliado, pendiente_ticket o sin_ticket.","motivo": "Justificación de la clasificación o ausencia de ticket.","id_ticket": "Ticket asociado; solo puede conciliarse una vez.","id_vencimiento": "Vencimiento de suscripción o cargo previsto asociado.","id_otro": "Otro concepto previsto asociado."
+  },
+  "tesoreria_tarjetas_movimientos": {"id_linea_banco": "Cargo total de tarjeta en el extracto de Tesorería.","id_liquidacion": "Liquidación cuyo detalle debe cuadrar con ese cargo total."},
+  "tesoreria_traspasos_propios": {
+    "id": "Identificador del traspaso propio.","banco_origen": "Banco desde el que sale el dinero.","banco_destino": "Banco propio que recibe el dinero.","importe": "Importe positivo trasladado entre bancos.","fecha": "Fecha del traspaso.","estado": "Previsto, revisado, pendiente_revision o cancelado.","prevision": "Indica si se incluyó como previsión puntual.","id_linea_cargo": "Cargo del extracto del banco de origen.","id_linea_abono": "Abono correspondiente en el banco de destino.","motivo": "Evidencia de la asociación o decisión de revisión.","actor": "Usuario que registró la decisión."
+  }
+}
