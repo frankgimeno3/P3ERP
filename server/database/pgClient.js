@@ -1,6 +1,7 @@
 import pg from "pg";
 import fs from "node:fs";
 import path from "node:path";
+import {AuditedClient} from './AuditedClient.js';
 
 const { Pool } = pg;
 
@@ -20,6 +21,7 @@ function getSslConfig() {
 export function getPgPool() {
   if (!pool) {
     pool = new Pool({
+      Client:AuditedClient,
       database: process.env.DATABASE_NAME,
       user: process.env.DATABASE_USER,
       password: process.env.DATABASE_PASSWORD,

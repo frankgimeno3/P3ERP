@@ -36,5 +36,17 @@ try{
  await updateTicket('900000002',{version:cash.updated_at,fecha:'2026-08-29',importe_total:20,base_imponible:20,forma_pago:'tarjeta',id_tarjeta:'card2',id_liquidacion_tarjeta:second.id,clasificacion:'asociable',estado_revision:'pendiente'});
  assert.equal((await getLiquidacion(second.id)).forecast.total,20);
  const overlap=periodForecast({card:{inicio_periodo:'2026-09-29',proximo_cierre:'2026-10-29',proxima_liquidacion:'2026-11-01'},history:[{estado:'pendiente',fecha:'2026-10-01',cierre:'2026-09-29'}],tickets:[],dues:[{id:'boundary',fecha:'2026-09-29',importe:20},{id:'inside',fecha:'2026-09-30',importe:30}]},{inicio:'2026-09-29',cierre:'2026-10-29',fecha:'2026-11-01'});assert.equal(overlap.total,30);
+ await db.query("INSERT INTO tesoreria_tarjetas(id_tarjeta,codigo,nombre,banco,ultimos_digitos,tipo,estado) VALUES('personal','PERSONAL','PASS personal','Sabadell','9876','personal','activa')");
+ const personal=await createLiquidacion('personal',{inicio:'2026-08-21',cierre:'2026-09-20',fecha:'2026-09-30'});
+ await db.query("INSERT INTO tesoreria_tarjetas_documentos VALUES($1,'personal.pdf','isolated-personal-sha',$2,'{}',now())",[personal.id,Buffer.from('%PDF-personal')]);
+ await db.query("INSERT INTO tesoreria_tarjetas_lineas(id,id_liquidacion,posicion,fecha,fecha_valor,concepto,importe) VALUES('personal-line',$1,1,'2026-08-20','2026-08-22','Gasto socio',42)",[personal.id]);
+ await db.query('UPDATE tesoreria_tarjetas_liquidaciones SET real=42 WHERE id=$1',[personal.id]);
+ let pd=await getLiquidacion(personal.id);assert.equal(pd.candidates.length,0);assert.equal(pd.checks.banco,null);
+ const personalPayload=()=>({version:pd.settlement.version,lines:[{...pd.lines[0],estado:'conciliado',id_otro:'personal-expense'}],otros:[{id:'personal-expense',descripcion:'Gasto socio',fecha:'2026-08-20',importe:42}],bankIds:[],omitidos:[],comentario:'Punteo interno según PDF personal; no existía previsión previa.',action:'save'});
+ await assert.rejects(saveLiquidacion(personal.id,{...personalPayload(),bankIds:['banc_sab_26_000.000.002']}),/personales/);
+ await assert.rejects(saveLiquidacion(personal.id,{...personalPayload(),otros:[{...personalPayload().otros[0],fecha:'2026-07-01'}]}),/otros gastos/);
+ pd=await saveLiquidacion(personal.id,personalPayload());assert.equal(pd.checks.issues.length,0);assert.equal(pd.settlement.estado,'pendiente');
+ pd=await saveLiquidacion(personal.id,{...personalPayload(),action:'review'});assert.equal(pd.settlement.estado,'revisada');assert.equal(pd.bankLines.length,0);
+ assert.equal((await db.query("SELECT estado_revision FROM tesoreria_movimientos_bancarios WHERE id_linea_banco='banc_sab_26_000.000.002'")).rows[0].estado_revision,false);
  console.log('PASS: idempotent migration; drafts and stale-write protection; strict document/ticket/amount checks; atomic close; frozen history; legacy close blocked; cash reassignment updates forecast and clears association; shared close boundary counted once.');
 }finally{pool.connect=connect;pool.query=query;await db.query('SET search_path TO public');await db.query('DROP SCHEMA IF EXISTS '+schema+' CASCADE');db.release();await pool.end();}

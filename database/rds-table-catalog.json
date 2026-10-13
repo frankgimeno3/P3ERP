@@ -93,5 +93,6 @@
   {"old":"","name":"comentarios_registro_eventos","description":"Vista de compatibilidad del historial de eventos y comentarios; no almacena una copia independiente de los datos."},
   {"old":"","name":"contactos_registro_eventos","description":"Vista de compatibilidad para consultar el historial de eventos de contactos."},
   {"old":"","name":"cuentas_registro_eventos","description":"Vista de compatibilidad para consultar el historial de eventos de cuentas."},
-  {"old":"","name":"prevision_remesas_resumen","description":"Vista de resumen de remesas: recibos, importes, órdenes, clientes y fechas previstas y reales de cobro."}
+  {"old":"","name":"prevision_remesas_resumen","description":"Vista de resumen de remesas: recibos, importes, órdenes, clientes y fechas previstas y reales de cobro."},
+  {"old":"","name":"eventos_de_usuarios","description":"Historial de escrituras de usuarios: altas, cambios, borrados, valores anteriores/nuevos, relaciones, fecha y dirección observada. No registra lecturas, login ni logout."}
 ]

@@ -1,12 +1,13 @@
 import {cents} from './CardSettlement.js';
 
-export function settlementChecks({settlement,lines,forecast,bankLines,tickets}) {
+export function settlementChecks({settlement,lines,forecast,bankLines,tickets,personal=false}) {
  const issues=[];
  const sum=lines.reduce((n,l)=>n+cents(l.importe),0),bank=bankLines.reduce((n,l)=>n-cents(l.importe),0);
  if(!lines.length)issues.push('Importa el PDF de la liquidación.');
- if(!bankLines.length)issues.push('Asocia el cargo total del extracto bancario.');
+ if(!personal&&!bankLines.length)issues.push('Asocia el cargo total del extracto bancario.');
+ if(personal&&bankLines.length)issues.push('Una liquidación personal no puede asociarse a movimientos bancarios de empresa.');
  if(sum!==cents(settlement.real))issues.push('El desglose no coincide con el total del PDF.');
- if(sum!==bank)issues.push('El PDF y el extracto bancario no coinciden exactamente.');
+ if(!personal&&sum!==bank)issues.push('El PDF y el extracto bancario no coinciden exactamente.');
  const consumed=new Set();
  for(const l of lines){
   if(!['conciliado','sin_ticket'].includes(l.estado))issues.push(`Movimiento ${l.posicion}: pendiente de clasificar o recibir ticket.`);
@@ -21,5 +22,5 @@ export function settlementChecks({settlement,lines,forecast,bankLines,tickets}) 
  for(const i of forecast.items)if(!consumed.has(`${i.tipo}:${i.id}`))issues.push(`${i.descripcion}: previsión todavía sin resolver.`);
  if(sum!==cents(forecast.total))issues.push('Actualiza las previsiones para que recojan todos los movimientos reales, incluidos los gastos sin ticket justificados.');
  if(cents(settlement.previsto)!==sum&&!settlement.comentario?.trim())issues.push('Explica la desviación respecto a la previsión inicial.');
- return {issues:[...new Set(issues)],pdf:sum/100,banco:bank/100,diferencia:(sum-bank)/100,previsto:forecast.total};
+ return {issues:[...new Set(issues)],pdf:sum/100,banco:personal?null:bank/100,diferencia:personal?null:(sum-bank)/100,previsto:forecast.total};
 }

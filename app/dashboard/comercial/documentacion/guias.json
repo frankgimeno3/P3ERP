@@ -918,12 +918,12 @@
       "Liquidaciones muestra una fila por mes y año de cargo, importe previsto inicial, importe real y estado pendiente de puntear o punteada/revisada. Crea el período con sus fechas reales de inicio, cierre y cargo: no tiene que coincidir con el mes natural.",
       "Importar liquidación abre tres fases: subir PDF y elegir banco; comprobar el formato y la suma; revisar los datos y confirmar su importación. Se reconocen los documentos originales comprobados de Sabadell y Santander. Los formatos incompletos, documentos de otra tarjeta y sumas incompatibles se bloquean.",
       "Asocia cada movimiento a un ticket, vencimiento de suscripción u otro gasto. Pendiente de recibir ticket conserva la incidencia abierta. No hay ticket exige explicar la ausencia y recoger el gasto en la previsión. Se conservan devoluciones y comisiones con sus signos reales.",
-      "Guardar cambios conserva el trabajo aunque existan incidencias. Marcar liquidación como revisada requiere guardar primero, revisar los tickets y cuadrar exactamente cada asociación y la suma del PDF con el cargo total de Tesorería. Una diferencia entre documentos bancarios bloquea el cierre aunque exista un comentario.",
+      "Guardar cambios conserva el trabajo aunque existan incidencias. Marcar liquidación como revisada requiere guardar primero, revisar los tickets asociados y cuadrar cada asociación. En las tarjetas de empresa, además, la suma del PDF debe coincidir con el cargo total de Tesorería: una diferencia bloquea el cierre aunque exista un comentario. Las personales se comprueban contra su PDF y su punteo interno.",
       "Explica las desviaciones respecto a la previsión inicial y actualiza sus componentes. Los tickets no cargados pueden pasar a efectivo, cambiar de tarjeta o quedar no válidos ni asociables mientras estén pendientes de revisión. Un vencimiento de suscripción no cargado puede retirarse de este período con una explicación, conservando los demás períodos.",
-      "Al cerrar se revisan los tickets conciliados y los cargos de Tesorería en una misma operación. Para reabrir la última liquidación, usa su movimiento bancario en Conciliación: las importaciones nuevas conservan el PDF y las asociaciones como trabajo pendiente.",
+      "Al cerrar se revisan los tickets conciliados y, solo para empresa, los cargos de Tesorería en una misma operación. Para reabrir la última liquidación de empresa, usa su movimiento bancario en Conciliación: las importaciones nuevas conservan el PDF y las asociaciones como trabajo pendiente.",
       "Juan desglosa suscripciones, tickets variables y otros gastos en el mes de cargo bancario. Un ticket vinculado a una suscripción sustituye su justificante sin sumar el gasto dos veces. La reserva original de Juan permanece identificada hasta detallar los gastos pendientes.",
       "El formato visual de Administración comparte controles y pestañas: pestañas principales sobre fondo blanco, contenido azul claro y subpestañas con contenido blanco.",
-      "En Tarjetas personales pulsa Importar liquidación personal. Selecciona tarjeta, mes de cierre y año: el sistema avisa si ya está importado y permite continuar el punteo existente. Sube el PDF, valida el formato y revisa las líneas antes de importar. PASS se identifica por cliente y Santander por contrato y terminación; nunca se importan como tarjetas de empresa. PASS excluye Operaciones para el próximo recibo; Santander excluye saldo anterior y pago del periodo anterior."
+      "En Tarjetas personales pulsa Importar liquidación personal. Selecciona tarjeta, mes de cierre y año: el sistema avisa si ya está importado y permite continuar el punteo existente. Sube el PDF, valida el formato y revisa las líneas antes de importar. PASS se identifica por cliente y Santander por contrato y terminación; nunca se importan como tarjetas de empresa. PASS excluye Operaciones para el próximo recibo; Santander excluye saldo anterior y pago del periodo anterior. Las tarjetas personales son gestión interna del socio: no se asocian a extractos bancarios de empresa ni alimentan Contabilidad, liquidez o Juan. Su cierre comprueba el PDF y el punteo interno, sin inventar justificantes. Las asociaciones a tickets exigen el mismo ámbito."
     ]
   },
   "/dashboard/administracion/liquidaciones/tickets": {
@@ -962,6 +962,17 @@
       "Añadir artículo abre un modal con cuenta, título, estado, responsable, fechas dd/mm/yyyy, páginas y destinos España, Latam, Especial y Hueco. El artículo crea un único contenido y las versiones impresa y digital muestran el mismo artículo del número.",
       "Puede vincularse opcionalmente como extra post-contrato a un contrato de su cuenta. Los extras se guardan separados de las líneas firmadas y no modifican importes ni generan cobros. Retirar o cambiar el vínculo mantiene sincronizada la ficha del contrato.",
       "Los filtros están agrupados en una tarjeta inicialmente cerrada. No se borran registros al moverlos a Publicados."
+    ]
+  },
+  "/dashboard/direccion/eventos-de-usuarios": {
+    "summary": "Historial de altas, ediciones y borrados realizados por usuarios en todo P3ERP, con fecha, hora, datos afectados e IP observada.",
+    "steps": [
+      "Consulta fecha y hora (Madrid), usuario, tipo, tabla o entidad, descripción e IP. Solo Dirección y Superadmin tienen acceso.",
+      "Todos los filtros se agrupan en Filtros, inicialmente cerrado. Filtra por fechas, usuario, tipo, tabla, descripción e IP y navega de cien en cien eventos.",
+      "Pulsa una fila para ver los valores anteriores y nuevos, los campos modificados y los otros cambios de la misma solicitud, incluidos borrados relacionados.",
+      "Las lecturas, login y logout no generan eventos. Los eventos se guardan con la escritura y se revierten si se revierte la transacción. El historial no puede editarse ni borrarse.",
+      "La IP es la dirección recibida por el servidor y se muestra su origen; no clasifica oficina ni otras ubicaciones. Credenciales protegidas y archivos identificados por tamaño y huella, sin copiar su contenido.",
+      "Si aparece una tabla sin cobertura, la funcionalidad que la creó debe instalar sus triggers de auditoría antes de escribir datos."
     ]
   }
 }

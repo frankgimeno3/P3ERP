@@ -2,6 +2,7 @@ import {Sequelize} from "sequelize";
 import * as fs from "node:fs";
 import path from "node:path";
 import pg from "pg";
+import {AuditedClient} from './AuditedClient.js';
 
 const caPath = path.resolve(process.cwd(), 'certs', 'rds-ca.pem');
 const sslCA  = fs.existsSync(caPath) ? fs.readFileSync(caPath, 'utf8') : undefined;
@@ -21,7 +22,7 @@ class Database {
                 host: process.env.DATABASE_HOST,
                 port: process.env.DATABASE_PORT,
                 dialect: 'postgres',
-                dialectModule: pg,
+                dialectModule: {...pg,Client:AuditedClient},
                 dialectOptions:{
                     ssl: {
                         require: true,

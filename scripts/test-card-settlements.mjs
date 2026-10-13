@@ -10,6 +10,13 @@ import {cardData,settleCard,associateCardCharge,associateCardTicket,cardLiquidit
 import {saveTarjeta,deleteTarjeta} from '../server/features/proveedor/TarjetaRepository.js';
 import {getLiquidityForecast} from '../server/features/prevision/LiquidityRepository.js';
 import {getRecurringCharge,updateRecurringCharge} from '../server/features/prevision/RecurringChargeRepository.js';
+import {settlementChecks} from '../server/features/proveedor/SettlementChecks.js';
+
+const personalReview={settlement:{real:42,previsto:42},lines:[{posicion:1,importe:42,estado:'conciliado',id_otro:'personal'}],forecast:{total:42,items:[{tipo:'otro',id:'personal',importe:42}]},bankLines:[],tickets:[]};
+assert.deepEqual(settlementChecks({...personalReview,personal:true}).issues,[]);
+assert.equal(settlementChecks({...personalReview,personal:true}).banco,null);
+assert(settlementChecks(personalReview).issues.some(s=>s.includes('extracto bancario')));
+assert(settlementChecks({...personalReview,personal:true,bankLines:[{importe:-42}]}).issues.length);
 
 assert.equal(addMonths('2028-01-31',1,31),'2028-02-29');
 assert.equal(addMonths('2028-02-29',1,31),'2028-03-31');
@@ -57,11 +64,12 @@ try{
   await pg.exec(`INSERT INTO administracion_proveedores VALUES('p','Proveedor');
     INSERT INTO tesoreria_cargos_recurrentes(id_cargo_recurrente,id_proveedor,tipo_cargo,programacion,planificado_hasta) VALUES(1,'p','proveedor','[]','2028-12-31');
     INSERT INTO tesoreria_cargos_vencimientos(id,id_cargo_recurrente,fecha,importe,descripcion) VALUES('due1',1,'2026-09-12',20,'Suscripción'),('due2',1,'2026-10-12',20,'Suscripción');
-    INSERT INTO administracion_tickets(id_ticket,fecha_ticket,id_proveedor,importe_total,ambito) VALUES(1,'12/09/2026','p',20,'P3'),(2,'20/09/2026','p',10,'GM');
+    INSERT INTO administracion_tickets(id_ticket,fecha_ticket,id_proveedor,importe_total,ambito) VALUES(1,'12/09/2026','p',20,'P3'),(2,'20/09/2026','p',10,'P3'),(3,'20/09/2026','p',10,'GM');
     INSERT INTO tesoreria_movimientos_bancarios(id_linea_banco,banco,importe,saldo,fecha_operativa,fecha_valor) VALUES('bank','Sabadell',-30,1000,'05/10/2026','05/10/2026'),('next','Sabadell',-20,980,'05/11/2026','05/11/2026'),('wrong','Santander',-31,500,'05/10/2026','05/10/2026');`);
   await associateCardCharge(id,{id_cargo_recurrente:1});
   await associateCardTicket(id,{id_ticket:1,id_vencimiento_tarjeta:'due1'});
   await associateCardTicket(id,{id_ticket:2});
+  await assert.rejects(associateCardTicket(id,{id_ticket:3}),/personales y de empresa/);
   assert.equal((await cardData(id)).next.total,30);
   await assert.rejects(associateCardTicket(id,{id_ticket:2,id_vencimiento_tarjeta:'due1'}),/exactamente/);
   assert.equal((await cardLiquidity('2026-09-01','2026-09-30')).Sabadell,0);

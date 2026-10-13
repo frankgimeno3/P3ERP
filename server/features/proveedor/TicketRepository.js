@@ -40,10 +40,11 @@ export async function createTicket(body, file) {
     if(provider)await db.query('SELECT id_proveedor FROM administracion_proveedores WHERE id_proveedor=$1 FOR KEY SHARE',[provider.id_proveedor]);
     let card = null;
     if (data.forma_pago === 'tarjeta') {
-      if (!/^\d{4}$/.test(data.tarjeta_ultimos_digitos) || !data.tarjeta_banco) throw new ProveedorError('Indica los cuatro últimos dígitos y el banco de la tarjeta.');
-      const { rows } = await db.query("SELECT *,to_char(inicio_periodo,'YYYY-MM-DD') inicio_periodo FROM tesoreria_tarjetas WHERE estado='activa' AND ultimos_digitos=$1 AND lower(btrim(banco))=lower(btrim($2)) AND ($3::text IS NULL OR id_tarjeta=$3) FOR SHARE",[data.tarjeta_ultimos_digitos,data.tarjeta_banco,data.id_tarjeta || null]);
+      if ((!data.id_tarjeta&&!/^\d{4}$/.test(data.tarjeta_ultimos_digitos)) || !data.tarjeta_banco) throw new ProveedorError('Selecciona la tarjeta o indica sus cuatro últimos dígitos y banco.');
+      const { rows } = await db.query("SELECT *,to_char(inicio_periodo,'YYYY-MM-DD') inicio_periodo FROM tesoreria_tarjetas WHERE estado='activa' AND ($3::text IS NOT NULL OR ultimos_digitos=$1) AND lower(btrim(banco))=lower(btrim($2)) AND ($3::text IS NULL OR id_tarjeta=$3) FOR SHARE",[data.tarjeta_ultimos_digitos,data.tarjeta_banco,data.id_tarjeta || null]);
       if (rows.length !== 1) throw new ProveedorError(rows.length > 1 ? 'Selecciona la tarjeta concreta del listado.' : 'No hay una tarjeta activa con esos datos. Regístrala desde Tarjetas.');
       card = rows[0];
+      if(data.ambito!==(card.tipo==='personal'?'GM':'P3'))throw new ProveedorError('No se pueden mezclar tickets personales y de empresa.');
       if((await db.query("SELECT 1 FROM tesoreria_tarjetas_liquidaciones WHERE id_tarjeta=$1 AND estado='revisada' AND $2::date BETWEEN inicio AND cierre",[card.id_tarjeta,data.fecha_ticket])).rowCount)throw new ProveedorError('El ticket pertenece a una liquidación revisada. Reábrela antes de registrarlo.');
     }
     const code=await allocateTicketIdentifier(db,data.forma_pago,data.fecha_ticket);

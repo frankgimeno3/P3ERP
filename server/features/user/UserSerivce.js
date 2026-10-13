@@ -10,10 +10,15 @@ import {
     paginateListUsers,
     UserNotFoundException
 } from "@aws-sdk/client-cognito-identity-provider";
+import {externalUserEvent} from '../userEvents/ExternalUserEvents.js';
 
 const cognito = new CognitoIdentityProviderClient({region: process.env.NEXT_PUBLIC_COGNITO_REGION});
 
 const USER_POOL_ID = process.env.NEXT_PUBLIC_USER_POOL_ID;
+async function userSnapshot(username){
+ try{const user=await cognito.send(new AdminGetUserCommand({UserPoolId:USER_POOL_ID,Username:username}));const attributes=Object.fromEntries((user.UserAttributes||[]).filter(a=>['name','email','email_verified'].includes(a.Name)).map(a=>[a.Name,a.Value]));return {username:user.Username||username,enabled:user.Enabled,...attributes};}
+ catch(e){if(e instanceof UserNotFoundException||e?.name==='UserNotFoundException')return null;throw e;}
+}
 
 export async function getAllUsers() {
     const paginator = paginateListUsers(
@@ -52,6 +57,7 @@ export async function createUser(name, email, password) {
         })
     );
 
+    await externalUserEvent('crear','Cognito / usuarios',email,null,{username:email,enabled:true,name,email});
     return {
         username: email,
         enabled: true,
@@ -63,6 +69,7 @@ export async function createUser(name, email, password) {
 }
 
 export async function updateUser({username, name, email, enabled, password}) {
+    const before=await userSnapshot(username);
     const userAttributes = [];
     if (name) {
         userAttributes.push({Name: "name", Value: name});
@@ -101,6 +108,8 @@ export async function updateUser({username, name, email, enabled, password}) {
         );
     }
 
+    const after=await userSnapshot(username);
+    await externalUserEvent('editar','Cognito / usuarios',username,before,{...after,...(password?{credencial:'[modificada; valor protegido]'}:{})});
     return {message: "User updated successfully"};
 }
 
@@ -140,7 +149,7 @@ export async function createConfirmedUser(name, email, password, groupName) {
     try {
         return await assignUserGroup(email, groupName);
     } catch (error) {
-        await cognito.send(new AdminDeleteUserCommand({UserPoolId: USER_POOL_ID, Username: email})).catch(() => {});
+        await deleteCognitoUser(email).catch(() => {});
         throw error;
     }
 }
@@ -151,8 +160,10 @@ export async function confirmExistingUser(name, email, password, groupName) {
 }
 
 export async function deleteCognitoUser(email) {
+    const before=await userSnapshot(email);
     try {
         await cognito.send(new AdminDeleteUserCommand({UserPoolId: USER_POOL_ID, Username: email}));
+        if(before)await externalUserEvent('borrar','Cognito / usuarios',email,before,null);
     } catch (error) {
         if (!(error instanceof UserNotFoundException) && error?.name !== "UserNotFoundException") throw error;
     }

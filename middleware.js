@@ -9,6 +9,7 @@ import {managesTasks} from './server/features/laboral/TaskAccess.js';
 import {canManageAccountTasks} from './app/config/accountTasks.js';
 import {guardMediatecaRequest} from './server/features/mediateca/MediatecaAccess.js';
 import {canonicalAccountingPath} from './app/config/accountingRoutes.js';
+import {eventRequestIdentity,signEventIdentity} from './server/features/userEvents/EventIdentity.js';
 
 let jwks;
 
@@ -92,7 +93,7 @@ export async function middleware(request) {
     const email = String(idPayload.email || "").trim();
     const pool = getPgPool();
     const { rows } = email
-      ? await pool.query(`SELECT id_agente, rol_agente, estado_agente FROM agentes_db WHERE (lower(btrim(email_agente)) = lower(btrim($1)) OR cognito_emails ? lower(btrim($1))) ORDER BY updated_at DESC LIMIT 1`, [email])
+      ? await pool.query(`SELECT id_agente, rol_agente, estado_agente,nombre_completo_agente,nombre_agente FROM agentes_db WHERE (lower(btrim(email_agente)) = lower(btrim($1)) OR cognito_emails ? lower(btrim($1))) ORDER BY updated_at DESC LIMIT 1`, [email])
       : { rows: [] };
     if(!rows[0]?.id_agente||rows[0].estado_agente!=='activo'){
       if(isApi)return NextResponse.json({message:'Tu cuenta no tiene un agente activo asociado.'},{status:403});
@@ -114,6 +115,8 @@ export async function middleware(request) {
     const authenticatedHeaders = new Headers(request.headers);
     authenticatedHeaders.set('x-p3-actor-id', rows[0]?.id_agente || '');
     authenticatedHeaders.set('x-p3-actor-role', role);
+    authenticatedHeaders.delete('x-p3-event-identity');
+    if(!['GET','HEAD','OPTIONS'].includes(request.method))authenticatedHeaders.set('x-p3-event-identity',signEventIdentity(eventRequestIdentity(request,rows[0],email)));
     if(pathname.startsWith('/api/v1/mediateca/')){
       try{await guardMediatecaRequest(new Request(request.url,{method:request.method,headers:authenticatedHeaders,...(request.method==='GET'||request.method==='HEAD'?{}:{body:await request.clone().text()})}));}
       catch(error){return NextResponse.json({message:error.status?error.message:'No se pudieron comprobar los permisos de la carpeta.'},{status:error.status||503});}

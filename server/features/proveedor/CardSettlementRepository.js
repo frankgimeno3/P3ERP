@@ -16,7 +16,7 @@ export async function cardData(id,db=getPgPool()) {
   for(const key of ['inicio_periodo','proximo_cierre','proxima_liquidacion'])card[key]=isoDate(card[key]);
   const tickets=(await db.query(`SELECT t.id_ticket,t.codigo_ticket,t.datos_importacion,t.base_imponible,t.id_tarjeta,t.id_liquidacion_tarjeta,t.id_vencimiento_tarjeta,t.importe_total,t.documento_src,t.ambito,t.forma_pago,t.estado_revision,t.clasificacion,t.comentarios,t.updated_at,
     to_char(p3_income_date(t.fecha_ticket),'YYYY-MM-DD') fecha,COALESCE(p.nombre_proveedor,t.nombre_personalizado_proveedor) proveedor
-    FROM administracion_tickets t LEFT JOIN administracion_proveedores p USING(id_proveedor) WHERE t.id_tarjeta=$1 ORDER BY p3_income_date(t.fecha_ticket),t.id_ticket`,[id])).rows;
+    FROM administracion_tickets t LEFT JOIN administracion_proveedores p USING(id_proveedor) WHERE t.id_tarjeta=$1 AND t.ambito=$2 ORDER BY p3_income_date(t.fecha_ticket),t.id_ticket`,[id,card.tipo==='personal'?'GM':'P3'])).rows;
   const charges=(await db.query('SELECT * FROM tesoreria_cargos_recurrentes WHERE id_tarjeta=$1 AND activo ORDER BY id_cargo_recurrente',[id])).rows;
   const dues=(await db.query(`SELECT v.*,to_char(v.fecha,'YYYY-MM-DD') fecha FROM tesoreria_cargos_vencimientos v
     JOIN tesoreria_cargos_recurrentes c USING(id_cargo_recurrente) WHERE c.id_tarjeta=$1 AND c.activo
@@ -32,6 +32,7 @@ export async function associateCardCharge(id,body) {
   return supplierTransaction(async db=>{
     await db.query("SELECT pg_advisory_xact_lock(hashtext('laboral:pagos'))");
     const data=await cardData(id,db);
+    if(data.card.tipo==='personal')fail('Las domiciliaciones de empresa no pueden asociarse a una tarjeta personal.');
     if(!data.next||data.card.estado!=='activa')fail('Configura primero el calendario de una tarjeta activa.');
     const charge=body.action==='create'?await insertRecurringCharge(db,{...body,banco_pago:data.card.banco}):(await db.query('SELECT * FROM tesoreria_cargos_recurrentes WHERE id_cargo_recurrente=$1 FOR UPDATE',[body.id_cargo_recurrente])).rows[0];
     if(!charge||!charge.activo||charge.tipo_cargo==='nomina')fail('Selecciona un cargo activo de proveedor u Otro.');
@@ -51,6 +52,7 @@ export async function associateCardTicket(id,body) {
     const {card,next}=await cardData(id,db);
     if(!next||card.estado!=='activa')fail('Configura el calendario de una tarjeta activa.');
     const ticket=(await db.query("SELECT *,to_char(p3_income_date(fecha_ticket),'YYYY-MM-DD') fecha FROM administracion_tickets WHERE id_ticket=$1 FOR UPDATE",[body.id_ticket])).rows[0];
+    if(ticket&&ticket.ambito!==(card.tipo==='personal'?'GM':'P3'))fail('No se pueden mezclar tickets personales y de empresa.');
     if(!ticket||ticket.fecha<next.inicio)fail('Selecciona un ticket del período abierto o posterior.');
     if(ticket.id_tarjeta&&ticket.id_tarjeta!==id)fail('El ticket pertenece a otra tarjeta.');
     if(body.id_vencimiento_tarjeta){
@@ -71,6 +73,7 @@ export async function settleCard(id,body) {
     if(!ids.length||ids.length>100)fail('Selecciona entre 1 y 100 movimientos de una misma liquidación.');
     await db.query('SELECT id_tarjeta FROM tesoreria_tarjetas WHERE id_tarjeta=$1 FOR UPDATE',[id]);
     const data=await cardData(id,db),forecast=data.next;
+    if(data.card.tipo==='personal')fail('Las liquidaciones personales no se concilian con bancos de empresa.');
     if(!forecast||data.card.estado!=='activa')fail('Configura una tarjeta activa antes de liquidar.');
     const lines=(await db.query('SELECT * FROM tesoreria_movimientos_bancarios WHERE id_linea_banco=ANY($1::text[]) ORDER BY id_linea_banco FOR UPDATE',[ids])).rows;
     if(lines.length!==ids.length||lines.some(l=>l.estado_revision||Number(l.importe)>=0||l.banco!==data.card.banco||l.id_proveedor||l.id_cuenta||l.id_agente||l.id_pago||l.id_orden||l.id_cargo_recurrente))fail('Selecciona cargos sin revisar ni asignar, del banco de la tarjeta.');

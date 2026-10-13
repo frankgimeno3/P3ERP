@@ -24,9 +24,9 @@ export async function getLiquidacion(id,db=getPgPool()){
  const l=await read(db,id),data=await cardData(l.id_tarjeta,db);
  const lines=(await db.query("SELECT *,to_char(fecha,'YYYY-MM-DD') fecha,to_char(fecha_valor,'YYYY-MM-DD') fecha_valor FROM tesoreria_tarjetas_lineas WHERE id_liquidacion=$1 ORDER BY posicion",[id])).rows;
  const bankLines=(await db.query('SELECT b.* FROM tesoreria_movimientos_bancarios b JOIN tesoreria_tarjetas_movimientos m USING(id_linea_banco) WHERE m.id_liquidacion=$1 ORDER BY id_linea_banco',[id])).rows;
- const candidates=(await db.query(`SELECT b.* FROM tesoreria_movimientos_bancarios b WHERE banco=$1 AND importe<0 AND NOT estado_revision AND NOT COALESCE(duplicado_descartado,false) AND NOT EXISTS(SELECT 1 FROM tesoreria_tarjetas_movimientos m WHERE m.id_linea_banco=b.id_linea_banco) AND COALESCE(p3_income_date(fecha_operativa),p3_income_date(fecha_valor)) BETWEEN $2::date-interval '15 days' AND $2::date+interval '15 days' ORDER BY id_linea_banco`,[data.card.banco,l.fecha])).rows;
+ const candidates=data.card.tipo==='personal'?[]:(await db.query(`SELECT b.* FROM tesoreria_movimientos_bancarios b WHERE banco=$1 AND importe<0 AND NOT estado_revision AND NOT COALESCE(duplicado_descartado,false) AND NOT EXISTS(SELECT 1 FROM tesoreria_tarjetas_movimientos m WHERE m.id_linea_banco=b.id_linea_banco) AND COALESCE(p3_income_date(fecha_operativa),p3_income_date(fecha_valor)) BETWEEN $2::date-interval '15 days' AND $2::date+interval '15 days' ORDER BY id_linea_banco`,[data.card.banco,l.fecha])).rows;
  const forecast=l.estado==='revisada'&&Array.isArray(l.detalle?.items)?{inicio:l.inicio,cierre:l.cierre,fecha:l.fecha,items:l.detalle.items,total:Number(l.detalle.total??l.previsto)}:periodForecast(data,l),document=(await db.query('SELECT nombre,sha256,extraccion FROM tesoreria_tarjetas_documentos WHERE id_liquidacion=$1',[id])).rows[0];
- return {settlement:l,card:data.card,lines,forecast,tickets:data.tickets,bankLines,candidates,document,checks:settlementChecks({settlement:l,lines,forecast,bankLines,tickets:data.tickets})};
+ return {settlement:l,card:data.card,lines,forecast,tickets:data.tickets,bankLines,candidates,document,checks:settlementChecks({settlement:l,lines,forecast,bankLines,tickets:data.tickets,personal:data.card.tipo==='personal'})};
 }
 export async function importLiquidacion(id,file,bank,version,commit=false){
  const parsed=await extractCardStatement(file,bank);
@@ -73,10 +73,12 @@ export async function importPersonalStatement(cardId,file,format,month,commit=fa
 }
 export async function saveLiquidacion(id,body,actor=''){return supplierTransaction(async db=>{
  await lock(db);const l=await read(db,id,true);if(l.estado!=='pendiente'||Number(body.version)!==l.version)fail('La liquidación ha cambiado. Recarga antes de guardar.');
- const lines=(await db.query('SELECT * FROM tesoreria_tarjetas_lineas WHERE id_liquidacion=$1 ORDER BY posicion FOR UPDATE',[id])).rows;
+ const lines=(await db.query("SELECT *,to_char(fecha,'YYYY-MM-DD') fecha,to_char(fecha_valor,'YYYY-MM-DD') fecha_valor FROM tesoreria_tarjetas_lineas WHERE id_liquidacion=$1 ORDER BY posicion FOR UPDATE",[id])).rows;
  if(!Array.isArray(body.lines)||body.lines.length!==lines.length||new Set(body.lines.map(r=>r.id)).size!==lines.length)fail('Envía todos los movimientos sin duplicarlos.');
  const data=await cardData(l.id_tarjeta,db),other=body.otros||[],omitted=body.omitidos||[];
- if(!Array.isArray(other)||other.length>500||other.some(o=>!o.id||!String(o.descripcion||'').trim()||!Number.isFinite(Number(o.importe))||Math.abs(Number(o.importe))>9999999999||!validDate(o.fecha)||o.fecha<l.inicio||o.fecha>l.cierre)||new Set(other.map(o=>o.id)).size!==other.length)fail('Revisa los otros gastos previstos.',422);
+ const personal=data.card.tipo==='personal';
+ const actualDate=o=>personal&&body.lines.some(r=>r.id_otro===o.id&&lines.some(original=>original.id===r.id&&[original.fecha,original.fecha_valor].includes(o.fecha)));
+ if(!Array.isArray(other)||other.length>500||other.some(o=>!o.id||!String(o.descripcion||'').trim()||!Number.isFinite(Number(o.importe))||Math.abs(Number(o.importe))>9999999999||!validDate(o.fecha)||((o.fecha<l.inicio||o.fecha>l.cierre)&&!actualDate(o)))||new Set(other.map(o=>o.id)).size!==other.length)fail('Revisa los otros gastos previstos.',422);
  if(!Array.isArray(omitted)||omitted.some(s=>!/^suscripcion:/.test(s))||omitted.length&&!String(body.comentario||'').trim())fail('Explica los vencimientos que no se han cargado.');
  l.detalle={...l.detalle,otros:other,omitidos:omitted};const forecast=periodForecast(data,l);
  for(const edited of body.lines){const original=lines.find(r=>r.id===edited.id);if(!original||!['pendiente','conciliado','pendiente_ticket','sin_ticket'].includes(edited.estado))fail('Movimiento o estado no válido.');
@@ -87,9 +89,13 @@ export async function saveLiquidacion(id,body,actor=''){return supplierTransacti
   if([edited.id_ticket,edited.id_vencimiento,edited.id_otro].filter(Boolean).length>1)fail('Selecciona un solo gasto por movimiento. El ticket de suscripción conserva su vínculo.');
   if(edited.estado==='sin_ticket'&&edited.id_ticket)fail('Retira el ticket antes de indicar que no existe justificante.');
  }
- await db.query('UPDATE tesoreria_tarjetas_lineas SET id_ticket=NULL,id_vencimiento=NULL,id_otro=NULL WHERE id_liquidacion=$1',[id]);
- for(const edited of body.lines)await db.query('UPDATE tesoreria_tarjetas_lineas SET estado=$2,motivo=$3,id_ticket=$4,id_vencimiento=$5,id_otro=$6 WHERE id=$1',[edited.id,edited.estado,String(edited.motivo||'').slice(0,3000),edited.id_ticket||null,edited.id_vencimiento||null,edited.id_otro||null]);
+ const ref=r=>[r.id_ticket,r.id_vencimiento,r.id_otro].map(v=>v?String(v):'').join('|');
+ const changed=body.lines.filter(edited=>{const original=lines.find(r=>r.id===edited.id);return original.estado!==edited.estado||original.motivo!==String(edited.motivo||'').slice(0,3000)||ref(original)!==ref(edited);});
+ const changedRefs=changed.filter(r=>ref(lines.find(original=>original.id===r.id))!==ref(r)).map(r=>r.id);
+ if(changedRefs.length)await db.query('UPDATE tesoreria_tarjetas_lineas SET id_ticket=NULL,id_vencimiento=NULL,id_otro=NULL WHERE id=ANY($1::text[])',[changedRefs]);
+ for(const edited of changed)await db.query('UPDATE tesoreria_tarjetas_lineas SET estado=$2,motivo=$3,id_ticket=$4,id_vencimiento=$5,id_otro=$6 WHERE id=$1',[edited.id,edited.estado,String(edited.motivo||'').slice(0,3000),edited.id_ticket||null,edited.id_vencimiento||null,edited.id_otro||null]);
  const ids=Array.isArray(body.bankIds)?[...new Set(body.bankIds)]:[];if(ids.length>30)fail('Demasiados cargos bancarios.');
+ if(personal&&(ids.length||(await db.query('SELECT 1 FROM tesoreria_tarjetas_movimientos WHERE id_liquidacion=$1',[id])).rowCount))fail('Las tarjetas personales no pueden asociarse a extractos bancarios de empresa.');
  const banks=(await db.query('SELECT * FROM tesoreria_movimientos_bancarios WHERE id_linea_banco=ANY($1::text[]) FOR UPDATE',[ids])).rows;
  if(banks.length!==ids.length||banks.some(b=>b.banco!==data.card.banco||Number(b.importe)>=0||b.estado_revision||b.duplicado_descartado||b.id_proveedor||b.id_cuenta||b.id_agente||b.id_pago||b.id_orden||b.id_cargo_recurrente))fail('Selecciona cargos disponibles del banco de la tarjeta.');
  if((await db.query(`SELECT 1 FROM tesoreria_tarjetas_movimientos WHERE id_linea_banco=ANY($1::text[]) AND id_liquidacion<>$2 UNION ALL SELECT 1 FROM tesoreria_vencimientos_aplicaciones WHERE id_linea_banco=ANY($1::text[]) UNION ALL SELECT 1 FROM tesoreria_aplicaciones_cobro WHERE id_linea_banco=ANY($1::text[]) UNION ALL SELECT 1 FROM laboral_nominas WHERE id_transferencia=ANY($1::text[]) UNION ALL SELECT 1 FROM laboral_anticipos WHERE id_transferencia=ANY($1::text[])`,[ids,id])).rowCount)fail('Un cargo ya tiene otra asociación.');

@@ -1,4 +1,27 @@
 {
+  "eventos_de_usuarios": {
+    "id": "Identificador interno e inmutable del evento.",
+    "fecha": "Instante real del cambio, con zona horaria; la vista lo muestra en hora de Madrid.",
+    "id_usuario": "Identificador del agente autenticado; se conserva aunque se elimine el agente.",
+    "usuario": "Nombre del usuario en el momento del cambio.",
+    "tipo": "Crear, editar o borrar; las lecturas no generan eventos.",
+    "descripcion": "Detalle generado con la escritura: entidad, campos, valores anteriores y nuevos y relaciones.",
+    "ip": "Dirección recibida por el servidor. No determina si es la oficina.",
+    "origen_ip": "Cabecera o procedencia de la dirección registrada; no_disponible si no se conoce.",
+    "tabla": "Tabla de RDS o entidad externa modificada.",
+    "clave": "Clave primaria del registro afectado, conservada tras su borrado.",
+    "datos_anteriores": "Instantánea anterior con credenciales protegidas y archivos representados por tamaño y huella.",
+    "datos_nuevos": "Instantánea nueva; nula al borrar.",
+    "campos_modificados": "Campos y rutas de JSON que han cambiado.",
+    "cambios": "Desglose por campo o ruta JSON con el valor anterior y nuevo.",
+    "relaciones": "Referencias del registro a otras tablas, conservadas en el historial.",
+    "id_solicitud": "Agrupa los cambios de una misma acción HTTP o de mantenimiento, incluidos sus registros asociados.",
+    "transaccion": "Transacción PostgreSQL que guardó el cambio y el evento conjuntamente.",
+    "ruta": "Ruta del ERP desde la que se realizó la escritura.",
+    "pagina_origen": "Página de la interfaz indicada por el Referer del mismo origen, cuando está disponible; no incluye parámetros ni fragmentos.",
+    "metodo": "Método de la solicitud de escritura.",
+    "profundidad": "Profundidad de triggers, que conserva también los cambios en cascada."
+  },
   "tesoreria_tarjetas": {
     "referencia_extracto": "Contrato Santander o cliente Carrefour PASS que identifica el extracto de la tarjeta personal."
   },

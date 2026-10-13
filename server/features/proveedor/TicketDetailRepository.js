@@ -20,6 +20,7 @@ export async function updateTicket(id,body){return supplierTransaction(async db=
  if(body.id_proveedor&&!(await db.query('SELECT 1 FROM administracion_proveedores WHERE id_proveedor=$1',[body.id_proveedor])).rowCount)fail('Proveedor no válido.');
  if(t.ambito==='P3'&&!body.id_proveedor&&!t.nombre_personalizado_proveedor?.trim())fail('Selecciona un proveedor para el ticket de empresa.');
  const card=body.forma_pago==='tarjeta'&&body.clasificacion==='asociable'?(await db.query("SELECT * FROM tesoreria_tarjetas WHERE id_tarjeta=$1 AND estado='activa'",[body.id_tarjeta])).rows[0]:null;
+ if(card&&t.ambito!==(card.tipo==='personal'?'GM':'P3'))fail('No se pueden mezclar tickets personales y de empresa.');
  if(body.forma_pago==='tarjeta'&&body.clasificacion==='asociable'&&!card)fail('Selecciona una tarjeta activa.');
  if(card&&!body.id_liquidacion_tarjeta&&(card.id_tarjeta!==t.id_tarjeta||body.fecha!==t.fecha_ticket.split('/').reverse().join('-'))&&(await db.query("SELECT 1 FROM tesoreria_tarjetas_liquidaciones WHERE id_tarjeta=$1 AND estado='revisada' AND $2::date BETWEEN inicio AND cierre",[card.id_tarjeta,body.fecha])).rowCount)fail('La liquidación de destino está revisada.');
  const target=card&&body.id_liquidacion_tarjeta?(await db.query("SELECT *,to_char(inicio,'YYYY-MM-DD') inicio,to_char(cierre,'YYYY-MM-DD') cierre FROM tesoreria_tarjetas_liquidaciones WHERE id=$1 AND id_tarjeta=$2 AND estado='pendiente'",[body.id_liquidacion_tarjeta,card.id_tarjeta])).rows[0]:null;

@@ -34,6 +34,14 @@ Consulta la guía pertinente en `node_modules/next/dist/docs/` antes de escribir
 6. Mantén este mapa estable; no añadas historiales de sesiones ni dupliques las guías.
 7. Limpieza: `node scripts/audit-repository.mjs` detecta candidatos sin borrar nada. Revisa cargas dinámicas y usos operativos; conserva migraciones y pruebas. No recorras de nuevo todo el repositorio para tareas locales.
 
+## Eventos de usuarios
+
+- Toda alta, edición o borrado de datos desde P3ERP debe generar su evento en `eventos_de_usuarios`, incluidos comentarios, relaciones, importaciones y borrados en cascada. Las lecturas, login y logout quedan excluidos.
+- Al crear funcionalidades, tablas o campos nuevos, integra y verifica su auditoría en el mismo cambio. Sigue [docs/eventos-de-usuarios.md](docs/eventos-de-usuarios.md): antes de la primera escritura de una tabla nueva debe instalarse `p3_install_user_event_triggers()`. Los campos nuevos se capturan automáticamente; adapta los nombres de entidad y el detalle cuando proceda.
+- Usa únicamente los clientes compartidos de `server/database/pgClient.js` o `server/database/database.js`; ambos transmiten el contexto autenticado. No introduzcas conexiones paralelas sin auditoría. Los cambios externos a RDS deben usar `externalUserEvent` con datos seguros anteriores y nuevos.
+- No obtengas el autor o la IP del cuerpo enviado por el cliente. El middleware firma la identidad; las operaciones de mantenimiento deben declarar su contexto con `withUserEventContext`, indicando su origen y dejando la IP vacía si no se conoce.
+- Nunca instales el capturador de cambios sobre `eventos_de_usuarios`, ni generes un evento por consultar o insertar eventos. No desactives la auditoría para salvar un error: corrige el error y prueba rollback, concurrencia, datos anteriores/nuevos y cascadas.
+
 ## Comandos (PowerShell, desde la raíz)
 
 - Desarrollo: `npm run dev`, sujeto al permiso de arriba.
