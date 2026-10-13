@@ -76,7 +76,8 @@
       "Mis propuestas usa el agente de la sesion actual. Si no hay agente asociado no se muestran propuestas de otro agente. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados.",
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
       "Al aceptar una propuesta, el servidor reserva el siguiente c?digo de contrato Caa.000.000 y las ?rdenes correspondientes; repetir la operaci?n conserva los registros ya asociados.",
-      "Enviada se marca expresamente tras guardar y completar la propuesta. Crear, editar, finalizar o aceptar registra actividad en Registro de eventos de la cuenta, dentro de Datos de gestión; no genera comentarios automáticos. Solo al pasar Enviada de No a Sí se añade un resumen comercial a Comentarios."
+      "Enviada se marca expresamente tras guardar y completar la propuesta. Crear, editar, finalizar o aceptar registra actividad en Registro de eventos de la cuenta, dentro de Datos de gestión; no genera comentarios automáticos. Solo al pasar Enviada de No a Sí se añade un resumen comercial a Comentarios.",
+      "Marcar una propuesta como Enviada o Aceptada genera un comentario en su cuenta. La aceptación reúne en un solo comentario la propuesta, el contrato, las órdenes y los contenidos generados. Las modificaciones de contratos y órdenes agrupan todos los cambios encadenados de una misma operación en un único comentario por cuenta, con valores anteriores y nuevos; el Registro de eventos conserva además el detalle."
     ]
   },
   "/dashboard/comercial/contratos": {
@@ -98,7 +99,8 @@
       "Los servicios facturados desde PDF se relacionan con las líneas del contrato cuando publicación y medio permiten una coincidencia única. Se completan las descripciones y productos ausentes conservando las tarifas, contenidos y asociaciones existentes.",
       "Los contratos se numeran autom?ticamente como Caa.000.000. Sus ?rdenes utilizan el c?digo del contrato seguido de n?mero de cobro/total, tambi?n al aceptar propuestas o reemplazar ?rdenes.",
       "Los agregados extra post-contrato se muestran separados del contenido firmado, con enlace a su ficha. No se incluyen en las líneas ni en los importes originales.",
-      "Crear nueva propuesta abre un modal con Modo prueba inicialmente en Sí. Selecciona No para una propuesta real; un contrato de prueba siempre conserva el modo prueba en sus derivados."
+      "Crear nueva propuesta abre un modal con Modo prueba inicialmente en Sí. Selecciona No para una propuesta real; un contrato de prueba siempre conserva el modo prueba en sus derivados.",
+      "Marcar una propuesta como Enviada o Aceptada genera un comentario en su cuenta. La aceptación reúne en un solo comentario la propuesta, el contrato, las órdenes y los contenidos generados. Las modificaciones de contratos y órdenes agrupan todos los cambios encadenados de una misma operación en un único comentario por cuenta, con valores anteriores y nuevos; el Registro de eventos conserva además el detalle."
     ]
   },
   "/dashboard/comercial/documentacion": {
@@ -229,7 +231,8 @@
       "Gestión de órdenes conserva las listas habituales. Pendiente de gestionar muestra subpestañas Sin contrato, Sin importe, Sin forma de cobro, Sin fecha de cobro y Pendientes de facturar. Las órdenes siguen en Gestión de órdenes y pueden aparecer en varios motivos. Las canceladas no requieren gestión; los intercambios no necesitan importe ni cobro monetario. Subir Excel, Agregar contrato e Importación masiva se reúnen en una misma fila.",
       "Cerrar cobro por acuerdo permite asumir una diferencia con motivo obligatorio, sin cambiar el importe facturado ni el dinero cobrado. La orden queda cerrada para la gestión y sale de pendientes y previsiones. Reabrir gestión del cobro restaura el saldo pendiente; ambos cambios quedan registrados.",
       "Los c?digos de ?rdenes importadas se comprueban antes de crear registros. Las correcciones de identificador conservan los importes, estados y asociaciones.",
-      "El formato visual de Administración comparte controles y pestañas: pestañas principales sobre fondo blanco, contenido azul claro y subpestañas con contenido blanco."
+      "El formato visual de Administración comparte controles y pestañas: pestañas principales sobre fondo blanco, contenido azul claro y subpestañas con contenido blanco.",
+      "Marcar una propuesta como Enviada o Aceptada genera un comentario en su cuenta. La aceptación reúne en un solo comentario la propuesta, el contrato, las órdenes y los contenidos generados. Las modificaciones de contratos y órdenes agrupan todos los cambios encadenados de una misma operación en un único comentario por cuenta, con valores anteriores y nuevos; el Registro de eventos conserva además el detalle."
     ]
   },
   "/dashboard/administracion/facturas-clientes": {
@@ -719,7 +722,8 @@
       "La fase Servicios comparte el selector y la tabla compacta con los contratos independientes. Sus campos y márgenes se han reducido para aprovechar el ancho disponible.",
       "En Cobros el primer vencimiento se propone a dos meses; cada cobro añadido toma la fecha del anterior más un mes. Todas las fechas pueden editarse.",
       "Buscar cuenta consulta resultados paginados sin cargar el catalogo completo. La propuesta carga solo su cuenta; cambiarla reinicia su contacto.",
-      "En Revisión, Enviada permite documentar que la propuesta se ha enviado. Guarda primero la propuesta completa. Una nueva marca Sí genera su resumen en Comentarios; las ediciones posteriores solo se registran en el historial."
+      "En Revisión, Enviada permite documentar que la propuesta se ha enviado. Guarda primero la propuesta completa. Una nueva marca Sí genera su resumen en Comentarios; las ediciones posteriores solo se registran en el historial.",
+      "Marcar una propuesta como Enviada o Aceptada genera un comentario en su cuenta. La aceptación reúne en un solo comentario la propuesta, el contrato, las órdenes y los contenidos generados. Las modificaciones de contratos y órdenes agrupan todos los cambios encadenados de una misma operación en un único comentario por cuenta, con valores anteriores y nuevos; el Registro de eventos conserva además el detalle."
     ]
   },
   "/dashboard/comercial/cuentas/[id_cuenta]": {

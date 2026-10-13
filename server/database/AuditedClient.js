@@ -28,15 +28,20 @@ export class AuditedClient extends pg.Client {
    }
   };
   const identify=()=>raw("SELECT set_config('p3.user_event_context',$1,true)",[JSON.stringify(context)]);
+  const summarize=async()=>{
+   if(!context?.enabled||['GET','HEAD','OPTIONS'].includes(context.method)||/\/propuestas(?:\/|$)/.test(context.route||''))return;
+   const installed=await raw("SELECT to_regprocedure('public.p3_account_operation_comment()') installed");
+   if(installed.rows[0]?.installed)await raw('SELECT public.p3_account_operation_comment()');
+  };
   if(/^(?:ROLLBACK\s+TO\b|SAVEPOINT\b|RELEASE\s+(?:SAVEPOINT\s+)?)/i.test(command))return raw(...args);
   if(begin){const result=await raw(...args);this.eventInTransaction=true;if(context?.enabled)await identify();return result;}
-  if(end){try{return await raw(...args);}finally{this.eventInTransaction=false;}}
+  if(end){try{if(!/^ROLLBACK/i.test(command)){if(context?.enabled)await identify();await summarize();}return await raw(...args);}finally{this.eventInTransaction=false;}}
   if(!context?.enabled){if(this.eventInTransaction)await raw("SELECT set_config('p3.user_event_context','',true)");const result=await raw(...args);await refreshCoverage();return result;}
   if(this.eventInTransaction){await identify();const result=await raw(...args);await refreshCoverage();return result;}
   // Autocommit mutations and their events share a transaction. Reads only set
   // context when invoked inside a mutating request; the trigger records no SELECT.
   await raw('BEGIN');
-  try{await identify();const result=await raw(...args);await refreshCoverage();await raw('COMMIT');return result;}
+  try{await identify();const result=await raw(...args);await refreshCoverage();await summarize();await raw('COMMIT');return result;}
   catch(error){await raw('ROLLBACK');throw error;}
  }
 }

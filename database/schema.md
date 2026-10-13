@@ -2,6 +2,8 @@
 
 Source: PostgreSQL `public` schema from the configured RDS connection.
 
+Migration `20261013_0006_chained_account_comments.sql` adds the transaction/request index to user events and `p3_account_operation_comment()` to summarize chained contract/order changes in one account comment per authenticated request. It does not modify business rows or add columns.
+
 ## Card settlements
 
 Migration `20260929_0001_tarjetas_liquidaciones.sql` extends `tesoreria_tarjetas` with

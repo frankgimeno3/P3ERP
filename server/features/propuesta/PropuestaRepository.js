@@ -233,7 +233,11 @@ async function addProposalSummaryComment(client, propuesta, action = "creada", a
   const contenido = `Propuesta ${action} por ${autor}: ${propuesta.nombre_propuesta || propuesta.id_propuesta}. `
     + `Contenido: ${lineas.length ? lineas.join("; ") : "todavía sin líneas de servicio"}. `
     + `Importe: ${importe} ${propuesta.moneda || "€"}, con ${pagos.length} pago${pagos.length === 1 ? "" : "s"} que se desglosan así: ${pagos.length ? pagos.join("; ") : "todavía sin desglose"}.`;
-  const summary=`${contenido} Identificador: ${propuesta.id_propuesta}.`;
+  let summary=`${contenido} Identificador: ${propuesta.id_propuesta}.`;
+  if(action.includes("aceptada")) {
+    const contracts=(await client.query('SELECT id_contrato,array_id_ordenes,array_contenidos FROM comercial_contratos WHERE id_propuesta=$1',[propuesta.id_propuesta])).rows;
+    summary += contracts.map(c=>` Contrato ${c.id_contrato}; órdenes: ${JSON.stringify(c.array_id_ordenes||[])}; contenidos: ${JSON.stringify(c.array_contenidos||[])}.`).join('');
+  }
   await addCuentaEvento({idCuenta,idAgente:actorId||propuesta.id_agente_propuesta,detalles:summary,eventType:"Propuesta"},client);
   if(sent)await addCuentaProposalComment(client,{idCuenta,idAgente:actorId||propuesta.id_agente_propuesta,contenido:summary});
 }
@@ -768,7 +772,9 @@ export async function updatePropuesta(idPropuesta, payload, actorId = "") {
         }, client);
       }
     }
-    if(after.enviada&&!before.enviada){await assertProposalReadyForAcceptance(client,after);if(String(after.fase_propuesta)!=="4")throw Object.assign(new Error("Completa la revisión de la propuesta antes de marcarla enviada."),{status:422});await addProposalSummaryComment(client,after,"enviada",actorId,true);}
+    const justAccepted=finalizedStatus === "aceptada" && previousStatus !== finalizedStatus;
+    if(after.enviada&&!before.enviada){await assertProposalReadyForAcceptance(client,after);if(String(after.fase_propuesta)!=="4")throw Object.assign(new Error("Completa la revisión de la propuesta antes de marcarla enviada."),{status:422});if(!justAccepted)await addProposalSummaryComment(client,after,"enviada",actorId,true);}
+    if(justAccepted)await addProposalSummaryComment(client,after,after.enviada&&!before.enviada?"enviada y aceptada":"aceptada",actorId,true);
     const wasFinal = String(before?.estado_propuesta || "").toLowerCase() === "pendiente";
     const isFinal = String(after?.estado_propuesta || "").toLowerCase() === "pendiente";
     if (!wasFinal && isFinal) await addProposalSummaryComment(client, after, "finalizada", actorId);

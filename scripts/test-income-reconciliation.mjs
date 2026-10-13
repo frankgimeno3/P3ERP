@@ -186,12 +186,14 @@ try{
   await updatePropuesta(testProposal.id_propuesta,{enviada:true},'actor');assert.equal(await commentCount(),initialComments+1);
   await updatePropuesta(testProposal.id_propuesta,{nombre_propuesta:'Enviada y revisada'},'actor');assert.equal(await commentCount(),initialComments+1);
   await assert.rejects(updatePropuesta(testProposal.id_propuesta,{es_prueba:false},'actor'));
-  await updatePropuesta(testProposal.id_propuesta,{estado_propuesta:'Aceptada'},'actor');assert.equal(await commentCount(),initialComments+1);
+  await updatePropuesta(testProposal.id_propuesta,{estado_propuesta:'Aceptada'},'actor');assert.equal(await commentCount(),initialComments+2);
+  const acceptedComment=(await db.query('SELECT contenido_comentario FROM general_comentarios ORDER BY created_at DESC LIMIT 1')).rows[0].contenido_comentario;
+  assert(acceptedComment.includes('aceptada'));assert(acceptedComment.includes('Contrato PRUEBA-'));assert(acceptedComment.includes('órdenes:'));assert(acceptedComment.includes('contenidos:'));
   const testContract=(await db.query('SELECT * FROM comercial_contratos WHERE id_propuesta=$1',[testProposal.id_propuesta])).rows[0];assert(testContract.id_contrato.startsWith('PRUEBA-C'));assert.equal(testContract.es_prueba,true);
   const testContent=(await db.query('SELECT * FROM produccion_contenidos WHERE id_contrato=$1',[testContract.id_contrato])).rows[0];assert(testContent.id_contenido.startsWith('PRUEBA-hp_'));assert.equal(testContent.es_prueba,true);
   const testInvoice=await createInvoiceDraft(testContract.id_contrato,'actor');assert(testInvoice.id_factura_cliente.startsWith('PRUEBA-'));assert.equal(testInvoice.es_prueba,true);
   const testOrder=(await db.query('SELECT * FROM tesoreria_ordenes WHERE id_contrato=$1',[testContract.id_contrato])).rows[0];assert.equal(testOrder.id_orden,testContract.id_contrato+'-1/1');assert.equal(testOrder.es_prueba,true);
-  console.log('PASS: modo prueba heredado en cuentas, contactos, propuestas, contratos, contenidos, órdenes y facturas; comentarios únicamente al enviar; duplicado de factura retirado con alias.');
+  console.log('PASS: modo prueba heredado en cuentas, contactos, propuestas, contratos, contenidos, órdenes y facturas; comentarios al enviar y aceptar; duplicado de factura retirado con alias.');
 }finally{
   pool.connect=connect;pool.query=query;
   await db.query('ROLLBACK');await db.query('SET search_path TO public');await db.query('DROP SCHEMA IF EXISTS '+schema+' CASCADE');db.release();await pool.end();
