@@ -6,12 +6,13 @@ import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 
 
 export const root = '/dashboard/direccion/laboral';
 export const apiRoot = '/api/v1/direccion/laboral';
+export const laboralApiPath = (path:string) => path.startsWith('/')?path:`${/^empleados(?:\/|\?|$)/.test(path)?'/api/v1/operaciones/agentes/asuntos':apiRoot}/${path}`;
 export const months = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 export const money = (value: number | string) => new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(Number(value));
 export const dateLabel = (value: string) => value?.slice(0,10).split('-').reverse().join('/') || '—';
 export const periodLabel = (mes: number, anio: number) => `${months[mes - 1]} ${anio}`;
 export async function request<T = any>(path: string, method = 'GET', data?: unknown): Promise<T> {
-  const response = await fetch(`${apiRoot}/${path}`, { method, cache: 'no-store', ...(data === undefined ? {} : { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }) });
+  const response = await fetch(laboralApiPath(path), { method, cache: 'no-store', ...(data === undefined ? {} : { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }) });
   const result = await response.json();
   if (!response.ok) throw new Error(result.message || 'No se pudo completar la operación.');
   return result;
@@ -22,7 +23,7 @@ export function useResource<T>(path: string) {
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true); setError('');
-    fetch(`${apiRoot}/${path}`, { signal: controller.signal, cache: 'no-store' }).then(async response => {
+    fetch(laboralApiPath(path), { signal: controller.signal, cache: 'no-store' }).then(async response => {
       const result = await response.json();
       if (!response.ok) throw new Error(result.message || 'No se pudieron cargar los datos.');
       setData(result);
@@ -34,8 +35,8 @@ export function useResource<T>(path: string) {
 export function Notice({ error, children }: { error?: string; children?: ReactNode }) {
   return error ? <p role="alert" className="my-3 rounded border border-red-200 bg-red-50 p-3 text-red-800">{error}</p> : children ? <p role="status" className="my-3 rounded bg-green-50 p-3 text-green-800">{children}</p> : null;
 }
-export function Header({ title, back, children }: { title: string; back?: string; children?: ReactNode }) {
-  return <header className="mb-5 flex flex-wrap items-center justify-between gap-3"><div>{back && <Link href={back} className="mb-2 inline-block rounded px-2 py-1 text-blue-900 hover:bg-blue-100">← Volver</Link>}<p className="text-xs uppercase text-slate-600">Dirección / Laboral</p><h1 className="text-2xl font-semibold text-blue-950">{title}</h1></div>{children}</header>;
+export function Header({ title, back, children,area='Dirección / Laboral' }: { title: string; back?: string; children?: ReactNode;area?:string }) {
+  return <header className="mb-5 flex flex-wrap items-center justify-between gap-3"><div>{back && <Link href={back} className="mb-2 inline-block rounded px-2 py-1 text-blue-900 hover:bg-blue-100">← Volver</Link>}<p className="text-xs uppercase text-slate-600">{area}</p><h1 className="text-2xl font-semibold text-blue-950">{title}</h1></div>{children}</header>;
 }
 export function Field({ label, children }: { label: string; children: ReactNode }) {
   return <label className="block space-y-1"><span className="block font-medium text-slate-600">{label}</span>{children}</label>;

@@ -462,7 +462,8 @@
       "Existe una sola previsión del ERP: los cargos y órdenes vinculados son su fuente; los grupos y conceptos pendientes tienen presupuestos compartidos. Editar la tabla o Vista Juan cambia el mismo registro. Los detalles cubren el presupuesto del grupo y nunca se suman de nuevo. La conciliación alimenta el realizado sin una aplicación manual adicional.",
       "Los pagos documentados de facturas son editables desde su concepto. El importe total debe coincidir con los vencimientos; los pagos ya conciliados quedan protegidos. Una factura sustituye una estimacion solo cuando se vincula explicitamente a su vencimiento. Los pagos sin banco se muestran aparte y se pueden abrir para asignarlo.",
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
-      "Traspasos propios permite crear y cancelar una previsión puntual entre bancos. La salida y entrada tienen el mismo importe; no alteran la liquidez conjunta. La conciliación empareja ambos movimientos y consume la previsión una sola vez."
+      "Traspasos propios permite crear y cancelar una previsión puntual entre bancos. La salida y entrada tienen el mismo importe; no alteran la liquidez conjunta. La conciliación empareja ambos movimientos y consume la previsión una sola vez.",
+      "En Previsión de cargos consulta Anticipos de nómina previstos: pagos puntuales hasta la fecha elegida, separados por banco. La nómina del mismo mes descuenta los anticipos pagados y previstos con fecha para conservar el total sin duplicar gastos."
     ]
   },
   "/dashboard/contabilidad/prevision-ingresos": {
@@ -595,7 +596,8 @@
       "Selecciona el año para consultar sus tres días de libre disposición. Marca cada día usado e introduce su fecha separada en dd, mm y yyyy; guarda los cambios.",
       "Sube y descarga documentación del empleado. Registra, edita o elimina ausencias indicando motivo, fechas y comentarios.",
       "Añade comentarios a la ficha; el historial permanece visible al cambiar de año.",
-      "Los nuevos documentos requieren S3 configurado. Si falta el bucket, la subida muestra un error y no guarda el archivo como respaldo en RDS. Los documentos antiguos almacenados en RDS siguen siendo descargables. Los filtros de cada tabla se muestran juntos en una tarjeta Filtros inicialmente cerrada, con una etiqueta fina encima de cada campo. Cerrarla conserva los filtros aplicados."
+      "Los nuevos documentos requieren S3 configurado. Si falta el bucket, la subida muestra un error y no guarda el archivo como respaldo en RDS. Los documentos antiguos almacenados en RDS siguen siendo descargables. Los filtros de cada tabla se muestran juntos en una tarjeta Filtros inicialmente cerrada, con una etiqueta fina encima de cada campo. Cerrarla conserva los filtros aplicados.",
+      "Pulsa Agregar asunto y selecciona agente y tipo: baja, vacaciones, libre disposición, otros o anticipo de nómina. El anticipo registra fecha puntual, banco e importe; aparece en la ficha del empleado y en Previsión de cargos, sin periodicidad. Se descuenta de la nómina del mismo mes para no duplicar liquidez."
     ]
   },
   "/dashboard/administracion/facturas-clientes/crear": {
@@ -920,7 +922,8 @@
       "Explica las desviaciones respecto a la previsión inicial y actualiza sus componentes. Los tickets no cargados pueden pasar a efectivo, cambiar de tarjeta o quedar no válidos ni asociables mientras estén pendientes de revisión. Un vencimiento de suscripción no cargado puede retirarse de este período con una explicación, conservando los demás períodos.",
       "Al cerrar se revisan los tickets conciliados y los cargos de Tesorería en una misma operación. Para reabrir la última liquidación, usa su movimiento bancario en Conciliación: las importaciones nuevas conservan el PDF y las asociaciones como trabajo pendiente.",
       "Juan desglosa suscripciones, tickets variables y otros gastos en el mes de cargo bancario. Un ticket vinculado a una suscripción sustituye su justificante sin sumar el gasto dos veces. La reserva original de Juan permanece identificada hasta detallar los gastos pendientes.",
-      "El formato visual de Administración comparte controles y pestañas: pestañas principales sobre fondo blanco, contenido azul claro y subpestañas con contenido blanco."
+      "El formato visual de Administración comparte controles y pestañas: pestañas principales sobre fondo blanco, contenido azul claro y subpestañas con contenido blanco.",
+      "En Tarjetas personales pulsa Importar liquidación personal. Selecciona tarjeta, mes de cierre y año: el sistema avisa si ya está importado y permite continuar el punteo existente. Sube el PDF, valida el formato y revisa las líneas antes de importar. PASS se identifica por cliente y Santander por contrato y terminación; nunca se importan como tarjetas de empresa. PASS excluye Operaciones para el próximo recibo; Santander excluye saldo anterior y pago del periodo anterior."
     ]
   },
   "/dashboard/administracion/liquidaciones/tickets": {

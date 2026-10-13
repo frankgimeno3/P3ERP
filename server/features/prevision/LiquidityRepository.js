@@ -29,8 +29,9 @@ export function forecastPayroll(charges, payrolls, advances, from, until) {
     if (!periods.has(key) && (due < from || due > until)) continue;
     periods.set(key,{employee:payroll.id_empleado,month,amount:payroll.estado==='pagado'?0:cents(payroll.importe_neto),bank:periods.get(key)?.bank || bank(charges.find(c=>c.id_agente===payroll.id_empleado)?.banco_pago)});
   }
-  return [...periods.values()].map(period=>({...period,amount:Math.max(0,period.amount-advances.filter(a=>a.id_empleado===period.employee && `${a.anio}-${String(a.mes).padStart(2,'0')}`===period.month && a.estado==='pagado').reduce((sum,a)=>sum+cents(a.importe_neto),0))/100}));
+  return [...periods.values()].map(period=>({...period,amount:Math.max(0,period.amount-advances.filter(a=>a.id_empleado===period.employee && `${a.anio}-${String(a.mes).padStart(2,'0')}`===period.month && (a.estado==='pagado'||a.estado==='pendiente'&&a.fecha_prevista)).reduce((sum,a)=>sum+cents(a.importe_neto),0))/100}));
 }
+export function forecastAdvances(advances,from,until){return advances.filter(a=>a.estado==='pendiente'&&a.fecha_prevista&&String(a.fecha_prevista).slice(0,10)>=from&&String(a.fecha_prevista).slice(0,10)<=until).map(a=>({id:a.id,employee:a.id_empleado,empleado:a.empleado||a.id_empleado,fecha:String(a.fecha_prevista).slice(0,10),bank:bank(a.banco_pago),amount:Number(a.importe_neto)}));}
 
 export async function getLiquidityForecast(date, pool=getPgPool()) {
   const until=parseImportDate(date);
@@ -67,7 +68,7 @@ export async function getLiquidityForecast(date, pool=getPgPool()) {
   const snapshot=(await pool.query(`SELECT
     (SELECT COALESCE(jsonb_agg(c),'[]'::jsonb) FROM tesoreria_cargos_recurrentes c WHERE activo AND tipo_cargo='nomina') charges,
     (SELECT COALESCE(jsonb_agg(n),'[]'::jsonb) FROM laboral_nominas n) payrolls,
-    (SELECT COALESCE(jsonb_agg(a),'[]'::jsonb) FROM laboral_anticipos a WHERE estado='pagado') advances,
+    (SELECT COALESCE(jsonb_agg(to_jsonb(a)||jsonb_build_object('empleado',COALESCE(NULLIF(e.nombre_completo_agente,''),trim(concat_ws(' ',e.nombre_agente,e.apellidos_agente))))),'[]'::jsonb) FROM laboral_anticipos a LEFT JOIN agentes_db e ON e.id_agente=a.id_empleado) advances,
     (SELECT count(*)::int FROM tesoreria_movimientos_bancarios m JOIN tesoreria_cargos_recurrentes c USING(id_cargo_recurrente)
       WHERE c.activo AND c.tipo_cargo IN ('proveedor','otro') AND m.importe<0
         AND p3_income_date(COALESCE(NULLIF(m.fecha_operativa,''),m.fecha_valor))>='2026-01-01'
@@ -81,6 +82,9 @@ export async function getLiquidityForecast(date, pool=getPgPool()) {
   const cards=await cardLiquidity(rows[0].today,rows[0].until,pool);
   for(const [name,amount] of Object.entries(cards))result[name]-=amount;
   for(const payroll of forecastPayroll(snapshot.charges,snapshot.payrolls,snapshot.advances,rows[0].today,rows[0].until)) result[payroll.bank]-=payroll.amount;
+  const advances=forecastAdvances(snapshot.advances,rows[0].today,rows[0].until);
+  for(const advance of advances)result[advance.bank]-=advance.amount;
   return {...result,total:Math.round(Object.values(result).reduce((sum,n)=>sum+n,0)*100)/100,
+    anticipos:advances,
     avisos:[...(snapshot.unapplied ? [`${snapshot.unapplied} movimientos asociados a cargos no tienen vencimiento aplicado. Sus previsiones siguen pendientes hasta indicar qué vencimiento pagan en Conciliación.`] : []),...(snapshot.incomplete ? [`${snapshot.incomplete} cargos no tienen planificación completa hasta la fecha elegida. Genera sus vencimientos o revisa su programación.`] : [])]};
 }

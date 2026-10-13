@@ -20,7 +20,7 @@ const payment = {
 };
 const schemas = {
   nominas: Joi.object(payment),
-  anticipos: Joi.object({ ...payment, importe_neto: payment.importe_neto.greater(0) }),
+  anticipos: Joi.object({ ...payment, importe_neto: payment.importe_neto.greater(0),fecha_prevista:date().optional().allow(null),banco_pago:Joi.string().valid('Sabadell','Santander','Sin asignar').allow(null).optional() }),
   calendario: Joi.object({ anio: year() }),
   eventos: Joi.object({ anio: year(), tipo: Joi.string().valid(...calendarTypes).required(), titulo: Joi.string().trim().max(300).required(), inicio: date(), fin: date(), comentarios: text() }),
   libres: Joi.object({ anio: year(), fechas: Joi.array().items(Joi.object({ numero: Joi.number().integer().min(1).max(3).required(), fecha: date() })).max(3).unique('numero').unique('fecha').required() }),

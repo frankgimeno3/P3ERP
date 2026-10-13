@@ -44,9 +44,11 @@ try{
     CREATE TABLE tesoreria_ordenes(id_orden text,cancelada boolean,cobrada boolean,banco_cobro text,cobro_total numeric,fecha_teorica_cobro text);
     CREATE TABLE tesoreria_pagos_previstos(id_pago text,cuenta_pago text,total_pago numeric,fecha_pago text);
   `);
+  await pg.exec("CREATE TABLE agentes_db(id_agente text PRIMARY KEY,nombre_completo_agente text,nombre_agente text,apellidos_agente text)");
   const migration=fs.readFileSync('database/migrations/20260929_0001_tarjetas_liquidaciones.sql','utf8');
   await pg.exec(migration);await pg.exec(migration);
   await pg.exec(fs.readFileSync('database/migrations/20261009_0003_liquidaciones_workflow.sql','utf8'));
+  await pg.exec('ALTER TABLE tesoreria_tarjetas_liquidaciones ADD COLUMN mes_extracto DATE');
   await pg.exec("ALTER TABLE tesoreria_movimientos_bancarios ADD COLUMN duplicado_descartado boolean DEFAULT false; ALTER TABLE tesoreria_ordenes ADD COLUMN datos_importacion jsonb DEFAULT '{}'; ALTER TABLE tesoreria_pagos_previstos ADD COLUMN cierre_pago jsonb DEFAULT '{}', ADD COLUMN id_vencimiento text");
   const card=await saveTarjeta(null,{codigo:'VISA-01',nombre:'Empresa',ultimos_digitos:'1234',banco:'Sabadell',tipo:'p3',estado:'activa',...Object.fromEntries(Object.entries(base).filter(([k])=>!k.startsWith('dia_')))});
   const id=card.id_tarjeta;

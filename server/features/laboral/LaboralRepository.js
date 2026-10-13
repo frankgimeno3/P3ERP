@@ -30,11 +30,11 @@ export async function listEmployees() {
   return (await getPgPool().query(`SELECT a.*, ${employeeName} AS nombre FROM agentes_db a WHERE is_empleado_account=TRUE ORDER BY nombre`)).rows;
 }
 export async function listPayments(kind) {
-  return (await getPgPool().query(`SELECT p.*, ${employeeName} AS empleado FROM ${paymentTable(kind)} p JOIN agentes_db a ON a.id_agente=p.id_empleado ORDER BY p.anio DESC,p.mes DESC,empleado,p.created_at DESC`)).rows;
+  return (await getPgPool().query(`SELECT p.*, ${employeeName} AS empleado ${kind==='anticipos'?",to_char(p.fecha_prevista,'YYYY-MM-DD') fecha_prevista":''} FROM ${paymentTable(kind)} p JOIN agentes_db a ON a.id_agente=p.id_empleado ORDER BY p.anio DESC,p.mes DESC,empleado,p.created_at DESC`)).rows;
 }
 export async function getPayment(kind, id) {
   const db = getPgPool();
-  const payment = await one(db, `SELECT p.*, ${employeeName} AS empleado FROM ${paymentTable(kind)} p JOIN agentes_db a ON a.id_agente=p.id_empleado WHERE p.id=$1`, [id]);
+  const payment = await one(db, `SELECT p.*, ${employeeName} AS empleado ${kind==='anticipos'?",to_char(p.fecha_prevista,'YYYY-MM-DD') fecha_prevista":''} FROM ${paymentTable(kind)} p JOIN agentes_db a ON a.id_agente=p.id_empleado WHERE p.id=$1`, [id]);
   const advances = kind === 'nominas' ? (await db.query('SELECT * FROM laboral_anticipos WHERE id=ANY($1::text[]) ORDER BY created_at', [payment.anticipos])).rows : [];
   const transferIds = [payment.id_transferencia, ...advances.map(a => a.id_transferencia)].filter(Boolean);
   const transfers = transferIds.length ? (await db.query('SELECT * FROM tesoreria_movimientos_bancarios WHERE id_linea_banco=ANY($1::text[])', [transferIds])).rows : [];
@@ -51,11 +51,13 @@ async function checkTransfer(db, transferId, employeeId, kind, id) {
   if (used.rowCount) throw new LaboralError('Esta transferencia ya está vinculada a una nómina o anticipo.');
 }
 async function syncAdvances(db, employeeId, year, month) {
-  const { rows } = await db.query('SELECT id,importe_neto,estado FROM laboral_anticipos WHERE id_empleado=$1 AND anio=$2 AND mes=$3 ORDER BY created_at', [employeeId, year, month]);
+  const { rows } = await db.query('SELECT id,importe_neto,estado,fecha_prevista FROM laboral_anticipos WHERE id_empleado=$1 AND anio=$2 AND mes=$3 ORDER BY created_at', [employeeId, year, month]);
   const { rows: payrolls } = await db.query('SELECT * FROM laboral_nominas WHERE id_empleado=$1 AND anio=$2 AND mes=$3 FOR UPDATE', [employeeId, year, month]);
   if (!payrolls.length) return;
   const paid = rows.filter(a => a.estado === 'pagado').reduce((sum, a) => sum + Math.round(Number(a.importe_neto) * 100), 0);
   if (paid > Math.round(Number(payrolls[0].importe_neto) * 100)) throw new LaboralError('Los anticipos pagados superan el importe neto de la nómina. Revisa los importes.');
+  const planned=rows.filter(a=>a.estado==='pendiente'&&a.fecha_prevista).reduce((sum,a)=>sum+Math.round(Number(a.importe_neto)*100),0);
+  if(paid+planned>Math.round(Number(payrolls[0].importe_neto)*100))throw new LaboralError('Los anticipos pagados y previstos superan el neto de la nómina.');
   await db.query('UPDATE laboral_nominas SET anticipos=$1,updated_at=NOW() WHERE id=$2', [rows.map(a => a.id), payrolls[0].id]);
 }
 export async function savePayment(kind, id, body) {
@@ -67,10 +69,12 @@ export async function savePayment(kind, id, body) {
     await employee(db, data.id_empleado, !previous || previous.id_empleado !== data.id_empleado);
     if (previous && (previous.id_empleado !== data.id_empleado || previous.mes !== data.mes || previous.anio !== data.anio)) throw new LaboralError('El empleado y el periodo de un registro existente no se pueden cambiar.');
     const recordId = id || randomUUID();
+    if(kind==='anticipos'&&data.fecha_prevista&&data.fecha_prevista.slice(0,7)!==`${data.anio}-${String(data.mes).padStart(2,'0')}`)throw new LaboralError('La fecha prevista debe pertenecer al periodo de la nómina.');
     await checkTransfer(db, data.id_transferencia, data.id_empleado, kind, recordId);
     const values = [data.id_empleado, data.mes, data.anio, data.importe_neto, data.estado, data.comentarios, data.id_transferencia || null, recordId];
     if (id) await db.query(`UPDATE ${paymentTable(kind)} SET id_empleado=$1,mes=$2,anio=$3,importe_neto=$4,estado=$5,comentarios=$6,id_transferencia=$7,updated_at=NOW() WHERE id=$8`, values);
     else await db.query(`INSERT INTO ${paymentTable(kind)} (id_empleado,mes,anio,importe_neto,estado,comentarios,id_transferencia,id) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`, values);
+    if(kind==='anticipos')await db.query('UPDATE laboral_anticipos SET fecha_prevista=COALESCE($2,fecha_prevista),banco_pago=COALESCE($3,banco_pago),updated_at=now() WHERE id=$1',[recordId,data.fecha_prevista||null,data.banco_pago||null]);
     await syncAdvances(db, data.id_empleado, data.anio, data.mes);
     return { id: recordId };
   });
@@ -113,12 +117,13 @@ export async function saveEvent(id, body) {
 export async function getEmployee(id, year) {
   const { anio } = validate('calendario', { anio: year });
   const db = getPgPool(), agente = await employee(db, id);
-  const [libres, ausencias, comentarios] = await Promise.all([
+  const [libres, ausencias, comentarios,anticipos] = await Promise.all([
     db.query('SELECT numero,fecha::text FROM laboral_dias_libre_disposicion WHERE id_empleado=$1 AND anio=$2 ORDER BY numero', [id, anio]),
     db.query('SELECT a.*,a.inicio::text,a.fin::text FROM laboral_ausencias a WHERE id_empleado=$1 AND inicio <= make_date($2,12,31) AND fin >= make_date($2,1,1) ORDER BY a.inicio DESC', [id, anio]),
     db.query('SELECT * FROM laboral_comentarios_empleados WHERE id_empleado=$1 ORDER BY created_at DESC', [id]),
+    db.query("SELECT *,to_char(fecha_prevista,'YYYY-MM-DD') fecha_prevista FROM laboral_anticipos WHERE id_empleado=$1 AND anio=$2 ORDER BY mes,created_at",[id,anio]),
   ]);
-  return { agente, anio, libres: libres.rows, ausencias: ausencias.rows, comentarios: comentarios.rows };
+  return { agente, anio, libres: libres.rows, ausencias: ausencias.rows, comentarios: comentarios.rows,anticipos:anticipos.rows };
 }
 export async function saveFreeDays(id, body) {
   const d = validate('libres', body);

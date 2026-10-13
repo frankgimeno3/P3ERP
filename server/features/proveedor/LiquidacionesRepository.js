@@ -32,7 +32,7 @@ export async function importLiquidacion(id,file,bank,version,commit=false){
  const parsed=await extractCardStatement(file,bank);
  return supplierTransaction(async db=>{await lock(db);const l=await read(db,id,true),data=await cardData(l.id_tarjeta,db);
  if(l.estado!=='pendiente'||Number(version)!==l.version)fail('La liquidación ha cambiado. Recarga antes de importar.');
- if(bank!==data.card.banco||parsed.ultimos_digitos!==data.card.ultimos_digitos)fail('El banco o la tarjeta del PDF no corresponden a esta liquidación.');
+ validateStatementCard(data.card,parsed);
  if((await db.query('SELECT 1 FROM tesoreria_tarjetas_documentos WHERE sha256=$1',[parsed.sha256])).rowCount)fail('Este PDF ya está importado.');
  if((await db.query('SELECT 1 FROM tesoreria_tarjetas_lineas WHERE id_liquidacion=$1',[id])).rowCount)fail('La liquidación ya tiene un PDF importado; conserva su conciliación.');
  if((await db.query("SELECT 1 FROM tesoreria_tarjetas_liquidaciones WHERE id<>$1 AND id_tarjeta=$2 AND estado<>'anulada' AND (fecha=$3::date OR inicio<$5::date AND cierre>$4::date)",[id,l.id_tarjeta,parsed.fecha,parsed.inicio,parsed.cierre])).rowCount)fail('El PDF se solapa con otra liquidación.');
@@ -40,6 +40,36 @@ export async function importLiquidacion(id,file,bank,version,commit=false){
  await db.query('INSERT INTO tesoreria_tarjetas_documentos(id_liquidacion,nombre,sha256,contenido,extraccion) VALUES($1,$2,$3,$4,$5::jsonb)',[id,parsed.nombre,parsed.sha256,bytes,JSON.stringify(preview)]);
  for(const [n,r]of parsed.rows.entries())await db.query('INSERT INTO tesoreria_tarjetas_lineas(id,id_liquidacion,posicion,fecha,fecha_valor,concepto,importe) VALUES($1,$2,$3,$4,$5,$6,$7)',[randomUUID(),id,n+1,r.fecha,r.fecha_valor,r.concepto,r.importe]);
  await db.query('UPDATE tesoreria_tarjetas_liquidaciones SET inicio=$2,cierre=$3,fecha=$4,real=$5,version=version+1,updated_at=now() WHERE id=$1',[id,parsed.inicio,parsed.cierre,parsed.fecha,parsed.total]);return {ok:true};});
+}
+export function validateStatementCard(card,parsed){
+ if(card.banco!==parsed.banco)fail('El banco de cargo del PDF no corresponde a la tarjeta.');
+ if(parsed.formato==='carrefour_pass'){
+  if(card.tipo!=='personal'||!card.referencia_extracto||card.referencia_extracto!==parsed.referencia)fail('El cliente PASS no corresponde a esta tarjeta personal.');
+ }else if(parsed.ultimos_digitos!==card.ultimos_digitos||(card.tipo==='personal'&&(!card.referencia_extracto||card.referencia_extracto!==parsed.referencia)))fail('La tarjeta o contrato del PDF no corresponde a la tarjeta seleccionada.');
+ if(card.tipo==='p3'&&parsed.formato==='santander_personal')fail('El extracto es personal; no se puede importar como tarjeta de empresa.');
+}
+export async function personalStatementStatus(cardId,month,db=getPgPool()){
+ if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(month))fail('Selecciona un mes y año válidos.',422);
+ const existing=(await db.query("SELECT l.id,l.estado,d.nombre,EXISTS(SELECT 1 FROM tesoreria_tarjetas_documentos d WHERE d.id_liquidacion=l.id) importada FROM tesoreria_tarjetas_liquidaciones l LEFT JOIN tesoreria_tarjetas_documentos d ON d.id_liquidacion=l.id WHERE l.id_tarjeta=$1 AND l.estado<>'anulada' AND COALESCE(l.mes_extracto,date_trunc('month',l.cierre)::date)=$2::date",[cardId,month+'-01'])).rows[0];
+ return existing||{importada:false};
+}
+export async function importPersonalStatement(cardId,file,format,month,commit=false){
+ const parsed=await extractCardStatement(file,format);
+ if(parsed.mes_extracto!==month)fail(`El PDF corresponde a ${parsed.mes_extracto}, no a ${month}. Selecciona el mes del cierre, no el del cargo.`,422);
+ return supplierTransaction(async db=>{
+  await lock(db);const data=await cardData(cardId,db);if(data.card.tipo!=='personal')fail('Selecciona una tarjeta personal.',422);
+  validateStatementCard(data.card,parsed);
+  const status=await personalStatementStatus(cardId,month,db);if(status.importada)fail('Este mes ya está importado. Abre su liquidación para continuar el punteo.');
+  if((await db.query('SELECT 1 FROM tesoreria_tarjetas_documentos WHERE sha256=$1',[parsed.sha256])).rowCount)fail('Este PDF ya está importado.');
+  if((await db.query("SELECT 1 FROM tesoreria_tarjetas_liquidaciones WHERE id_tarjeta=$1 AND estado<>'anulada' AND ($2::text IS NULL OR id::text<>$2) AND inicio<$4::date AND cierre>$3::date",[cardId,status.id||null,parsed.inicio,parsed.cierre])).rowCount)fail('El periodo se solapa con otra liquidación.');
+  const {bytes,...preview}=parsed;if(!commit)return preview;
+  const id=status.id||randomUUID();
+  if(status.id){const l=await read(db,id,true);if(l.estado!=='pendiente')fail('Esta liquidación no admite una nueva importación.');await db.query('UPDATE tesoreria_tarjetas_liquidaciones SET inicio=$2,cierre=$3,fecha=$4,mes_extracto=$5 WHERE id=$1',[id,parsed.inicio,parsed.cierre,parsed.fecha,month+'-01']);}
+  else {const forecast=periodForecast(data,{inicio:parsed.inicio,cierre:parsed.cierre,fecha:parsed.fecha,detalle:{}});await db.query("INSERT INTO tesoreria_tarjetas_liquidaciones(id,id_tarjeta,inicio,cierre,fecha,mes_extracto,previsto,detalle,estado) VALUES($1,$2,$3,$4,$5,$6,$7,'{}','pendiente')",[id,cardId,parsed.inicio,parsed.cierre,parsed.fecha,month+'-01',forecast.total]);}
+  await db.query('INSERT INTO tesoreria_tarjetas_documentos(id_liquidacion,nombre,sha256,contenido,extraccion) VALUES($1,$2,$3,$4,$5::jsonb)',[id,parsed.nombre,parsed.sha256,bytes,JSON.stringify(preview)]);
+  for(const [n,r] of parsed.rows.entries())await db.query('INSERT INTO tesoreria_tarjetas_lineas(id,id_liquidacion,posicion,fecha,fecha_valor,concepto,importe) VALUES($1,$2,$3,$4,$5,$6,$7)',[randomUUID(),id,n+1,r.fecha,r.fecha_valor,r.concepto,r.importe]);
+  await db.query('UPDATE tesoreria_tarjetas_liquidaciones SET real=$2,version=version+1,updated_at=now() WHERE id=$1',[id,parsed.total]);return {id};
+ });
 }
 export async function saveLiquidacion(id,body,actor=''){return supplierTransaction(async db=>{
  await lock(db);const l=await read(db,id,true);if(l.estado!=='pendiente'||Number(body.version)!==l.version)fail('La liquidación ha cambiado. Recarga antes de guardar.');

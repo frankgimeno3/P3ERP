@@ -24,6 +24,7 @@ try {
   await client.query(readLegacyMigrationSql('database/migrations/20260905_0001_laboral.sql'));
   await client.query(readLegacyMigrationSql('database/migrations/20260905_0002_laboral_documentos_rds.sql'));
   await client.query('CREATE TABLE laboral_empleados_en_nomina (LIKE public.laboral_empleados_en_nomina INCLUDING ALL)');
+  await client.query('ALTER TABLE laboral_anticipos ADD COLUMN fecha_prevista DATE, ADD COLUMN banco_pago TEXT');
   const savepoints = [];
   const adapter = { release() {}, async query(sql, values) {
     if (sql === 'BEGIN') { const name = `sp_${savepoints.length}`; savepoints.push(name); return client.query(`SAVEPOINT ${name}`); }
@@ -35,6 +36,18 @@ try {
   pool.connect = async () => adapter;
   await client.query("INSERT INTO agentes_db(id_agente,nombre_completo_agente) VALUES ('employee-a','Empleado de prueba A'),('employee-b','Empleado de prueba B')");
   const draft = { id_empleado:'employee-a',mes:9,anio:2026,importe_neto:2000,estado:'pendiente',comentarios:'' };
+  await client.query('SAVEPOINT advances_planning_test');
+  await check('anticipos puntuales conservan fecha y banco y bloquean exceder la nómina',async()=>{
+    const payroll={...draft,id_empleado:'employee-b',mes:10,importe_neto:1500};
+    await repo.savePayment('nominas',null,payroll);
+    const body={...payroll,importe_neto:500,fecha_prevista:'2026-10-15',banco_pago:'Santander'};
+    const saved=await repo.savePayment('anticipos',null,body);
+    const actual=await repo.getPayment('anticipos',saved.id);
+    assert.equal(actual.banco_pago,'Santander');assert.equal(actual.fecha_prevista,'2026-10-15');
+    await assert.rejects(()=>repo.savePayment('anticipos',null,{...body,importe_neto:1200}),/superan/);
+    await assert.rejects(()=>repo.savePayment('anticipos',null,{...body,fecha_prevista:'2026-11-15'}),/periodo/);
+  });
+  await client.query('ROLLBACK TO SAVEPOINT advances_planning_test');
   await check('agentes existentes y nuevos marcados como empleados', async () => {
     const list = await repo.listEmployees(); assert.equal(list.length,2); assert(list.every(a => a.is_empleado_account));
   });

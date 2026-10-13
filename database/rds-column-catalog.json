@@ -1,4 +1,11 @@
 {
+  "tesoreria_tarjetas": {
+    "referencia_extracto": "Contrato Santander o cliente Carrefour PASS que identifica el extracto de la tarjeta personal."
+  },
+  "laboral_anticipos": {
+    "fecha_prevista": "Fecha puntual de pago del anticipo de nómina; alimenta liquidez sin crear recurrencias.",
+    "banco_pago": "Banco previsto del anticipo, que se separa de la nómina del mismo mes sin duplicar su importe."
+  },
   "agentes_db": {
     "cognito_emails": "Emails alternativos normalizados de Cognito que resuelven al mismo agente y rol que su email principal.",
     "is_empleado_account": "Indica si el agente pertenece a la gestión de empleados; los colaboradores externos pueden tener acceso sin figurar en nómina.",
@@ -137,6 +144,7 @@
     "note": "Notas de la asociación."
   },
   "tesoreria_tarjetas_liquidaciones": {
+    "mes_extracto": "Mes de cierre del extracto, distinto del mes de cargo; tarjeta y mes no pueden importarse dos veces.",
     "id": "Identificador de la liquidación.",
     "id_tarjeta": "Tarjeta liquidada.",
     "inicio": "Inicio del periodo de movimientos, que puede diferir del mes natural.",

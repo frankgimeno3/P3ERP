@@ -5,6 +5,9 @@ const fail=m=>{throw new ProveedorError(m,422);};
 const number=s=>Number(s.replaceAll('.','').replace(',','.'));
 const date=s=>s.replaceAll('.','/').replaceAll('-','/').split('/').reverse().join('-');
 export function parseCardStatement(text,bank){
+ if(bank==='Carrefour PASS')return parsePassStatement(text);
+ const personal=/CREDITO SANTANDER/i.test(text)&&/Extracte de moviments/i.test(text);
+ text=text.replace(/Període de liquidació/gi,'PERIODO DE LIQUIDACION').replace(/Data de càrrec/gi,'FECHA DE CARGO').replace(/Import a pagar/gi,'Importe a Pagar').replace(/rebut a pagar el/gi,'recibo a Pagar el').replace(/Contracte número/gi,'Contrato número').replace(/C - Comissions, despeses i interessos/gi,'C - Comisiones, Gastos e Intereses').replace(/Detall de l'import pendent de pagament/gi,'Detalle de importe pendiente de pago');
  text=text.replace(/\s+/g,' ').trim();let start,end,pay,total,digits,contract;const rows=[];
  if(bank==='Sabadell'){
   if(!/Liquidación del contrato de tarjeta de crédito/i.test(text)||!/bancsabadell\.com/i.test(text))fail('No es una liquidación Sabadell compatible.');
@@ -19,7 +22,7 @@ export function parseCardStatement(text,bank){
    rows.push({fecha:d,fecha_valor:d,concepto:m[3],importe:number(m[5])});
   }
  }else if(bank==='Santander'){
-  if(!/BANCO SANTANDER/i.test(text)||!/SANTANDER .*CREDITO/i.test(text))fail('No es una liquidación Santander compatible.');
+  if(!/BANCO SANTANDER/i.test(text)||!/(?:SANTANDER .*CREDITO|CREDITO SANTANDER)/i.test(text))fail('No es una liquidación Santander compatible.');
   const p=/PERIODO DE LIQUIDACI[ÓO]N (\d{2}\/\d{2}\/\d{4}) A (\d{2}\/\d{2}\/\d{4})/i.exec(text),t=/(?:Importe a Pagar|TOTAL MOVIMIENTOS) ([\d.,]+) €/i.exec(text),c=/\*{5,}(\d{6})/.exec(text);
   if(!p||!t||!c)fail('Faltan el período, el total o la identificación de la tarjeta.');
   start=date(p[1]);end=date(p[2]);total=number(t[1]);digits=c[1].slice(-4);contract=/Contrato n[úu]mero:? ([\d ]+)/i.exec(text)?.[1].replaceAll(' ','').trim();
@@ -32,7 +35,21 @@ export function parseCardStatement(text,bank){
  }else fail('Selecciona Sabadell o Santander.');
  if(![start,end,pay].every(validDate)||start>end||end>pay||!rows.length||!Number.isFinite(total)||rows.some(r=>!validDate(r.fecha)||!validDate(r.fecha_valor)||!r.concepto||!Number.isFinite(r.importe)))fail('El documento no tiene datos completos y válidos.');
  if(rows.reduce((n,r)=>n+cents(r.importe),0)!==cents(total))fail('La suma extraída no coincide con el total del PDF. Importación bloqueada.');
- return {banco:bank,inicio:start,cierre:end,fecha:pay,total,ultimos_digitos:digits,contrato:contract,rows};
+ return {banco:bank,inicio:start,cierre:end,fecha:pay,total,ultimos_digitos:digits,contrato:contract,mes_extracto:end.slice(0,7),formato:personal?'santander_personal':'empresa',referencia:contract,rows};
+}
+export function parsePassStatement(text){
+ text=text.replace(/\s+/g,' ').trim();
+ if(!/Servicios Financieros Carrefour/i.test(text)||!/Detalle de tus operaciones a Contado Fin de Mes/i.test(text))fail('No es un extracto Carrefour PASS compatible.');
+ const p=/Resumen de operaciones (\d{2}\/\d{2}\/\d{4}) al (\d{2}\/\d{2}\/\d{4})/.exec(text),client=/Número de Cliente: (\d+)/.exec(text),total=/Total compras realizadas a Contado Fin de Mes (\d{2}\/\d{2}\/\d{4}) ([\d.,]+) €/.exec(text),account=/Número de Cuenta: ES\d{2} (\d{4})/.exec(text);
+ if(!p||!client||!total||!account)fail('Faltan el periodo, el cliente PASS, el banco de cargo o el total.');
+ const debt=/Deuda a \d{2}\/\d{2}\/\d{4} ([\d.,]+) €/.exec(text);if(!debt||number(debt[1])!==0)fail('El extracto PASS incluye deuda a crédito: revisa ese desglose antes de importar.');
+ const detail=text.split('Detalle de tus operaciones a Contado Fin de Mes')[1].split('Total compras realizadas a Contado Fin de Mes')[0];
+ const rows=[...detail.matchAll(/(\d{2}\/\d{2}\/\d{4}) (.+?) (-?[\d.]+,\d{2}) €(?= |$)/g)].map(m=>({fecha:date(m[1]),fecha_valor:date(m[1]),concepto:m[2],importe:number(m[3])}));
+ const start=date(p[1]),end=date(p[2]),pay=date(total[1]),amount=number(total[2]);
+ if(![start,end,pay].every(validDate)||start>end||end>pay||!rows.length||rows.some(r=>!validDate(r.fecha)||r.fecha> end||r.fecha<new Date(Date.parse(start)-7*86400000).toISOString().slice(0,10)))fail('Las fechas del extracto PASS no son compatibles.');
+ if(rows.reduce((sum,r)=>sum+cents(r.importe),0)!==cents(amount))fail('La suma extraída no coincide con el total PASS. Importación bloqueada.');
+ const banco={'0081':'Sabadell','0049':'Santander'}[account[1]];if(!banco)fail('El banco de cargo PASS no está configurado.');
+ return {banco,inicio:start,cierre:end,fecha:pay,total:amount,ultimos_digitos:null,formato:'carrefour_pass',referencia:client[1],mes_extracto:end.slice(0,7),rows,avisos:['Se excluyen las operaciones del próximo recibo y la mensualidad de crédito cuando la deuda es cero. Las fechas de operación se conservan aunque el banco incluya una compra anterior al inicio indicado.']};
 }
 export async function extractCardStatement(file,bank){
  if(!file||file.size>15*1024*1024||file.size<5)fail('Selecciona un PDF de hasta 15 MB.');

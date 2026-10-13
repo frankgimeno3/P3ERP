@@ -21,7 +21,7 @@ export async function cardData(id,db=getPgPool()) {
   const dues=(await db.query(`SELECT v.*,to_char(v.fecha,'YYYY-MM-DD') fecha FROM tesoreria_cargos_vencimientos v
     JOIN tesoreria_cargos_recurrentes c USING(id_cargo_recurrente) WHERE c.id_tarjeta=$1 AND c.activo
     AND NOT EXISTS(SELECT 1 FROM tesoreria_vencimientos_aplicaciones a WHERE a.id_vencimiento=v.id) ORDER BY v.fecha,v.id`,[id])).rows;
-  const history=(await db.query(`SELECT l.*,to_char(l.inicio,'YYYY-MM-DD') inicio,to_char(l.cierre,'YYYY-MM-DD') cierre,to_char(l.fecha,'YYYY-MM-DD') fecha,COALESCE((SELECT jsonb_agg(m.id_linea_banco ORDER BY m.id_linea_banco) FROM tesoreria_tarjetas_movimientos m WHERE m.id_liquidacion=l.id),'[]'::jsonb) movimientos
+  const history=(await db.query(`SELECT l.*,to_char(l.mes_extracto,'YYYY-MM-DD') mes_extracto,to_char(l.inicio,'YYYY-MM-DD') inicio,to_char(l.cierre,'YYYY-MM-DD') cierre,to_char(l.fecha,'YYYY-MM-DD') fecha,COALESCE((SELECT jsonb_agg(m.id_linea_banco ORDER BY m.id_linea_banco) FROM tesoreria_tarjetas_movimientos m WHERE m.id_liquidacion=l.id),'[]'::jsonb) movimientos
     FROM tesoreria_tarjetas_liquidaciones l WHERE id_tarjeta=$1 ORDER BY created_at DESC,id`,[id])).rows;
   const draft=history.find(h=>h.estado==='pendiente'&&h.fecha.slice(0,7)===card.proxima_liquidacion?.slice(0,7));
   const next=draft?(await import('./LiquidacionesRepository.js')).periodForecast({card,tickets,dues,history},draft):settlementForecast(card,tickets,dues);

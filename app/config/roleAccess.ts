@@ -8,6 +8,7 @@ export function canAccessApiPath(role: unknown, pathname: string, method: string
   pathname=canonicalAccountingPath(pathname);
   if(/^\/api\/v1\/contabilidad(?:\/|$)/.test(pathname))return accountingRoles.includes(normalized);
   if(normalized==='contabilidad' && /^\/api\/v1\/(produccion|operaciones)(?:\/|$)/.test(pathname))return false;
+  if(pathname.startsWith('/api/v1/operaciones/agentes/asuntos/'))return ['direccion','operaciones','superadmin'].includes(normalized);
   if (/^\/api\/v1\/admin\/proveedores\/[^/]+\/(benchmark|cargos-recurrentes)(?:\/[^/]+)?\/?$/.test(pathname)) return normalized === 'direccion' || roleRank[normalized] >= roleRank.administracion;
   if (method === 'POST' && /^\/api\/v1\/tareas\/propias\/?$/.test(pathname)) return true;
   if (pathname.startsWith('/api/v1/tareas') && (method !== 'GET' || pathname === '/api/v1/tareas/agentes')) return normalized === 'direccion' || roleRank[normalized] >= roleRank.operaciones;

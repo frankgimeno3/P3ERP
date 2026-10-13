@@ -1,4 +1,5 @@
 "use client";
+import SortableTable from '@/app/components/SortableTable';
 import DateInputRow from "@/app/components/DateInputRow";
 import {useEffect,useState} from 'react';
 import Link from 'next/link';
@@ -7,7 +8,7 @@ import JuanPlannedList from '@/app/dashboard/contabilidad/JuanPlannedList';
 import InternalTransferPlans from '@/app/dashboard/contabilidad/InternalTransferPlans';
 export default function PrevisionLiquidezPage() {
  const now=new Date();
- const [view,setView]=useState<'ingresos'|'cargos'>('ingresos'),[date,setDate]=useState({d:String(now.getDate()),m:String(now.getMonth()+1),y:String(now.getFullYear())}),[values,setValues]=useState({Sabadell:0,Santander:0,total:0,avisos:[] as string[]}),[revision,setRevision]=useState(0),[error,setError]=useState(''),[calculating,setCalculating]=useState(true);
+ const [view,setView]=useState<'ingresos'|'cargos'>('ingresos'),[date,setDate]=useState({d:String(now.getDate()),m:String(now.getMonth()+1),y:String(now.getFullYear())}),[values,setValues]=useState({Sabadell:0,Santander:0,total:0,avisos:[] as string[],anticipos:[] as any[]}),[revision,setRevision]=useState(0),[error,setError]=useState(''),[calculating,setCalculating]=useState(true);
  useEffect(()=>{const refresh=()=>setRevision(n=>n+1);window.addEventListener('p3:forecast-changed',refresh);if(new URLSearchParams(window.location.search).get('vista')==='cargos')setView('cargos');return()=>window.removeEventListener('p3:forecast-changed',refresh);},[]);
  const fecha=`${date.d.padStart(2,'0')}/${date.m.padStart(2,'0')}/${date.y}`;
  useEffect(()=>{
@@ -24,6 +25,7 @@ export default function PrevisionLiquidezPage() {
   {error&&<p role="alert" className="mt-4 text-red-700">{error}</p>}{!calculating&&!error&&values.avisos?.map(message=><p key={message} className="mt-3 rounded bg-amber-50 p-3 text-sm">{message}</p>)}
  </section><div className="mt-6 flex flex-wrap items-center gap-2 border-b border-slate-300 bg-white px-4 pt-2 shadow-sm">{(['ingresos','cargos'] as const).map(tab=><button key={tab} type="button" onClick={()=>setView(tab)} className={`cursor-pointer border-b-2 px-6 py-3 font-semibold transition hover:bg-blue-50 ${view===tab?'border-blue-950 text-blue-950':'border-transparent text-slate-600'}`}>Previsión de {tab}</button>)}<Link href="/dashboard/administracion/liquidaciones/tarjetas" className="mb-2 ml-auto cursor-pointer rounded bg-blue-950 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-900">Previsiones tarjetas</Link></div>
  <JuanPlannedList section={view==='ingresos'?'income':'payments'} revision={revision} year={Number(date.y)}/>
+ {view==='cargos'&&<section className="mt-6 rounded bg-white p-5 shadow"><h2 className="mb-3 font-semibold">Anticipos de nómina previstos · Sin periodicidad</h2><p className="mb-3 text-sm">Pagos puntuales hasta la fecha elegida. Se descuentan de la nómina del mismo mes para no duplicar el total.</p><SortableTable><thead><tr><th>Agente</th><th>Fecha</th><th>Banco</th><th>Importe</th></tr></thead><tbody>{values.anticipos?.map(a=><tr key={a.id}><td>{a.empleado}</td><td>{a.fecha.split('-').reverse().join('/')}</td><td>{a.bank}</td><td>{money(a.amount)}</td></tr>)}</tbody></SortableTable>{!values.anticipos?.length&&<p>Sin anticipos pendientes para este intervalo.</p>}</section>}
  <InternalTransferPlans revision={revision}/>
  </main></div>;
 }
