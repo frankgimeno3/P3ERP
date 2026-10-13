@@ -8,7 +8,7 @@ import {extractCardStatement} from './CardStatementPdf.js';
 const fail=(m,status=409)=>{throw new ProveedorError(m,status);};
 const lock=async db=>db.query("SELECT pg_advisory_xact_lock(hashtext('laboral:pagos'))");
 const clean=row=>({...row,inicio:isoDate(row.inicio),cierre:isoDate(row.cierre),fecha:isoDate(row.fecha)});
-async function read(db,id,forUpdate=false){const row=(await db.query(`SELECT *,to_char(inicio,'YYYY-MM-DD') inicio,to_char(cierre,'YYYY-MM-DD') cierre,to_char(fecha,'YYYY-MM-DD') fecha FROM tesoreria_tarjetas_liquidaciones WHERE id=$1 ${forUpdate?'FOR UPDATE':''}`,[id])).rows[0];if(!row)fail('Liquidación no encontrada.',404);return clean(row);}
+async function read(db,id,forUpdate=false){const row=(await db.query(`SELECT *,to_char(mes_extracto,'YYYY-MM-DD') mes_extracto,to_char(inicio,'YYYY-MM-DD') inicio,to_char(cierre,'YYYY-MM-DD') cierre,to_char(fecha,'YYYY-MM-DD') fecha FROM tesoreria_tarjetas_liquidaciones WHERE id=$1 ${forUpdate?'FOR UPDATE':''}`,[id])).rows[0];if(!row)fail('Liquidación no encontrada.',404);return clean(row);}
 export function periodForecast(data,l){
  let start=l.inicio;if(data.history.some(h=>h.estado!=='anulada'&&h.fecha<l.fecha&&h.cierre===l.inicio)){const d=new Date(start);d.setUTCDate(d.getUTCDate()+1);start=isoDate(d);}
  const f=settlementForecast({...data.card,id_liquidacion:l.id,inicio_periodo:start,proximo_cierre:l.cierre,proxima_liquidacion:l.fecha},data.tickets.filter(t=>t.clasificacion!=='no_asociable'&&t.forma_pago==='tarjeta'),data.dues);
