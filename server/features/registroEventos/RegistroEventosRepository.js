@@ -4,11 +4,13 @@ import { getPgPool } from "../../database/pgClient.js";
 export function formatChangeDetail(actor, field, beforeValue, afterValue) {
   const before = beforeValue === null || beforeValue === undefined || beforeValue === "" ? "vacío" : String(beforeValue);
   const after = afterValue === null || afterValue === undefined || afterValue === "" ? "vacío" : String(afterValue);
-  return `el usuario ${actor || "sistema"}, ha realizado un cambio en el campo ${field}, pasando de valor ${before} a valor ${after}`;
+  return `${actor&&actor!=='sistema'?`el usuario ${actor}`:'ACCIÓN AUTOMÁTIZADA'}, ha realizado un cambio en el campo ${field}, pasando de valor ${before} a valor ${after}`;
 }
 
 export async function addCuentaEvento({ idCuenta, idAgente = "", eventType = "Acción automatizada", detalles = "" }, client = getPgPool()) {
   if (!idCuenta || !detalles) return null;
+  detalles=detalles.replace(/el usuario sistema/gi,'ACCIÓN AUTOMÁTIZADA');
+  if(!idAgente)eventType='ACCIÓN AUTOMÁTIZADA';
   const { rows } = await client.query(
     `
       INSERT INTO general_eventos (id, event_type, id_agente, tipo_entidad, id_entidad, detalles)
@@ -41,6 +43,8 @@ export async function addCuentaEntityEvent({
 
 export async function addContactoEvento({ idContacto, idAgente = "", eventType = "Acción automatizada", detalles = "" }, client = getPgPool()) {
   if (!idContacto || !detalles) return null;
+  detalles=detalles.replace(/el usuario sistema/gi,'ACCIÓN AUTOMÁTIZADA');
+  if(!idAgente)eventType='ACCIÓN AUTOMÁTIZADA';
   const { rows } = await client.query(
     `
       INSERT INTO general_eventos (id, event_type, id_agente, tipo_entidad, id_entidad, detalles)

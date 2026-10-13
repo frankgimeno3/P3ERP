@@ -48,7 +48,12 @@ export async function planInvoiceRegister(db,rows){
     const before=matches[0];
     if(before?.ya_contabilizada||before?.verifactu_estado_envio==='factura emitida')throw new Error('Factura bloqueada: '+row.numero);
     const aliases=unique([row.numero,before?.id_factura_cliente]);
-    const linked=orders.filter(order=>aliases.includes(order.id_factura)||aliases.includes(String(order.datos_importacion?.original?.FACTURA||'').trim()));
+    let linked=orders.filter(order=>aliases.includes(order.id_factura)||aliases.includes(String(order.datos_importacion?.original?.FACTURA||'').trim()));
+    if(!linked.length&&before?.id_contrato){
+      const candidates=orders.filter(order=>order.id_contrato===before.id_contrato&&!order.cancelada&&(!order.id_factura||aliases.includes(order.id_factura)));
+      if(!candidates.length||cents(candidates.reduce((sum,order)=>sum+Number(order.cobro_total||0),0))!==cents(row.total))throw new Error('La factura '+row.numero+' tiene contrato, pero sus órdenes necesitan revisión. No se creará otro cobro automáticamente.');
+      linked=candidates;
+    }
     if(linked.some(order=>order.id_factura&&!aliases.includes(order.id_factura)))throw new Error('Una orden de '+row.numero+' ya pertenece a otra factura.');
     const coded=accounts.filter(account=>row.codigo&&account.id_edisoft===row.codigo);
     const accountIds=unique([before?.id_cuenta,...linked.map(order=>order.id_cuenta)]);

@@ -1,13 +1,16 @@
+import {testMode,testIdentifier} from '../identifiers/TestMode.js';
 import { assertCommercialAgent } from "../agente/CommercialAgent.js";
 import {allocateContractIdentifier,allocateContentIdentifier,allocateOrderIdentifier} from '../identifiers/BusinessIdentifiers.js';
 import crypto from "node:crypto";
 import { getPgPool } from "../../database/pgClient.js";
-import { addCuentaEntityEvent, formatChangeDetail } from "../registroEventos/RegistroEventosRepository.js";
+import { addCuentaEvento, addCuentaEntityEvent, formatChangeDetail } from "../registroEventos/RegistroEventosRepository.js";
 import { accountActivity } from "../comentario/AccountActivity.js";
 import { lockIncome, ensureOrderReceipt, syncOrderCollections } from "../prevision/IncomeReconciliation.js";
 
 const propuestaColumns = [
   "id_propuesta",
+  "es_prueba",
+  "enviada",
   "id_agente_propuesta",
   "estado_propuesta",
   "fase_propuesta",
@@ -73,6 +76,7 @@ function asJson(value, fallback) {
 function normalizePropuesta(row, lineas = [], cobros = [], cuenta = null, contacto = null) {
   return {
     id_propuesta: row.id_propuesta,
+    es_prueba:Boolean(row.es_prueba),enviada:Boolean(row.enviada),
     id_agente_propuesta: row.id_agente_propuesta ?? "",
     estado_propuesta: row.estado_propuesta ?? "",
     fase_propuesta: row.fase_propuesta ?? "1",
@@ -185,9 +189,10 @@ function normalizeContacto(row) {
 }
 
 function normalizeInputValue(column, value) {
+  if(['es_prueba','enviada'].includes(column)&&typeof value!=='boolean')throw Object.assign(new Error('Modo prueba y Enviada deben ser Sí o No.'),{status:422});
   if (jsonColumns.has(column)) return JSON.stringify(value ?? (column === "contacto_personalizado" ? null : {}));
   if (column === "fecha_proxima_gestion") return value || null;
-  if (["iva_aplicable", "base_imponible_personalizada", "es_intercambio", "intercambio_precio_final", "intercambio_transferencias"].includes(column)) return Boolean(value);
+  if (["es_prueba","enviada","iva_aplicable", "base_imponible_personalizada", "es_intercambio", "intercambio_precio_final", "intercambio_transferencias"].includes(column)) return Boolean(value);
   if (["descuento_final_propuesta", "importe_total_bi_propuesta", "importe_propuesta_con_iva", "importe_base_personalizada", "importe_intercambio"].includes(column)) {
     return asNumber(value);
   }
@@ -207,7 +212,7 @@ async function addCuentaProposalComment(client, { idCuenta, idAgente, contenido 
   );
 }
 
-async function addProposalSummaryComment(client, propuesta, action = "creada", actorId = "") {
+async function addProposalSummaryComment(client, propuesta, action = "creada", actorId = "", sent=false) {
   const idCuenta = propuesta?.id_cuenta_propuesta;
   if (!idCuenta) return;
   const [agentResult, linesResult, paymentsResult] = await Promise.all([
@@ -228,7 +233,9 @@ async function addProposalSummaryComment(client, propuesta, action = "creada", a
   const contenido = `Propuesta ${action} por ${autor}: ${propuesta.nombre_propuesta || propuesta.id_propuesta}. `
     + `Contenido: ${lineas.length ? lineas.join("; ") : "todavía sin líneas de servicio"}. `
     + `Importe: ${importe} ${propuesta.moneda || "€"}, con ${pagos.length} pago${pagos.length === 1 ? "" : "s"} que se desglosan así: ${pagos.length ? pagos.join("; ") : "todavía sin desglose"}.`;
-  await addCuentaProposalComment(client, { idCuenta, idAgente: actorId || propuesta.id_agente_propuesta, contenido: `${contenido} Identificador: ${propuesta.id_propuesta}.` });
+  const summary=`${contenido} Identificador: ${propuesta.id_propuesta}.`;
+  await addCuentaEvento({idCuenta,idAgente:actorId||propuesta.id_agente_propuesta,detalles:summary,eventType:"Propuesta"},client);
+  if(sent)await addCuentaProposalComment(client,{idCuenta,idAgente:actorId||propuesta.id_agente_propuesta,contenido:summary});
 }
 
 function todaySpanishWords() {
@@ -265,19 +272,14 @@ async function finalizeProposal(client, propuesta, status, actorId = "") {
   const accepted = status === "aceptada";
   const label = accepted ? "aceptada" : "rechazada";
   const note = `Propuesta ${label} en día ${todaySpanishWords()}`;
-  const comments = [String(propuesta.comentarios_adicionales || "").trim(), note].filter(Boolean).join("\n");
-  await client.query(`UPDATE comercial_propuestas_db SET comentarios_adicionales=$1, updated_at=NOW() WHERE id_propuesta=$2`, [comments, propuesta.id_propuesta]);
-  await addCuentaProposalComment(client, {
-    idCuenta: propuesta.id_cuenta_propuesta,
-    idAgente: propuesta.id_agente_propuesta,
-    contenido: `${note}: ${propuesta.nombre_propuesta || propuesta.id_propuesta}.`,
-  });
+  const comments = String(propuesta.comentarios_adicionales || "").trim();
+  await addCuentaEvento({idCuenta:propuesta.id_cuenta_propuesta,idAgente:actorId||propuesta.id_agente_propuesta,detalles:`${note}: ${propuesta.nombre_propuesta||propuesta.id_propuesta}.`,eventType:"Propuesta"},client);
   if (!accepted) { await accountActivity(client,propuesta.id_cuenta_propuesta,actorId,`ha rechazado la propuesta ${propuesta.id_propuesta}.`); return; }
   await assertProposalReadyForAcceptance(client, propuesta);
 
   const existingContracts=(await client.query('SELECT id_contrato FROM comercial_contratos WHERE id_propuesta=$1',[propuesta.id_propuesta])).rows;
   if(existingContracts.length>1)throw new Error('La propuesta tiene varios contratos asociados.');
-  const idContrato = existingContracts[0]?.id_contrato || await allocateContractIdentifier(client);
+  const idContrato = existingContracts[0]?.id_contrato || await allocateContractIdentifier(client,'',Boolean(propuesta.es_prueba));
   if((await client.query('SELECT 1 FROM tesoreria_ordenes WHERE id_contrato=$1 AND cancelada LIMIT 1',[idContrato])).rowCount)throw new Error('Esta propuesta tiene órdenes canceladas. Crea una nueva propuesta para generar nuevas órdenes.');
   await client.query(
     `INSERT INTO comercial_contratos (
@@ -304,10 +306,10 @@ async function finalizeProposal(client, propuesta, status, actorId = "") {
   for (const linea of lineas.rows) {
     const existingLines=(await client.query('SELECT id_linea_contrato FROM comercial_contratos_lineas WHERE id_contrato=$1 AND id_linea_propuesta=$2',[idContrato,linea.id_linea_propuesta])).rows;
     if(existingLines.length>1)throw new Error('La línea de propuesta tiene varios servicios asociados.');
-    const idLinea = existingLines[0]?.id_linea_contrato || stableId('lc',linea.id_linea_propuesta);
+    const idLinea = existingLines[0]?.id_linea_contrato || testIdentifier(stableId('lc',linea.id_linea_propuesta),propuesta.es_prueba);
     const existingContents=(await client.query('SELECT id_contenido FROM produccion_contenidos WHERE id_linea_contrato=$1',[idLinea])).rows;
     if(existingContents.length>1)throw new Error('La línea tiene varios contenidos asociados.');
-    const idContenido = existingContents[0]?.id_contenido || await allocateContentIdentifier(client,linea.fecha_publicacion_publicacion);
+    const idContenido = existingContents[0]?.id_contenido || await allocateContentIdentifier(client,linea.fecha_publicacion_publicacion,Boolean(propuesta.es_prueba));
     contentIds.push(idContenido);
     await client.query(
       `INSERT INTO comercial_contratos_lineas (
@@ -503,7 +505,7 @@ export async function getPropuestaById(idPropuesta) {
 
   const { rows } = await pool.query(
     `
-      SELECT p.*, c.*, ct.id_contacto, ct.nombre_completo_contacto, ct.email_contacto, ct.cargo_contacto, ct.telefono_contacto,
+      SELECT p.*, c.*, p.es_prueba,p.enviada,p.created_at,p.updated_at,ct.id_contacto, ct.nombre_completo_contacto, ct.email_contacto, ct.cargo_contacto, ct.telefono_contacto,
              con.id_contrato AS contrato_creado_id
       FROM comercial_propuestas_db p
       LEFT JOIN comercial_cuentas c ON c.id_cuenta = p.id_cuenta_propuesta
@@ -629,19 +631,22 @@ async function replaceCobros(client, idPropuesta, cobros = []) {
 }
 
 export async function createPropuesta(payload, actorId = "") {
+  if(payload.enviada)throw Object.assign(new Error("Guarda la propuesta completa antes de marcarla como enviada."),{status:422});
   const pool = getPgPool();
   await assertCommercialAgent(pool, payload.id_agente_propuesta);
   const client = await pool.connect();
-  const idPropuesta = payload.id_propuesta || generateId("prop");
+  let idPropuesta = payload.id_propuesta || generateId("prop");
 
   try {
     await client.query("BEGIN");
 
+    const esPrueba=await testMode(client,{requested:payload.es_prueba??false,accountId:payload.id_cuenta_propuesta,contactId:payload.id_contacto_propuesta});
+    idPropuesta=testIdentifier(idPropuesta,esPrueba);
     const data = {
       id_propuesta: idPropuesta,
       estado_propuesta: "Borrador",
       fase_propuesta: "1",
-      ...payload,
+      ...payload,es_prueba:esPrueba,enviada:false,
       id_propuesta: idPropuesta,
     };
     if (["pendiente", "aceptada", "rechazada"].includes(String(data.estado_propuesta).toLowerCase()) && String(data.fase_propuesta) !== "4") {
@@ -688,6 +693,7 @@ export async function updatePropuesta(idPropuesta, payload, actorId = "") {
 
     const { rows: beforeRows } = await client.query("SELECT * FROM comercial_propuestas_db WHERE id_propuesta = $1 LIMIT 1", [idPropuesta]);
     const before = beforeRows[0] || null;
+    if(payload.es_prueba!==undefined&&Boolean(payload.es_prueba)!==Boolean(before?.es_prueba))throw Object.assign(new Error('El modo prueba se fija al crear la propuesta y se conserva en sus derivados.'),{status:422});
     if (payload.id_agente_propuesta !== undefined) await assertCommercialAgent(client, payload.id_agente_propuesta, before?.id_agente_propuesta);
     const nextStatus = String(payload.estado_propuesta ?? before?.estado_propuesta ?? "").toLowerCase();
     const nextPhase = String(payload.fase_propuesta ?? before?.fase_propuesta ?? "1");
@@ -716,11 +722,7 @@ export async function updatePropuesta(idPropuesta, payload, actorId = "") {
     const idCuenta = after?.id_cuenta_propuesta || before?.id_cuenta_propuesta;
     const idAgente = actorId || after?.id_agente_propuesta || before?.id_agente_propuesta || "";
     const changedColumns = columns.filter((column) => JSON.stringify(before?.[column] ?? "") !== JSON.stringify(after?.[column] ?? ""));
-    const followUpLabels = {
-      fecha_proxima_gestion: "fecha de próxima gestión",
-      acciones_proxima_gestion: "acciones de próxima gestión",
-      comentarios_seguimiento: "comentarios de seguimiento",
-    };
+
     for (const column of changedColumns) {
       await addCuentaEntityEvent({
         idCuenta,
@@ -730,14 +732,7 @@ export async function updatePropuesta(idPropuesta, payload, actorId = "") {
         action: "modificado",
         details: formatChangeDetail(idAgente, `propuesta.${column}`, before?.[column], after?.[column]),
       }, client);
-      if (followUpLabels[column]) {
-        const value = after?.[column] === null || after?.[column] === undefined || after?.[column] === "" ? "vacío" : String(after[column]);
-        await addCuentaProposalComment(client, {
-          idCuenta,
-          idAgente,
-          contenido: `Seguimiento de la propuesta ${after?.nombre_propuesta || idPropuesta}: ${followUpLabels[column]} actualizado a «${value}».`,
-        });
-      }
+
     }
     if (Array.isArray(payload.lineas)) {
       await addCuentaEntityEvent({ idCuenta, idAgente, entity: "líneas de propuesta", entityId: idPropuesta, action: "modificado" }, client);
@@ -773,6 +768,7 @@ export async function updatePropuesta(idPropuesta, payload, actorId = "") {
         }, client);
       }
     }
+    if(after.enviada&&!before.enviada){await assertProposalReadyForAcceptance(client,after);if(String(after.fase_propuesta)!=="4")throw Object.assign(new Error("Completa la revisión de la propuesta antes de marcarla enviada."),{status:422});await addProposalSummaryComment(client,after,"enviada",actorId,true);}
     const wasFinal = String(before?.estado_propuesta || "").toLowerCase() === "pendiente";
     const isFinal = String(after?.estado_propuesta || "").toLowerCase() === "pendiente";
     if (!wasFinal && isFinal) await addProposalSummaryComment(client, after, "finalizada", actorId);

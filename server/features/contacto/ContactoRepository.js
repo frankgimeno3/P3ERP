@@ -1,3 +1,4 @@
+import {testMode,testIdentifier} from '../identifiers/TestMode.js';
 import { getPgPool } from "../../database/pgClient.js";
 import {allocateContactIdentifier} from '../identifiers/BusinessIdentifiers.js';
 import { addCuentaEvento, addContactoEvento, formatChangeDetail } from "../registroEventos/RegistroEventosRepository.js";
@@ -9,6 +10,7 @@ function normalizeContacto(row) {
     'origen_base_anexa','vidrio','carpinteria','proteccion_solar','puertas_automatismos','construccion_arquitectura','actividad_empresa'];
   return {
     id_contacto: row.id_contacto,
+    es_prueba:Boolean(row.es_prueba),
     es_principal: Boolean(row.es_principal),
     id_cuenta: row.id_cuenta ?? "",
     nombre_contacto: row.nombre_contacto ?? "",
@@ -82,7 +84,7 @@ export async function getContactos(filters = {}) {
 export async function createContacto(data = {}) {
   const pool = getPgPool();
   let idContacto = data.id_contacto?.trim() || "";
-  if(idContacto && !/^CON[0-9]+$/.test(idContacto))throw Object.assign(new Error("El ID del contacto debe seguir la serie CON."),{status:400});
+  if(idContacto && !/^(?:PRUEBA-)?CON[0-9]+$/.test(idContacto))throw Object.assign(new Error("El ID del contacto debe seguir la serie CON."),{status:400});
   const nombre = data.nombre_contacto?.trim() || "";
   const apellidos = data.apellidos_contacto?.trim() || "";
   const nombreCompleto = data.nombre_completo_contacto?.trim() || `${nombre} ${apellidos}`.trim();
@@ -92,7 +94,7 @@ export async function createContacto(data = {}) {
   try {
     await client.query("BEGIN");
     const generated = await allocateContactIdentifier(client);
-    idContacto ||= generated;
+    idContacto = testIdentifier(idContacto||generated,await testMode(client,{requested:data.es_prueba??false,accountId:idCuenta}));
     await client.query(`
       ALTER TABLE comercial_contactos
         ADD COLUMN IF NOT EXISTS linkedin_cuenta TEXT NOT NULL DEFAULT '',

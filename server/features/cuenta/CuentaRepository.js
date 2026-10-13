@@ -1,3 +1,4 @@
+import {testMode,testIdentifier} from '../identifiers/TestMode.js';
 import {resolveIdentifier} from '../identifiers/IdentifierAliases.js';
 import { assertCommercialAgent } from "../agente/CommercialAgent.js";
 import { cuentaOrderBy } from './CuentaSorting.js';
@@ -69,6 +70,7 @@ const jsonColumns = new Set([
 function normalizeCuenta(row) {
   return {
     id_cuenta: row.id_cuenta,
+    es_prueba:Boolean(row.es_prueba),
     nombre_empresa: row.nombre_empresa ?? "",
     pais_cuenta: row.pais_cuenta ?? "",
     id_agente: row.id_agente ?? "",
@@ -203,7 +205,7 @@ export async function getCuentaById(idCuenta) {
 
 export async function createCuenta(cuentaData) {
   const requestedId = String(cuentaData.id_cuenta || '').trim();
-  if(requestedId && !/^ACC[0-9]+$/.test(requestedId))throw Object.assign(new Error('El ID de cuenta debe seguir la serie ACC.'),{status:400});
+  if(requestedId && !/^(?:PRUEBA-)?ACC[0-9]+$/.test(requestedId))throw Object.assign(new Error('El ID de cuenta debe seguir la serie ACC.'),{status:400});
   const pool = getPgPool();
   await assertCommercialAgent(pool, cuentaData.id_agente);
   const columns = writableColumns.filter((column) => column === "id_cuenta" || cuentaData[column] !== undefined);
@@ -217,7 +219,7 @@ export async function createCuenta(cuentaData) {
   try {
     await client.query("BEGIN");
     const generated = await allocateAccountIdentifier(client);
-    values[columns.indexOf("id_cuenta")] = requestedId || generated;
+    values[columns.indexOf("id_cuenta")] = testIdentifier(requestedId || generated,await testMode(client,{requested:cuentaData.es_prueba??false}));
     const { rows } = await client.query(
       `
         INSERT INTO ${tableName} (${columns.join(", ")})

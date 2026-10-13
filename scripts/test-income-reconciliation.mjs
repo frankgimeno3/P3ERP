@@ -12,6 +12,8 @@ import {getLiquidityForecast} from "../server/features/prevision/LiquidityReposi
 import {getPrevisionIngresosOrdenes,getOrdenesAdministrativas} from "../server/features/orden/OrdenRepository.js";
 import {updateAdministrativeOrder,updateCustomerInvoice,createInvoiceDraft,getEligibleContracts} from '../server/features/factura/FacturaClienteRepository.js';
 import {createPropuesta,updatePropuesta,deletePropuesta} from '../server/features/propuesta/PropuestaRepository.js';
+import {createCuenta} from '../server/features/cuenta/CuentaRepository.js';
+import {createContacto} from '../server/features/contacto/ContactoRepository.js';
 
 env.loadEnvConfig(process.cwd());
 const pool=getPgPool(),db=await pool.connect(),schema='test_income_'+randomUUID().replaceAll('-','');
@@ -19,7 +21,7 @@ const connect=pool.connect.bind(pool),query=pool.query.bind(pool);
 try{
   await db.query('CREATE SCHEMA '+schema);await db.query('SET search_path TO '+schema+',public');
   const tables=['tesoreria_cargos_recurrentes','tesoreria_cargos_vencimientos','tesoreria_vencimientos_aplicaciones','laboral_nominas','laboral_anticipos','tesoreria_pagos_previstos','tesoreria_ingresos_adicionales','tesoreria_ordenes','tesoreria_recibos_importados','tesoreria_remesas','tesoreria_movimientos_bancarios','administracion_facturas_clientes','comercial_cuentas','agentes_db','general_comentarios','general_eventos','cuentas_registro_eventos','comercial_contratos',
-    'comercial_propuestas_db','comercial_propuestas_lineas','comercial_propuestas_cobros','comercial_contratos_lineas','produccion_contenidos','comercial_contratos_cobros','comercial_contactos','administracion_lineas_factura'];
+    'comercial_propuestas_db','comercial_propuestas_lineas','comercial_propuestas_cobros','comercial_contratos_lineas','produccion_contenidos','comercial_contratos_cobros','comercial_contactos','administracion_lineas_factura','general_identificadores_alias'];
   for(const table of tables)await db.query('CREATE TABLE '+schema+'.'+table+' (LIKE public.'+table+' INCLUDING ALL)');
   await db.query(readLegacyMigrationSql('database/migrations/20260914_0002_income_reconciliation.sql'));
   pool.connect=async()=>({query:(...args)=>db.query(...args),release(){}});pool.query=(...args)=>db.query(...args);
@@ -101,7 +103,7 @@ try{
   await assert.rejects(reconcileDocumentedIncome(db,'banc_sab_26_000.000.080',{account:'client',reason:'Replay',allocations:[{orderId:'NET',amount:80}]}),/available/);
   await saveBankWorkflow({action:'unreview',ids:['banc_sab_26_000.000.120']},'actor');
   assert.equal((await db.query("SELECT cobrada FROM tesoreria_ordenes WHERE id_orden='OVER'")).rows[0].cobrada,false);
-  const comments=(await db.query('SELECT * FROM general_comentarios')).rows;
+  const comments=(await db.query('SELECT detalles AS contenido_comentario FROM general_eventos')).rows;
   assert(comments.some(c=>c.contenido_comentario.includes('Usuario real') && c.contenido_comentario.includes('confirmado el cobro')));
   // Proposal lifecycle, draft invoice and receipt generation remain in one transaction.
   const proposal=await createPropuesta({id_cuenta_propuesta:'client',id_agente_propuesta:'owner',nombre_propuesta:'Prueba',fase_propuesta:'4',estado_propuesta:'Pendiente',lineas:[{producto:'Servicio',numero_linea_propuesta:1,unidades:1,precio_unitario:100}],cobros:[{numero_cobro:1,fecha_cobro:'15/09/2026',importe_cobro:121,forma_cobro:'recibo',banco_cobro:'Sabadell'}]},'actor');
@@ -121,10 +123,13 @@ try{
   const linkedReceipt=(await db.query('SELECT numero_factura FROM tesoreria_recibos_importados WHERE id_orden=$1',[generated[0].id_orden])).rows[0];
   assert.equal(linkedReceipt.numero_factura,contract.id_factura);
   const originalOrderId=generated[0].id_orden;
+  await db.query("INSERT INTO tesoreria_ordenes(id_orden,id_factura,id_cuenta,numero_cobro,cobro_total,base_imponible,cancelada) SELECT 'ord_fac_reg_test',id_factura,id_cuenta,1,cobro_total,base_imponible,true FROM tesoreria_ordenes WHERE id_orden=$1",[originalOrderId]);
   const forecastBefore=await getLiquidityForecast('30/12/2099',pool);
   draft=await updateCustomerInvoice(contract.id_factura,{cobros:draft.cobros.map(c=>({...c,forma_cobro:'Transferencia bancaria',fecha_cobro:'2099-12-30',banco_cobro:'Santander'}))},'actor');
   assert.equal(draft.ordenes[0].id_orden,originalOrderId);
   assert.equal(draft.ordenes[0].forma_cobro,'Transferencia bancaria');
+  assert.equal((await db.query("SELECT count(*)::int n FROM tesoreria_ordenes WHERE id_orden='ord_fac_reg_test'")).rows[0].n,0);
+  assert.equal((await db.query("SELECT id_actual FROM general_identificadores_alias WHERE id_anterior='ord_fac_reg_test'")).rows[0].id_actual,originalOrderId);
   assert.equal(draft.ordenes[0].fecha_teorica_cobro,'30/12/2099');
   assert.equal((await db.query('SELECT count(*)::int n FROM tesoreria_recibos_importados WHERE id_orden=$1',[originalOrderId])).rows[0].n,0);
   assert((await getPrevisionIngresosOrdenes('transfers')).some(o=>o.id_orden===originalOrderId));
@@ -155,7 +160,7 @@ try{
   console.log('PASS: accepted proposal draft reopening; same order IDs; receipt/transfer conversion; updated amounts/dates/bank/tax base; liquidity includes pending income once and excludes collected income.');
   const disposable=await createPropuesta({id_cuenta_propuesta:'client',id_agente_propuesta:'owner',nombre_propuesta:'Eliminar'},'actor');
   await deletePropuesta(disposable.id_propuesta,'actor');
-  assert((await db.query('SELECT contenido_comentario FROM general_comentarios')).rows.some(c=>c.contenido_comentario.includes('Usuario real') && c.contenido_comentario.includes('ha eliminado')));
+  assert((await db.query('SELECT detalles AS contenido_comentario FROM general_eventos')).rows.some(c=>c.contenido_comentario.includes('Usuario real') && c.contenido_comentario.includes('ha eliminado')));
   const additional=await createIngresoAdicional({id_cuenta:'client',tipo_ingreso:'transferencia',forma_cobro:'transferencia',fecha_teorica:'15/09/2026',banco:'Sabadell',base_imponible:35},'actor');
   assert.equal((await db.query('SELECT cobro_total FROM tesoreria_ordenes WHERE id_orden=$1',[additional.id_ingreso_adicional])).rows[0].cobro_total,'35');
   assert.equal((await getIngresosAdicionales()).length,0);
@@ -170,6 +175,23 @@ try{
   assert.equal((await db.query("SELECT count(*)::int n FROM tesoreria_ordenes WHERE id_factura='legacy_invoice'")).rows[0].n,1);
   assert.equal(Number((await db.query("SELECT cobro_total FROM tesoreria_ordenes WHERE id_orden='legacy_order'")).rows[0].cobro_total),1108.4);
   console.log('PASS: legacy receipt reference becomes canonical, preserving its order and avoiding duplicate income on reimport.');
+  for(const table of ['comercial_cuentas','comercial_contactos','comercial_propuestas_db','comercial_contratos','administracion_facturas_clientes','tesoreria_ordenes','produccion_contenidos'])await db.query(`CREATE TRIGGER mode_test BEFORE INSERT OR UPDATE ON ${table} FOR EACH ROW EXECUTE FUNCTION public.p3_test_mode_inherit()`);
+  const accountTest=await createCuenta({nombre_empresa:'Cuenta modo prueba',id_agente:'owner',es_prueba:true});assert(accountTest.id_cuenta.startsWith('PRUEBA-ACC'));assert.equal(accountTest.es_prueba,true);
+  const contactTest=await createContacto({nombre_contacto:'Contacto prueba',email_contacto:'test@example.invalid',id_cuenta:accountTest.id_cuenta,es_prueba:false});assert(contactTest.id_contacto.startsWith('PRUEBA-CON'));assert.equal(contactTest.es_prueba,true);
+  const commentCount=async()=>(await db.query('SELECT count(*)::int n FROM general_comentarios')).rows[0].n;
+  const initialComments=await commentCount();
+  const testProposal=await createPropuesta({es_prueba:true,id_cuenta_propuesta:'client',id_agente_propuesta:'owner',nombre_propuesta:'Modo prueba',fase_propuesta:'4',estado_propuesta:'Pendiente',importe_total_bi_propuesta:100,importe_propuesta_con_iva:121,lineas:[{producto:'Servicio prueba',numero_linea_propuesta:1,unidades:1,precio_unitario:100}],cobros:[{numero_cobro:1,fecha_cobro:'15/09/2026',importe_cobro:121,forma_cobro:'transferencia',banco_cobro:'Sabadell'}]},'actor');
+  assert(testProposal.id_propuesta.startsWith('PRUEBA-'));assert.equal(testProposal.es_prueba,true);assert.equal(await commentCount(),initialComments);
+  await updatePropuesta(testProposal.id_propuesta,{nombre_propuesta:'Revisada'},'actor');assert.equal(await commentCount(),initialComments);
+  await updatePropuesta(testProposal.id_propuesta,{enviada:true},'actor');assert.equal(await commentCount(),initialComments+1);
+  await updatePropuesta(testProposal.id_propuesta,{nombre_propuesta:'Enviada y revisada'},'actor');assert.equal(await commentCount(),initialComments+1);
+  await assert.rejects(updatePropuesta(testProposal.id_propuesta,{es_prueba:false},'actor'));
+  await updatePropuesta(testProposal.id_propuesta,{estado_propuesta:'Aceptada'},'actor');assert.equal(await commentCount(),initialComments+1);
+  const testContract=(await db.query('SELECT * FROM comercial_contratos WHERE id_propuesta=$1',[testProposal.id_propuesta])).rows[0];assert(testContract.id_contrato.startsWith('PRUEBA-C'));assert.equal(testContract.es_prueba,true);
+  const testContent=(await db.query('SELECT * FROM produccion_contenidos WHERE id_contrato=$1',[testContract.id_contrato])).rows[0];assert(testContent.id_contenido.startsWith('PRUEBA-hp_'));assert.equal(testContent.es_prueba,true);
+  const testInvoice=await createInvoiceDraft(testContract.id_contrato,'actor');assert(testInvoice.id_factura_cliente.startsWith('PRUEBA-'));assert.equal(testInvoice.es_prueba,true);
+  const testOrder=(await db.query('SELECT * FROM tesoreria_ordenes WHERE id_contrato=$1',[testContract.id_contrato])).rows[0];assert.equal(testOrder.id_orden,testContract.id_contrato+'-1/1');assert.equal(testOrder.es_prueba,true);
+  console.log('PASS: modo prueba heredado en cuentas, contactos, propuestas, contratos, contenidos, órdenes y facturas; comentarios únicamente al enviar; duplicado de factura retirado con alias.');
 }finally{
   pool.connect=connect;pool.query=query;
   await db.query('ROLLBACK');await db.query('SET search_path TO public');await db.query('DROP SCHEMA IF EXISTS '+schema+' CASCADE');db.release();await pool.end();

@@ -36,7 +36,8 @@
     "estado_agente": "Solo los agentes activos pueden acceder al ERP mediante Cognito."
   },
   "comercial_contratos": {
-    "agregados_extra_post_contrato": "IDs de contenidos añadidos como extras después del contrato; se vinculan sin alterar sus líneas pactadas."
+    "agregados_extra_post_contrato": "IDs de contenidos añadidos como extras después del contrato; se vinculan sin alterar sus líneas pactadas.",
+    "es_prueba": "Indica que el registro es de prueba. Su identificador empieza por PRUEBA- y los registros derivados heredan el modo."
   },
   "laboral_tareas_empleado": {
     "agentes_asociados": "Lista de IDs de todos los responsables de la tarea, sin duplicados. El campo agente conserva el primero por compatibilidad.",
@@ -218,5 +219,24 @@
     "id_linea_abono": "Abono correspondiente en el banco de destino.",
     "motivo": "Evidencia de la asociación o decisión de revisión.",
     "actor": "Usuario que registró la decisión."
+  },
+  "comercial_cuentas": {
+    "es_prueba": "Indica que el registro es de prueba. Su identificador empieza por PRUEBA- y los registros derivados heredan el modo."
+  },
+  "comercial_contactos": {
+    "es_prueba": "Indica que el registro es de prueba. Su identificador empieza por PRUEBA- y los registros derivados heredan el modo."
+  },
+  "comercial_propuestas_db": {
+    "es_prueba": "Indica que el registro es de prueba. Su identificador empieza por PRUEBA- y los registros derivados heredan el modo.",
+    "enviada": "Marca explícita de envío. Solo pasar de No a Sí tras completar la propuesta crea el resumen comercial en Comentarios; crear y editar solo genera eventos."
+  },
+  "administracion_facturas_clientes": {
+    "es_prueba": "Indica que el registro es de prueba. Su identificador empieza por PRUEBA- y los registros derivados heredan el modo."
+  },
+  "tesoreria_ordenes": {
+    "es_prueba": "Indica que el registro es de prueba. Su identificador empieza por PRUEBA- y los registros derivados heredan el modo."
+  },
+  "produccion_contenidos": {
+    "es_prueba": "Indica que el registro es de prueba. Su identificador empieza por PRUEBA- y los registros derivados heredan el modo."
   }
 }

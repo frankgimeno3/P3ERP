@@ -1,4 +1,5 @@
 import {allocateOrderIdentifier} from '../identifiers/BusinessIdentifiers.js';
+import {mergeInvoicePlaceholder} from './InvoiceDuplicateOrders.js';
 import { ensureOrderReceipt, incomeCents, syncOrderCollections } from '../prevision/IncomeReconciliation.js';
 import { parseImportDate } from '../prevision/ReceiptExcel.js';
 import { orderActivity } from '../comentario/AccountActivity.js';
@@ -51,5 +52,6 @@ export async function syncInvoiceOrders(db, invoiceId, actorId = '') {
     await ensureOrderReceipt(db, orderId, actorId);
     orderIds.push(orderId);
   }
+  await mergeInvoicePlaceholder(db,invoiceId,orderIds,actorId);
   await syncOrderCollections(db, orderIds, actorId);
 }

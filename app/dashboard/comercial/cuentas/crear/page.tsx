@@ -1,4 +1,5 @@
 "use client";
+import TestModeToggle from '@/app/components/TestModeToggle';
 
 import { isCommercialAgent } from "@/app/config/commercialAgents";
 import { useEffect, useMemo, useState } from "react";
@@ -63,6 +64,7 @@ function websiteValida(value: string) {
 
 export default function CrearCuenta() {
   const router = useRouter();
+  const [esPrueba,setEsPrueba]=useState(true);
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<CuentaForm>(() => initialForm());
   const [agentes, setAgentes] = useState<Agente[]>([]);
@@ -106,6 +108,7 @@ export default function CrearCuenta() {
       setSubmitting(true);
       setError("");
       const payload = {
+        es_prueba:esPrueba,
         id_cuenta: form.id_cuenta,
         nombre_empresa: form.nombre_empresa.trim(),
         pais_cuenta: form.pais_cuenta,
@@ -151,7 +154,7 @@ export default function CrearCuenta() {
       <MiddleNav tituloprincipal="Crear cuenta" />
       <div className="min-h-screen bg-gray-100 p-8">
         <div className="mx-auto max-w-6xl">
-          <StepHeader current={step} />
+          <TestModeToggle value={esPrueba} onChange={setEsPrueba} disabled={submitting}/><StepHeader current={step} />
           <div className="mt-8 rounded border border-gray-200 bg-white p-8 shadow-sm">
             {error && <div className="mb-5 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
 

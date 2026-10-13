@@ -1279,3 +1279,5 @@ Mientras falte cualquier número previsto, una publicación parcial sigue pendie
 Vidrioperfil se registra de forma independiente. Las vistas de Contenidos y
 Control de redacción comparten registros. Las altas reciben identificadores
 `hp_aa_nnn.nnn`; editar un artículo vinculado sincroniza su contenido existente.
+
+Modo prueba: comercial_cuentas, comercial_contactos, comercial_propuestas_db, comercial_contratos, produccion_contenidos, tesoreria_ordenes y administracion_facturas_clientes tienen es_prueba (booleano); PRUEBA- identifica sus datos y sus derivados. comercial_propuestas_db.enviada solo registra envíos expresamente marcados, una vez completada la propuesta. La migración 20261013_0005 instala herencia y permite el borrado confirmado de eventos mediante su API, conservando el bloqueo de UPDATE/TRUNCATE.

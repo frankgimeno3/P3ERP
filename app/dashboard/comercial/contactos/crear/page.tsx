@@ -1,4 +1,5 @@
 "use client";
+import TestModeToggle from '@/app/components/TestModeToggle';
 import SearchableSelect from "@/app/components/SearchableSelect";
 
 import { useEffect, useMemo, useState } from "react";
@@ -10,6 +11,7 @@ import { CuentaService } from "@/app/service/CuentaService";
 import paises from "@/app/data/paises.json";
 
 type Cuenta = {
+  es_prueba?:boolean;
   id_cuenta: string;
   nombre_empresa: string;
   pais_cuenta: string;
@@ -52,6 +54,7 @@ function emailValido(value: string) {
 
 export default function CrearContacto() {
   const router = useRouter();
+  const [esPrueba,setEsPrueba]=useState(true);
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<ContactForm>(() => initialForm());
   const [linked, setLinked] = useState(false);
@@ -87,6 +90,7 @@ export default function CrearContacto() {
       setSubmitting(true);
       setError("");
       const created = await ContactoService.createContacto({
+        es_prueba:esPrueba,
         id_contacto: form.id_contacto,
         id_cuenta: linked ? form.id_cuenta : "",
         nombre_empresa: linked ? form.nombre_empresa : "",
@@ -112,7 +116,7 @@ export default function CrearContacto() {
     <div className="min-h-screen bg-white text-slate-700">
       <MiddleNav tituloprincipal="Crear contacto" />
       <main className="px-8 py-8">
-        <StepHeader current={step} labels={["Vincular cuenta", "Datos obligatorios", "Datos opcionales", "Preview"]} />
+        <TestModeToggle value={esPrueba||Boolean(selectedAccount?.es_prueba)} onChange={setEsPrueba} disabled={submitting||Boolean(selectedAccount?.es_prueba)}/><StepHeader current={step} labels={["Vincular cuenta", "Datos obligatorios", "Datos opcionales", "Preview"]} />
         <div className="mt-8 rounded-lg border border-slate-200 bg-white p-8 shadow-sm">
           {error && <div className="mb-5 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
 

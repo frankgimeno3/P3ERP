@@ -116,7 +116,7 @@ export async function middleware(request) {
     authenticatedHeaders.set('x-p3-actor-id', rows[0]?.id_agente || '');
     authenticatedHeaders.set('x-p3-actor-role', role);
     authenticatedHeaders.delete('x-p3-event-identity');
-    if(!['GET','HEAD','OPTIONS'].includes(request.method))authenticatedHeaders.set('x-p3-event-identity',signEventIdentity(eventRequestIdentity(request,rows[0],email)));
+    if(!['GET','HEAD','OPTIONS'].includes(request.method))authenticatedHeaders.set('x-p3-event-identity',signEventIdentity(eventRequestIdentity(request,{...rows[0],rol_agente:role},email)));
     if(pathname.startsWith('/api/v1/mediateca/')){
       try{await guardMediatecaRequest(new Request(request.url,{method:request.method,headers:authenticatedHeaders,...(request.method==='GET'||request.method==='HEAD'?{}:{body:await request.clone().text()})}));}
       catch(error){return NextResponse.json({message:error.status?error.message:'No se pudieron comprobar los permisos de la carpeta.'},{status:error.status||503});}

@@ -17,6 +17,7 @@ import { PropuestaService } from "@/app/service/PropuestaService";
 import { AgenteService } from "@/app/service/AgenteService";
 import { RevistaService } from "@/app/service/RevistaService";
 import PropuestaPreview from "@/app/dashboard/comercial/propuestas/componentesPropuestas/PropuestaPreview";
+import TestModeToggle from '@/app/components/TestModeToggle';
 import ProposalTemplatePicker from './ProposalTemplatePicker';
 import { addCalendarMonths } from '@/app/config/paymentDates';
 
@@ -33,6 +34,8 @@ type Cobro = {
 type TransferenciaIntercambio = { fecha_proporcion3: string; fecha_contraparte: string; importe: number };
 
 type FormState = {
+  es_prueba:boolean;
+  enviada:boolean;
   id_propuesta: string;
   id_cuenta_propuesta: string;
   id_contacto_propuesta: string;
@@ -321,6 +324,7 @@ function defaultForm(cuentaId = ""): FormState {
   const id = makeId();
   return {
     id_propuesta: id,
+    es_prueba:true,enviada:false,
     id_cuenta_propuesta: cuentaId,
     id_contacto_propuesta: "",
     id_agente_propuesta: "",
@@ -357,6 +361,7 @@ function mapPropuestaToForm(propuesta: any): FormState {
   return {
     ...defaultForm(),
     id_propuesta: propuesta.id_propuesta,
+    es_prueba:Boolean(propuesta.es_prueba),enviada:Boolean(propuesta.enviada),
     id_cuenta_propuesta: propuesta.id_cuenta_propuesta ?? "",
     id_contacto_propuesta: propuesta.id_contacto_propuesta ?? "",
     id_agente_propuesta: propuesta.id_agente_propuesta ?? "",
@@ -403,6 +408,8 @@ export default function PropuestaEditor({
   const router = useRouter();
   const [step, setStep] = useState(mode === "replicate" ? 0 : 1);
   const [form, setForm] = useState<FormState>(() => defaultForm(cuentaInicial));
+  const persistedId=useRef(mode==='edit'?idPropuesta||'':'');
+  const saveAcknowledged=useRef(false);
   const formRef=useRef(form);
   formRef.current=form;
   const [cuentas, setCuentas] = useState<any[]>([]);
@@ -424,7 +431,7 @@ export default function PropuestaEditor({
   const publicationIds=[...new Set(form.lineas.map(line=>line.id_publicacion).filter(Boolean))].join('|');
   useEffect(()=>{const ids=publicationIds.split('|').filter(Boolean);if(!ids.length){setPreferredPageIds(new Set());return;}let active=true;Promise.all(ids.map(id=>RevistaService.getPaginas(id))).then(results=>{if(!active)return;setPreferredPageIds(new Set(results.flatMap(result=>result?.paginas||[]).filter((page:any)=>String(page.pagina_preferente||'').startsWith('pag_pref_')).map((page:any)=>page.id_pagina_publicacion)));}).catch(()=>{if(active)setPreferredPageIds(new Set());});return()=>{active=false;};},[publicationIds]);
 
-  useEffect(() => setSaved(false), [form]);
+  useEffect(() => {if(saveAcknowledged.current){saveAcknowledged.current=false;return;}setSaved(false);}, [form]);
 
   useEffect(() => {
     ServicioService.getServicios().then((data) => setServicios(Array.isArray(data) ? data.filter((item) => item.disponibilidad !== "Oculto") : [])).catch(() => setServicios([]));
@@ -637,9 +644,12 @@ export default function PropuestaEditor({
         forma_cobro_propuesta: form.cobros[0]?.forma_cobro || form.forma_cobro_propuesta,
       };
       const saved =
-        mode === "edit"
-          ? await PropuestaService.updatePropuesta(form.id_propuesta, payload)
+        persistedId.current
+          ? await PropuestaService.updatePropuesta(persistedId.current, payload)
           : await PropuestaService.createPropuesta(payload);
+      persistedId.current=saved.id_propuesta;
+      saveAcknowledged.current=true;
+      setForm(current=>({...current,id_propuesta:saved.id_propuesta,es_prueba:Boolean(saved.es_prueba),enviada:Boolean(saved.enviada)}));
       setSaved(true);
       return saved;
     } catch (err: any) {
@@ -727,7 +737,7 @@ export default function PropuestaEditor({
   return (
     <div className="min-h-screen bg-gray-100 text-gray-600">
       <MiddleNav tituloprincipal={title} />
-      <div className="px-4 py-6 md:px-6">
+      <div className="px-4 py-6 md:px-6"><TestModeToggle value={form.es_prueba||Boolean(cuentas.find(c=>c.id_cuenta===form.id_cuenta_propuesta)?.es_prueba)} disabled={saving||!!persistedId.current||Boolean(cuentas.find(c=>c.id_cuenta===form.id_cuenta_propuesta)?.es_prueba)} onChange={value=>setForm(current=>({...current,es_prueba:value}))}/>{step===4&&<label className="mb-5 flex cursor-pointer items-center gap-3 rounded border border-blue-200 bg-white p-4 hover:bg-blue-50"><input type="checkbox" className="h-5 w-5 enabled:cursor-pointer" checked={form.enviada} disabled={saving||!persistedId.current} onChange={e=>setForm(current=>({...current,enviada:e.target.checked}))}/><span><strong>¿Enviada?</strong> {form.enviada?'Sí':'No'}<span className="block text-sm text-slate-500">Guarda la propuesta completa antes de marcarla enviada. Solo al pasar a Sí se añade su resumen a los comentarios de la cuenta.</span></span></label>}
         {step >= 2 && <div className="mb-4 flex justify-end gap-3">
           <button type="button" onClick={() => void save(mode === "edit" && !isDraftProposal ? form.estado_propuesta : "En construcción", String(step))} disabled={saving} aria-label="Guardar cambios" className={`cursor-pointer rounded-lg border px-4 py-2 text-sm transition-colors hover:bg-green-50 disabled:cursor-not-allowed ${saved ? "border-green-600 bg-green-50 text-green-700" : "border-blue-950 text-blue-950"}`}>
             <span aria-hidden="true">▣</span> {saved ? "Guardado" : "Guardar"}

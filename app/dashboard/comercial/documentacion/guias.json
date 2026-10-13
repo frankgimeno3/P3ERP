@@ -42,7 +42,8 @@
       "La tabla consulta solo la pagina actual y el total del servidor. Los filtros se combinan y las respuestas de consultas anteriores se descartan.",
       "Abre una cuenta y entra en Tareas para gestionar sus acciones y responsables.",
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
-      "Las cuentas nuevas reciben autom?ticamente un ID ACC seguido de n?mero al guardar; el c?digo Edisoft y la referencia de origen CRM se conservan por separado."
+      "Las cuentas nuevas reciben autom?ticamente un ID ACC seguido de n?mero al guardar; el c?digo Edisoft y la referencia de origen CRM se conservan por separado.",
+      "Al crear, Modo prueba aparece arriba e inicialmente en Sí. Puedes pasarlo a No para datos reales. Los datos de prueba usan PRUEBA- delante del identificador; las relaciones derivadas conservan este modo, incluidos contratos, contenidos, órdenes y facturas. El modo se fija al crear y no se convierte después en real."
     ]
   },
   "/dashboard/comercial/contactos": {
@@ -55,7 +56,8 @@
       "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados.",
       "La paginacion se realiza en el servidor. Durante una nueva consulta se conserva la tabla anterior y se muestra Actualizando contactos. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados.",
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
-      "Los contactos nuevos reciben autom?ticamente un ID CON seguido de n?mero al guardar."
+      "Los contactos nuevos reciben autom?ticamente un ID CON seguido de n?mero al guardar.",
+      "Al crear, Modo prueba aparece arriba e inicialmente en Sí. Puedes pasarlo a No para datos reales. Los datos de prueba usan PRUEBA- delante del identificador; las relaciones derivadas conservan este modo, incluidos contratos, contenidos, órdenes y facturas. El modo se fija al crear y no se convierte después en real."
     ]
   },
   "/dashboard/comercial/propuestas": {
@@ -73,7 +75,8 @@
       "Buscar cuenta abre una tabla con filtros y 30 cuentas por pagina. Al elegir una cuenta se selecciona su contacto principal o el primero; si no tiene contactos se activa automaticamente el contacto manual.",
       "Mis propuestas usa el agente de la sesion actual. Si no hay agente asociado no se muestran propuestas de otro agente. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados.",
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
-      "Al aceptar una propuesta, el servidor reserva el siguiente c?digo de contrato Caa.000.000 y las ?rdenes correspondientes; repetir la operaci?n conserva los registros ya asociados."
+      "Al aceptar una propuesta, el servidor reserva el siguiente c?digo de contrato Caa.000.000 y las ?rdenes correspondientes; repetir la operaci?n conserva los registros ya asociados.",
+      "Enviada se marca expresamente tras guardar y completar la propuesta. Crear, editar, finalizar o aceptar registra actividad en Registro de eventos de la cuenta, dentro de Datos de gestión; no genera comentarios automáticos. Solo al pasar Enviada de No a Sí se añade un resumen comercial a Comentarios."
     ]
   },
   "/dashboard/comercial/contratos": {
@@ -94,7 +97,8 @@
       "En la ficha del contrato, Crear nueva propuesta copia la cuenta, contacto, servicios, importes y condiciones a un borrador independiente. Usa el agente de la sesión, fecha de hoy y validez de 30 días; renueva las fechas de los cobros conservando sus intervalos. Revisa y edita el borrador antes de enviarlo.",
       "Los servicios facturados desde PDF se relacionan con las líneas del contrato cuando publicación y medio permiten una coincidencia única. Se completan las descripciones y productos ausentes conservando las tarifas, contenidos y asociaciones existentes.",
       "Los contratos se numeran autom?ticamente como Caa.000.000. Sus ?rdenes utilizan el c?digo del contrato seguido de n?mero de cobro/total, tambi?n al aceptar propuestas o reemplazar ?rdenes.",
-      "Los agregados extra post-contrato se muestran separados del contenido firmado, con enlace a su ficha. No se incluyen en las líneas ni en los importes originales."
+      "Los agregados extra post-contrato se muestran separados del contenido firmado, con enlace a su ficha. No se incluyen en las líneas ni en los importes originales.",
+      "Crear nueva propuesta abre un modal con Modo prueba inicialmente en Sí. Selecciona No para una propuesta real; un contrato de prueba siempre conserva el modo prueba en sus derivados."
     ]
   },
   "/dashboard/comercial/documentacion": {
@@ -355,7 +359,8 @@
       "Tareas muestra ID, nombre, agente, estado y descripción. Filtra por ID, nombre, descripción o estado; Crear tarea abre un modal que se cierra con × o Escape. Abre cualquier fila para consultar y editar su tarea en una subpágina. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados.",
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
       "El menú lateral, las rutas y la Mediateca comparten los permisos del rol. Las cuentas de Cognito necesitan un agente activo asociado; los emails alternativos registrados para ese agente comparten identidad, tareas y rol.",
-      "Contabilidad permite Comercial, Administración y el módulo Contabilidad; bloquea Dirección, Operaciones y Producción. Juan (contavidrioperfil@gmail.com) es el único agente con este rol. Menú, rutas, API y Mediateca aplican la misma política."
+      "Contabilidad permite Comercial, Administración y el módulo Contabilidad; bloquea Dirección, Operaciones y Producción. Juan (contavidrioperfil@gmail.com) es el único agente con este rol. Menú, rutas, API y Mediateca aplican la misma política.",
+      "Para cambiar una contraseña: abre un agente, entra en Detalles y pulsa Cambiar contraseña, en Acceso a Cognito. Solo Superadmin dispone de esta acción. Selecciona una cuenta vinculada, introduce dos veces la nueva contraseña y guarda. No se modifica el email ni se almacena la contraseña en RDS o en el historial."
     ]
   },
   "/dashboard/operaciones/agentes/roles": {
@@ -702,7 +707,8 @@
       "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "Los selectores de agentes permiten Comercial, Dirección, Administración, Operaciones y Superadmin; los agentes Base no pueden seleccionarse.",
       "Buscar y seleccionar cuenta abre un modal con filtros por empresa, código, país y correo. Elige una cuenta válida y confirma. Se preselecciona su contacto principal si lo tiene.",
-      "En Cobros el primer vencimiento se propone a dos meses; cada cobro añadido toma la fecha del anterior más un mes. El banco inicial depende del país de la cuenta y todas las fechas y bancos pueden editarse."
+      "En Cobros el primer vencimiento se propone a dos meses; cada cobro añadido toma la fecha del anterior más un mes. El banco inicial depende del país de la cuenta y todas las fechas y bancos pueden editarse.",
+      "Al crear, Modo prueba aparece arriba e inicialmente en Sí. Puedes pasarlo a No para datos reales. Los datos de prueba usan PRUEBA- delante del identificador; las relaciones derivadas conservan este modo, incluidos contratos, contenidos, órdenes y facturas. El modo se fija al crear y no se convierte después en real."
     ]
   },
   "/dashboard/comercial/propuestas/[id_propuesta]/editar": {
@@ -712,7 +718,8 @@
       "Los selectores de agentes permiten Comercial, Dirección, Administración, Operaciones y Superadmin; los agentes Base no pueden seleccionarse.",
       "La fase Servicios comparte el selector y la tabla compacta con los contratos independientes. Sus campos y márgenes se han reducido para aprovechar el ancho disponible.",
       "En Cobros el primer vencimiento se propone a dos meses; cada cobro añadido toma la fecha del anterior más un mes. Todas las fechas pueden editarse.",
-      "Buscar cuenta consulta resultados paginados sin cargar el catalogo completo. La propuesta carga solo su cuenta; cambiarla reinicia su contacto."
+      "Buscar cuenta consulta resultados paginados sin cargar el catalogo completo. La propuesta carga solo su cuenta; cambiarla reinicia su contacto.",
+      "En Revisión, Enviada permite documentar que la propuesta se ha enviado. Guarda primero la propuesta completa. Una nueva marca Sí genera su resumen en Comentarios; las ediciones posteriores solo se registran en el historial."
     ]
   },
   "/dashboard/comercial/cuentas/[id_cuenta]": {
@@ -970,9 +977,10 @@
       "Consulta fecha y hora (Madrid), usuario, tipo, tabla o entidad, descripción e IP. Solo Dirección y Superadmin tienen acceso.",
       "Todos los filtros se agrupan en Filtros, inicialmente cerrado. Filtra por fechas, usuario, tipo, tabla, descripción e IP y navega de cien en cien eventos.",
       "Pulsa una fila para ver los valores anteriores y nuevos, los campos modificados y los otros cambios de la misma solicitud, incluidos borrados relacionados.",
-      "Las lecturas, login y logout no generan eventos. Los eventos se guardan con la escritura y se revierten si se revierte la transacción. El historial no puede editarse ni borrarse.",
+      "Las lecturas, login y logout no generan eventos. Los eventos se guardan con la escritura y se revierten si se revierte la transacción. El historial no puede editarse; su borrado solo se permite mediante selección y confirmación.",
       "La IP es la dirección recibida por el servidor y se muestra su origen; no clasifica oficina ni otras ubicaciones. Credenciales protegidas y archivos identificados por tamaño y huella, sin copiar su contenido.",
-      "Si aparece una tabla sin cobertura, la funcionalidad que la creó debe instalar sus triggers de auditoría antes de escribir datos."
+      "Si aparece una tabla sin cobertura, la funcionalidad que la creó debe instalar sus triggers de auditoría antes de escribir datos.",
+      "Cada fila tiene una casilla inicialmente vacía. Al seleccionar una o varias aparece Borrar seleccionados. El modal solicita confirmación; borrar eventos no borra los datos de negocio que describen. El borrado es definitivo y no genera otro evento, evitando bucles."
     ]
   }
 }

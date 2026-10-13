@@ -1,3 +1,4 @@
+import {testMode} from '../identifiers/TestMode.js';
 import { assertCommercialAgent } from "../agente/CommercialAgent.js";
 import {allocateContractIdentifier,allocateContentIdentifier,allocateOrderIdentifier} from '../identifiers/BusinessIdentifiers.js';
 import { randomUUID } from 'node:crypto';
@@ -49,7 +50,8 @@ export async function createDirectContract(data, actorId='', pool=getPgPool()) {
     if (!(await db.query('SELECT 1 FROM comercial_cuentas WHERE id_cuenta=$1',[data.id_cuenta_contrato])).rowCount) fail('La cuenta no existe.');
     await assertCommercialAgent(db, data.id_agente_contrato);
     if (data.id_contacto_contrato && !(await db.query('SELECT 1 FROM comercial_contactos WHERE id_contacto=$1 AND id_cuenta=$2',[data.id_contacto_contrato,data.id_cuenta_contrato])).rowCount) fail('El contacto no pertenece a la cuenta.');
-    const contractId=await allocateContractIdentifier(db,data.fecha_firma_contrato);
+    const esPrueba=await testMode(db,{requested:data.es_prueba??false,accountId:data.id_cuenta_contrato,proposalId:data.id_propuesta});
+    const contractId=await allocateContractIdentifier(db,data.fecha_firma_contrato,esPrueba);
     await db.query(`INSERT INTO comercial_contratos(id_contrato,nombre_contrato,id_cuenta_contrato,id_agente_contrato,id_contacto_contrato,
       fecha_firma_contrato,fecha_fin_contrato,fecha_cobro_prevista_contrato,forma_cobro_contrato,importe_total_bi_contrato,importe_contrato_con_iva,iva_aplicable,comentarios_adicionales)
       VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
@@ -62,7 +64,7 @@ export async function createDirectContract(data, actorId='', pool=getPgPool()) {
       (id_linea_contrato,id_contrato,numero_linea_contrato,producto,descripcion_linea,unidades,precio_unitario,precio_producto,precio_total_personalizado,linea_snapshot)
       VALUES($1,$2,$3,$4,$5,$6,$7,$7,$8,$9::jsonb)`,[lineId,contractId,index+1,line.producto,line.descripcion_linea,line.unidades,line.precio_unitario,line.base,JSON.stringify(line)]);
       await db.query(`UPDATE comercial_contratos_lineas SET id_servicio=$2,id_publicacion=$3,medio=$4,publicacion=$5,especificaciones_linea=$6,descuento_producto=$7,tipo_descuento_producto=$8,modo_precio=$9,precio_tarifa=$10,deadline_publicacion=$11,fecha_publicacion_publicacion=$12,id_pagina_publicacion=$13 WHERE id_linea_contrato=$1`,[lineId,line.id_servicio || null,line.id_publicacion || null,line.medio || '',line.publicacion || '',line.especificaciones_linea || '',Number(line.descuento_producto || 0),line.tipo_descuento_producto || 'porcentaje',line.modo_precio || 'calculado',Number(line.precio_tarifa || 0),line.deadline_publicacion || '',line.fecha_publicacion_publicacion || '',line.id_pagina_publicacion || '']);
-      const contentId=await allocateContentIdentifier(db,line.fecha_publicacion_publicacion || data.fecha_firma_contrato);
+      const contentId=await allocateContentIdentifier(db,line.fecha_publicacion_publicacion || data.fecha_firma_contrato,esPrueba);
       await db.query(`INSERT INTO produccion_contenidos(id_contenido,id_publicacion,id_cuenta,especificaciones_contenido,id_agente,estado_contenido,deadline_contenido,hoja_prod,id_contrato,id_linea_contrato,nombre_contenido,tipo_contenido,fecha_publicacion,ano_publicacion,servicio,contenido_especifico_id)
         VALUES($1,$2,$3,$4,$5,'pendiente de recibir materiales',$6,TRUE,$7,$8,$9,$10,$11,$12,$13,$14)`,
         [contentId,line.id_publicacion || null,data.id_cuenta_contrato,line.especificaciones_linea || line.descripcion_linea || '',data.id_agente_contrato || '',line.deadline_publicacion || '',contractId,lineId,line.producto,line.medio || line.producto,line.fecha_publicacion_publicacion || '',String(line.fecha_publicacion_publicacion || '').match(/\d{4}/)?.[0] || '',line.id_servicio || '',line.id_publicacion || '']);

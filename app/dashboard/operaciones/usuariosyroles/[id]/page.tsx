@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
+import AgentCredentials from '../AgentCredentials';
 import AgentTasks from '../../agentes/AgentTasks';
 import { EmployeePayrollList } from '../../../direccion/laboral/components/EmployeePayroll';
 import '../../../direccion/laboral/laboral.css';
@@ -192,6 +193,7 @@ export default function AgenteDetallePage() {
               </label>
             </div>
 
+            <AgentCredentials id={idAgente}/>
             <label className="mt-4 flex cursor-pointer items-center gap-2 rounded border border-gray-200 p-3 transition hover:bg-blue-50">
               <input type="checkbox" checked={isEmpleado} onChange={event => setIsEmpleado(event.target.checked)} className="cursor-pointer" />
               Cuenta de empleado (is_empleado_account)

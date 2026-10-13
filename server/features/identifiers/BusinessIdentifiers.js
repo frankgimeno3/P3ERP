@@ -1,3 +1,4 @@
+import {testIdentifier,isTestIdentifier} from './TestMode.js';
 // All allocators must run on the caller's transaction connection. The lock is
 // shared by imports and normal forms; IDs are never calculated in the browser.
 const serial = n => {
@@ -16,7 +17,7 @@ export function invoiceIdentifier(number) {
   return id;
 }
 export function contractOrderIdentifier(contractId, number, total) {
-  if (!/^C\d{2}\.\d{3}\.\d{3}$/.test(contractId) || !Number.isSafeInteger(number) || number < 1 || !Number.isSafeInteger(total) || total < number) {
+  if (!/^(?:PRUEBA-)?C\d{2}\.\d{3}\.\d{3}$/.test(contractId) || !Number.isSafeInteger(number) || number < 1 || !Number.isSafeInteger(total) || total < number) {
     throw Object.assign(new Error('Contrato o numeración de cobro no válidos.'), {status:400});
   }
   return `${contractId}-${number}/${total}`;
@@ -26,12 +27,12 @@ async function lock(db, namespace) {
 }
 export async function allocateAccountIdentifier(db) {
   await lock(db, 'cuentas');
-  const n = Number((await db.query("SELECT COALESCE(MAX(substring(id_cuenta FROM '^ACC([0-9]+)$')::bigint),0)+1 n FROM comercial_cuentas")).rows[0].n);
+  const n = Number((await db.query("SELECT COALESCE(MAX(substring(id_cuenta FROM '^(?:PRUEBA-)?ACC([0-9]+)$')::bigint),0)+1 n FROM comercial_cuentas")).rows[0].n);
   return `ACC${n}`;
 }
 export async function allocateContactIdentifier(db) {
   await lock(db, 'contactos');
-  const n = Number((await db.query("SELECT COALESCE(MAX(substring(id_contacto FROM '^CON([0-9]+)$')::bigint),0)+1 n FROM comercial_contactos")).rows[0].n);
+  const n = Number((await db.query("SELECT COALESCE(MAX(substring(id_contacto FROM '^(?:PRUEBA-)?CON([0-9]+)$')::bigint),0)+1 n FROM comercial_contactos")).rows[0].n);
   return `CON${n}`;
 }
 export async function allocateAgentIdentifier(db, date = '') {
@@ -48,20 +49,20 @@ export async function allocateTicketIdentifier(db,payment,date='') {
   if(n>9999)throw new Error('Numeración anual de tickets agotada.');
   return `${prefix}.${yy}.${String(n).padStart(4,'0')}`;
 }
-export async function allocateContractIdentifier(db, date = '') {
+export async function allocateContractIdentifier(db, date = '', esPrueba=false) {
   const yy = identifierYear(date).slice(-2);
   await lock(db, 'contratos:' + yy);
   // Also reserve codes found in imported orders without a contract row.
   const n = Number((await db.query(`SELECT COALESCE(MAX(replace(code,'.','')::bigint),0)+1 n FROM (
     SELECT substring(id_contrato FROM $1) code FROM comercial_contratos
-    UNION ALL SELECT substring(id_orden FROM $1) code FROM tesoreria_ordenes) s`, [`^C${yy}\\.([0-9]{3}\\.[0-9]{3})(?:-|$)`])).rows[0].n);
-  return `C${yy}.${serial(n)}`;
+    UNION ALL SELECT substring(id_orden FROM $1) code FROM tesoreria_ordenes) s`, [`^(?:PRUEBA-)?C${yy}\\.([0-9]{3}\\.[0-9]{3})(?:-|$)`])).rows[0].n);
+  return testIdentifier(`C${yy}.${serial(n)}`,esPrueba);
 }
-export async function allocateContentIdentifier(db, date = '') {
+export async function allocateContentIdentifier(db, date = '', esPrueba=false) {
   const yy = identifierYear(date).slice(-2);
   await lock(db, 'contenidos:' + yy);
-  const n = Number((await db.query("SELECT COALESCE(MAX(replace(substring(id_contenido FROM $1),'.','')::bigint),0)+1 n FROM produccion_contenidos", [`^hp_${yy}_([0-9]{3}\\.[0-9]{3})$`])).rows[0].n);
-  return `hp_${yy}_${serial(n)}`;
+  const n = Number((await db.query("SELECT COALESCE(MAX(replace(substring(id_contenido FROM $1),'.','')::bigint),0)+1 n FROM produccion_contenidos", [`^(?:PRUEBA-)?hp_${yy}_([0-9]{3}\\.[0-9]{3})$`])).rows[0].n);
+  return testIdentifier(`hp_${yy}_${serial(n)}`,esPrueba);
 }
 export async function allocateOrderIdentifier(db, {contractId = '', number = 1, total = number, date = '', invoiceId = ''} = {}) {
   await lock(db, 'ordenes');
@@ -78,9 +79,9 @@ export async function allocateOrderIdentifier(db, {contractId = '', number = 1, 
   }
   if (!base) {
     const yy = identifierYear(date).slice(-2);
-    const n = Number((await db.query("SELECT COALESCE(MAX(replace(substring(id_orden FROM $1),'.','')::bigint),0)+1 n FROM tesoreria_ordenes", [`^O${yy}\\.([0-9]{3}\\.[0-9]{3})-`])).rows[0].n);
+    const n = Number((await db.query("SELECT COALESCE(MAX(replace(substring(id_orden FROM $1),'.','')::bigint),0)+1 n FROM tesoreria_ordenes", [`^(?:PRUEBA-)?O${yy}\\.([0-9]{3}\\.[0-9]{3})-`])).rows[0].n);
     base = `O${yy}.${serial(n)}`;
   }
   if (!Number.isSafeInteger(Number(number)) || Number(number) < 1) throw new Error('Número de cobro no válido.');
-  return `${base}-${Number(number)}/${Math.max(Number(number), Number(total))}`;
+  return testIdentifier(`${base}-${Number(number)}/${Math.max(Number(number), Number(total))}`,isTestIdentifier(invoiceId));
 }

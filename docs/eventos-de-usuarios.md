@@ -8,7 +8,7 @@ El middleware autentica con Cognito, resuelve el agente y firma el contexto de u
 
 Los triggers `p3_user_events_row` y `p3_user_events_truncate` registran crear, editar y borrar en todas las tablas públicas de negocio. Conservan la clave, valores anteriores y nuevos, cambios individuales de JSON, relaciones, solicitud y transacción. Los borrados relacionados conservan sus datos antes de desaparecer y la página los agrupa con la solicitud original. Una transacción revertida también revierte sus eventos.
 
-Las escrituras de `eventos_de_usuarios` no tienen capturador. El historial es de solo lectura y bloquea actualizar, borrar o vaciar. Las consultas, login y logout no se registran. Credenciales y tokens se ocultan; archivos binarios se identifican mediante tamaño y SHA-256 sin duplicar su contenido.
+Las escrituras de `eventos_de_usuarios` no tienen capturador. El historial bloquea actualizar y vaciar. Por instrucción del usuario, permite borrar una selección confirmada desde Eventos de usuarios: la API verifica Dirección/Superadmin, DELETE y confirmación explícita, y habilita el permiso de borrado solo dentro de esa transacción. El borrado del propio historial no genera otro evento. Las consultas, login y logout no se registran. Credenciales y tokens se ocultan; archivos binarios se identifican mediante tamaño y SHA-256 sin duplicar su contenido.
 
 ## Obligaciones al ampliar el ERP
 
@@ -21,3 +21,9 @@ Las escrituras de `eventos_de_usuarios` no tienen capturador. El historial es de
 7. Prueba altas, edición de campos, relaciones, borrados en cascada, rollback, reutilización de conexiones y ausencia de recursión. Ejecuta `scripts/test-user-events.mjs` y las pruebas pertinentes del dominio. No introduzcas datos de demostración permanentes para probar el historial.
 
 Si se añade en el futuro cualquier módulo nuevo, su creación incluye este circuito de eventos desde el primer cambio; no es una tarea opcional para después.
+
+## Comentarios y pruebas
+
+La actividad automática de una cuenta se guarda exclusivamente en general_eventos (Registro de eventos, Datos de gestión). accountActivity no escribe en general_comentarios. Los comentarios son notas manuales, salvo el resumen comercial de una propuesta marcada expresamente como enviada y completa. Los registros sin autor identificado se presentan como ACCIÓN AUTOMÁTIZADA.
+
+Las altas interactivas de cuentas, contactos y propuestas ofrecen Modo prueba inicialmente en Sí. El servidor usa es_prueba y PRUEBA-; contratos, contenidos, órdenes y facturas derivados conservan ambos. Los triggers impiden convertir datos de prueba en reales o crear derivados con IDs reales. Las importaciones y datos existentes conservan su modo previo.

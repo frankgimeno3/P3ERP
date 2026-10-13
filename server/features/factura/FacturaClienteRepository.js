@@ -1,3 +1,4 @@
+import {testIdentifier,isTestIdentifier} from '../identifiers/TestMode.js';
 import {resolveIdentifier} from '../identifiers/IdentifierAliases.js';
 import { syncInvoiceOrders } from './InvoiceOrders.js';
 import {invoiceRegionalTotals} from './InvoiceCustomerMatching.js';
@@ -101,7 +102,7 @@ export async function createOrderInvoiceDraft(idOrden,actorId='') {
       LEFT JOIN comercial_cuentas cu ON cu.id_cuenta=COALESCE(NULLIF(o.id_cuenta,''),c.id_cuenta_contrato) WHERE o.id_orden=$1 FOR UPDATE OF o`,[idOrden]);
     const o=rows[0];
     if(!o || o.cancelada || o.id_factura || !o.invoice_account_id)throw new Error('La orden no está disponible para facturar');
-    const invoiceId=id('fac');
+    const invoiceId=testIdentifier(id('fac'),o.es_prueba||isTestIdentifier(idOrden));
     const gross=number(o.cobro_total),base=number(o.base_imponible)||Math.round(gross/(o.con_iva===false?1:1.21)*100)/100;
     const fiscal={nombre_fiscal:o.nombre_fiscal||o.nombre_empresa||'',vat_code:o.vat_code||'',pais:o.pais_facturacion||'',direccion:o.direccion_facturacion||'',poblacion:o.poblacion_facturacion||'',cp:o.cp_facturacion||'',email:o.mail_contabilidad||''};
     await client.query(`INSERT INTO administracion_facturas_clientes(id_factura_cliente,id_orden_origen,id_cuenta,base_imponible,importe_total,estado,datos_fiscales,forma_cobro)
@@ -212,7 +213,7 @@ export async function createInvoiceDraft(idContrato, actorId = "", transaction =
     }
     if((await client.query('SELECT 1 FROM administracion_facturas_clientes f WHERE f.id_contrato=$1 OR EXISTS (SELECT 1 FROM tesoreria_ordenes o WHERE o.id_contrato=$1 AND o.id_factura=f.id_factura_cliente) LIMIT 1',[idContrato])).rowCount) throw new Error('Este contrato ya tiene facturas. Selecciona una orden pendiente para facturar solo su importe.');
     if(c.importe_total_bi_contrato==null||c.importe_contrato_con_iva==null||!c.id_cuenta_contrato) throw new Error('Completa la cuenta y el importe del contrato antes de crear la factura.');
-    const idFactura = id("fac");
+    const idFactura = testIdentifier(id("fac"),c.es_prueba||isTestIdentifier(idContrato));
     const fiscal = {
       nombre_fiscal: c.nombre_fiscal || c.nombre_empresa || "", vat_code: c.vat_code || "",
       pais: c.pais_facturacion || "", direccion: c.direccion_facturacion || "",

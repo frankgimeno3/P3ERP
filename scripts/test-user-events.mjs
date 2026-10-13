@@ -44,6 +44,13 @@ try{
  const rollback={...context,requestId:randomUUID()};await db.query('SAVEPOINT rollback_check');
  await withUserEventContext(rollback,()=>db.query(`INSERT INTO public.${parent}(id) VALUES('rolled-back')`));await db.query('ROLLBACK TO SAVEPOINT rollback_check');
  assert.equal((await db.query('SELECT count(*)::int n FROM eventos_de_usuarios WHERE id_solicitud=$1',[rollback.requestId])).rows[0].n,0);
+ const selectionDelete={...context,role:'superadmin',method:'DELETE',requestId:randomUUID(),route:'/api/v1/direccion/eventos-de-usuarios'};
+ await withUserEventContext(selectionDelete,async()=>{
+  await db.query("SELECT set_config('p3.user_event_delete','true',true)");
+  await db.query('DELETE FROM eventos_de_usuarios WHERE id_solicitud=$1',[nested.requestId]);
+ });
+ assert.equal((await db.query('SELECT count(*)::int n FROM eventos_de_usuarios WHERE id_solicitud=$1',[nested.requestId])).rows[0].n,0);
+ assert.equal((await db.query('SELECT count(*)::int n FROM eventos_de_usuarios WHERE id_solicitud=$1',[selectionDelete.requestId])).rows[0].n,0,'Deleting events must not generate events');
  console.log('PASS: crear/editar/borrar, valores anteriores/nuevos, cascadas, IP, secretos protegidos, archivos sin copiar, TRUNCATE, rollback, lecturas sin eventos e historial sin bucles ni modificaciones.');
 }finally{await db.query('ROLLBACK');db.release();}
 const orm=new Sequelize(process.env.DATABASE_NAME,process.env.DATABASE_USER,process.env.DATABASE_PASSWORD,{dialect:'postgres',host:process.env.DATABASE_HOST,port:Number(process.env.DATABASE_PORT),logging:false,dialectModule:{...pg,Client:AuditedClient},dialectOptions:{ssl:pool.options.ssl},pool:{max:2}});

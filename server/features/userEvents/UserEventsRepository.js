@@ -1,5 +1,16 @@
 import {getPgPool} from '../../database/pgClient.js';
+import {getUserEventContext} from './EventContext.js';
 const error=(message,status=422)=>Object.assign(new Error(message),{status});
+export async function deleteUserEvents(body){
+ const context=await getUserEventContext();
+ if(!context?.enabled||!['direccion','superadmin'].includes(context.role)||context.method!=='DELETE')throw error('No tienes permiso para borrar eventos.',403);
+ if(body.confirmar!==true||!Array.isArray(body.ids)||!body.ids.length||body.ids.length>1000||body.ids.some(id=>!/^\d+$/.test(String(id))))throw error('Selecciona los eventos y confirma su borrado.');
+ const ids=[...new Set(body.ids.map(String))],db=await getPgPool().connect();
+ try{await db.query('BEGIN');await db.query("SELECT set_config('p3.user_event_delete','true',true)");
+ const result=await db.query('DELETE FROM eventos_de_usuarios WHERE id=ANY($1::bigint[]) RETURNING id',[ids]);
+ await db.query('COMMIT');return {borrados:result.rowCount};
+ }catch(e){await db.query('ROLLBACK');throw e;}finally{db.release();}
+}
 export async function getUserEvents(filters,db=getPgPool()){
  const params=[],where=[];
  const add=(sql,value)=>{params.push(value);where.push(sql.replaceAll('?',`$${params.length}`));};

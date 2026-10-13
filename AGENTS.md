@@ -41,6 +41,9 @@ Consulta la guía pertinente en `node_modules/next/dist/docs/` antes de escribir
 - Usa únicamente los clientes compartidos de `server/database/pgClient.js` o `server/database/database.js`; ambos transmiten el contexto autenticado. No introduzcas conexiones paralelas sin auditoría. Los cambios externos a RDS deben usar `externalUserEvent` con datos seguros anteriores y nuevos.
 - No obtengas el autor o la IP del cuerpo enviado por el cliente. El middleware firma la identidad; las operaciones de mantenimiento deben declarar su contexto con `withUserEventContext`, indicando su origen y dejando la IP vacía si no se conoce.
 - Nunca instales el capturador de cambios sobre `eventos_de_usuarios`, ni generes un evento por consultar o insertar eventos. No desactives la auditoría para salvar un error: corrige el error y prueba rollback, concurrencia, datos anteriores/nuevos y cascadas.
+- El borrado seleccionado y confirmado de eventos está autorizado por el usuario: reutiliza `deleteUserEvents`, con contexto autenticado y permiso LOCAL a la transacción. No permitas UPDATE/TRUNCATE ni generes un evento por borrar eventos.
+- La actividad automática de cuentas corresponde a `general_eventos` (Registro de eventos en Datos de gestión), no a `general_comentarios`. Solo las notas manuales y el resumen de una propuesta completada al marcarla expresamente Enviada generan comentarios. Usa «ACCIÓN AUTOMÁTIZADA» cuando no haya autor identificado.
+- Las altas interactivas de cuentas, contactos y propuestas ofrecen Modo prueba inicialmente en Sí. Respeta `es_prueba` y el prefijo `PRUEBA-` al generar derivados, incluidos contratos, contenidos, órdenes y facturas. Reutiliza `TestMode.js` y los generadores existentes; no conviertas pruebas en datos reales ni cambies su modo después de crearlas.
 
 ## Comandos (PowerShell, desde la raíz)
 

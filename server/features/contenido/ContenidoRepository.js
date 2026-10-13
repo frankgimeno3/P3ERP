@@ -1,3 +1,4 @@
+import {testMode,testIdentifier} from '../identifiers/TestMode.js';
 import { getPgPool } from "../../database/pgClient.js";
 import {allocateContentIdentifier} from '../identifiers/BusinessIdentifiers.js';
 import { normalizeProductionDeadline } from "../../../app/lib/productionContentFields.js";
@@ -194,14 +195,14 @@ export async function getHojaProduccionContenidos(filters = {}) {
 export async function createHojaProduccionContenido(data = {}) {
   const pool = getPgPool();
   let idContenido = data.id_contenido?.trim() || '';
-  if(idContenido&&!/^hp_\d{2}_\d{3}\.\d{3}$/.test(idContenido))throw Object.assign(new Error('El ID de un contenido nuevo debe seguir la serie hp.'),{status:400});
+  if(idContenido&&!/^(?:PRUEBA-)?hp_\d{2}_\d{3}\.\d{3}$/.test(idContenido))throw Object.assign(new Error('El ID de un contenido nuevo debe seguir la serie hp.'),{status:400});
   const destinos = Array.isArray(data.destinos_publicacion) ? data.destinos_publicacion : [];
   const materiales = Array.isArray(data.materiales_array) ? data.materiales_array : [];
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
     const generated=await allocateContentIdentifier(client,data.fecha_publicacion);
-    idContenido ||= generated;
+    idContenido=testIdentifier(idContenido||generated,await testMode(client,{requested:data.es_prueba??false,accountId:data.id_cuenta,contractId:data.id_contrato}));
     await client.query(`
       ALTER TABLE produccion_contenidos
         ADD COLUMN IF NOT EXISTS destinos_publicacion JSONB NOT NULL DEFAULT '[]'::jsonb,
@@ -466,14 +467,14 @@ export async function updateContenidoProduccion(idContenido, data = {}) {
 export async function createContenidoProduccion(data = {}) {
   const pool = getPgPool();
   let idContenido = data.id_contenido?.trim() || '';
-  if(idContenido&&!/^hp_\d{2}_\d{3}\.\d{3}$/.test(idContenido))throw Object.assign(new Error('El ID de un contenido nuevo debe seguir la serie hp.'),{status:400});
+  if(idContenido&&!/^(?:PRUEBA-)?hp_\d{2}_\d{3}\.\d{3}$/.test(idContenido))throw Object.assign(new Error('El ID de un contenido nuevo debe seguir la serie hp.'),{status:400});
   const destinoRevista = Boolean(data.destino_revista);
   const destinoVidrioperfil = Boolean(data.destino_vidrioperfil);
   const client=await pool.connect();
   try{
   await client.query('BEGIN');
   const generated=await allocateContentIdentifier(client,data.fecha_publicacion);
-  idContenido ||= generated;
+  idContenido=testIdentifier(idContenido||generated,await testMode(client,{requested:data.es_prueba??false,accountId:data.id_cuenta,contractId:data.id_contrato}));
   const { rows } = await client.query(
     `
       INSERT INTO produccion_contenidos (

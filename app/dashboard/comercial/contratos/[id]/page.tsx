@@ -1,4 +1,6 @@
 "use client";
+import TestModeToggle from '@/app/components/TestModeToggle';
+import {Modal} from '@/app/dashboard/administracion/liquidaciones/Subscriptions';
 import SortableTable from '@/app/components/SortableTable';
 
 import { isCommercialAgent } from "@/app/config/commercialAgents";
@@ -89,9 +91,10 @@ const ResumenContrato: FC = () => {
     }
   };
   const chooseContact=async(contactId:string)=>{const updated=await ContratoService.updateContrato(id,{id_contacto_contrato:contactId});setContrato(updated);setMessage('Contacto del contrato actualizado.');};
+  const [proposalMode,setProposalMode]=useState(true),[proposalModal,setProposalModal]=useState(false);
   const createProposal=async()=>{
     if(creatingProposal)return;setCreatingProposal(true);setError('');
-    try{const response=await apiClient.post(`/api/v1/comercial/contratos/${encodeURIComponent(id)}/propuesta`);router.push(`/dashboard/comercial/propuestas/${encodeURIComponent(response.data.id_propuesta)}`);}
+    try{const response=await apiClient.post(`/api/v1/comercial/contratos/${encodeURIComponent(id)}/propuesta`,{es_prueba:proposalMode||Boolean(contrato.es_prueba)});router.push(`/dashboard/comercial/propuestas/${encodeURIComponent(response.data.id_propuesta)}`);}
     catch(reason:any){setError(reason.response?.data?.message||'No se pudo crear la propuesta.');}
     finally{setCreatingProposal(false);}
   };
@@ -136,13 +139,13 @@ const ResumenContrato: FC = () => {
   return (
     <div className="min-h-screen flex flex-col bg-gray-200 text-gray-600">
       <MiddleNav tituloprincipal={`Resumen del contrato nº ${contrato.id_contrato}`} />
-      <div className="p-12 space-y-8"><div role="tablist" aria-label="Vista del contrato" className="flex gap-2">{(['datos','documento'] as const).map(value=><button key={value} role="tab" aria-selected={tab===value} type="button" onClick={()=>setTab(value)} className={`cursor-pointer rounded px-4 py-3 ${tab===value?'bg-blue-950 text-white hover:bg-blue-900':'bg-white hover:bg-blue-50'}`}>{value==='datos'?'Datos':'Vista de documento'}</button>)}</div><div hidden={tab!=='datos'} className="space-y-8">
+      {proposalModal&&<Modal title="Crear nueva propuesta" close={()=>setProposalModal(false)}><TestModeToggle value={proposalMode||Boolean(contrato.es_prueba)} onChange={setProposalMode} disabled={creatingProposal||Boolean(contrato.es_prueba)}/><button className="cursor-pointer rounded bg-blue-950 px-4 py-2 text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50" disabled={creatingProposal} onClick={()=>void createProposal()}>Crear propuesta</button></Modal>}<div className="p-12 space-y-8"><div role="tablist" aria-label="Vista del contrato" className="flex gap-2">{(['datos','documento'] as const).map(value=><button key={value} role="tab" aria-selected={tab===value} type="button" onClick={()=>setTab(value)} className={`cursor-pointer rounded px-4 py-3 ${tab===value?'bg-blue-950 text-white hover:bg-blue-900':'bg-white hover:bg-blue-50'}`}>{value==='datos'?'Datos':'Vista de documento'}</button>)}</div><div hidden={tab!=='datos'} className="space-y-8">
         {error && <p className="border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</p>}
         {message && <p className="border border-green-200 bg-green-50 p-3 text-sm text-green-700">{message}</p>}
         <section className="bg-white">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3">
             <h2 className="text-base font-semibold text-blue-950">Datos generales</h2>
-            <button type="button" disabled={creatingProposal||!contrato.id_cuenta_contrato} onClick={()=>void createProposal()} className="rounded border border-blue-950 px-4 py-2 text-sm font-semibold text-blue-950 transition enabled:cursor-pointer enabled:hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50">{creatingProposal?'Creando propuesta…':'Crear nueva propuesta'}</button>
+            <button type="button" disabled={creatingProposal||!contrato.id_cuenta_contrato} onClick={()=>setProposalModal(true)} className="rounded border border-blue-950 px-4 py-2 text-sm font-semibold text-blue-950 transition enabled:cursor-pointer enabled:hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50">{creatingProposal?'Creando propuesta…':'Crear nueva propuesta'}</button>
             <button type="button" onClick={() => void saveGeneralData()} disabled={saving} className="cursor-pointer rounded bg-blue-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-50">
               {saving ? "Guardando..." : "Guardar cambios"}
             </button>
