@@ -19,7 +19,7 @@ export async function ensureMediatecaStructure() {
   try {
     await db.query('BEGIN');
     await db.query("SELECT pg_advisory_xact_lock(hashtext('mediateca_required_roots'))");
-    for (const name of ['documentos_administracion','documentos_direccion','documentos_produccion']) await child(db,null,name);
+    for (const name of ['documentos_administracion','documentos_contabilidad','documentos_direccion','documentos_produccion']) await child(db,null,name);
     const contractsRoot = await child(db,null,'contratos_firmados');
     const result = await db.query(`SELECT DISTINCT a.id_agente,
       CASE WHEN c.id_contrato IS NOT NULL THEN

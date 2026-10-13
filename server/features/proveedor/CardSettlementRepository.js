@@ -14,7 +14,7 @@ export async function cardData(id,db=getPgPool()) {
   const card=(await db.query("SELECT *,to_char(inicio_periodo,'YYYY-MM-DD') inicio_periodo,to_char(proximo_cierre,'YYYY-MM-DD') proximo_cierre,to_char(proxima_liquidacion,'YYYY-MM-DD') proxima_liquidacion FROM tesoreria_tarjetas WHERE id_tarjeta=$1",[id])).rows[0];
   if(!card)throw new ProveedorError('Tarjeta no encontrada.',404);
   for(const key of ['inicio_periodo','proximo_cierre','proxima_liquidacion'])card[key]=isoDate(card[key]);
-  const tickets=(await db.query(`SELECT t.id_ticket,t.id_tarjeta,t.id_liquidacion_tarjeta,t.id_vencimiento_tarjeta,t.importe_total,t.documento_src,t.ambito,t.forma_pago,t.estado_revision,t.clasificacion,t.comentarios,t.updated_at,
+  const tickets=(await db.query(`SELECT t.id_ticket,t.codigo_ticket,t.datos_importacion,t.base_imponible,t.id_tarjeta,t.id_liquidacion_tarjeta,t.id_vencimiento_tarjeta,t.importe_total,t.documento_src,t.ambito,t.forma_pago,t.estado_revision,t.clasificacion,t.comentarios,t.updated_at,
     to_char(p3_income_date(t.fecha_ticket),'YYYY-MM-DD') fecha,COALESCE(p.nombre_proveedor,t.nombre_personalizado_proveedor) proveedor
     FROM administracion_tickets t LEFT JOIN administracion_proveedores p USING(id_proveedor) WHERE t.id_tarjeta=$1 ORDER BY p3_income_date(t.fecha_ticket),t.id_ticket`,[id])).rows;
   const charges=(await db.query('SELECT * FROM tesoreria_cargos_recurrentes WHERE id_tarjeta=$1 AND activo ORDER BY id_cargo_recurrente',[id])).rows;

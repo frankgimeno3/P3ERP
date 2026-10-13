@@ -8,7 +8,7 @@ import SupplierBankCharges from '../SupplierBankCharges';
 import SupplierDataFields from "../SupplierDataFields";
 import SupplierActions from "../SupplierActions";
 import SupplierPendingCharges from "../SupplierPendingCharges";
-import RecurringChargeManageModal from "../../../direccion/tesoreria/RecurringChargeManageModal";
+import RecurringChargeManageModal from "@/app/dashboard/contabilidad/RecurringChargeManageModal";
 import MiddleNav from "@/app/general_components/componentes_recurrentes/MiddleNav";
 
 type TabType = "movimientos" | "cargos-pendientes" | "tickets" | "facturas" | "precios" | "datos";

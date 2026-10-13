@@ -19,7 +19,7 @@ readable(cell.color,declarations('.content-main table tbody tr:hover')['backgrou
 readable(declarations('.content-main table thead th').color,declarations('.content-main table thead tr')['background-color']);
 const gm=fs.readFileSync('app/gm/layout.tsx','utf8').match(/<style>\{`([\s\S]*?)`\}<\/style>/)[1];
 postcss.parse(gm).walkRules(rule=>{if(rule.selector.includes('button:not(:disabled):hover'))rule.walkDecls(decl=>assert(!['background','background-color','color'].includes(decl.prop),'El hover compartido de GM debe conservar la combinación de colores del control.'));});
-const juan=postcss.parse(fs.readFileSync('app/dashboard/direccion/tesoreria/prevision-liquidez/vista-juan/juan.css','utf8'));
+const juan=postcss.parse(fs.readFileSync('app/dashboard/contabilidad/prevision-liquidez/vista-juan/juan.css','utf8'));
 let negative;juan.walkRules(rule=>{if(rule.selector.includes('.negative'))rule.walkDecls('color',decl=>negative=decl.value);});
 for(const background of ['#ffffff','#c5d9ef','#eaf1f5'])readable(negative,background);
 console.log('PASS: contraste de superficies, formularios, placeholders, cabeceras, filas, hover de GM, importes negativos y tema del sistema.');

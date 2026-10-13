@@ -21,7 +21,7 @@ export function settlementForecast(card, tickets, dues) {
   const within = date => date>=inicio && date<=cierre;
   const selected=tickets.filter(t=>(t.id_liquidacion_tarjeta?t.id_liquidacion_tarjeta===card.id_liquidacion:within(t.fecha))&&t.clasificacion!=='no_asociable'&&(!t.forma_pago||t.forma_pago==='tarjeta'));
   const replaced=new Set(selected.map(t=>t.id_vencimiento_tarjeta).filter(Boolean));
-  const items=[...selected.map(t=>({tipo:'ticket',id:String(t.id_ticket),fecha:t.fecha,descripcion:t.proveedor || `Ticket ${t.id_ticket}`,importe:Number(t.importe_total),id_vencimiento:t.id_vencimiento_tarjeta || null})),
+  const items=[...selected.map(t=>({tipo:'ticket',id:String(t.id_ticket),fecha:t.fecha,descripcion:t.proveedor || `Ticket ${t.id_ticket}`,importe:t.importe_total===null?null:Number(t.importe_total),id_vencimiento:t.id_vencimiento_tarjeta || null})),
     ...dues.filter(d=>within(d.fecha)&&!replaced.has(d.id)).map(d=>({tipo:'suscripcion',id:d.id,fecha:d.fecha,descripcion:d.descripcion || `Cargo ${d.id_cargo_recurrente}`,importe:Number(d.importe)}))];
   return {inicio,cierre,fecha,items,total:items.reduce((sum,item)=>sum+cents(item.importe),0)/100};
 }

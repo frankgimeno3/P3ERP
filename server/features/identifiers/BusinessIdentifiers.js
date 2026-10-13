@@ -41,6 +41,13 @@ export async function allocateAgentIdentifier(db, date = '') {
   if(n>9999)throw new Error('Numeración de agentes agotada.');
   return `ag_${yy}_${String(n).padStart(4,'0')}`;
 }
+export async function allocateTicketIdentifier(db,payment,date='') {
+  const prefix=payment==='tarjeta'?'V':'E',yy=identifierYear(date).slice(-2);
+  await lock(db,'tickets:'+prefix+yy);
+  const n=Number((await db.query('SELECT COALESCE(MAX(substring(codigo_ticket FROM $1)::integer),0)+1 n FROM administracion_tickets',[`^${prefix}\\.${yy}\\.([0-9]{4})$`])).rows[0].n);
+  if(n>9999)throw new Error('Numeración anual de tickets agotada.');
+  return `${prefix}.${yy}.${String(n).padStart(4,'0')}`;
+}
 export async function allocateContractIdentifier(db, date = '') {
   const yy = identifierYear(date).slice(-2);
   await lock(db, 'contratos:' + yy);

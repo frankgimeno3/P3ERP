@@ -355,7 +355,7 @@
       "Tareas muestra ID, nombre, agente, estado y descripción. Filtra por ID, nombre, descripción o estado; Crear tarea abre un modal que se cierra con × o Escape. Abre cualquier fila para consultar y editar su tarea en una subpágina. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados.",
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
       "El menú lateral, las rutas y la Mediateca comparten los permisos del rol. Las cuentas de Cognito necesitan un agente activo asociado; los emails alternativos registrados para ese agente comparten identidad, tareas y rol.",
-      "Contabilidad permite Comercial, Administración y Dirección, y bloquea Operaciones y Producción. Juan (contavidrioperfil@gmail.com) es el único agente con este rol. La restricción se aplica al menú, rutas, API y Mediateca."
+      "Contabilidad permite Comercial, Administración y el módulo Contabilidad; bloquea Dirección, Operaciones y Producción. Juan (contavidrioperfil@gmail.com) es el único agente con este rol. Menú, rutas, API y Mediateca aplican la misma política."
     ]
   },
   "/dashboard/operaciones/agentes/roles": {
@@ -366,7 +366,7 @@
       "Activa únicamente los accesos requeridos.",
       "Guarda y comprueba el efecto con un agente que tenga ese rol.",
       "El menú lateral, las rutas y la Mediateca comparten los permisos del rol. Las cuentas de Cognito necesitan un agente activo asociado; los emails alternativos registrados para ese agente comparten identidad, tareas y rol.",
-      "Contabilidad permite Comercial, Administración y Dirección, y bloquea Operaciones y Producción. Juan (contavidrioperfil@gmail.com) es el único agente con este rol. La restricción se aplica al menú, rutas, API y Mediateca."
+      "Contabilidad permite Comercial, Administración y el módulo Contabilidad; bloquea Dirección, Operaciones y Producción. Juan (contavidrioperfil@gmail.com) es el único agente con este rol. Menú, rutas, API y Mediateca aplican la misma política."
     ]
   },
   "/dashboard/operaciones/gestion_cuentas": {
@@ -378,18 +378,14 @@
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
     ]
   },
-  "/dashboard/direccion/tesoreria": {
-    "summary": "En Tesorería puedes importar, ordenar y revisar los movimientos de las cuentas bancarias de la empresa.",
+  "/dashboard/contabilidad": {
+    "summary": "Módulo independiente para extractos, conciliación y previsión de liquidez.",
     "steps": [
-      "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
-      "Pulsa Añadir extracto, selecciona Santander o Sabadell e indica expresamente si el archivo tiene cabezal. Sin cabezal exige la tabla en la primera fila; con cabezal localiza la tabla después de los datos informativos de la cuenta.",
-      "La aplicación detecta el sentido cronológico y compara las coincidencias exactas de cada movimiento para reconocer movimientos registrados e intercalar los ausentes con identificadores ordinales. En la fase de confirmación se muestra el rango de fechas operativas del archivo y la última fecha registrada para ese banco. Si hay movimientos anteriores, puedes marcar Omitir anteriores: se excluyen de la subida y se recalcula el total; los del mismo día se conservan y siguen pasando por la comparación de movimientos. La importación conserva los identificadores y todos los vínculos existentes con nóminas, anticipos y pagos. Solo inserta movimientos nuevos, con el siguiente identificador disponible por banco y año, aunque su fecha sea anterior. Cada coincidencia exacta consume una sola aparición, independientemente del orden del archivo. Si quedan cero movimientos nuevos, Finalizar sin subir cierra el asistente sin importar nada. El aviso distingue los movimientos comprobados de los omitidos; desmarca Omitir para comprobar los anteriores.",
-      "Cambia entre las pestañas Sabadell y Santander y filtra, en este orden, por fecha, concepto, importe y estado. El interruptor de fecha permite usar una fecha concreta o un rango Desde/Hasta.",
-      "Los selectores con búsqueda usan un único campo desplegable: pulsa para ver las opciones, escribe para filtrarlas y elige una opción válida. Escribir no confirma una selección y borra la selección anterior; puedes usar las flechas, Enter y Escape.",
-      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
+      "Se encuentra debajo de Operaciones y encima de Dirección. Solo acceden Contabilidad, Dirección y Superadmin; Administración y Operaciones no tienen acceso.",
+      "Las rutas y API antiguas de Tesorería redirigen al módulo Contabilidad conservando parámetros y métodos. Las restricciones se verifican también al escribir directamente una URL."
     ]
   },
-  "/dashboard/direccion/tesoreria/extractos": {
+  "/dashboard/contabilidad/extractos": {
     "summary": "Importa y consulta los extractos de Sabadell y Santander.",
     "steps": [
       "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
@@ -399,7 +395,7 @@
       "La ficha de cada extracto muestra el apartado Cargo previsto: indica si existe una asociación, su programación e importe y un enlace para consultarla o modificarla. Si no existe, Asociar o crear cargo previsto abre el asistente compartido; si falta destinatario, permite elegir primero proveedor o empleado. Los ingresos no admiten cargos previstos. La asociación se guarda al confirmar el asistente."
     ]
   },
-  "/dashboard/direccion/tesoreria/extractos/conciliacion": {
+  "/dashboard/contabilidad/extractos/conciliacion": {
     "summary": "Revisa, asigna y concilia líneas bancarias individualmente o en bloque.",
     "steps": [
       "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
@@ -441,7 +437,7 @@
       "Las conciliaciones respaldadas por justificantes conservan el ingreso bancario real: un pago parcial deja saldo pendiente y un pago superior cubre la orden sin cambiar su importe previsto. Las diferencias asumidas o comisiones documentadas pueden cerrarse para gestión con su motivo, conservando los importes reales y la posibilidad de reabrir el saldo.",
       "En Asignado a, Otro aparece al final para revisar cargos sin proveedor, cliente ni empleado. Permite un comentario y asociar un cargo previsto de tipo Otro. Si existe una asignación anterior, confirma su sustitución o conserva ese movimiento omitiéndolo.",
       "Conciliación sustituye al nombre Revisión de líneas. En Otro puedes seleccionar o crear un cargo previsto de tipo Otro sin destinatario, y asociar sus vencimientos mediante el análisis. Las asociaciones se conservan al volver a conciliar.",
-      "La ruta de Conciliación es /dashboard/direccion/tesoreria/extractos/conciliacion. Los detalles de movimientos y Duplicados se abren dentro de esta ruta. La URL se escribe sin tilde; el menú mantiene el nombre Conciliación. Las direcciones antiguas de revision y conciliación redirigen conservando la subruta y los filtros de la URL.",
+      "La ruta de Conciliación es /dashboard/contabilidad/extractos/conciliacion. Los detalles de movimientos y Duplicados se abren dentro de esta ruta. La URL se escribe sin tilde; el menú mantiene el nombre Conciliación. Las direcciones antiguas de revision y conciliación redirigen conservando la subruta y los filtros de la URL.",
       "Los movimientos revisados y asociados actualizan automáticamente el realizado y el pendiente de la previsión del ERP. Reabrir un movimiento retira su efecto hasta que vuelva a revisarse. Los filtros de cada tabla se muestran juntos en una tarjeta Filtros inicialmente cerrada, con una etiqueta fina encima de cada campo. Cerrarla conserva los filtros aplicados.",
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
       "Los vencimientos sin asociar de 2025 o anteriores se conservan como histórico externo y no generan avisos pendientes. Al crear un cargo, indica si contiene IVA y, cuando corresponda, su porcentaje; las cuotas de comunidad confirmadas sin IVA conservan todo el importe como base.",
@@ -450,7 +446,7 @@
       "Liquidación tarjeta guarda los cargos seleccionados como trabajo pendiente y abre la página de Administración → Liquidaciones. El cierre requiere importar el PDF de detalle, revisar sus movimientos y cuadrar exactamente su suma con Tesorería."
     ]
   },
-  "/dashboard/direccion/tesoreria/prevision-liquidez": {
+  "/dashboard/contabilidad/prevision-liquidez": {
     "summary": "Una previsión de liquidez compartida con la Vista Juan.",
     "steps": [
       "Previsiones tarjetas, a la derecha de las pestañas Previsión de ingresos y Previsión de cargos, abre Administración → Liquidaciones → Tarjetas.",
@@ -469,7 +465,7 @@
       "Traspasos propios permite crear y cancelar una previsión puntual entre bancos. La salida y entrada tienen el mismo importe; no alteran la liquidez conjunta. La conciliación empareja ambos movimientos y consume la previsión una sola vez."
     ]
   },
-  "/dashboard/direccion/tesoreria/prevision-ingresos": {
+  "/dashboard/contabilidad/prevision-ingresos": {
     "summary": "Reúne órdenes de cobro e ingresos adicionales previstos.",
     "steps": [
       "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
@@ -489,7 +485,7 @@
       "Un recibo puede registrarse sin remesa. Es el flujo normal: la remesa se asigna después al agrupar recibos por fecha para preparar el fichero que se envía al banco."
     ]
   },
-  "/dashboard/direccion/tesoreria/prevision-cargos": {
+  "/dashboard/contabilidad/prevision-cargos": {
     "summary": "Gestiona cargos recurrentes previstos y cargos bancarios pendientes de asociar.",
     "steps": [
       "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
@@ -784,7 +780,7 @@
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
     ]
   },
-  "/dashboard/direccion/tesoreria/prevision-liquidez/vista-juan": {
+  "/dashboard/contabilidad/prevision-liquidez/vista-juan": {
     "title": "Vista Juan · Previsión de liquidez",
     "summary": "Previsión de Sabadell y Santander con importes desglosados en un modal por celda.",
     "steps": [
@@ -818,12 +814,12 @@
       "Las tarjetas muestran por separado suscripciones, tickets variables y otros gastos, con el desglose individual al pulsar la celda. Sus importes proceden de Liquidaciones y se sitúan en el mes de cargo al banco. Las reservas de presupuesto se identifican hasta detallar los gastos; un ticket de suscripción no se suma dos veces."
     ]
   },
-  "/dashboard/direccion/tesoreria/conciliacion": {
+  "/dashboard/contabilidad/conciliacion": {
     "title": "Conciliación",
     "summary": "Acceso directo a la misma conciliación bancaria de Tesorería.",
     "steps": [
       "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
-      "Esta dirección abre la misma pantalla que /dashboard/direccion/tesoreria/extractos/conciliacion. Los detalles de movimientos y los enlaces internos conservan esa ruta principal.",
+      "Esta dirección abre la misma pantalla que /dashboard/contabilidad/extractos/conciliacion. Los detalles de movimientos y los enlaces internos conservan esa ruta principal.",
       "Los movimientos revisados y asociados actualizan automáticamente el realizado y el pendiente de la previsión del ERP. Reabrir un movimiento retira su efecto hasta que vuelva a revisarse. Los filtros de cada tabla se muestran juntos en una tarjeta Filtros inicialmente cerrada, con una etiqueta fina encima de cada campo. Cerrarla conserva los filtros aplicados.",
       "Traspaso propio abre un modal para emparejar un cargo y un ingreso entre Sabadell y Santander por importe opuesto y fecha cercana. Se revisan ambos con una sola operación; reabrir uno reabre los dos. Puede confirmarse que falta la contrapartida sin inventar un ingreso. Las previsiones de traspasos son puntuales; se vinculan cuando llega el movimiento. No generan cobros comerciales ni cargos recurrentes."
     ]
@@ -841,7 +837,7 @@
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
       "El acceso de cada carpeta se vincula a un módulo o ruta del ERP y se cruza con las restricciones de roles heredadas. Si no puedes abrir esa ruta, no ves su carpeta ni accedes a sus archivos. Las raíces protegidas conservan su módulo; al editar una subcarpeta puedes elegir una página para restringir su acceso.",
       "Los archivos almacenados en S3 se abren desde una ruta del ERP que vuelve a comprobar los permisos; el visor no utiliza una dirección pública permanente de CloudFront.",
-      "El rol Contabilidad accede a documentos de Administración, Dirección y Comercial; no ve documentos de Producción ni carpetas vinculadas a Operaciones."
+      "El rol Contabilidad accede a documentos de Administración, Contabilidad y Comercial; no ve documentos de Dirección o Producción ni carpetas vinculadas a Operaciones."
     ]
   },
   "/dashboard/operaciones/data/importar/cuentas": {
@@ -938,19 +934,21 @@
       "Antes de cerrar una liquidación, puntea los tickets asociados. Mientras estén pendientes puedes pasarlos a efectivo, asignarlos a otra tarjeta y a una liquidación concreta o retirarlos como no asociables. Elegir el período expresamente permite respetar la anotación tardía del banco sin cambiar la fecha del justificante; ambas previsiones se recalculan sin duplicarlo.",
       "Para justificar una suscripción, selecciona su vencimiento. Los importes deben coincidir exactamente. Corrige el ticket o la previsión antes de validar; si no existe justificante, retira el ticket y explica la ausencia desde la liquidación.",
       "Los tickets de liquidaciones revisadas están protegidos. Reabre la liquidación antes de modificarlos. Los filtros están juntos en una tarjeta inicialmente cerrada.",
-      "El formato visual de Administración comparte controles y pestañas: pestañas principales sobre fondo blanco, contenido azul claro y subpestañas con contenido blanco."
+      "El formato visual de Administración comparte controles y pestañas: pestañas principales sobre fondo blanco, contenido azul claro y subpestañas con contenido blanco.",
+      "Los tickets importados conservan el código V.AA.NNNN o E.AA.NNNN, origen, comentarios y feria. Las divisas mantienen el importe original y dejan el importe en euros pendiente hasta confirmar el cambio; las devoluciones conservan su signo.",
+      "El justificante se comparte con Mediateca en documentos_administracion/liquidaciones/tickets, separado por tarjeta o efectivo, año y tarjeta de empresa. El mismo archivo no se guarda dos veces. Los tickets pendientes de justificante o de completar datos no se dan por revisados."
     ]
   },
   "/dashboard/administracion/liquidaciones/suscripciones": {
-    "summary": "Programa cargos recurrentes de tarjetas que alimentan sus liquidaciones.",
+    "summary": "Domiciliaciones recurrentes asociadas a tarjetas, con previsiones sin duplicar tickets.",
     "steps": [
-      "El listado, sus formularios y la pestaña de suscripciones de cada tarjeta comparten la navegación superior, los paneles y las cabeceras azules del ERP.",
+      "El listado, sus formularios y la pestaña de domiciliaciones de cada tarjeta comparten la navegación superior, los paneles y las cabeceras azules del ERP.",
       "Consulta la tabla general, con concepto, tarjeta, importes previstos, periodicidad, fecha prevista y estado; los filtros se agrupan en una tarjeta inicialmente cerrada.",
-      "Nueva suscripción abre un modal con tarjeta, proveedor opcional, importe, tratamiento del IVA, periodicidad y fechas. También puedes crearla o asociar un cargo recurrente existente desde Suscripciones asociadas de una tarjeta.",
-      "Una suscripción pertenece a una tarjeta. Sus vencimientos alimentan las liquidaciones respetando sus cierres y se pagan en la fecha del cargo total bancario; no se duplican como pagos directos al proveedor.",
+      "Nueva domiciliación abre un modal con tarjeta, proveedor opcional, importe, tratamiento del IVA, periodicidad y fechas. También puedes crearla o asociar un cargo recurrente existente desde Domiciliaciones asociadas de una tarjeta.",
+      "Una domiciliación pertenece a una tarjeta. Sus vencimientos alimentan las liquidaciones respetando sus cierres y se pagan en la fecha del cargo total bancario; no se duplican como pagos directos al proveedor.",
       "Editar permite modificar su programación con el componente común de cargos previstos. Desactivar excluye sus previsiones activas; Activar vuelve a incluirlas. Las liquidaciones ya revisadas conservan su desglose.",
       "Si hay un ticket que justifica un vencimiento, vincúlalos con importes exactamente iguales para contabilizar ese gasto una sola vez.",
-      "Las suscripciones de clientes a revistas mantienen su gestión independiente en Clientes → Suscripciones.",
+      "Las domiciliaciones de clientes a revistas mantienen su gestión independiente en Clientes → Domiciliaciones.",
       "El formato visual de Administración comparte controles y pestañas: pestañas principales sobre fondo blanco, contenido azul claro y subpestañas con contenido blanco."
     ]
   },

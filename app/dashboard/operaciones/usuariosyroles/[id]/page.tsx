@@ -66,7 +66,7 @@ export default function AgenteDetallePage() {
   const [agreementLoading, setAgreementLoading] = useState(true);
   useEffect(() => {
     const controller = new AbortController(); setAgreementLoading(true); setAgreementError('');
-    fetch('/api/v1/direccion/cargos-recurrentes', { signal:controller.signal, cache:'no-store' }).then(async response => { if (!response.ok) throw new Error('No se pudo cargar la nómina pactada.'); return response.json(); }).then(rows => setAgreement(rows.find((r:any) => r.tipo_cargo === 'nomina' && r.id_agente === idAgente) || null)).catch(error => { if (error.name !== 'AbortError') setAgreementError(error.message); }).finally(() => { if (!controller.signal.aborted) setAgreementLoading(false); });
+    fetch('/api/v1/contabilidad/cargos-recurrentes', { signal:controller.signal, cache:'no-store' }).then(async response => { if (!response.ok) throw new Error('No se pudo cargar la nómina pactada.'); return response.json(); }).then(rows => setAgreement(rows.find((r:any) => r.tipo_cargo === 'nomina' && r.id_agente === idAgente) || null)).catch(error => { if (error.name !== 'AbortError') setAgreementError(error.message); }).finally(() => { if (!controller.signal.aborted) setAgreementLoading(false); });
     return () => controller.abort();
   },[idAgente,agreementVersion]);
 
@@ -227,7 +227,7 @@ export default function AgenteDetallePage() {
               <button type="button" disabled={!agente.is_empleado_account || agreementLoading || !!agreementError || !!agreement} onClick={() => setShowRecurringModal(true)} className="rounded bg-blue-950 px-4 py-2 text-sm font-medium text-white transition enabled:cursor-pointer enabled:hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-50">Establecer nómina recurrente</button>
             </div>
             <nav className="mb-4 flex gap-2" aria-label="Nóminas">{[['historial','Historial nóminas'],['pactada','Nómina pactada']].map(([value,label]) => <button key={value} onClick={() => setPayrollTab(value)} className={`cursor-pointer rounded border px-4 py-2 hover:bg-blue-50 ${payrollTab === value ? 'bg-blue-100' : ''}`}>{label}</button>)}</nav>
-            {payrollTab === 'pactada' ? <div>{agreementLoading ? <p>Cargando...</p> : agreementError ? <p role="alert" className="text-red-700">{agreementError}</p> : agreement ? <div><p className="mb-3 font-semibold">{getNombreAgente(agente)}</p><a className="block cursor-pointer p-2 text-blue-900 hover:bg-blue-50 hover:underline" href={`/dashboard/direccion/tesoreria/cargos-recurrentes/${agreement.id_cargo_recurrente}`}>Ver y modificar cargo previsto</a>{agreement.programacion.map((r:any,i:number) => <div key={i} className="rounded border p-4"><p>Importe neto: {Number(r.total_iva).toFixed(2)} EUR</p><p>Cada {r.cada} {r.unidad}</p><p>{r.descripcion}</p></div>)}</div> : <p>No hay nómina recurrente registrada.</p>}</div> : <>
+            {payrollTab === 'pactada' ? <div>{agreementLoading ? <p>Cargando...</p> : agreementError ? <p role="alert" className="text-red-700">{agreementError}</p> : agreement ? <div><p className="mb-3 font-semibold">{getNombreAgente(agente)}</p><a className="block cursor-pointer p-2 text-blue-900 hover:bg-blue-50 hover:underline" href={`/dashboard/contabilidad/cargos-recurrentes/${agreement.id_cargo_recurrente}`}>Ver y modificar cargo previsto</a>{agreement.programacion.map((r:any,i:number) => <div key={i} className="rounded border p-4"><p>Importe neto: {Number(r.total_iva).toFixed(2)} EUR</p><p>Cada {r.cada} {r.unidad}</p><p>{r.descripcion}</p></div>)}</div> : <p>No hay nómina recurrente registrada.</p>}</div> : <>
             <div className="laboral"><EmployeePayrollList employee={idAgente} version={agreementVersion} /></div>
             </>}
           </section>}
@@ -259,7 +259,7 @@ function RecurringPayrollModal({ agent, onClose, onSaved }: { agent: Agente; onC
   async function save(event: FormEvent) {
     event.preventDefault(); setSaving(true); setError("");
     try {
-      const response = await fetch("/api/v1/direccion/cargos-recurrentes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tipo_cargo: "nomina", id_agente: agent.id_agente, id_proveedor: null, tipo_programacion: "periodicidad", programacion: [{ cada: 1, unidad: "meses", base_imponible: 0, total_iva: Number(amount), descripcion: description }] }) });
+      const response = await fetch("/api/v1/contabilidad/cargos-recurrentes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tipo_cargo: "nomina", id_agente: agent.id_agente, id_proveedor: null, tipo_programacion: "periodicidad", programacion: [{ cada: 1, unidad: "meses", base_imponible: 0, total_iva: Number(amount), descripcion: description }] }) });
       const result = await response.json();
       if (!response.ok) throw new Error(result.message || "No se pudo guardar la nómina recurrente.");
       onSaved(); onClose();

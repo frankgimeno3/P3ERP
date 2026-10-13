@@ -1,11 +1,13 @@
 import Joi from 'joi';
+import {assertMediatecaAccess} from '../mediateca/MediatecaAccess.js';
+import {allocateTicketIdentifier} from '../identifiers/BusinessIdentifiers.js';
 import { getPgPool } from '../../database/pgClient.js';
 import { createOrFindSupplier, findSupplier, ProveedorError, realDate, supplierTransaction, validateData } from './SupplierAdminRepository.js';
 
 export async function getTickets(idProveedor = '', ambito = '') {
   if (ambito && !['P3','GM'].includes(ambito)) throw new ProveedorError('Ámbito de tickets no válido.');
   const providerId = idProveedor ? (await findSupplier(idProveedor)).id_proveedor : '';
-  const { rows } = await getPgPool().query(`SELECT t.id_ticket,t.fecha_ticket,t.id_proveedor,t.nombre_personalizado_proveedor,
+  const { rows } = await getPgPool().query(`SELECT t.id_ticket,t.codigo_ticket,t.datos_importacion,t.feria,t.id_archivo_mediateca,t.fecha_ticket,t.id_proveedor,t.nombre_personalizado_proveedor,
     t.base_imponible,t.importe_total,t.forma_pago,t.documento_src,t.ambito,t.id_tarjeta,t.id_vencimiento_tarjeta,t.tarjeta_ultimos_digitos,t.tarjeta_banco,t.tarjeta_nombre,t.tarjeta_tipo,t.archivo_nombre,t.estado_revision,t.clasificacion,t.comentarios,t.updated_at,
     COALESCE(NULLIF(p.nombre_proveedor,''),t.nombre_personalizado_proveedor,'') AS proveedor
     FROM administracion_tickets t LEFT JOIN administracion_proveedores p ON p.id_proveedor=t.id_proveedor
@@ -44,17 +46,25 @@ export async function createTicket(body, file) {
       card = rows[0];
       if((await db.query("SELECT 1 FROM tesoreria_tarjetas_liquidaciones WHERE id_tarjeta=$1 AND estado='revisada' AND $2::date BETWEEN inicio AND cierre",[card.id_tarjeta,data.fecha_ticket])).rowCount)throw new ProveedorError('El ticket pertenece a una liquidación revisada. Reábrela antes de registrarlo.');
     }
-    const result = await db.query(`INSERT INTO administracion_tickets(fecha_ticket,id_proveedor,nombre_personalizado_proveedor,base_imponible,importe_total,forma_pago,documento_src,ambito,id_tarjeta,tarjeta_ultimos_digitos,tarjeta_banco,tarjeta_nombre,tarjeta_tipo,archivo_nombre,archivo_tipo,archivo_contenido)
-      VALUES ($1,$2,'',$3,$4,$5,'',$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING id_ticket`,
-      [data.fecha_ticket.split('-').reverse().join('/'),provider?.id_proveedor||null,data.ambito === 'GM' ? null : data.base_imponible,data.importe_total,data.forma_pago,data.ambito,card?.id_tarjeta || null,card?.ultimos_digitos || '',card?.banco || '',card?.nombre || '',card?.tipo || '',document.name,document.type,document.bytes]);
+    const code=await allocateTicketIdentifier(db,data.forma_pago,data.fecha_ticket);
+    const result = await db.query(`INSERT INTO administracion_tickets(fecha_ticket,id_proveedor,nombre_personalizado_proveedor,base_imponible,importe_total,forma_pago,documento_src,ambito,id_tarjeta,tarjeta_ultimos_digitos,tarjeta_banco,tarjeta_nombre,tarjeta_tipo,archivo_nombre,archivo_tipo,archivo_contenido,codigo_ticket)
+      VALUES ($1,$2,'',$3,$4,$5,'',$6,$7,$8,$9,$10,$11,$12,$13,$14,$15) RETURNING id_ticket`,
+      [data.fecha_ticket.split('-').reverse().join('/'),provider?.id_proveedor||null,data.ambito === 'GM' ? null : data.base_imponible,data.importe_total,data.forma_pago,data.ambito,card?.id_tarjeta || null,card?.ultimos_digitos || '',card?.banco || '',card?.nombre || '',card?.tipo || '',document.name,document.type,document.bytes,code]);
     const id = result.rows[0].id_ticket;
     await db.query('UPDATE administracion_tickets SET documento_src=$1 WHERE id_ticket=$2',[`/api/v1/admin/tickets/${id}/archivo`,id]);
     return { id_ticket:id,id_proveedor:provider?.id_proveedor||null,ambito:data.ambito };
   });
 }
-export async function getTicketFile(id) {
+export async function getTicketFile(id,request) {
   if (!/^\d+$/.test(String(id))) throw new ProveedorError('Ticket no encontrado.',404);
-  const { rows } = await getPgPool().query('SELECT archivo_nombre,archivo_tipo,archivo_contenido FROM administracion_tickets WHERE id_ticket=$1',[id]);
+  const { rows } = await getPgPool().query('SELECT archivo_nombre,archivo_tipo,archivo_contenido,id_archivo_mediateca,datos_importacion FROM administracion_tickets WHERE id_ticket=$1',[id]);
+  if(rows[0]?.id_archivo_mediateca)await assertMediatecaAccess(request,{mediaId:rows[0].id_archivo_mediateca});
+  if(!rows[0]?.archivo_contenido&&rows[0]?.datos_importacion?.documento_ticket_id){
+    const source=(await getPgPool().query('SELECT id_archivo_mediateca FROM administracion_tickets WHERE id_ticket=$1',[rows[0].datos_importacion.documento_ticket_id])).rows[0];
+    if(!source?.id_archivo_mediateca)throw new ProveedorError('Justificante compartido no encontrado.',404);
+    await assertMediatecaAccess(request,{mediaId:source.id_archivo_mediateca});
+    rows[0].archivo_contenido=(await getPgPool().query('SELECT archivo_contenido FROM administracion_tickets WHERE id_ticket=$1',[rows[0].datos_importacion.documento_ticket_id])).rows[0]?.archivo_contenido;
+  }
   if (!rows[0]?.archivo_contenido) throw new ProveedorError('Archivo no encontrado.',404);
   return new Response(rows[0].archivo_contenido,{headers:{'Content-Type':rows[0].archivo_tipo,'Content-Disposition':`inline; filename*=UTF-8''${encodeURIComponent(rows[0].archivo_nombre).replaceAll("'",'%27')}`,'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff','Content-Security-Policy':'sandbox'}});
 }

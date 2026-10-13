@@ -8,6 +8,7 @@ import {loginUrl,loginDestination} from "./app/config/loginRedirect.js";
 import {managesTasks} from './server/features/laboral/TaskAccess.js';
 import {canManageAccountTasks} from './app/config/accountTasks.js';
 import {guardMediatecaRequest} from './server/features/mediateca/MediatecaAccess.js';
+import {canonicalAccountingPath} from './app/config/accountingRoutes.js';
 
 let jwks;
 
@@ -51,11 +52,13 @@ async function verifyIdToken(idToken) {
 
 export async function middleware(request) {
   const { pathname } = request.nextUrl;
+  const canonicalAccounting=canonicalAccountingPath(pathname);
+  if(canonicalAccounting!==pathname){const url=request.nextUrl.clone();url.pathname=canonicalAccounting;return NextResponse.redirect(url,308);}
   // Canonicalize the accented legacy URL before it can match a bank-line ID.
-  const legacyReconciliation = /^\/dashboard\/direccion\/tesoreria\/extractos\/conciliaci(?:ó|%c3%b3)n(?=\/|$)/i;
+  const legacyReconciliation = /^\/dashboard\/contabilidad\/extractos\/conciliaci(?:ó|%c3%b3)n(?=\/|$)/i;
   if (legacyReconciliation.test(pathname)) {
     const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = pathname.replace(legacyReconciliation, "/dashboard/direccion/tesoreria/extractos/conciliacion");
+    redirectUrl.pathname = pathname.replace(legacyReconciliation, "/dashboard/contabilidad/extractos/conciliacion");
     return NextResponse.redirect(redirectUrl, 308);
   }
   let response = NextResponse.next();
@@ -117,12 +120,12 @@ export async function middleware(request) {
     }
     response = NextResponse.next({ request: { headers: authenticatedHeaders } });
     const legacyDirectionRoutes = [
-      ["/dashboard/direccion/tesoreria/extractos/revision", "/dashboard/direccion/tesoreria/extractos/conciliacion"],
+      ["/dashboard/contabilidad/extractos/revision", "/dashboard/contabilidad/extractos/conciliacion"],
       ["/dashboard/operaciones/agentesyroles", "/dashboard/operaciones/agentes"],
       ["/dashboard/operaciones/roles", "/dashboard/operaciones/agentes/roles"],
-      ["/dashboard/direccion/previsiones/prevision-liquidez", "/dashboard/direccion/tesoreria/prevision-liquidez"],
-      ["/dashboard/direccion/previsiones/prevision-ingresos", "/dashboard/direccion/tesoreria/prevision-ingresos"],
-      ["/dashboard/direccion/previsiones/prevision-gastos", "/dashboard/direccion/tesoreria/prevision-cargos"],
+      ["/dashboard/direccion/previsiones/prevision-liquidez", "/dashboard/contabilidad/prevision-liquidez"],
+      ["/dashboard/direccion/previsiones/prevision-ingresos", "/dashboard/contabilidad/prevision-ingresos"],
+      ["/dashboard/direccion/previsiones/prevision-gastos", "/dashboard/contabilidad/prevision-cargos"],
     ];
     const legacyAgentDetail = pathname.match(/^\/dashboard\/operaciones\/(ag_[^/]+)$/);
     if (legacyAgentDetail) {
@@ -137,32 +140,32 @@ export async function middleware(request) {
         return NextResponse.redirect(redirectUrl, 308);
       }
     }
-    if (pathname === "/dashboard/direccion/tesoreria") {
+    if (pathname === "/dashboard/contabilidad") {
       const redirectUrl = request.nextUrl.clone();
-      redirectUrl.pathname = "/dashboard/direccion/tesoreria/extractos";
+      redirectUrl.pathname = "/dashboard/contabilidad/extractos";
       return NextResponse.redirect(redirectUrl, 308);
     }
-    if (pathname === "/dashboard/direccion/tesoreria/prevision-ingresos" || pathname.startsWith("/dashboard/direccion/tesoreria/prevision-ingresos/")) {
+    if (pathname === "/dashboard/contabilidad/prevision-ingresos" || pathname.startsWith("/dashboard/contabilidad/prevision-ingresos/")) {
       const redirectUrl = request.nextUrl.clone();
-      redirectUrl.pathname = "/dashboard/direccion/tesoreria/prevision-liquidez";
+      redirectUrl.pathname = "/dashboard/contabilidad/prevision-liquidez";
       redirectUrl.searchParams.set("vista", "ingresos");
       return NextResponse.redirect(redirectUrl, 308);
     }
-    if (pathname === "/dashboard/direccion/tesoreria/prevision-cargos" || pathname.startsWith("/dashboard/direccion/tesoreria/prevision-cargos/")) {
+    if (pathname === "/dashboard/contabilidad/prevision-cargos" || pathname.startsWith("/dashboard/contabilidad/prevision-cargos/")) {
       const redirectUrl = request.nextUrl.clone();
-      redirectUrl.pathname = "/dashboard/direccion/tesoreria/prevision-liquidez";
+      redirectUrl.pathname = "/dashboard/contabilidad/prevision-liquidez";
       redirectUrl.searchParams.set("vista", "cargos");
       return NextResponse.redirect(redirectUrl, 308);
     }
     const legacyBankDetail = pathname.match(/^\/dashboard\/direccion\/bancos\/(banc_[^/]+)$/);
     if (legacyBankDetail) {
       const redirectUrl = request.nextUrl.clone();
-      redirectUrl.pathname = `/dashboard/direccion/tesoreria/extractos/conciliacion/${legacyBankDetail[1]}`;
+      redirectUrl.pathname = `/dashboard/contabilidad/extractos/conciliacion/${legacyBankDetail[1]}`;
       return NextResponse.redirect(redirectUrl, 308);
     }
     if (pathname === "/dashboard/direccion/bancos" || pathname.startsWith("/dashboard/direccion/bancos/")) {
       const redirectUrl = request.nextUrl.clone();
-      redirectUrl.pathname = pathname.replace("/dashboard/direccion/bancos", "/dashboard/direccion/tesoreria");
+      redirectUrl.pathname = pathname.replace("/dashboard/direccion/bancos", "/dashboard/contabilidad");
       return NextResponse.redirect(redirectUrl, 308);
     }
     if (pathname.startsWith("/dashboard/operaciones/usuariosyroles")) {

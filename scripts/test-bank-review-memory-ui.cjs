@@ -9,8 +9,8 @@ function load(file) {
  m.require=id=>{if(id.startsWith('@/')||id.startsWith('./')||id.startsWith('../')){const base=id.startsWith('@/')?id.slice(2):path.resolve(path.dirname(filename),id);return load(['','.tsx','.ts','.js'].map(ext=>base+ext).find(candidate=>fs.existsSync(candidate)&&fs.statSync(candidate).isFile()));}return original(id);};
  m._compile(ts.transpileModule(fs.readFileSync(filename,'utf8'),{compilerOptions:{jsx:ts.JsxEmit.ReactJSX,module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true}}).outputText,filename);return m.exports;
 }
-const Wizard=load('app/dashboard/direccion/tesoreria/BankReviewWizard.tsx').default;
-const Insights=load('app/dashboard/direccion/tesoreria/BankReviewInsights.tsx').default;
+const Wizard=load('app/dashboard/contabilidad/BankReviewWizard.tsx').default;
+const Insights=load('app/dashboard/contabilidad/BankReviewInsights.tsx').default;
 const lines=[{id_linea_banco:'first',importe:-50,fecha_valor:'02/04/2026',id_cargo_recurrente:'1',id_proveedor:'supplier',concepto:'Recibo comunidad local 154'}];
 const empty={alerts:[],resolved:[],criteria:[],history:[],notes:[],occurrences:[],applications:[],lines,token:'token'};
 let response=empty,saved,closed=false,mutations=0,plan;

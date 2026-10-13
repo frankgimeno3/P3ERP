@@ -19,7 +19,7 @@ try {
  const following=nextJuanSheets(withTransfer,2028,[],[]);assert(!following[0].payments.some(r=>r.internalTransferId),'One-off transfers are never copied as annual recurrences');assert(following[0].payments.every(r=>!r.cellDetails),'Prior year statement breakdowns cannot appear as new year actuals');
  const output=ts.transpileModule(fs.readFileSync('app/config/roleAccess.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText;
  const exports={};new Function('exports',output)(exports);
- assert.equal(exports.normalizeRole('direccion'),'direccion');assert.ok(exports.canAccessDashboardPath('direccion','/dashboard/direccion/tesoreria/prevision-liquidez/vista-juan'));assert.ok(exports.canAccessApiPath('direccion','/api/v1/direccion/prevision-liquidez/vista-juan','PATCH'));
+ assert.equal(exports.normalizeRole('direccion'),'direccion');assert.ok(exports.canAccessDashboardPath('direccion','/dashboard/contabilidad/prevision-liquidez/vista-juan'));assert.ok(exports.canAccessApiPath('direccion','/api/v1/contabilidad/prevision-liquidez/vista-juan','PATCH'));
  assert.equal(exports.canAccessApiPath('direccion','/api/v1/admin/user-wizard','POST'),false);assert.equal(exports.canAccessDashboardPath('direccion','/dashboard/operaciones/roles'),false);
  console.log('PASS: annual 24-column forecasts, no fabricated actuals/opening balance, Victor monthly, annual information service, PIXUP, card split, immutable seed, Direction access without user/role administration.');
 }finally{await p.end();}

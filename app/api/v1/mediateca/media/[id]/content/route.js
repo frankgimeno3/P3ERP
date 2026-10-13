@@ -8,7 +8,11 @@ export async function GET(request,{params}) {
     const {id}=await params;
     await assertMediatecaAccess(request,{mediaId:id});
     const media=await getMediaById(id);
-    if(!media?.s3Key)return Response.json({message:'El archivo no está almacenado en S3.'},{status:404});
+    if(!media?.s3Key){
+      const ticket=media?.url?.match(/^\/api\/v1\/admin\/tickets\/(\d+)\/archivo$/);
+      if(ticket){const {getTicketFile}=await import('@/server/features/proveedor/TicketRepository.js');return getTicketFile(ticket[1],request);}
+      return Response.json({message:'Archivo no disponible.'},{status:404});
+    }
     const headers={};const range=request.headers.get('range');if(range)headers.Range=range;
     const source=await fetch(await createPresignedDownload(media.s3Key),{headers,cache:'no-store',signal:AbortSignal.timeout(20000)});
     if(!source.ok)return Response.json({message:'No se pudo descargar el archivo.'},{status:502});

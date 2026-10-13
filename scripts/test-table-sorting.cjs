@@ -54,7 +54,7 @@ const layoutCode=ts.transpileModule(fs.readFileSync('app/dashboard/layout.tsx','
 const layoutModule={exports:{}};
 new Function('require','exports','module',layoutCode)(name=>name==='next/navigation'?{usePathname:()=>pathname}:name==='next/link'?{__esModule:true,default:({children,...props})=>h('a',props,children)}:name.includes('loggedNav')||name.includes('loggedLeftMenu')?{__esModule:true,default:()=>null}:require(name),layoutModule.exports,layoutModule);
 const {renderToStaticMarkup}=require('react-dom/server');
-for(const route of ['/dashboard/comercial/cuentas','/dashboard/direccion/tesoreria','/dashboard/operaciones/tareas','/dashboard/administracion','/dashboard/administracion/pendiente-cobro','/dashboard/administracion-falsa']){
+for(const route of ['/dashboard/comercial/cuentas','/dashboard/contabilidad','/dashboard/operaciones/tareas','/dashboard/administracion','/dashboard/administracion/pendiente-cobro','/dashboard/administracion-falsa']){
  pathname=route;const html=renderToStaticMarkup(h(layoutModule.exports.default,{},'Contenido'));
  assert.equal(html.includes('/ayuda/informacion-legal'),route==='/dashboard/administracion'||route.startsWith('/dashboard/administracion/'));
 }

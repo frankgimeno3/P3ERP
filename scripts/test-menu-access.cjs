@@ -25,7 +25,10 @@ const direction=dashboardMenu.find(module=>module.id==='direccion');
 assert(!flatten(visibleEntries(direction.children,'direccion')).includes('/dashboard/operaciones/agentes'));
 assert(flatten(visibleEntries(direction.children,'superadmin')).includes('/dashboard/operaciones/agentes'));
 const accounting=dashboardMenu.filter(area=>canViewModule('contabilidad',area.id)).flatMap(area=>flatten(visibleEntries(area.children,'contabilidad')));
-assert(accounting.includes('/dashboard/direccion/tesoreria/extractos'));
+assert(accounting.includes('/dashboard/contabilidad/extractos'));
 assert(accounting.includes('/dashboard/administracion/pendiente-cobro'));
-assert(!accounting.some(href=>/^\/dashboard\/(operaciones|produccion)(?:\/|$)/.test(href)));
+assert(!accounting.some(href=>/^\/dashboard\/(operaciones|produccion|direccion)(?:\/|$)/.test(href)));
 console.log('PASS: menú recursivo coherente con rutas para todos los roles; grupos vacíos y enlaces restringidos no aparecen.');
+
+assert(dashboardMenu.findIndex(area=>area.id==='operaciones')<dashboardMenu.findIndex(area=>area.id==='contabilidad'));
+assert(dashboardMenu.findIndex(area=>area.id==='contabilidad')<dashboardMenu.findIndex(area=>area.id==='direccion'));

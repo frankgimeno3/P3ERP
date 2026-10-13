@@ -12,7 +12,7 @@ import { MediatecaService } from "@/app/service/MediatecaService";
 import apiClient from '@/app/apiClient';
 
 export type MediatecaFolder = { id: string; name: string; path: string; allowedRoles?: string[]; effectiveRoles?: string[]; accessInherited?: boolean; accessPath?:string|null };
-const protectedRoots = new Set(['contratos_firmados','documentos_administracion','documentos_direccion','documentos_produccion']);
+const protectedRoots = new Set(['contratos_firmados','documentos_administracion','documentos_contabilidad','documentos_direccion','documentos_produccion']);
 export type MediatecaMedia = {
   id: string;
   name: string;

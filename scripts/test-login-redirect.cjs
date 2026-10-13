@@ -48,6 +48,14 @@ new Function('require','module','exports',js)(id=>{
  const login=new URL(unauth.headers.get('location'));assert.equal(login.pathname,'/');assert.equal(login.searchParams.get('next'),'/dashboard/comercial/cuentas/A?tab=contactos');
  assert.equal((await middleware(new NextRequest('http://localhost/api/v1/comercial/cuentas'))).status,401);
  const cookie='CognitoIdentityServiceProvider.test.LastAuthUser=user; CognitoIdentityServiceProvider.test.user.accessToken=access; CognitoIdentityServiceProvider.test.user.idToken=id';
+ for(const oldPath of ['/dashboard/direccion/tesoreria/extractos','/dashboard/produccion/tesoreria/extractos']){
+  const moved=await middleware(new NextRequest('http://localhost'+oldPath+'?banco=Santander',{headers:{cookie}}));
+  const location=new URL(moved.headers.get('location'));assert.equal(moved.status,308);assert.equal(location.pathname,'/dashboard/contabilidad/extractos');assert.equal(location.searchParams.get('banco'),'Santander');
+ }
+ role='contabilidad';
+ assert.equal((await middleware(new NextRequest('http://localhost/api/v1/direccion/laboral/nominas',{headers:{cookie}}))).status,403);
+ assert.equal((await middleware(new NextRequest('http://localhost/api/v1/contabilidad/bancos',{headers:{cookie}}))).status,200);
+ role='operaciones';
  const authenticated=await middleware(new NextRequest('http://localhost'+loginUrl(target),{headers:{cookie}}));assert.equal(authenticated.headers.get('location'),'http://localhost'+target);
  for(const restricted of ['missing','inactive']){
   missingAgent=restricted==='missing';inactiveAgent=restricted==='inactive';
@@ -59,7 +67,7 @@ new Function('require','module','exports',js)(id=>{
  for(const currentRole of ['base','comercial','administracion','operaciones']){
   role=currentRole;
   assert.equal((await middleware(new NextRequest('http://localhost/dashboard/direccion/rds',{headers:{cookie}}))).headers.get('location'),'http://localhost/dashboard');
-  assert.equal((await middleware(new NextRequest('http://localhost/api/v1/direccion/bancos/revision',{headers:{cookie}}))).status,403);
+  assert.equal((await middleware(new NextRequest('http://localhost/api/v1/contabilidad/bancos/revision',{headers:{cookie}}))).status,403);
  }
  role='operaciones';
  databaseFailure=true;
@@ -70,8 +78,8 @@ new Function('require','module','exports',js)(id=>{
  assert.equal(recovery.headers.get('location'),null,'Service errors must show the login error without a redirect loop');
  databaseFailure=false;
  role='superadmin';
- const oldBankPath='/dashboard/direccion/tesoreria/extractos/revision';
- const newBankPath='/dashboard/direccion/tesoreria/extractos/conciliacion';
+ const oldBankPath='/dashboard/contabilidad/extractos/revision';
+ const newBankPath='/dashboard/contabilidad/extractos/conciliacion';
  for(const suffix of ['', '/duplicados', '/banc_sab_26_000.000.314']) {
    const redirected=await middleware(new NextRequest('http://localhost'+oldBankPath+suffix+'?banco=Sabadell',{headers:{cookie}}));
    assert.equal(redirected.status,308);

@@ -8,10 +8,11 @@ const next={inicio:'2026-09-01',cierre:'2026-09-30',fecha:'2026-10-05',total:20,
 global.fetch=async(url,options={})=>{const body=typeof options.body==='string'?JSON.parse(options.body):options.body||null;calls.push({url,body});
   let data=[];
   if(url==='/api/v1/admin/tarjetas')data=[card,{...card,id_tarjeta:'personal',codigo:'PASS',nombre:'PASS Gimeno',tipo:'personal'}];
+  if(url==='/api/v1/admin/tickets'&&!body)data=[{id_ticket:1,codigo_ticket:'V.26.0143',ambito:'P3',forma_pago:'tarjeta',tarjeta_tipo:'p3',importe_total:null,datos_importacion:{importe_original:500,moneda:'MXN'},documento_src:'/file',proveedor:'HOTEL',fecha_ticket:'12/07/2026'},{id_ticket:2,codigo_ticket:'E.26.0009',ambito:'P3',forma_pago:'efectivo',importe_total:2,proveedor:'METRO',fecha_ticket:'23/03/2026',documento_src:''}];
   if(url==='/api/v1/admin/proveedores')data=[{id_proveedor:'supplier',nombre_proveedor:'Proveedor'}];
   if(url==='/api/v1/admin/tarjetas/card')data={card,next,tickets:[],charges:[],dues:[],history:[]};
-  if(url==='/api/v1/direccion/bancos/liquidacion-tarjeta')data=body.action==='preview'?{...next,real:22,diferencia:2,token:'reviewed-snapshot'}:{ok:true};
-  if(url.startsWith('/api/v1/direccion/bancos/liquidacion-tarjeta?id='))data={id_tarjeta:'card',fecha:'2026-10-05',previsto:20,real:22,detalle:{...next,card},movimientos:['bank','fee']};
+  if(url==='/api/v1/contabilidad/bancos/liquidacion-tarjeta')data=body.action==='preview'?{...next,real:22,diferencia:2,token:'reviewed-snapshot'}:{ok:true};
+  if(url.startsWith('/api/v1/contabilidad/bancos/liquidacion-tarjeta?id='))data={id_tarjeta:'card',fecha:'2026-10-05',previsto:20,real:22,detalle:{...next,card},movimientos:['bank','fee']};
   if(url==='/api/v1/admin/liquidaciones/settlement')data={settlement:{id:'settlement',version:1,estado:'pendiente',fecha:next.fecha,inicio:next.inicio,cierre:next.cierre,previsto:20,real:22,detalle:{},comentario:''},card,lines:[],bankLines:[],candidates:[],forecast:next,document:{nombre:'Banco.pdf'},checks:{banco:0,diferencia:22,issues:['Pendiente de recibir ticket.']}};
   if(url.endsWith('/importar'))return {ok:false,json:async()=>({message:'Formato bancario no compatible.'})};
   return {ok:true,json:async()=>data};
@@ -59,6 +60,14 @@ const type=async(node,text)=>React.act(async()=>{const proto=node.tagName==='TEX
   await React.act(async()=>document.querySelector('form').dispatchEvent(new dom.window.Event('submit',{bubbles:true,cancelable:true})));
   const ticketRequest=calls.findLast(c=>c.url==='/api/v1/admin/tickets'&&c.body);
   assert(ticketRequest.body instanceof dom.window.FormData);const ticketData=JSON.parse(ticketRequest.body.get('data'));assert.equal(ticketData.id_tarjeta,'card');assert.equal(ticketData.id_proveedor,'supplier');assert.equal(ticketData.importe_total,12.1);assert.equal(ticketRequest.body.get('file').name,'ticket.pdf');
+  const TicketList=load('app/dashboard/administracion/liquidaciones/tickets/page.tsx').default;
+  await React.act(async()=>root.render(React.createElement(TicketList)));
+  assert(document.body.textContent.includes('V.26.0143'));assert(document.body.textContent.includes('Pendiente EUR (500 MXN)'));
+  assert(!document.body.textContent.includes('E.26.0009'));
+  await click('Tickets de efectivo');assert(document.body.textContent.includes('E.26.0009'));assert(document.body.textContent.includes('Pendiente'));assert(!document.body.textContent.includes('V.26.0143'));
+  const Subs=load('app/dashboard/administracion/liquidaciones/suscripciones/page.tsx').default;
+  await React.act(async()=>root.render(React.createElement(Subs)));
+  assert(document.body.textContent.includes('Domiciliaciones'));assert(!document.body.textContent.includes('Nueva suscripci\u00f3n'));
   await React.act(async()=>root.unmount());
   console.log('PASS: company/personal cards, unified filters, split dates, Escape, three detail tabs, drafts saved with pending issues, review blocked, unsupported PDF blocks continuation, multipart provider ticket.');
 })().catch(e=>{console.error(e);process.exitCode=1;});

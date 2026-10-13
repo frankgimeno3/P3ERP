@@ -53,7 +53,7 @@ export const dashboardMenu: DashboardMenuModule[] = [
       group("liquidaciones", "Liquidaciones", [
         page("Tarjetas", "/dashboard/administracion/liquidaciones/tarjetas"),
         page("Tickets", "/dashboard/administracion/liquidaciones/tickets"),
-        page("Suscripciones", "/dashboard/administracion/liquidaciones/suscripciones"),
+        page("Domiciliaciones", "/dashboard/administracion/liquidaciones/suscripciones"),
       ]),
       group("clientes", "Clientes", [
         page("Control administrativo", "/dashboard/administracion/control-administrativo"),
@@ -79,6 +79,15 @@ export const dashboardMenu: DashboardMenuModule[] = [
     ],
   },
   {
+    id: "contabilidad",
+    label: "Contabilidad",
+    children: [
+        page("Extractos", "/dashboard/contabilidad/extractos"),
+        page("Conciliación", "/dashboard/contabilidad/extractos/conciliacion"),
+        page("Previsión liquidez", "/dashboard/contabilidad/prevision-liquidez"),
+    ],
+  },
+  {
     id: "direccion",
     label: "Dirección",
     children: [
@@ -87,11 +96,6 @@ export const dashboardMenu: DashboardMenuModule[] = [
         page("Nóminas", "/dashboard/direccion/laboral/nominas"),
         page("Calendario laboral", "/dashboard/direccion/laboral/calendario-laboral"),
         page("Contratación", "/dashboard/direccion/laboral/contratacion"),
-      ]),
-      group("tesoreria", "Tesorería", [
-        page("Extractos", "/dashboard/direccion/tesoreria/extractos"),
-        page("Conciliación", "/dashboard/direccion/tesoreria/extractos/conciliacion"),
-        page("Previsión liquidez", "/dashboard/direccion/tesoreria/prevision-liquidez"),
       ]),
       page("Horas Juan", "/dashboard/direccion/horas-juan"),
       page("Copias de seguridad", "/dashboard/direccion/copias-seguridad"),

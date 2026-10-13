@@ -26,7 +26,7 @@ function load(file) {
 
 (async () => {
   const { middleware } = load('middleware.js');
-  const base = '/dashboard/direccion/tesoreria/extractos';
+  const base = '/dashboard/contabilidad/extractos';
   const canonical = `${base}/conciliacion`;
   const cookie = 'CognitoIdentityServiceProvider.test.LastAuthUser=user; CognitoIdentityServiceProvider.test.user.accessToken=access; CognitoIdentityServiceProvider.test.user.idToken=id';
   for (const legacy of ['conciliación', 'conciliaci%C3%B3n', 'conciliaci%c3%b3n']) {

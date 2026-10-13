@@ -3,9 +3,9 @@ import SortableTable from '@/app/components/SortableTable';
 
 import {request} from '@/app/lib/request';
 import { useEffect, useState } from 'react';
-import RecurringChargeEnd from '../../direccion/tesoreria/RecurringChargeEnd';
-import RecurringChargeModal from '../../direccion/tesoreria/RecurringChargeModal';
-import { reviewButton as button } from '../../direccion/tesoreria/RecurringChargeForm';
+import RecurringChargeEnd from '@/app/dashboard/contabilidad/RecurringChargeEnd';
+import RecurringChargeModal from '@/app/dashboard/contabilidad/RecurringChargeModal';
+import { reviewButton as button } from '@/app/dashboard/contabilidad/RecurringChargeForm';
 export default function SupplierActions({ supplier, tab, onChargesChange, onEditCharge, refreshVersion = 0 }: { supplier:any; tab:string; onChargesChange?: (charges:any[])=>void; onEditCharge?: (id:string)=>void; refreshVersion?:number }) {
   const [modal,setModal]=useState(''),[rows,setRows]=useState<any[]>([]),[charges,setCharges]=useState<any[]>([]),[version,setVersion]=useState(0),[error,setError]=useState(''),[saving,setSaving]=useState(false);
   const [form,setForm]=useState({servicio:'',descripcion:'',unidad:'',precio_por_unidad:''});

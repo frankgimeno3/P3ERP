@@ -27,6 +27,7 @@ const LoggedNav = () => {
     '/dashboard/administracion': 'Módulo administrativo',
     '/dashboard/produccion': 'Módulo de producción',
     '/dashboard/operaciones': 'Módulo de operaciones como moderador',
+    '/dashboard/contabilidad': 'Módulo de contabilidad',
   };
 
   const getDescription = (pathname: string, routes: Record<string, string>) => {

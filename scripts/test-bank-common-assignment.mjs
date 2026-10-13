@@ -5,7 +5,7 @@ import vm from 'node:vm';
 import { randomUUID } from 'node:crypto';
 import { ruleStart, withRuleIds } from '../server/features/banco/BankReviewAnalysis.js';
 
-const source = fs.readFileSync('app/api/v1/direccion/bancos/revision/route.js', 'utf8')
+const source = fs.readFileSync('app/api/v1/contabilidad/bancos/revision/route.js', 'utf8')
   .replace(/^import .*;\r?\n/gm, '').replace(/export /g, '');
 const repository = fs.readFileSync('server/features/prevision/RecurringChargeRepository.js', 'utf8').replace(/^import .*;\r?\n/gm, '').replace(/export /g, '');
 async function run({ line = {}, linked = false, entity = true, action = 'assign', entityType = 'nomina', existingCharge = true, extra = {} } = {}) {

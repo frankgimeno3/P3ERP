@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
 export default function PrevisionRecibosPage() {
-  redirect("/dashboard/direccion/tesoreria/prevision-ingresos");
+  redirect("/dashboard/contabilidad/prevision-ingresos");
 }

@@ -73,9 +73,10 @@ function cdnUrlForKey(s3Key) {
   return host ? `https://${host}/${s3Key}` : "";
 }
 
-export async function createPresignedUpload({ filename, contentType, prefix = "" }) {
+export async function createPresignedUpload({ filename, contentType, prefix = "", mediaId:requestedId }) {
   if (!bucket) throw new Error("S3 bucket is not configured. Set AWS_S3_BUCKET or S3_BUCKET in .env.");
-  const mediaId = crypto.randomUUID();
+  if(requestedId&&!/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(requestedId))throw new Error('Identificador de archivo inválido.');
+  const mediaId = requestedId||crypto.randomUUID();
   const safeName = cleanFilename(filename);
   const safePrefix = String(prefix || "").replace(/[^a-zA-Z0-9/_-]/g, "").replace(/^\/+|\/+$/g, "");
   const s3Key = `${safePrefix ? `${safePrefix}/` : "mediateca/"}${mediaId}/${safeName}`;

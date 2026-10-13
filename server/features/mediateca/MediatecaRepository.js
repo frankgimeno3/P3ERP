@@ -190,7 +190,7 @@ export async function updateFolder(folderId, data) {
   if (!name) throw new Error("name is required");
   const current = await getFolderRowById(pool, folderId);
   if (!current) throw new Error("Folder not found");
-  const protectedNames = new Set(['contratos_firmados','documentos_administracion','documentos_direccion','documentos_produccion']);
+  const protectedNames = new Set(['contratos_firmados','documentos_administracion','documentos_contabilidad','documentos_direccion','documentos_produccion']);
   if (!current.mediateca_parent_folder_id && protectedNames.has(current.mediateca_folder_name) && name !== current.mediateca_folder_name) {
     throw new Error('No se puede cambiar el nombre de esta carpeta principal');
   }
@@ -239,7 +239,7 @@ export async function deleteFolder(folderId) {
     const protectedFound = await client.query(`SELECT 1 FROM mediateca_carpetas
       WHERE mediateca_folder_id=ANY($1::uuid[]) AND mediateca_parent_folder_id IS NULL
         AND mediateca_folder_name=ANY($2::text[]) LIMIT 1`,
-      [folderIds, ['contratos_firmados','documentos_administracion','documentos_direccion','documentos_produccion']]);
+      [folderIds, ['contratos_firmados','documentos_administracion','documentos_contabilidad','documentos_direccion','documentos_produccion']]);
     if (protectedFound.rowCount) throw new Error('No se puede eliminar una carpeta principal protegida');
     const media = await client.query(
       "SELECT * FROM mediateca_archivos WHERE mediateca_folder_id = ANY($1::uuid[]) FOR UPDATE",
@@ -300,7 +300,7 @@ export async function createPresign(data) {
 export async function createMedia(data) {
   const pool = getPgPool();
   const id = String(data?.mediaId || data?.id || crypto.randomUUID()).trim();
-  const name = normalizeSegment(data?.contentName || data?.name);
+  const name = data?.preserveName?String(data?.contentName||data?.name||'').trim().slice(0,255):normalizeSegment(data?.contentName || data?.name);
   const s3Key = String(data?.s3Key || "").trim();
   if (!id || !name || !s3Key) throw new Error("mediaId, name and s3Key are required");
   const folderId = data?.folderId ? String(data.folderId).trim() : await getFolderIdByPath(data?.folderPath || "");

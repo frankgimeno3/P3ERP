@@ -9,7 +9,7 @@ import TableColumnFilter from '@/app/components/TableColumnFilter';
 
 export const button='rounded border border-gray-300 bg-white px-4 py-2 text-sm text-blue-950 enabled:cursor-pointer enabled:hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50';
 export const input='w-full rounded border border-gray-300 bg-white p-2 disabled:bg-gray-100';
-export const money=(n:any)=>Number(n||0).toLocaleString('es-ES',{style:'currency',currency:'EUR'});
+export const money=(n:any)=>n===null?'Pendiente':Number(n||0).toLocaleString('es-ES',{style:'currency',currency:'EUR'});
 export const date=(s:any)=>String(s||'').slice(0,10).split('-').reverse().join('/');
 export const iso=(s:string)=>s.includes('/')?s.split('/').reverse().map((v,i)=>i?v.padStart(2,'0'):v).join('-'):s.slice(0,10);
 export async function api(url:string,body?:any,method='POST') {

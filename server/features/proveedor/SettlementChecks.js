@@ -17,6 +17,7 @@ export function settlementChecks({settlement,lines,forecast,bankLines,tickets}) 
   for(const ref of refs){if(consumed.has(ref))issues.push('Un gasto se ha asociado dos veces.');consumed.add(ref);const item=forecast.items.find(i=>`${i.tipo}:${i.id}`===ref);if(!item||cents(item.importe)!==cents(l.importe))issues.push(`Movimiento ${l.posicion}: importe incompatible con la previsión.`);}
   if(l.id_ticket){const t=tickets.find(t=>String(t.id_ticket)===String(l.id_ticket));if(!t||t.clasificacion!=='asociable'||!['punteado','revisado'].includes(t.estado_revision))issues.push(`Ticket ${l.id_ticket}: pendiente de revisar.`);if(t?.id_vencimiento_tarjeta){const due=forecast.items.find(i=>i.id===String(t.id_ticket));if(!due?.subscriptionAmount||cents(due.subscriptionAmount)!==cents(t.importe_total))issues.push(`Ticket ${l.id_ticket}: no cuadra con su suscripción.`);}}
  }
+ for(const i of forecast.items)if(i.importe===null)issues.push(`${i.descripcion}: falta el importe final en euros.`);
  for(const i of forecast.items)if(!consumed.has(`${i.tipo}:${i.id}`))issues.push(`${i.descripcion}: previsión todavía sin resolver.`);
  if(sum!==cents(forecast.total))issues.push('Actualiza las previsiones para que recojan todos los movimientos reales, incluidos los gastos sin ticket justificados.');
  if(cents(settlement.previsto)!==sum&&!settlement.comentario?.trim())issues.push('Explica la desviación respecto a la previsión inicial.');

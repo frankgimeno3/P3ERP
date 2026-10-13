@@ -2,7 +2,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
 const {JSDOM}=require(process.env.P3_SELECTOR_TEST_MODULES?path.join(process.env.P3_SELECTOR_TEST_MODULES,'jsdom'):'jsdom');
 const dom=new JSDOM('<div id="root"></div>');Object.assign(global,{window:dom.window,document:dom.window.document,navigator:dom.window.navigator,HTMLElement:dom.window.HTMLElement,IS_REACT_ACT_ENVIRONMENT:true});
 const React=require('react'),{act}=React,{createRoot}=require('react-dom/client');
-const filename=path.resolve('app/dashboard/direccion/tesoreria/JuanCellModal.tsx'),m=new Module(filename,module);m.filename=filename;m.paths=module.paths;m._compile(ts.transpileModule(fs.readFileSync(filename,'utf8'),{compilerOptions:{jsx:ts.JsxEmit.ReactJSX,module:ts.ModuleKind.CommonJS,esModuleInterop:true}}).outputText,filename);
+const filename=path.resolve('app/dashboard/contabilidad/JuanCellModal.tsx'),m=new Module(filename,module);m.filename=filename;m.paths=module.paths;m._compile(ts.transpileModule(fs.readFileSync(filename,'utf8'),{compilerOptions:{jsx:ts.JsxEmit.ReactJSX,module:ts.ModuleKind.CommonJS,esModuleInterop:true}}).outputText,filename);
 const Modal=m.exports.default,root=createRoot(document.getElementById('root'));let saved,closed=0;
 const props={label:'IBI diciembre',parts:[{id:'A',label:'Plaza A',amount:2000,editable:true},{id:'B',label:'Plaza B',amount:3000,editable:true}],disabled:false,onClose:()=>closed++,onSave:async(value,components)=>{saved={value,components};}};
 (async()=>{

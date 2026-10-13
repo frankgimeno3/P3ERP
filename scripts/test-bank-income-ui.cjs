@@ -17,7 +17,7 @@ function load(file){
   m._compile(ts.transpileModule(fs.readFileSync(filename,'utf8'),{compilerOptions:{jsx:ts.JsxEmit.ReactJSX,module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true}}).outputText,filename);
   return m.exports;
 }
-const Wizard=load('app/dashboard/direccion/tesoreria/BankReviewWizard.tsx').default;
+const Wizard=load('app/dashboard/contabilidad/BankReviewWizard.tsx').default;
 const remesas=[{id_remesa:'REM-1',importe_total:300,numero_recibos:2,recibos_sin_orden:0,fecha_teorica:'15/09/2026',cobrada:false},{id_remesa:'REM-OTHER',importe_total:600,numero_recibos:1,recibos_sin_orden:0,cobrada:false,fecha_teorica:'15/09/2026'},{id_remesa:'REM-PAID',importe_total:300,numero_recibos:1,cobrada:true}];
 const orders=[{id_orden:'TRANSFER',forma_cobro:'transferencia',cobro_total:50,id_cuenta:'client',cliente:'Cliente'},{id_orden:'RECEIPT',forma_cobro:'recibo',cobro_total:50,id_cuenta:'client'}];
 orders.push({id_orden:'GROUP-A',forma_cobro:'transferencia',cobro_total:30,id_cuenta:'client',cliente:'Cliente'},{id_orden:'GROUP-B',forma_cobro:'transferencia',cobro_total:20,id_cuenta:'client',cliente:'Cliente'},{id_orden:'OTHER-CLIENT',forma_cobro:'transferencia',cobro_total:20,id_cuenta:'another',cliente:'Otro cliente'});

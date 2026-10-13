@@ -5,18 +5,18 @@ export class PrevisionIngresosService {
         const form = new FormData();
         form.append('file', file);
         form.append('action', action);
-        const response = await apiClient.post('/api/v1/direccion/prevision-ingresos/importar-recibos', form);
+        const response = await apiClient.post('/api/v1/contabilidad/prevision-ingresos/importar-recibos', form);
         return response.data;
     }
     static async getOrdenes(tipo) {
-        const response = await apiClient.get('/api/v1/direccion/prevision-ingresos', {
+        const response = await apiClient.get('/api/v1/contabilidad/prevision-ingresos', {
             params: { tipo }
         });
         return response.data;
     }
 
     static async createIngresoAdicional(data) {
-        const response = await apiClient.post('/api/v1/direccion/prevision-ingresos', data);
+        const response = await apiClient.post('/api/v1/contabilidad/prevision-ingresos', data);
         return response.data;
     }
 }

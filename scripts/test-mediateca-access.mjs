@@ -17,12 +17,13 @@ assert(!modules.roles('operation-route').includes('administracion'));
 assert(modules.roles('operation-route').includes('operaciones'));
 assert(!modules.roles('create-contract').includes('base'));
 const accounting=folderAccess([
+ {mediateca_folder_id:'accounting',mediateca_folder_name:'documentos_contabilidad',mediateca_parent_folder_id:null,allowed_roles:[]},
  {mediateca_folder_id:'production',mediateca_folder_name:'documentos_produccion',mediateca_parent_folder_id:null,allowed_roles:[]},
  {mediateca_folder_id:'direction',mediateca_folder_name:'documentos_direccion',mediateca_parent_folder_id:null,allowed_roles:[]},
  {mediateca_folder_id:'administration',mediateca_folder_name:'documentos_administracion',mediateca_parent_folder_id:null,allowed_roles:[]},
  {mediateca_folder_id:'ops',mediateca_parent_folder_id:'administration',access_path:'/dashboard/operaciones/tareas',allowed_roles:['contabilidad']},
 ]);
-assert(accounting.roles('direction').includes('contabilidad'));
+assert(!accounting.roles('direction').includes('contabilidad'));
 assert(accounting.roles('administration').includes('contabilidad'));
 assert(!accounting.roles('production').includes('contabilidad'));
 assert(!accounting.roles('ops').includes('contabilidad'));
@@ -42,3 +43,5 @@ try{
  await guardMediatecaRequest(request('superadmin','media/file'));
 }finally{p.query=original;await p.end();}
 console.log('PASS: permisos heredados, bloqueo de ampliación, acceso directo a archivos, destino de movimientos y eliminación de carpetas con hijos privados.');
+
+assert(accounting.roles('accounting').includes('contabilidad'));assert(accounting.roles('accounting').includes('direccion'));assert(!accounting.roles('accounting').includes('operaciones'));assert(!accounting.roles('accounting').includes('administracion'));

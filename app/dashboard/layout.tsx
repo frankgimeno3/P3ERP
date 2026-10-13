@@ -12,7 +12,7 @@ export default function RegistroLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  if (pathname === '/dashboard/direccion/tesoreria/prevision-liquidez/vista-juan') return <>{children}</>;
+  if (pathname === '/dashboard/contabilidad/prevision-liquidez/vista-juan') return <>{children}</>;
   return (
     <>
       <LoggedNav />
