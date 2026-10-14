@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports -- Isolated auth boundary tests. */
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),ts=require('typescript');
 const {NextRequest}=require('next/server');
 const {JSDOM}=require(process.env.P3_SELECTOR_TEST_MODULES ? path.join(process.env.P3_SELECTOR_TEST_MODULES,'jsdom') : 'jsdom');
@@ -7,15 +6,18 @@ Object.assign(global,{window:dom.window,document:dom.window.document,navigator:d
 const React=require('react'),{createRoot}=require('react-dom/client');
 let rejectResponse;let role='operaciones';let databaseFailure=false;let missingAgent=false;let inactiveAgent=false;let serverSessionFailure=false;const redirects=[],router={replace:url=>redirects.push(url)};
 const cache=new Map();
+const signInCalls=[];
+let authTokens={idToken:'old-token'},signInError=null,loginError=null,signInResult={isSignedIn:true},signedOut=0,sessionReads=0,signOutError=null;
+let initialSession=Promise.resolve(null);
 function load(file){file=path.resolve(file);if(cache.has(file))return cache.get(file);const mod={exports:{}};
 const js=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{jsx:ts.JsxEmit.ReactJSX,module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true}}).outputText;
 new Function('require','module','exports',js)(id=>{
  if(id==='next/navigation')return {useRouter:()=>router};
  if(id==='aws-amplify')return {Amplify:{configure(){}}};
- if(id==='aws-amplify/auth/cognito')return {};
- if(id==='@aws-amplify/core')return {};
- if(id==='aws-amplify/auth')return {};
- if(id.includes('AuthenticationService'))return {__esModule:true,default:{checkSession:async()=>null,login:async()=>({sub:'user'}),checkServerSession:async()=>{if(serverSessionFailure)throw new Error('Servidor no disponible');}}};
+ if(id==='aws-amplify/auth/cognito')return {cognitoUserPoolsTokenProvider:{setKeyValueStorage(){}},signIn:async credentials=>{signInCalls.push(credentials);if(signInError)throw signInError;authTokens={idToken:'fresh-token'};return signInResult;},confirmSignIn:async()=>({isSignedIn:true})};
+ if(id==='@aws-amplify/core')return {CookieStorage:class{},fetchAuthSession:async()=>{sessionReads++;return {tokens:authTokens};},decodeJWT:token=>({payload:{sub:token,email:token==='old-token'?'old@example.test':'frankgimeno3@gmail.com'}})};
+ if(id==='aws-amplify/auth')return {signOut:async()=>{if(signOutError)throw signOutError;signedOut++;authTokens=null;}};
+ if(id.includes('AuthenticationService'))return {__esModule:true,default:{checkSession:async()=>initialSession,login:async()=>{if(loginError)throw loginError;return {sub:'user'};},checkServerSession:async()=>{if(serverSessionFailure)throw new Error('Servidor no disponible');}}};
  if(id==='axios')return {__esModule:true,default:{create:()=>({interceptors:{request:{use(){}},response:{use(ok,reject){rejectResponse=reject;}}}})}};
  if(id.endsWith('env.js'))return {COGNITO:{CLIENT_ID:'test',REGION:'region',USER_POOL_ID:'pool'}};
  if(id.includes('MediatecaAccess'))return {guardMediatecaRequest:async()=>{}};
@@ -26,6 +28,19 @@ new Function('require','module','exports',js)(id=>{
 },mod,mod.exports);cache.set(file,mod.exports);return mod.exports;}
 (async()=>{
  const AuthenticationService=load('app/service/AuthenticationService.js').default;
+ localStorage.setItem('username','old@example.test');localStorage.setItem('userPayload','{"sub":"old"}');
+ signInError=Object.assign(new Error('Incorrect username or password'),{name:'NotAuthorizedException'});
+ await assert.rejects(()=>AuthenticationService.login('frankgimeno3@gmail.com','patata'),{name:'NotAuthorizedException'});
+ assert.equal(signedOut,1);assert.deepEqual(signInCalls,[{username:'frankgimeno3@gmail.com',password:'patata'}]);
+ assert.equal(sessionReads,0,'Wrong credentials must not read or reuse existing tokens');assert.equal(authTokens,null);
+ assert.equal(localStorage.getItem('userPayload'),null);assert.equal(localStorage.getItem('username'),null);
+ signInError=null;
+ assert.equal((await AuthenticationService.login('frankgimeno3@gmail.com','valid-fixture')).sub,'fresh-token');
+ signInResult={isSignedIn:false,nextStep:{signInStep:'CONFIRM_SIGN_IN_WITH_SMS_CODE'}};
+ await assert.rejects(()=>AuthenticationService.login('frankgimeno3@gmail.com','valid-fixture'),/verificación/);
+ signOutError=new Error('Cannot clear prior session');const callsBefore=signInCalls.length;
+ await assert.rejects(()=>AuthenticationService.login('frankgimeno3@gmail.com','patata'),/Cannot clear/);assert.equal(signInCalls.length,callsBefore);
+ signOutError=null;signInResult={isSignedIn:true};
  const originalFetch=global.fetch;
  try {
    global.fetch=async()=>({status:200,ok:true,json:async()=>({authenticated:true})});
@@ -96,16 +111,25 @@ new Function('require','module','exports',js)(id=>{
  assert.equal(loginDestination(expiredUrl.slice(1)),'/dashboard/order?x=1#receipt');global.window=browser;
  localStorage.setItem('userPayload','{"sub":"expired"}');localStorage.setItem('redirectAfterLogin','/dashboard/old');
  const root=createRoot(document.getElementById('root')),Home=load('app/page.tsx').default;
- await React.act(async()=>root.render(React.createElement(Home)));assert.equal(redirects.length,0);assert.equal(localStorage.getItem('userPayload'),null);
+ let resolveInitial;initialSession=new Promise(resolve=>{resolveInitial=resolve;});
+ await React.act(async()=>root.render(React.createElement(Home)));
+ assert.equal(document.querySelector('form'),null,'Do not expose credentials while an existing session can still redirect');assert.match(document.body.textContent,/Comprobando sesión/);
+ await React.act(async()=>resolveInitial(null));assert.equal(redirects.length,0);assert.equal(localStorage.getItem('userPayload'),null);
  const browserLocation={search:browser.location.search,hash:browser.location.hash,replace:url=>redirects.push(url)};
  global.window=new Proxy(browser,{get:(value,key)=>key==='location'?browserLocation:Reflect.get(value,key)});
  serverSessionFailure=true;
  await React.act(async()=>{document.querySelector('form').dispatchEvent(new dom.window.Event('submit',{bubbles:true,cancelable:true}));});
  assert.equal(redirects.length,0);assert.match(document.body.textContent,/Servidor no disponible/);assert.ok(document.querySelector('form'));
  serverSessionFailure=false;
+ for(const cause of [Object.assign(new Error('Incorrect username or password'),{name:'NotAuthorizedException'}),new Error('There is already a signed in user')]){
+  loginError=cause;
+  await React.act(async()=>{document.querySelector('form').dispatchEvent(new dom.window.Event('submit',{bubbles:true,cancelable:true}));});
+  assert.equal(redirects.length,0,'A failed sign-in must never recover another session');assert.equal(localStorage.getItem('userPayload'),null);assert.ok(document.querySelector('form'));
+ }
+ loginError=null;
  await React.act(async()=>{document.querySelector('form').dispatchEvent(new dom.window.Event('submit',{bubbles:true,cancelable:true}));await new Promise(resolve=>setTimeout(resolve,1900));});
  assert.equal(redirects.at(-1),target);assert.equal(localStorage.getItem('redirectAfterLogin'),null);
  global.window=browser;
  await React.act(async()=>root.unmount());dom.window.close();
- console.log('PASS: middleware return URL, authenticated return, API 401 path/query/hash, safe destinations, URL priority, stale session cache and successful login return.');
+ console.log('PASS: fresh Cognito sign-in even with prior session; wrong password rejects without token reuse; incomplete challenges/sign-out failures blocked; no login form during session check; failed sign-in cannot recover old user; middleware permissions and safe return URLs.');
 })().catch(error=>{console.error(error);process.exitCode=1;});

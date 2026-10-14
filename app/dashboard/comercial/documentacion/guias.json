@@ -769,7 +769,7 @@
     "summary": "Acceso al ERP mediante inicio de sesión.",
     "steps": [
       "Si tu sesión ha caducado o abres una página sin identificarte, el login conserva la ruta en el parámetro next. Tras iniciar sesión vuelves a esa página con sus parámetros de URL. Entrar directamente al login sin destino abre el dashboard.",
-      "La recuperación conserva la dirección de la página, no los cambios de formularios que todavía no hayas guardado."
+      "La recuperación conserva la dirección de la página, no los cambios de formularios que todavía no hayas guardado. Al abrir el acceso se comprueba primero la sesión y no se muestra el formulario durante esa comprobación. Si ya tienes una sesión válida, se abre directamente el ERP. Si aparece el formulario, cada pulsación de Identificarse cierra la sesión local anterior y comprueba el email y la contraseña en Cognito; una contraseña incorrecta permanece en el login y nunca reutiliza otro usuario."
     ]
   },
   "/tareas": {

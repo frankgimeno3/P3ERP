@@ -26,6 +26,7 @@ export default function Home() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [redirectLoading, setRedirectLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
+  const [checkingSession, setCheckingSession] = useState(true);
 
   const showRedirectLoader = async () => {
     setRedirectLoading(true);
@@ -53,6 +54,7 @@ export default function Home() {
       const authError = new URLSearchParams(window.location.search).get("auth_error");
       if (authError) {
         setError(authError === "access" ? "Tu cuenta no tiene un agente activo asociado. Contacta con Administración." : authError === "service" ? "El servidor no puede comprobar tus permisos. Revisa la conexión a la base de datos en Vercel." : "El servidor no ha aceptado la sesión. Vuelve a identificarte.");
+        setCheckingSession(false);
         return;
       }
       try {
@@ -62,10 +64,13 @@ export default function Home() {
           localStorage.setItem("userPayload", JSON.stringify(sessionPayload));
           const target=getLoginRedirect();
           localStorage.removeItem("redirectAfterLogin");
+          setRedirectLoading(true);
           window.location.replace(target);
         } else {localStorage.removeItem("userPayload");}
       } catch (error: any) {
         setError(error?.message || "No se pudo comprobar la sesión en el servidor.");
+      } finally {
+        setCheckingSession(false);
       }
     };
 
@@ -82,6 +87,7 @@ export default function Home() {
 
   const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (checkingSession || isLoggingIn || redirectLoading) return;
     setError(null);
     setIsLoggingIn(true);
 
@@ -91,22 +97,12 @@ export default function Home() {
       await finishLoginRedirect();
     } catch (error: any) {
       setRedirectLoading(false);
+      localStorage.removeItem('username');
+      localStorage.removeItem('userPayload');
       if (isInvalidCredentialsError(error)) {
         setError("La contraseña introducida es incorrecta.");
         setIsLoggingIn(false);
         return;
-      }
-      if (error?.message?.includes("already a signed in user") || error?.message?.includes("already signed in")) {
-        try {
-          const sessionPayload = await AuthenticationService.checkSession();
-          if (sessionPayload) {
-            localStorage.setItem("userPayload", JSON.stringify(sessionPayload));
-            await finishLoginRedirect();
-            return;
-          }
-        } catch {
-          // Continue to the regular login error.
-        }
       }
       console.error("Error técnico durante el inicio de sesión:", error);
       setError(error?.message || "Error al iniciar sesion. Verifica tus credenciales.");
@@ -114,11 +110,11 @@ export default function Home() {
     }
   };
 
-  if (redirectLoading) {
+  if (redirectLoading || checkingSession) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-slate-950 p-8 text-white">
         <div className="h-12 w-12 animate-spin rounded-full border-4 border-slate-700 border-t-blue-500" />
-        <p className="mt-6 min-h-7 text-lg font-semibold">{loadingTexts[loadingStep]}</p>
+        <p className="mt-6 min-h-7 text-lg font-semibold">{checkingSession ? 'Comprobando sesión…' : loadingTexts[loadingStep]}</p>
       </div>
     );
   }

@@ -50,7 +50,7 @@ export default class AuthenticationService {
                 return payload;
             }
             return null;
-        } catch (e) {
+        } catch {
             return null;
         }
     }
@@ -58,16 +58,11 @@ export default class AuthenticationService {
     static async login(username, password) {
         cognitoUserPoolsTokenProvider.setKeyValueStorage(new CookieStorage());
         
-        // Verificar si ya hay una sesión activa
-        const existingSession = await this.checkSession();
-        if (existingSession) {
-            // Si hay una sesión activa, retornar el payload existente
-            localStorage.setItem('username', username);
-            localStorage.setItem("userPayload", JSON.stringify(existingSession));
-            return existingSession;
-        }
-
-        const response = await signIn({
+        // Submitting credentials must authenticate them, never reuse a prior user.
+        localStorage.removeItem('username');
+        localStorage.removeItem('userPayload');
+        await signOut();
+        let response = await signIn({
             username: username,
             password: password
         });
@@ -75,11 +70,14 @@ export default class AuthenticationService {
         if (response.nextStep?.signInStep === 'CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED') {
             const newPassword = prompt("Por favor, introduzca nueva contraseña");
 
-            await confirmSignIn({
+            response = await confirmSignIn({
                 challengeResponse: newPassword,
             });
         }
 
+        if (response.isSignedIn !== true) {
+            throw new Error("Debes completar la verificación de Cognito antes de acceder.");
+        }
         const session = await fetchAuthSession();
 
         if (!session.tokens?.idToken) {
