@@ -68,7 +68,7 @@ const ContenidoPropuestasCuenta: FC<ContenidoPropuestasCuentaProps> = ({ id_cuen
       <div className="flex flex-row justify-between items-center gap-4">
         <h2 className="text-xl font-bold">Propuestas</h2>
         <Link
-          href="/dashboard/comercial/propuestas/crear"
+          href={`/dashboard/comercial/propuestas/crear?cuenta=${encodeURIComponent(id_cuenta)}`}
           className="bg-blue-950 text-gray-100 p-2 px-4 rounded-lg shadow-xl cursor-pointer hover:bg-blue-900 text-sm"
         >
           Crear nueva propuesta

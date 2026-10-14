@@ -43,7 +43,8 @@
       "Abre una cuenta y entra en Tareas para gestionar sus acciones y responsables.",
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
       "Las cuentas nuevas reciben autom?ticamente un ID ACC seguido de n?mero al guardar; el c?digo Edisoft y la referencia de origen CRM se conservan por separado.",
-      "Al crear, Modo prueba aparece arriba e inicialmente en Sí. Puedes pasarlo a No para datos reales. Los datos de prueba usan PRUEBA- delante del identificador; las relaciones derivadas conservan este modo, incluidos contratos, contenidos, órdenes y facturas. El modo se fija al crear y no se convierte después en real."
+      "Al crear, Modo prueba aparece arriba e inicialmente en Sí. Puedes pasarlo a No para datos reales. Los datos de prueba usan PRUEBA- delante del identificador; las relaciones derivadas conservan este modo, incluidos contratos, contenidos, órdenes y facturas. El modo se fija al crear y no se convierte después en real.",
+      "Crear nueva propuesta desde una cuenta conserva su cuenta en la URL y completa el contacto principal y el título. El encabezado de edición muestra el nombre de la propuesta. Al seleccionar un servicio de revista, la línea conserva la revista, edición y publicación elegidas; el catálogo aporta especificaciones y precio. Página preferente empieza en No: al activar Sí debes elegir una página para confirmar; volver a No retira la selección."
     ]
   },
   "/dashboard/comercial/contactos": {
@@ -711,7 +712,8 @@
       "Los selectores de agentes permiten Comercial, Dirección, Administración, Operaciones y Superadmin; los agentes Base no pueden seleccionarse.",
       "Buscar y seleccionar cuenta abre un modal con filtros por empresa, código, país y correo. Elige una cuenta válida y confirma. Se preselecciona su contacto principal si lo tiene.",
       "En Cobros el primer vencimiento se propone a dos meses; cada cobro añadido toma la fecha del anterior más un mes. El banco inicial depende del país de la cuenta y todas las fechas y bancos pueden editarse.",
-      "Al crear, Modo prueba aparece arriba e inicialmente en Sí. Puedes pasarlo a No para datos reales. Los datos de prueba usan PRUEBA- delante del identificador; las relaciones derivadas conservan este modo, incluidos contratos, contenidos, órdenes y facturas. El modo se fija al crear y no se convierte después en real."
+      "Al crear, Modo prueba aparece arriba e inicialmente en Sí. Puedes pasarlo a No para datos reales. Los datos de prueba usan PRUEBA- delante del identificador; las relaciones derivadas conservan este modo, incluidos contratos, contenidos, órdenes y facturas. El modo se fija al crear y no se convierte después en real.",
+      "Crear nueva propuesta desde una cuenta conserva su cuenta en la URL y completa el contacto principal y el título. El encabezado de edición muestra el nombre de la propuesta. Al seleccionar un servicio de revista, la línea conserva la revista, edición y publicación elegidas; el catálogo aporta especificaciones y precio. Página preferente empieza en No: al activar Sí debes elegir una página para confirmar; volver a No retira la selección."
     ]
   },
   "/dashboard/comercial/propuestas/[id_propuesta]/editar": {
@@ -723,7 +725,8 @@
       "En Cobros el primer vencimiento se propone a dos meses; cada cobro añadido toma la fecha del anterior más un mes. Todas las fechas pueden editarse.",
       "Buscar cuenta consulta resultados paginados sin cargar el catalogo completo. La propuesta carga solo su cuenta; cambiarla reinicia su contacto.",
       "En Revisión, Enviada permite documentar que la propuesta se ha enviado. Guarda primero la propuesta completa. Una nueva marca Sí genera su resumen en Comentarios; las ediciones posteriores solo se registran en el historial.",
-      "Marcar una propuesta como Enviada o Aceptada genera un comentario en su cuenta. La aceptación reúne en un solo comentario la propuesta, el contrato, las órdenes y los contenidos generados. Las modificaciones de contratos y órdenes agrupan todos los cambios encadenados de una misma operación en un único comentario por cuenta, con valores anteriores y nuevos; el Registro de eventos conserva además el detalle."
+      "Marcar una propuesta como Enviada o Aceptada genera un comentario en su cuenta. La aceptación reúne en un solo comentario la propuesta, el contrato, las órdenes y los contenidos generados. Las modificaciones de contratos y órdenes agrupan todos los cambios encadenados de una misma operación en un único comentario por cuenta, con valores anteriores y nuevos; el Registro de eventos conserva además el detalle.",
+      "Crear nueva propuesta desde una cuenta conserva su cuenta en la URL y completa el contacto principal y el título. El encabezado de edición muestra el nombre de la propuesta. Al seleccionar un servicio de revista, la línea conserva la revista, edición y publicación elegidas; el catálogo aporta especificaciones y precio. Página preferente empieza en No: al activar Sí debes elegir una página para confirmar; volver a No retira la selección."
     ]
   },
   "/dashboard/comercial/cuentas/[id_cuenta]": {

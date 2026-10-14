@@ -17,7 +17,7 @@ function load(file){
     if(id.includes('MiddleNav'))return {__esModule:true,default:()=>null};
     if(id==='@/app/apiClient')return {__esModule:true,default:api};
     if(id.includes('ServicioService'))return {ServicioService:{getServicios:async()=>[{id_servicio:'srv',id_medio:'web',nombre_medio:'Web',nombre_servicio_es:'Servicio',precio_tarifa:100}]}};
-    if(id.includes('RevistaService'))return {RevistaService:{getRevistas:async()=>[]}};
+    if(id.includes('RevistaService'))return {RevistaService:{getRevistas:async()=>[],getPaginas:async()=>({paginas:[{id_pagina_publicacion:'preferred-4',pagina_preferente:'pag_pref_4',pagina_actual:4,has_content:false}]})}};
     if(id.includes('CuentaService'))return {CuentaService:{getCuentaById:async()=>({id_cuenta:'client',nombre_empresa:'Cliente',id_agente:'agent'}),getCuentas:async(filters={})=>{const rows=[{id_cuenta:'client',nombre_empresa:'Cliente',id_agente:'agent'}].filter(row=>!filters.clienteFiltro||row.nombre_empresa.toLowerCase().includes(filters.clienteFiltro.toLowerCase()));return filters.limit?{rows,total:rows.length}:rows;}}};
     if(id.includes('AgenteService'))return {AgenteService:{getAgentes:async()=>[{id_agente:'agent',nombre_completo_agente:'Agente asignado'}]}};
     if(id.includes('ContactoService'))return {ContactoService:{getContactos:async()=>[{id_contacto:'first',id_cuenta:'client',nombre_completo_contacto:'Principal',es_principal:true},{id_contacto:'second',id_cuenta:'client',nombre_completo_contacto:'Segundo',es_principal:false}]}};
@@ -55,5 +55,22 @@ const {proposalDate}=load('app/config/proposalDate.js');assert.equal(proposalDat
 const Order=load('app/dashboard/administracion/control-administrativo/[...id_orden]/page.tsx').default;
 const params=Promise.resolve({id_orden:['C25.000.036-1','1']});await React.act(async()=>root.render(React.createElement(React.Suspense,{fallback:'Cargando'},React.createElement(Order,{params}))));
 assert(document.querySelector('a[href="/dashboard/comercial/contratos/C1"]'));assert.match(document.querySelector('a[href="/dashboard/administracion/facturas-clientes/F1"]').textContent,/Previa/);assert(document.querySelector('select[aria-label="Otras \u00f3rdenes de la factura"]')); assert.match(document.body.textContent,/Fecha teórica de cobro/);assert.match(document.body.textContent,/Fecha real de cobro/);assert.match(document.body.textContent,/Remesa\s*:?\s*R1/);
-await React.act(async()=>root.unmount());dom.window.close();console.log('PASS: filtered account modal, automatic primary contact, confirmation/cancel/crown, date filters stacked and enabled in both proposal tabs.');
+const {proposalServicePatch}=load('app/config/proposalServiceSelection.js');
+const selected={id_publicacion:'latam-92',medio_publicacion:'Revista del Vidrio Plano',edicion_publicacion:'América Latina',detalle_publicacion:'92 · versión digital'};
+const service={id_servicio:'right-page',id_medio:'revista',medio_servicio_es:'Hueco arquitectura',edicion_servicio_es:'Edición 2025',publicacion_servicio_es:'Antigua',nombre_servicio_es:'1 página interior derecha',precio_tarifa:1020};
+const fixed=proposalServicePatch(service,selected,{fecha_publicacion:'01/12/2026',deadline_materiales:'01/11/2026'});
+assert.equal(fixed.medio,'Revista del Vidrio Plano');assert.equal(fixed.producto,'Revista del Vidrio Plano');
+assert.equal(fixed.descripcion_linea,'América Latina - 92 - versión digital');assert.equal(fixed.especificaciones_linea,'1 página interior derecha');assert.equal(fixed.fecha_publicacion_publicacion,'01/12/2026');
+const {ServiceWizardBody,emptyLinea}=load('app/components/ProposalServices.tsx');
+let currentLine;
+function Wizard(){const [line,setLine]=React.useState({...emptyLinea(),...selected,...fixed});currentLine=line;return React.createElement(ServiceWizardBody,{step:3,linea:line,grupos:[{id:'revista',nombre:'Revista'}],servicios:[service],revistas:[],onPatch:patch=>setLine(prev=>({...prev,...patch})),onSelectService(){},onApplyPublication(){},onStep(){}});}
+await React.act(async()=>root.render(React.createElement(Wizard)));
+const toggle=()=>document.querySelector('button[role="switch"][aria-label="Página preferente"]');
+assert.equal(toggle().getAttribute('aria-checked'),'false');assert(!document.body.textContent.includes('Página preferente 4'));
+await React.act(async()=>toggle().click());assert.equal(toggle().getAttribute('aria-checked'),'true');assert(document.querySelector('[role="alert"]'));
+const page=[...document.querySelectorAll('button')].find(node=>node.textContent.includes('Página preferente 4'));assert(page);await React.act(async()=>page.click());assert.equal(currentLine.id_pagina_publicacion,'preferred-4');
+await React.act(async()=>toggle().click());assert.equal(currentLine.id_pagina_publicacion,'');assert.equal(currentLine.pagina_preferente_solicitada,false);assert.equal(currentLine.especificaciones_bloqueadas,false);
+await React.act(async()=>root.render(React.createElement(Editor,{mode:'create',cuentaInicial:'client'})));
+assert(label('Título de la propuesta').value.includes('client'));assert([...document.querySelectorAll('tbody tr')].some(row=>row.className.includes('bg-green-50')&&row.textContent.includes('Principal')));
+await React.act(async()=>root.unmount());dom.window.close();console.log('PASS: account prefilling and primary contact, selected magazine overrides stale service data, preferred-page switch selects and clears its reservation, account modal and date filters.');
 })().catch(error=>{console.error(error);process.exitCode=1;});

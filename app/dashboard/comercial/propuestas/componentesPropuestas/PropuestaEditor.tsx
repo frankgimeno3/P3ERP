@@ -17,6 +17,7 @@ import { PropuestaService } from "@/app/service/PropuestaService";
 import { AgenteService } from "@/app/service/AgenteService";
 import { RevistaService } from "@/app/service/RevistaService";
 import PropuestaPreview from "@/app/dashboard/comercial/propuestas/componentesPropuestas/PropuestaPreview";
+import {proposalServicePatch} from "@/app/config/proposalServiceSelection";
 import TestModeToggle from '@/app/components/TestModeToggle';
 import ProposalTemplatePicker from './ProposalTemplatePicker';
 import { addCalendarMonths } from '@/app/config/paymentDates';
@@ -594,31 +595,9 @@ export default function PropuestaEditor({
   }, [revistas]);
 
   function servicePatch(idServicio: string): Partial<Linea> {
-    const servicio = servicios.find((item) => item.id_servicio === idServicio);
-    const precio = toNumber(servicio?.precio_tarifa ?? servicio?.precio_servicio);
-    const language = form.idioma_propuesta;
-    const suffix = language === "es" ? "es" : language;
-    const medio = servicio?.[`medio_servicio_${suffix}`] || servicio?.medio_servicio_es || "";
-    const edicion = servicio?.[`edicion_servicio_${suffix}`] || servicio?.edicion_servicio_es || "";
-    const publicacion = servicio?.[`publicacion_servicio_${suffix}`] || servicio?.publicacion_servicio_es || "";
-    const nombre = servicio?.[`nombre_servicio_${suffix}`] || servicio?.nombre_servicio_es || "";
-    const selectedMagazine=lineModalDraft?.id_publicacion ? revistasById.get(lineModalDraft.id_publicacion) : null;
-    const issue=selectedMagazine?.numero_publicacion||selectedMagazine?.numero||'';
-    const issueWord={es:'número',en:'issue',it:'numero',pt:'número'}[language];
-    return {
-      grupo_servicio: servicio?.id_medio || "",
-      id_servicio: idServicio,
-      medio,
-      publicacion: `${edicion} ${publicacion} ${issue?`${issueWord} ${issue}`:''}`.trim(),
-      producto: nombre,
-      descripcion_linea: `${edicion} ${publicacion}`.trim(),
-      especificaciones_linea: nombre,
-      servicio_personalizado: false,
-      precio_tarifa: precio,
-      precio_unitario: precio,
-      deadline_publicacion: servicio?.fecha_deadline_servicio || "",
-      fecha_publicacion_publicacion: servicio?.fecha_publicacion_servicio || "",
-    };
+    const service = servicios.find(item => item.id_servicio === idServicio);
+    const selection = lineModalDraft || emptyLinea();
+    return proposalServicePatch(service, selection, revistasById.get(selection.id_publicacion || '') || {}, form.idioma_propuesta);
   }
 
   function publicationPatch(idPublicacion: string): Partial<Linea> {
@@ -723,7 +702,7 @@ export default function PropuestaEditor({
     setStep(next);
     setForm(mapPropuestaToForm(result));
   }
-  const title = mode === "edit" ? `Editar propuesta ${form.id_propuesta}` : mode === "replicate" ? `Replicar propuesta ${idPropuesta}` : "Crear propuesta";
+  const title = mode === "edit" ? `Editar propuesta ${form.nombre_propuesta.trim() || "sin título"}` : mode === "replicate" ? `Replicar propuesta ${idPropuesta}` : "Crear propuesta";
 
   if (loading) {
     return (
@@ -1054,7 +1033,7 @@ export default function PropuestaEditor({
                     onStep={setLineModalStep}
                   />
                   <div className="mt-5 flex justify-end">
-                    <button type="button" onClick={() => { setForm((prev) => ({ ...prev, lineas: [...prev.lineas.slice(0, lineModalIndex), lineModalDraft, ...prev.lineas.slice(lineModalIndex)] })); setLineModalIndex(null); setLineModalDraft(null); }} disabled={lineModalStep < 3 || !lineModalDraft.id_servicio || (lineModalDraft.id_servicio === "personalizado" && !lineModalDraft.producto.trim())} className="rounded-lg bg-blue-950 px-4 py-2 text-sm text-white enabled:cursor-pointer enabled:hover:bg-blue-900 disabled:cursor-not-allowed disabled:bg-gray-300">
+                    <button type="button" onClick={() => { setForm((prev) => ({ ...prev, lineas: [...prev.lineas.slice(0, lineModalIndex), lineModalDraft, ...prev.lineas.slice(lineModalIndex)] })); setLineModalIndex(null); setLineModalDraft(null); }} disabled={lineModalStep < 3 || !lineModalDraft.id_servicio || (lineModalDraft.pagina_preferente_solicitada && !lineModalDraft.id_pagina_publicacion) || (lineModalDraft.id_servicio === "personalizado" && !lineModalDraft.producto.trim())} className="rounded-lg bg-blue-950 px-4 py-2 text-sm text-white enabled:cursor-pointer enabled:hover:bg-blue-900 disabled:cursor-not-allowed disabled:bg-gray-300">
                       Confirmar
                     </button>
                   </div>
