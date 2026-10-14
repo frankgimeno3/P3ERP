@@ -17,6 +17,8 @@ try{
  await db.query(`CREATE TABLE public.${parent}(id TEXT PRIMARY KEY,nombre_cuenta TEXT,nif TEXT,password TEXT,archivo BYTEA,datos JSONB,updated_at TIMESTAMPTZ DEFAULT now());CREATE TABLE public.${child}(id TEXT PRIMARY KEY,parent_id TEXT REFERENCES public.${parent}(id) ON DELETE CASCADE,detalle TEXT)`);
  await db.query('SELECT public.p3_install_user_event_triggers()');
  await withUserEventContext(context,async()=>{
+  await db.query('DO $block$ BEGIN PERFORM 1; END $block$');
+  await assert.rejects(()=>db.query('SELECT 1; COMMIT'),/por separado/);
   await db.query(`INSERT INTO public.${parent}(id,nombre_cuenta,nif,password,archivo,datos) VALUES('one','Cuenta prueba','NIF-A','never-store-secret',decode('010203','hex'),' {"secret":"never-json-secret","visible":1}')`);
   await db.query(`INSERT INTO public.${child} VALUES('child','one','Dato asociado')`);
   await db.query(`UPDATE public.${parent} SET nif='NIF-B' WHERE id='one'`);

@@ -1,6 +1,8 @@
 import apiClient from "../apiClient.js";
 
 export class FacturaService {
+    static async getOrigenFactura(source,id){return (await apiClient.get('/api/v1/admin/facturas-clientes/origen',{params:{origen:source,id}})).data;}
+    static async createFacturaSeleccionada(data){return (await apiClient.post('/api/v1/admin/facturas-clientes',data)).data;}
     static async getFacturasClientes() {
         const response = await apiClient.get('/api/v1/admin/facturas-clientes');
         return response.data;

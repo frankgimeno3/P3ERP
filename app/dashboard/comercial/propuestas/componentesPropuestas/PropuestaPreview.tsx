@@ -159,6 +159,7 @@ function lineTotal(line: any) {
 
 export default function PropuestaPreview({
   propuesta,
+  documentStyle = false,
   agentes = [],
   servicios = [],
   editableAgent = false,
@@ -167,6 +168,7 @@ export default function PropuestaPreview({
   onCommentsChange,
 }: {
   propuesta: any;
+  documentStyle?: boolean;
   agentes?: any[];
   servicios?: any[];
   editableAgent?: boolean;
@@ -181,6 +183,7 @@ export default function PropuestaPreview({
   ) as keyof typeof copy;
   const t = copy[language];
   const serviceName = (line: any) => {
+    if(line.id_publicacion && (line.medio||line.producto))return line.medio||line.producto;
     const service = servicios.find(
       (item) => item.id_servicio === line.id_servicio,
     );
@@ -217,17 +220,19 @@ export default function PropuestaPreview({
   const base = Number(propuesta.importe_total_bi_propuesta || 0);
   const total = Number(propuesta.importe_propuesta_con_iva || 0);
   return (
-    <article className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
-      <header className="bg-gradient-to-r from-slate-950 to-blue-950 px-8 py-8 text-white">
+    <article className={documentStyle ? "mx-auto min-h-[1123px] w-[794px] max-w-full border border-slate-200 bg-white p-10 text-black shadow-lg" : "overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl"}>
+      <header className={documentStyle ? "border-b border-slate-200 pb-6 text-black" : "bg-gradient-to-r from-slate-950 to-blue-950 px-8 py-8 text-white"}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        {documentStyle && <img src="/invoices/proporcion3-letterhead.png" alt="Proporción 3, S.A." className="mb-8 w-80"/>}
         <p className="text-xs font-semibold uppercase tracking-[0.25em]">
           Proporción 3
         </p>
         <h1 className="mt-2 text-3xl font-semibold">
           {propuesta.nombre_propuesta || t.proposal}
         </h1>
-        <p className="mt-2 text-blue-100">{t.proposal}</p>
+        <p className={documentStyle ? "mt-2 text-slate-600" : "mt-2 text-blue-100"}>{t.proposal}</p>
       </header>
-      <div className="space-y-8 p-8">
+      <div className={documentStyle ? "space-y-8 pt-6" : "space-y-8 p-8"}>
         <section>
           <h2 className="mb-4 border-b-2 border-blue-950 pb-2 text-lg font-semibold text-blue-950">
             {t.general}

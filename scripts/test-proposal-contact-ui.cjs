@@ -6,7 +6,7 @@ Object.assign(global,{window:dom.window,document:dom.window.document,navigator:d
 dom.window.HTMLElement.prototype.scrollIntoView=function(){};
 const React=require('react'),{createRoot}=require('react-dom/client');
 const calls=[],navigations=[],cache=new Map();
-const api={put:async(url,data)=>{calls.push({url,data});return {data};}};
+const api={get:async()=>({data:{id_agente:"agent"}}),put:async(url,data)=>{calls.push({url,data});return {data};}};
 function load(file){
   if(cache.has(file))return cache.get(file);
   const js=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{jsx:ts.JsxEmit.ReactJSX,module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true}}).outputText;
@@ -15,6 +15,7 @@ function load(file){
     if(id==='next/navigation')return {useRouter:()=>({push:url=>navigations.push(url)})};
     if(id==='next/link')return {__esModule:true,default:props=>React.createElement('a',props)};
     if(id.includes('MiddleNav'))return {__esModule:true,default:()=>null};
+    if(id==='@/app/lib/currentUser')return {getCurrentUser:async()=>({id_agente:'agent',name:'Agente creador',role:'comercial'})};
     if(id==='@/app/apiClient')return {__esModule:true,default:api};
     if(id.includes('ServicioService'))return {ServicioService:{getServicios:async()=>[{id_servicio:'srv',id_medio:'web',nombre_medio:'Web',nombre_servicio_es:'Servicio',precio_tarifa:100}]}};
     if(id.includes('RevistaService'))return {RevistaService:{getRevistas:async()=>[],getPaginas:async()=>({paginas:[{id_pagina_publicacion:'preferred-4',pagina_preferente:'pag_pref_4',pagina_actual:4,has_content:false}]})}};

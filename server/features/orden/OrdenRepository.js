@@ -56,7 +56,7 @@ const ordenesSelect = `
   SELECT
     o.id_orden,o.updated_at,
     o.cancelada,o.cancelada_at,o.cancelacion_detalle,o.id_contacto_cobro,o.comentarios,o.con_iva,
-    COALESCE(NULLIF(o.id_agente,''),aceptacion.id_agente,c.id_agente_contrato) agente_orden_id,
+    COALESCE(NULLIF(o.id_agente,''),aceptacion.id_agente,c.id_agente_propuesta_contrato,c.id_agente_contrato) agente_orden_id,
     substring(o.id_orden from '(\\d+/\\d+)$') numero_orden,
     (SELECT count(*) FROM tesoreria_ordenes sibling WHERE sibling.id_contrato=o.id_contrato) total_ordenes,
     c.id_propuesta,c.fecha_firma_contrato,p.nombre_propuesta,p.id_agente_propuesta,p.id_contacto_propuesta,
@@ -94,7 +94,7 @@ const ordenesSelect = `
     WHERE e.id_cuenta=c.id_cuenta_contrato AND NULLIF(e.id_agente,'') IS NOT NULL
       AND strpos(e.detalles,'ha confirmado la propuesta ' || c.id_propuesta || ';')>0
     ORDER BY e.created_at ASC LIMIT 1) aceptacion ON TRUE
-  LEFT JOIN agentes_db a ON a.id_agente = COALESCE(NULLIF(o.id_agente,''),aceptacion.id_agente,c.id_agente_contrato)
+  LEFT JOIN agentes_db a ON a.id_agente = COALESCE(NULLIF(o.id_agente,''),aceptacion.id_agente,c.id_agente_propuesta_contrato,c.id_agente_contrato)
   LEFT JOIN LATERAL (SELECT r.* FROM tesoreria_recibos_importados r WHERE r.id_orden=o.id_orden ORDER BY r.numero_recibo LIMIT 1) r ON TRUE
 `;
 

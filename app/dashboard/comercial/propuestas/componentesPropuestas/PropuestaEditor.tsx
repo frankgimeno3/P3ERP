@@ -18,6 +18,7 @@ import { AgenteService } from "@/app/service/AgenteService";
 import { RevistaService } from "@/app/service/RevistaService";
 import PropuestaPreview from "@/app/dashboard/comercial/propuestas/componentesPropuestas/PropuestaPreview";
 import {proposalServicePatch} from "@/app/config/proposalServiceSelection";
+import {getCurrentUser} from "@/app/lib/currentUser";
 import TestModeToggle from '@/app/components/TestModeToggle';
 import ProposalTemplatePicker from './ProposalTemplatePicker';
 import { addCalendarMonths } from '@/app/config/paymentDates';
@@ -418,6 +419,8 @@ export default function PropuestaEditor({
   const [contactos, setContactos] = useState<any[]>([]);
   const [servicios, setServicios] = useState<any[]>([]);
   const [agentes, setAgentes] = useState<any[]>([]);
+  const creatorAgent=useRef("");
+  useEffect(()=>{if(mode==="edit")return;let active=true;getCurrentUser().then(response=>{const actorId=response.id_agente||"";if(active&&actorId){creatorAgent.current=actorId;setForm(previous=>({...previous,id_agente_propuesta:previous.id_agente_propuesta||actorId}));}}).catch(()=>setError("No se pudo identificar al agente que crea la propuesta."));return()=>{active=false;};},[mode]);
   const [revistas, setRevistas] = useState<any[]>([]);
   const [lineModalIndex, setLineModalIndex] = useState<number | null>(null);
   const [lineModalDraft, setLineModalDraft] = useState<Linea | null>(null);
@@ -479,6 +482,7 @@ export default function PropuestaEditor({
         const fresh = defaultForm("");
         setForm({
           ...fresh,
+          id_agente_propuesta:creatorAgent.current,
           idioma_propuesta: data.idioma_propuesta || "es",
           lineas: (data.lineas || []).map((linea: Linea) => ({ ...linea, id_linea_propuesta: undefined })),
           descuento_final_propuesta: toNumber(data.descuento_final_propuesta),
@@ -522,7 +526,7 @@ export default function PropuestaEditor({
       return {
         ...prev,
         nombre_propuesta: nombre,
-        id_agente_propuesta: prev.id_agente_propuesta || agentes.find((agent) => agent.id_agente === cuenta.id_agente && isCommercialAgent(agent))?.id_agente || "",
+        id_agente_propuesta: prev.id_agente_propuesta,
         datos_facturacion: {
           nombre_fiscal: cuenta.nombre_fiscal || cuenta.nombre_empresa || "",
           vat_code: cuenta.vat_code || "",
@@ -928,7 +932,7 @@ export default function PropuestaEditor({
               </div>
             )}
 
-            {step === 4 && <PropuestaPreview propuesta={{ ...form, cuenta, contacto: contactos.find((item) => item.id_contacto === form.id_contacto_propuesta), importe_total_bi_propuesta: baseImponible, importe_propuesta_con_iva: totalConIva }} agentes={agentes} servicios={servicios} editableAgent onAgentChange={(id) => setForm((prev) => ({ ...prev, id_agente_propuesta: id }))} editableComments onCommentsChange={(value) => setForm((prev) => ({ ...prev, comentarios_adicionales: value }))} />}
+            {step === 4 && <div className="overflow-x-auto rounded bg-gray-200 p-5"><PropuestaPreview documentStyle propuesta={{ ...form, cuenta, contacto: contactos.find((item) => item.id_contacto === form.id_contacto_propuesta), importe_total_bi_propuesta: baseImponible, importe_propuesta_con_iva: totalConIva }} agentes={agentes} servicios={servicios} editableAgent onAgentChange={(id) => setForm((prev) => ({ ...prev, id_agente_propuesta: id }))} editableComments onCommentsChange={(value) => setForm((prev) => ({ ...prev, comentarios_adicionales: value }))} /></div>}
 
             {false && step === 4 && (
               <div className="space-y-4">

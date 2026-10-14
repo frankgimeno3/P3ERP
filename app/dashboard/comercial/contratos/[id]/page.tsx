@@ -17,8 +17,9 @@ import ContractDocument from './ContractDocument';
 
 const formatDate = (value?: string) => value || "-";
 const formatMoney = (value?: number) => {
+  if(value===undefined||value===null)return '-';
   const amount = Number(value ?? 0);
-  return amount ? `${amount.toLocaleString("es-ES")} €` : "-";
+  return Number.isFinite(amount) ? `${amount.toLocaleString("es-ES")} €` : "-";
 };
 
 const Field = ({ label, value }: { label: string; value?: React.ReactNode }) => (
@@ -70,13 +71,13 @@ const ResumenContrato: FC = () => {
     if (id) fetchContrato();
   }, [id]);
 
-  const saveGeneralData = async () => {
+  const saveGeneralData = async (agentId:string) => {
     setSaving(true);
     setError("");
     setMessage("");
     try {
       const updated = await ContratoService.updateContrato(id, {
-        id_agente_contrato: contrato.id_agente_contrato || "",
+        id_agente_contrato: agentId,
       });
       setContrato(updated);
       setMessage("Datos generales actualizados correctamente.");
@@ -146,9 +147,7 @@ const ResumenContrato: FC = () => {
           <div className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3">
             <h2 className="text-base font-semibold text-blue-950">Datos generales</h2>
             <button type="button" disabled={creatingProposal||!contrato.id_cuenta_contrato} onClick={()=>setProposalModal(true)} className="rounded border border-blue-950 px-4 py-2 text-sm font-semibold text-blue-950 transition enabled:cursor-pointer enabled:hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50">{creatingProposal?'Creando propuesta…':'Crear nueva propuesta'}</button>
-            <button type="button" onClick={() => void saveGeneralData()} disabled={saving} className="cursor-pointer rounded bg-blue-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-50">
-              {saving ? "Guardando..." : "Guardar cambios"}
-            </button>
+            <p role="status" className="text-sm text-slate-500">{saving?"Guardando...":message||"Los cambios se guardan automáticamente."}</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3">
             <Field label="Contrato" value={contrato.id_contrato} />
@@ -156,21 +155,22 @@ const ResumenContrato: FC = () => {
             <Field label="Moneda" value={contrato.moneda || "EUR"} />
             <Field label="Comentarios" value={contrato.comentarios_adicionales} />
             <label className="border-b border-gray-200 px-4 py-3">
-              <span className="text-xs uppercase text-gray-600">Agente</span>
-              <select value={contrato.id_agente_contrato || ""} onChange={(event) => setContrato({ ...contrato, id_agente_contrato: event.target.value })} className="mt-1 w-full cursor-pointer rounded border bg-white px-3 py-2 text-sm transition hover:border-blue-950">
+              <span className="text-xs uppercase text-gray-600">Agente gestor</span>
+              <select value={contrato.id_agente_contrato || ""} disabled={saving} onChange={(event) => void saveGeneralData(event.target.value)} className="mt-1 w-full cursor-pointer rounded border bg-white px-3 py-2 text-sm transition hover:border-blue-950">
                 <option value="">Sin agente</option>
-                {agentes.filter(isCommercialAgent).map((agente) => <option key={agente.id_agente} value={agente.id_agente}>{agente.nombre_completo_agente || agente.nombre_agente || agente.id_agente}</option>)}
+                {agentes.filter(item=>isCommercialAgent(item)||item.id_agente===contrato.id_agente_contrato).map((agente) => <option key={agente.id_agente} value={agente.id_agente}>{agente.nombre_completo_agente || agente.nombre_agente || agente.id_agente}</option>)}
               </select>
             </label>
+            <Field label="Agente propuesta (inalterable)" value={contrato.nombre_agente_propuesta_contrato || contrato.id_agente_propuesta_contrato} />
             <Field label="Propuesta de origen" value={contrato.id_propuesta ? <Link href={`/dashboard/comercial/propuestas/${encodeURIComponent(contrato.id_propuesta)}`} className="cursor-pointer font-medium text-blue-950 underline decoration-blue-300 underline-offset-2 transition hover:text-blue-700">{contrato.id_propuesta}</Link> : "-"} />
             <Field label="Fecha de firma" value={formatDate(contrato.fecha_firma_contrato)} />
             <Field label="Fecha fin" value={formatDate(contrato.fecha_fin_contrato)} />
             <Field label="Fecha cobro prevista" value={formatDate(contrato.fecha_cobro_prevista_contrato)} />
             <Field label="Forma de cobro" value={contrato.forma_cobro_contrato} />
             <Field label="Descuento final" value={formatMoney(contrato.descuento_final_contrato)} />
-            <Field label="Importe BI" value={contrato.datos_importacion?.importe_desconocido ? "Importe pendiente" : formatMoney(contrato.importe_total_bi_contrato)} />
+            {contrato.iva_aplicable && <Field label="Importe BI" value={contrato.datos_importacion?.importe_desconocido ? "Importe pendiente" : formatMoney(contrato.importe_total_bi_contrato)} />}
             <Field label="IVA aplicable" value={contrato.datos_importacion?.importe_desconocido ? "Sin determinar" : contrato.iva_aplicable ? "Sí" : "No"} />
-            <Field label={contrato.es_intercambio ? "Cobro monetario del intercambio" : "Importe con IVA"} value={contrato.datos_importacion?.importe_desconocido ? "Importe pendiente" : contrato.es_intercambio ? "0 EUR" : formatMoney(contrato.importe_contrato_con_iva)} />
+            <Field label={contrato.es_intercambio ? "Cobro monetario del intercambio" : contrato.iva_aplicable ? "Importe con IVA" : "Importe total"} value={contrato.datos_importacion?.importe_desconocido ? "Importe pendiente" : contrato.es_intercambio ? "0 EUR" : formatMoney(contrato.importe_contrato_con_iva)} />
             {contrato.es_intercambio && <><Field label="Valor ofrecido en intercambio" value={formatMoney(contrato.importe_intercambio)} /><Field label="Condiciones del intercambio" value={contrato.condiciones_intercambio} /></>}
           </div>
         </section>

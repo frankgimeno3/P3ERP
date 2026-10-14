@@ -635,6 +635,7 @@ async function replaceCobros(client, idPropuesta, cobros = []) {
 }
 
 export async function createPropuesta(payload, actorId = "") {
+  payload={...payload,id_agente_propuesta:payload.id_agente_propuesta||actorId};
   if(payload.enviada)throw Object.assign(new Error("Guarda la propuesta completa antes de marcarla como enviada."),{status:422});
   const pool = getPgPool();
   await assertCommercialAgent(pool, payload.id_agente_propuesta);

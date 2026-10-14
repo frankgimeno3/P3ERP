@@ -1,4 +1,6 @@
 import {testIdentifier,isTestIdentifier} from '../identifiers/TestMode.js';
+import {replaceInvoiceOrders} from './InvoiceSelection.js';
+import {calculateInvoicePricing} from '../../../app/config/invoicePricing.js';
 import {resolveIdentifier} from '../identifiers/IdentifierAliases.js';
 import { syncInvoiceOrders } from './InvoiceOrders.js';
 import {invoiceRegionalTotals} from './InvoiceCustomerMatching.js';
@@ -63,7 +65,7 @@ export async function getEligibleContracts() {
     SELECT c.*,cu.nombre_empresa
     FROM comercial_contratos c LEFT JOIN comercial_cuentas cu ON cu.id_cuenta=c.id_cuenta_contrato
     LEFT JOIN administracion_facturas_clientes f ON f.id_factura_cliente=c.id_factura
-    WHERE COALESCE(c.id_factura,'')='' OR (f.estado='en proceso' AND NOT COALESCE(f.ya_contabilizada,false) AND COALESCE(f.verifactu_estado_envio,'')<>'factura emitida')
+    WHERE EXISTS(SELECT 1 FROM tesoreria_ordenes o WHERE o.id_contrato=c.id_contrato AND NOT o.cancelada AND COALESCE(o.id_factura,'')='') OR COALESCE(c.id_factura,'')='' OR (f.estado='en proceso' AND NOT COALESCE(f.ya_contabilizada,false) AND COALESCE(f.verifactu_estado_envio,'')<>'factura emitida')
     ORDER BY c.created_at DESC
   `);
   return rows;
@@ -184,7 +186,9 @@ export async function getCustomerInvoice(idFactura) {
   if (!rows[0]) return null;
   const [lines, payments, orders, documents] = await Promise.all([
     pool.query(`SELECT * FROM administracion_lineas_factura WHERE id_factura_cliente=$1 ORDER BY posicion`, [idFactura]),
-    pool.query(`SELECT * FROM comercial_contratos_cobros WHERE id_contrato=$1 ORDER BY numero_cobro`, [rows[0].id_contrato]),
+    rows[0].datos_importacion?.facturacion_por_ordenes||rows[0].id_orden_origen
+      ? pool.query(`SELECT o.id_orden,o.id_cobro_contrato,o.numero_cobro,o.fecha_teorica_cobro fecha_cobro,o.cobro_total importe_cobro,o.forma_cobro,o.banco_cobro FROM tesoreria_ordenes o WHERE o.id_factura=$1 ORDER BY o.numero_cobro`,[idFactura])
+      : pool.query(`SELECT * FROM comercial_contratos_cobros WHERE id_contrato=$1 ORDER BY numero_cobro`, [rows[0].id_contrato]),
     pool.query(`SELECT * FROM tesoreria_ordenes WHERE id_factura=$1 ORDER BY numero_cobro`, [idFactura]),
     pool.query('SELECT id_documento,nombre,sha256 FROM administracion_facturas_documentos WHERE id_factura_cliente=$1 ORDER BY nombre',[idFactura]),
   ]);
@@ -264,24 +268,24 @@ export async function createRectifyingInvoiceDraft(sourceInvoiceId, invoiceType)
     if (!["rectificativa", "abono"].includes(invoiceType)) throw new Error("Tipo de factura rectificativa no válido");
     const original = source.rows[0];
     if(original.factura_tipo==='abono'||number(original.importe_total)<=0)throw new Error('Selecciona una factura de origen positiva, no otro abono.');
-    const idFactura = id("fac");
+    const idFactura = testIdentifier(id("fac"),original.es_prueba||isTestIdentifier(sourceInvoiceId));
     await client.query(`INSERT INTO administracion_facturas_clientes (
       id_factura_cliente,id_cuenta,base_imponible,importe_total,estado,moneda,datos_fiscales,forma_cobro,
-      factura_origen_id,factura_tipo,verifactu_estado_envio
-    ) VALUES ($1,$2,$3,$4,'en proceso',$5,$6::jsonb,$7,$8,$9,'borrador')`,
+      factura_origen_id,factura_tipo,verifactu_estado_envio,datos_importacion
+    ) VALUES ($1,$2,$3,$4,'en proceso',$5,$6::jsonb,$7,$8,$9,'borrador',$10::jsonb)`,
     [idFactura,original.id_cuenta,invoiceType==="abono"?-Math.abs(number(original.base_imponible)):original.base_imponible,
       invoiceType==="abono"?-Math.abs(number(original.importe_total)):original.importe_total,original.moneda || "EUR",
-      JSON.stringify(original.datos_fiscales || {}),original.forma_cobro || "",sourceInvoiceId,invoiceType]);
+      JSON.stringify(original.datos_fiscales || {}),original.forma_cobro || "",sourceInvoiceId,invoiceType,JSON.stringify({ajustes_importe:{...original.datos_importacion?.ajustes_importe,...(original.datos_importacion?.ajustes_importe?.base_personalizada!=null?{base_personalizada:Number(original.datos_importacion.ajustes_importe.base_personalizada)*(invoiceType==="abono"?-1:1)}:{}),redondeo:Number(original.datos_importacion?.ajustes_importe?.redondeo||0)*(invoiceType==="abono"?-1:1)}})]);
     const lines = await client.query(`SELECT * FROM administracion_lineas_factura WHERE id_factura_cliente=$1 ORDER BY posicion`, [sourceInvoiceId]);
     for (const line of lines.rows) {
       const sign = invoiceType === "abono" ? -1 : 1;
       await client.query(`INSERT INTO administracion_lineas_factura (
         id_linea_factura,id_factura_cliente,id_linea_contrato,posicion,concepto,descripcion,cantidad,
-        precio_unitario,descuento,tipo_descuento,base_imponible,iva_porcentaje,importe_total,personalizada
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
+        precio_unitario,descuento,tipo_descuento,base_imponible,iva_porcentaje,importe_total,personalizada,modo_precio,precio_total_personalizado
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`,
       [id("lfac"),idFactura,line.id_linea_contrato,line.posicion,line.concepto,line.descripcion,line.cantidad,
         number(line.precio_unitario)*sign,line.descuento,line.tipo_descuento,number(line.base_imponible)*sign,
-        line.iva_porcentaje,number(line.importe_total)*sign,line.personalizada]);
+        line.iva_porcentaje,number(line.importe_total)*sign,line.personalizada,line.modo_precio||"calculado",line.precio_total_personalizado==null?null:Number(line.precio_total_personalizado)*sign]);
     }
     await client.query("COMMIT");
     return getCustomerInvoice(idFactura);
@@ -311,6 +315,7 @@ export async function emitCustomerInvoice(idFactura, data = {}, actorId = "") {
     const result = await client.query(`SELECT * FROM administracion_facturas_clientes WHERE id_factura_cliente=$1 FOR UPDATE`, [idFactura]);
     const invoice = result.rows[0];
     if (!invoice) throw new Error("Factura no encontrada");
+    if(invoice.datos_importacion?.facturacion_por_ordenes){const sums=(await client.query('SELECT count(*)::int n,COALESCE(sum(cobro_total),0) total FROM tesoreria_ordenes WHERE id_factura=$1 AND NOT cancelada',[idFactura])).rows[0];if(!sums.n||Math.round(Number(sums.total)*100)!==Math.round(Number(invoice.importe_total)*100))throw Error('Revisa y guarda la distribución de cobros antes de emitir esta factura.');}
     if (invoice.verifactu_estado_envio === "factura emitida") throw new Error("La factura ya está emitida");
     if (invoice.datos_importacion?.requiere_revision_importe) throw new Error("Revisa primero la discrepancia entre base e importe del Excel de origen.");
     const issuerNif = String(data.issuer_nif || data.verifactu_emisor || "").trim().toUpperCase();
@@ -529,6 +534,12 @@ export async function updateCustomerInvoice(idFactura, data = {}, actorId = "") 
       return getCustomerInvoice(idFactura);
     }
     const locked = Boolean(current.rows[0].ya_contabilizada);
+    if(!locked&&current.rows[0].datos_importacion?.facturacion_por_ordenes&&Array.isArray(data.cobros)&&!Array.isArray(data.ordenes_nuevas))data={...data,ordenes_nuevas:data.cobros};
+    if(Array.isArray(data.lineas)&&(data.ajustes_importe!==undefined||current.rows[0].datos_importacion?.facturacion_por_ordenes)&&!locked){
+      data={...data,ajustes_importe:data.ajustes_importe??current.rows[0].datos_importacion?.ajustes_importe??{}};
+      data={...data,lineas:calculateInvoicePricing(data.lineas,data.ajustes_importe,current.rows[0].factura_tipo==='abono').lineas};
+      await client.query(`UPDATE administracion_facturas_clientes SET datos_importacion=COALESCE(datos_importacion,'{}'::jsonb)||jsonb_build_object('ajustes_importe',$2::jsonb) WHERE id_factura_cliente=$1`,[idFactura,JSON.stringify(data.ajustes_importe)]);
+    }
     if (locked && Object.keys(data).some((key) => !["ya_contabilizada"].includes(key))) {
       throw new Error("La factura contabilizada ya no admite modificaciones");
     }
@@ -545,21 +556,21 @@ export async function updateCustomerInvoice(idFactura, data = {}, actorId = "") 
         const appliedVat=["exenta","no_sujeta","inversion_sujeto_pasivo"].includes(operation)?0:iva;
         const surcharge=number(line.recargo_equivalencia_porcentaje);
         const withholding=number(line.retencion_porcentaje);
-        const calculatedTotal=base*(1+(appliedVat+surcharge-withholding)/100);
+        const calculatedTotal=data.ajustes_importe!==undefined?number(line.importe_total):base*(1+(appliedVat+surcharge-withholding)/100);
         await client.query(`INSERT INTO administracion_lineas_factura (
           id_linea_factura,id_factura_cliente,id_linea_contrato,posicion,concepto,descripcion,cantidad,precio_unitario,
           descuento,tipo_descuento,base_imponible,iva_porcentaje,importe_total,personalizada,
-          operacion_fiscal,causa_exencion,inversion_sujeto_pasivo,recargo_equivalencia_porcentaje,retencion_porcentaje
-        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)`,
+          operacion_fiscal,causa_exencion,inversion_sujeto_pasivo,recargo_equivalencia_porcentaje,retencion_porcentaje,modo_precio,precio_total_personalizado
+        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)`,
         [line.id_linea_factura || id("lfac"),idFactura,line.id_linea_contrato || null,i+1,line.concepto || "",line.descripcion || "",
           qty,unit,number(line.descuento),line.tipo_descuento || "porcentaje",base,iva,
           calculatedTotal,Boolean(line.personalizada),
           operation,line.causa_exencion || "",
           Boolean(line.inversion_sujeto_pasivo),number(line.recargo_equivalencia_porcentaje),
-          number(line.retencion_porcentaje)]);
+          number(line.retencion_porcentaje),line.modo_precio||'calculado',line.precio_total_personalizado??null]);
       }
     }
-    if (Array.isArray(data.cobros) && !locked) {
+    if (Array.isArray(data.cobros) && !Array.isArray(data.ordenes_nuevas) && !locked) {
       for (const cobro of data.cobros) {
         await client.query(`UPDATE comercial_contratos_cobros SET
           fecha_cobro=$1,importe_cobro=$2,forma_cobro=$3,banco_cobro=$4,observaciones_cobro=$5,updated_at=NOW()
@@ -569,7 +580,7 @@ export async function updateCustomerInvoice(idFactura, data = {}, actorId = "") 
       }
     }
     const lines = await client.query(`SELECT COALESCE(SUM(base_imponible),0) base,COALESCE(SUM(importe_total),0) total FROM administracion_lineas_factura WHERE id_factura_cliente=$1`, [idFactura]);
-    if(current.rows[0].id_orden_origen){
+    if(current.rows[0].id_orden_origen&&!current.rows[0].datos_importacion?.facturacion_por_ordenes&&!Array.isArray(data.ordenes_nuevas)){
       const linked=(await client.query('SELECT cobro_total FROM tesoreria_ordenes WHERE id_orden=$1 FOR UPDATE',[current.rows[0].id_orden_origen])).rows[0];
       if(!linked || Math.abs(number(lines.rows[0].total)-number(linked.cobro_total))>0.01)throw new Error('El total de la factura de esta orden debe coincidir con su importe de cobro.');
     }
@@ -583,7 +594,9 @@ export async function updateCustomerInvoice(idFactura, data = {}, actorId = "") 
       JSON.stringify(patch.datos_fiscales || {}),JSON.stringify(patch.datos_verifactu || {}),patch.comentarios || "",
       patch.forma_cobro || "",lines.rows[0].base,lines.rows[0].total,Boolean(patch.ya_contabilizada),
       JSON.stringify(data),idFactura]);
-    if (!locked && (Array.isArray(data.cobros) || Array.isArray(data.lineas) || data.estado === "enviada")) {
+    if(!locked&&Array.isArray(data.ordenes_nuevas))await replaceInvoiceOrders(client,{...current.rows[0],base_imponible:lines.rows[0].base,importe_total:lines.rows[0].total},data.ordenes_nuevas,actorId);
+    if(data.ya_contabilizada&&current.rows[0].datos_importacion?.facturacion_por_ordenes){const orders=(await client.query('SELECT count(*)::int n,COALESCE(sum(cobro_total),0) total FROM tesoreria_ordenes WHERE id_factura=$1 AND NOT cancelada',[idFactura])).rows[0];if(!orders.n||Math.round(Number(orders.total)*100)!==Math.round(Number(lines.rows[0].total)*100))throw Error('Los cobros de la factura no cuadran. Completa su distribución antes de contabilizarla.');}
+    if (!locked && (Array.isArray(data.cobros) || Array.isArray(data.lineas) || data.numero_factura!==undefined || data.estado === "enviada")) {
       await syncInvoiceOrders(client,idFactura,actorId);
     }
     await client.query("COMMIT");

@@ -2,6 +2,8 @@
 
 Source: PostgreSQL `public` schema from the configured RDS connection.
 
+Migration `20261014_0001_contract_managers_order_rekey.sql` adds immutable `comercial_contratos.id_agente_propuesta_contrato` (the original proposal agent); existing `id_agente_contrato` remains the current manager. It adds `modo_precio` and `precio_total_personalizado` to invoice lines. Order foreign keys in receipts, bank movements and receipt applications now cascade ID updates, preserving associations during transactional renumbering. Selected invoice orders and general pricing adjustments reuse `administracion_facturas_clientes.datos_importacion`; historical fiscal records and source files remain unchanged.
+
 Migration `20261013_0006_chained_account_comments.sql` adds the transaction/request index to user events and `p3_account_operation_comment()` to summarize chained contract/order changes in one account comment per authenticated request. It does not modify business rows or add columns.
 
 ## Card settlements

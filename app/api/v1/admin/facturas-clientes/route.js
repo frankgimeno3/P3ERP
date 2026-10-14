@@ -1,5 +1,6 @@
 import { requestActor } from "../../../../../server/features/comentario/AccountActivity.js";
 import { NextResponse } from "next/server";
+import {createSelectedInvoiceDraft} from '../../../../../server/features/factura/InvoiceSelection.js';
 import { createInvoiceDraft, createOrderInvoiceDraft, getCustomerInvoices } from "../../../../../server/features/factura/FacturaClienteRepository.js";
 
 export const runtime = "nodejs";
@@ -21,6 +22,10 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const body = await request.json();
+    if(Array.isArray(body.id_ordenes)){
+      const id=await createSelectedInvoiceDraft(body.id_contrato,body.id_ordenes,requestActor(request),body.origen||'contrato');
+      return NextResponse.json(await (await import('../../../../../server/features/factura/FacturaClienteRepository.js')).getCustomerInvoice(id),{status:201});
+    }
     if (!body?.id_contrato && !body?.id_orden) return NextResponse.json({ message: "Indica un contrato o una orden" }, { status: 400 });
     return NextResponse.json(body.id_orden ? await createOrderInvoiceDraft(body.id_orden,requestActor(request)) : await createInvoiceDraft(body.id_contrato, requestActor(request)), { status: 201 });
   } catch (error) {

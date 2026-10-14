@@ -1,4 +1,5 @@
 import {allocateOrderIdentifier} from '../identifiers/BusinessIdentifiers.js';
+import {syncSelectedInvoiceReceipts} from './InvoiceSelection.js';
 import {mergeInvoicePlaceholder} from './InvoiceDuplicateOrders.js';
 import { ensureOrderReceipt, incomeCents, syncOrderCollections } from '../prevision/IncomeReconciliation.js';
 import { parseImportDate } from '../prevision/ReceiptExcel.js';
@@ -8,6 +9,7 @@ import { orderActivity } from '../comentario/AccountActivity.js';
 export async function syncInvoiceOrders(db, invoiceId, actorId = '') {
   const invoice = (await db.query('SELECT * FROM administracion_facturas_clientes WHERE id_factura_cliente=$1', [invoiceId])).rows[0];
   if (!invoice?.id_contrato || invoice.factura_origen_id) return;
+  if(invoice.datos_importacion?.facturacion_por_ordenes){await syncSelectedInvoiceReceipts(db,invoiceId,actorId);return;}
   const payments = (await db.query('SELECT * FROM comercial_contratos_cobros WHERE id_contrato=$1 ORDER BY numero_cobro', [invoice.id_contrato])).rows;
   const orderIds = [];
   for (const payment of payments) {

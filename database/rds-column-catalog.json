@@ -37,7 +37,9 @@
   },
   "comercial_contratos": {
     "agregados_extra_post_contrato": "IDs de contenidos añadidos como extras después del contrato; se vinculan sin alterar sus líneas pactadas.",
-    "es_prueba": "Indica que el registro es de prueba. Su identificador empieza por PRUEBA- y los registros derivados heredan el modo."
+    "es_prueba": "Indica que el registro es de prueba. Su identificador empieza por PRUEBA- y los registros derivados heredan el modo.",
+    "id_agente_propuesta_contrato": "Agente original de la propuesta, inalterable tras crear el contrato.",
+    "id_agente_contrato": "Agente gestor actual, responsable de solicitar contenidos pendientes y renovar. Sus cambios se guardan automáticamente."
   },
   "laboral_tareas_empleado": {
     "agentes_asociados": "Lista de IDs de todos los responsables de la tarea, sin duplicados. El campo agente conserva el primero por compatibilidad.",
@@ -238,5 +240,9 @@
   },
   "produccion_contenidos": {
     "es_prueba": "Indica que el registro es de prueba. Su identificador empieza por PRUEBA- y los registros derivados heredan el modo."
+  },
+  "administracion_lineas_factura": {
+    "modo_precio": "Calculado, tachado, gratis o personalizado.",
+    "precio_total_personalizado": "Base personalizada de la línea antes de los ajustes generales."
   }
 }

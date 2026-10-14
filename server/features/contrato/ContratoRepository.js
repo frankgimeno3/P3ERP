@@ -74,6 +74,7 @@ function normalizeContrato(row) {
 const baseSelect = `
   SELECT
     c.*,
+    origin_agent.nombre_completo_agente AS nombre_agente_propuesta_contrato,
     a.nombre_completo_agente AS nombre_agente_contrato,
     COALESCE(cu.nombre_empresa,(SELECT string_agg(shared.nombre_empresa, ' / ' ORDER BY shared.nombre_empresa)
       FROM comercial_cuentas shared WHERE shared.id_cuenta IN
@@ -81,6 +82,7 @@ const baseSelect = `
     co.nombre_completo_contacto AS nombre_contacto
   FROM comercial_contratos c
   LEFT JOIN agentes_db a ON a.id_agente = c.id_agente_contrato
+  LEFT JOIN agentes_db origin_agent ON origin_agent.id_agente=c.id_agente_propuesta_contrato
   LEFT JOIN comercial_cuentas cu ON cu.id_cuenta = c.id_cuenta_contrato
   LEFT JOIN comercial_contactos co ON co.id_contacto = c.id_contacto_contrato
 `;
@@ -127,7 +129,7 @@ export async function getContratoById(idContrato) {
         SELECT *
         FROM tesoreria_ordenes
         WHERE id_contrato = $1
-        ORDER BY id_orden ASC
+        ORDER BY numero_cobro ASC NULLS LAST,id_orden ASC
       `,
       [idContrato],
     ),
@@ -144,34 +146,19 @@ export async function getContratoById(idContrato) {
 }
 
 export async function updateContrato(idContrato, data = {}) {
-  const pool = getPgPool();
-  const current=(await pool.query('SELECT id_agente_contrato,id_cuenta_contrato FROM comercial_contratos WHERE id_contrato=$1',[idContrato])).rows[0];
-  if(!current)return null;
-  const agentId = String(data.id_agente_contrato ?? current.id_agente_contrato ?? "").trim();
-  const contactId=String(data.id_contacto_contrato??'').trim();
-  if(data.id_contacto_contrato!==undefined && contactId){
-    const belongs=await pool.query('SELECT 1 FROM comercial_contactos WHERE id_contacto=$1 AND id_cuenta=$2',[contactId,current.id_cuenta_contrato]);
-    if(!belongs.rowCount)throw new Error('El contacto debe pertenecer a la cuenta del contrato');
-  }
-
-  if (data.id_agente_contrato !== undefined) await assertCommercialAgent(pool, agentId, current.id_agente_contrato);
-  if (agentId) {
-    const agent = await pool.query(
-      "SELECT 1 FROM agentes_db WHERE id_agente=$1 LIMIT 1",
-      [agentId],
-    );
-    if (!agent.rowCount) throw new Error("El agente seleccionado no existe");
-  }
-
-  const { rowCount } = await pool.query(
-    `UPDATE comercial_contratos
-     SET id_agente_contrato=$1,
-         id_contacto_contrato=CASE WHEN $3::boolean THEN $4 ELSE id_contacto_contrato END,
-         updated_at=NOW()
-     WHERE id_contrato=$2`,
-    [agentId, idContrato,data.id_contacto_contrato!==undefined,contactId],
-  );
-  if (!rowCount) return null;
-
-  return getContratoById(idContrato);
+  const db=await getPgPool().connect();
+  try{
+    await db.query('BEGIN');
+    const current=(await db.query('SELECT * FROM comercial_contratos WHERE id_contrato=$1 FOR UPDATE',[idContrato])).rows[0];
+    if(!current){await db.query('ROLLBACK');return null;}
+    if(data.id_agente_propuesta_contrato!==undefined&&data.id_agente_propuesta_contrato!==current.id_agente_propuesta_contrato)throw Error('El agente de la propuesta es inalterable.');
+    const agentId=String(data.id_agente_contrato??current.id_agente_contrato??'').trim();
+    if(data.id_agente_contrato!==undefined&&!agentId)throw Error('Selecciona un agente gestor.');
+    if(data.id_agente_contrato!==undefined)await assertCommercialAgent(db,agentId,current.id_agente_contrato);
+    const contactId=String(data.id_contacto_contrato??current.id_contacto_contrato??'').trim();
+    if(data.id_contacto_contrato!==undefined&&contactId&&!(await db.query('SELECT 1 FROM comercial_contactos WHERE id_contacto=$1 AND id_cuenta=$2',[contactId,current.id_cuenta_contrato])).rowCount)throw Error('El contacto debe pertenecer a la cuenta del contrato.');
+    await db.query('UPDATE comercial_contratos SET id_agente_contrato=$2,id_contacto_contrato=$3,updated_at=now() WHERE id_contrato=$1',[idContrato,agentId,contactId]);
+    if(agentId!==current.id_agente_contrato)await db.query("UPDATE produccion_contenidos SET id_agente=$2,updated_at=now() WHERE id_contrato=$1 AND lower(btrim(COALESCE(estado_contenido,''))) NOT IN ('publicado','publicada','publicados','publicadas')",[idContrato,agentId]);
+    await db.query('COMMIT');return getContratoById(idContrato);
+  }catch(error){await db.query('ROLLBACK');throw error;}finally{db.release();}
 }

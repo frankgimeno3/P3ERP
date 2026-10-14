@@ -19,7 +19,8 @@ export class AuditedClient extends pg.Client {
   const command=sql.replace(/^\s*(?:--[^\n]*\n|\/\*[\s\S]*?\*\/)\s*/g,'').trim();
   const begin=/^(?:BEGIN|START TRANSACTION)(?:\s+(?:ISOLATION LEVEL (?:READ COMMITTED|SERIALIZABLE|REPEATABLE READ)|READ (?:ONLY|WRITE)))?\s*;?$/i.test(command);
   const end=/^(?:COMMIT|END|ROLLBACK)\s*;?$/i.test(command);
-  if(context?.enabled&&/;\s*(?:BEGIN|START TRANSACTION|COMMIT|END|ROLLBACK)\b/i.test(command))throw Error('Los controles de transacción auditada deben ejecutarse por separado.');
+  const transactionSql=command.replace(/\$([A-Za-z_]\w*|)\$[\s\S]*?\$\1\$/g,'').replace(/'(?:''|[^'])*'/g,'').replace(/--[^\n]*|\/\*[\s\S]*?\*\//g,'');
+  if(context?.enabled&&/;\s*(?:BEGIN|START TRANSACTION|COMMIT|END|ROLLBACK)\b/i.test(transactionSql))throw Error('Los controles de transacción auditada deben ejecutarse por separado.');
   const raw=(...a)=>super.query(...a);
   const refreshCoverage=async()=>{
    if(/\bCREATE\s+(?:UNLOGGED\s+)?TABLE\b/i.test(command)&&!command.includes('p3_install_user_event_triggers')){

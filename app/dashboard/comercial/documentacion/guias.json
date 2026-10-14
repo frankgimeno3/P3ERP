@@ -78,7 +78,8 @@
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
       "Al aceptar una propuesta, el servidor reserva el siguiente c?digo de contrato Caa.000.000 y las ?rdenes correspondientes; repetir la operaci?n conserva los registros ya asociados.",
       "Enviada se marca expresamente tras guardar y completar la propuesta. Crear, editar, finalizar o aceptar registra actividad en Registro de eventos de la cuenta, dentro de Datos de gestión; no genera comentarios automáticos. Solo al pasar Enviada de No a Sí se añade un resumen comercial a Comentarios.",
-      "Marcar una propuesta como Enviada o Aceptada genera un comentario en su cuenta. La aceptación reúne en un solo comentario la propuesta, el contrato, las órdenes y los contenidos generados. Las modificaciones de contratos y órdenes agrupan todos los cambios encadenados de una misma operación en un único comentario por cuenta, con valores anteriores y nuevos; el Registro de eventos conserva además el detalle."
+      "Marcar una propuesta como Enviada o Aceptada genera un comentario en su cuenta. La aceptación reúne en un solo comentario la propuesta, el contrato, las órdenes y los contenidos generados. Las modificaciones de contratos y órdenes agrupan todos los cambios encadenados de una misma operación en un único comentario por cuenta, con valores anteriores y nuevos; el Registro de eventos conserva además el detalle.",
+      "Arriba en la ficha, Marcar como enviada guarda el estado de una propuesta completa. Al enviarla, el botón pasa a Enviada, verde suave y con un tick. La acción genera su comentario comercial una sola vez."
     ]
   },
   "/dashboard/comercial/contratos": {
@@ -101,7 +102,8 @@
       "Los contratos se numeran autom?ticamente como Caa.000.000. Sus ?rdenes utilizan el c?digo del contrato seguido de n?mero de cobro/total, tambi?n al aceptar propuestas o reemplazar ?rdenes.",
       "Los agregados extra post-contrato se muestran separados del contenido firmado, con enlace a su ficha. No se incluyen en las líneas ni en los importes originales.",
       "Crear nueva propuesta abre un modal con Modo prueba inicialmente en Sí. Selecciona No para una propuesta real; un contrato de prueba siempre conserva el modo prueba en sus derivados.",
-      "Marcar una propuesta como Enviada o Aceptada genera un comentario en su cuenta. La aceptación reúne en un solo comentario la propuesta, el contrato, las órdenes y los contenidos generados. Las modificaciones de contratos y órdenes agrupan todos los cambios encadenados de una misma operación en un único comentario por cuenta, con valores anteriores y nuevos; el Registro de eventos conserva además el detalle."
+      "Marcar una propuesta como Enviada o Aceptada genera un comentario en su cuenta. La aceptación reúne en un solo comentario la propuesta, el contrato, las órdenes y los contenidos generados. Las modificaciones de contratos y órdenes agrupan todos los cambios encadenados de una misma operación en un único comentario por cuenta, con valores anteriores y nuevos; el Registro de eventos conserva además el detalle.",
+      "Los cambios del agente gestor se guardan automáticamente y transfieren los contenidos pendientes. El agente de la propuesta de origen es inalterable. Sin IVA no se muestra Importe BI: el importe se denomina Importe total."
     ]
   },
   "/dashboard/comercial/documentacion": {
@@ -259,7 +261,8 @@
       "Crear factura abono abre un borrador negativo asociado a una factura numerada, tambi?n importada. Usa prefijo A y fecha; en emisi?n fiscal se utiliza una serie distinta y una rectificativa por diferencias. Al finalizar o aplicar el abono se reduce el saldo pendiente: las ?rdenes abonadas se conservan canceladas y sin fecha de pago; los cobros previos no se alteran. Repetir la aplicaci?n no duplica efectos. No se permite superar el total original; los recibos remesados y los cobros parciales conciliados requieren revisi?n antes de cambiarlos.",
       "Si el PDF fija un importe mayor que el dinero ya registrado, la diferencia se conserva como saldo pendiente con su orden y cobro de contrato asociados. Los movimientos bancarios y remesas hist?ricos se mantienen; cualquier exceso cobrado se identifica en la ficha.",
       "Facturas y Contratos sin facturar son pestañas sobre un panel gris claro. Los botones de gestión aparecen arriba a la derecha; debajo, las pestañas Sin fecha y años muestran un panel blanco con la tarjeta de filtros de ancho completo, los estados En proceso y Enviadas y la tabla. La columna N FRA muestra el número documental, conservando el identificador interno para abrir la ficha.",
-      "El formato visual de Administración comparte controles y pestañas: pestañas principales sobre fondo blanco, contenido azul claro y subpestañas con contenido blanco."
+      "El formato visual de Administración comparte controles y pestañas: pestañas principales sobre fondo blanco, contenido azul claro y subpestañas con contenido blanco.",
+      "La creación de factura permite precios calculados, tachados, gratis o personalizados, descuentos por línea y generales y base personalizada. Datos de pago muestra solamente los cobros de las órdenes seleccionadas. Al confirmar cambios se sustituyen esas órdenes pendientes y se renumeran todas las del contrato por fecha, actualizando sus referencias. Las facturadas fuera de esta factura conservan sus importes y documentos. La suma de cobros debe coincidir exactamente con el total. Los cobros revisados, bancos asociados y recibos remesados bloquean la sustitución. Recibo propone Sabadell; transferencia propone Santander en empresas españolas y Sabadell en otras; PayPal propone PayPal. El banco sigue siendo editable. Datos fiscales y VeriFactu se completa con la cuenta y permite editar los datos fiscales."
     ]
   },
   "/dashboard/administracion/pendiente-cobro": {
@@ -620,7 +623,8 @@
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
       "El enlace Información legal verifactu se muestra al pie de las páginas de Administración.",
       "Crear factura abono abre un borrador negativo asociado a una factura numerada, tambi?n importada. Usa prefijo A y fecha; en emisi?n fiscal se utiliza una serie distinta y una rectificativa por diferencias. Al finalizar o aplicar el abono se reduce el saldo pendiente: las ?rdenes abonadas se conservan canceladas y sin fecha de pago; los cobros previos no se alteran. Repetir la aplicaci?n no duplica efectos. No se permite superar el total original; los recibos remesados y los cobros parciales conciliados requieren revisi?n antes de cambiarlos.",
-      "El formato visual de Administración comparte controles y pestañas: pestañas principales sobre fondo blanco, contenido azul claro y subpestañas con contenido blanco."
+      "El formato visual de Administración comparte controles y pestañas: pestañas principales sobre fondo blanco, contenido azul claro y subpestañas con contenido blanco.",
+      "El enlace desde un contrato u orden preselecciona su origen y muestra sus órdenes antes de crear el borrador. Una sola factura para todas empieza en Sí si todas están disponibles; sus checkboxes permanecen seleccionados y bloqueados. En No se puede elegir un subconjunto. Las ya facturadas quedan desmarcadas, bloqueadas y en tarjetas azul oscuro con el enlace a su factura."
     ]
   },
   "/dashboard/operaciones/data/exportar/cuentas": {
@@ -713,7 +717,8 @@
       "Buscar y seleccionar cuenta abre un modal con filtros por empresa, código, país y correo. Elige una cuenta válida y confirma. Se preselecciona su contacto principal si lo tiene.",
       "En Cobros el primer vencimiento se propone a dos meses; cada cobro añadido toma la fecha del anterior más un mes. El banco inicial depende del país de la cuenta y todas las fechas y bancos pueden editarse.",
       "Al crear, Modo prueba aparece arriba e inicialmente en Sí. Puedes pasarlo a No para datos reales. Los datos de prueba usan PRUEBA- delante del identificador; las relaciones derivadas conservan este modo, incluidos contratos, contenidos, órdenes y facturas. El modo se fija al crear y no se convierte después en real.",
-      "Crear nueva propuesta desde una cuenta conserva su cuenta en la URL y completa el contacto principal y el título. El encabezado de edición muestra el nombre de la propuesta. Al seleccionar un servicio de revista, la línea conserva la revista, edición y publicación elegidas; el catálogo aporta especificaciones y precio. Página preferente empieza en No: al activar Sí debes elegir una página para confirmar; volver a No retira la selección."
+      "Crear nueva propuesta desde una cuenta conserva su cuenta en la URL y completa el contacto principal y el título. El encabezado de edición muestra el nombre de la propuesta. Al seleccionar un servicio de revista, la línea conserva la revista, edición y publicación elegidas; el catálogo aporta especificaciones y precio. Página preferente empieza en No: al activar Sí debes elegir una página para confirmar; volver a No retira la selección.",
+      "El agente inicial es quien crea la propuesta, no el responsable de la cuenta. La fase 4 muestra una hoja de documento con membrete, servicios, importes y cobros, similar al contrato."
     ]
   },
   "/dashboard/comercial/propuestas/[id_propuesta]/editar": {
@@ -726,7 +731,8 @@
       "Buscar cuenta consulta resultados paginados sin cargar el catalogo completo. La propuesta carga solo su cuenta; cambiarla reinicia su contacto.",
       "En Revisión, Enviada permite documentar que la propuesta se ha enviado. Guarda primero la propuesta completa. Una nueva marca Sí genera su resumen en Comentarios; las ediciones posteriores solo se registran en el historial.",
       "Marcar una propuesta como Enviada o Aceptada genera un comentario en su cuenta. La aceptación reúne en un solo comentario la propuesta, el contrato, las órdenes y los contenidos generados. Las modificaciones de contratos y órdenes agrupan todos los cambios encadenados de una misma operación en un único comentario por cuenta, con valores anteriores y nuevos; el Registro de eventos conserva además el detalle.",
-      "Crear nueva propuesta desde una cuenta conserva su cuenta en la URL y completa el contacto principal y el título. El encabezado de edición muestra el nombre de la propuesta. Al seleccionar un servicio de revista, la línea conserva la revista, edición y publicación elegidas; el catálogo aporta especificaciones y precio. Página preferente empieza en No: al activar Sí debes elegir una página para confirmar; volver a No retira la selección."
+      "Crear nueva propuesta desde una cuenta conserva su cuenta en la URL y completa el contacto principal y el título. El encabezado de edición muestra el nombre de la propuesta. Al seleccionar un servicio de revista, la línea conserva la revista, edición y publicación elegidas; el catálogo aporta especificaciones y precio. Página preferente empieza en No: al activar Sí debes elegir una página para confirmar; volver a No retira la selección.",
+      "La fase 4 muestra una hoja de documento con membrete y resumen de servicios, importes y cobros."
     ]
   },
   "/dashboard/comercial/cuentas/[id_cuenta]": {
