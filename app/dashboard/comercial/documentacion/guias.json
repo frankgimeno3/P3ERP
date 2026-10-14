@@ -367,7 +367,8 @@
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
       "El menú lateral, las rutas y la Mediateca comparten los permisos del rol. Las cuentas de Cognito necesitan un agente activo asociado; los emails alternativos registrados para ese agente comparten identidad, tareas y rol.",
       "Contabilidad permite Comercial, Administración y el módulo Contabilidad; bloquea Dirección, Operaciones y Producción. Juan (contavidrioperfil@gmail.com) es el único agente con este rol. Menú, rutas, API y Mediateca aplican la misma política.",
-      "Para cambiar una contraseña: abre un agente, entra en Detalles y pulsa Cambiar contraseña, en Acceso a Cognito. Solo Superadmin dispone de esta acción. Selecciona una cuenta vinculada, introduce dos veces la nueva contraseña y guarda. No se modifica el email ni se almacena la contraseña en RDS o en el historial."
+      "Para cambiar una contraseña: abre un agente, entra en Detalles y pulsa Cambiar contraseña, en Acceso a Cognito. Solo Superadmin dispone de esta acción. Selecciona una cuenta vinculada, introduce dos veces la nueva contraseña y guarda. No se modifica el email ni se almacena la contraseña en RDS o en el historial.",
+      "En Cambiar contrase?a, Nueva contrase?a y Repetir contrase?a incluyen un bot?n con ojo para mostrar u ocultar cada campo de forma independiente. Al cerrar el modal se vac?an y vuelven a estar ocultos."
     ]
   },
   "/dashboard/operaciones/agentes/roles": {
