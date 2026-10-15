@@ -41,7 +41,7 @@ export const dashboardMenu: DashboardMenuModule[] = [
     children: [
       page("Hoja de producción", "/dashboard/produccion/hoja_produccion"),
       page("Artículos", "/dashboard/produccion/articulos"),
-      page("Contenidos", "/dashboard/produccion/contenidos"),
+      page("GESTION PRODUCCION", "/dashboard/produccion/contenidos"),
       page("Revistas", "/dashboard/produccion/revistas"),
     ],
   },

@@ -143,15 +143,15 @@
     ]
   },
   "/dashboard/produccion/contenidos": {
-    "summary": "Contenidos y artículos de producción con seguimiento por número previsto.",
+    "summary": "GESTION PRODUCCION reúne contenidos de revista, otros contenidos contratados y artículos con seguimiento por número previsto.",
     "steps": [
-      "Contenidos conserva Filtrar por revista y Todos los contenidos. Artículos reutiliza Control de redacción, con Pendientes como vista inicial y Publicados sin columna Estado.",
+      "La página tiene tres pestañas: Contenidos revista, Otros contenidos contratados y Artículos. Artículos reutiliza Control de redacción, con Pendientes como vista inicial y Publicados sin columna Estado.",
       "Pulsa una fila de artículos para editar ubicación, cuenta, título, estado, responsable (Frank, Paco o Ricardo), fecha de paso a producción, portada (Vidrio, Ventanas u Otro), números previstos y páginas.",
       "Confirma la publicación de cada número previsto. Si solo han salido algunos, el estado es Parcialmente publicado y sigue en Pendientes; al completar todos pasa a Publicados. La publicación en Vidrioperfil se registra por separado.",
       "Los estados importados se conservan en origen. Pendiente o Pendiente de pasar se muestran como Pendiente pasar producción; Hecho se muestra como Corregido, sin marcarlo publicado.",
       "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
-      "Filtrar por revista muestra primero el número, seguido de revista, región y sector, y permite abrir sus anuncios y artículos.",
-      "Todos los contenidos muestra los registros de producción; abre la tarjeta Filtros y pulsa una fila para entrar en el detalle del contenido.",
+      "Contenidos revista muestra primero el número, seguido de revista, región y sector, y permite abrir sus anuncios y artículos.",
+      "Otros contenidos contratados muestra los registros de producción; abre la tarjeta Filtros y pulsa una fila para entrar en el detalle del contenido.",
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
       "Al abrir una revista se accede directamente a /dashboard/produccion/contenidos/revistas/[id_revista]/contenidos.",
       "Los contenidos nuevos reciben un c?digo hp_aa_000.000 del servidor. Se conservan los identificadores num?ricos procedentes de la hoja antigua y la referencia original cuando se corrige un c?digo duplicado.",

@@ -5,10 +5,11 @@ import ModuleTabs from '@/app/components/ModuleTabs';
 import ContentsList from './ContentsList';
 import ControlRedaccionTable from '../control_redaccion/ControlRedaccionTable';
 export default function ContenidosPage(){
- const [section,setSection]=useUrlState<'contenidos'|'articulos'>('contents.section','contenidos');
- return <main className="min-h-screen bg-gray-100 text-gray-700"><MiddleNav tituloprincipal="Contenidos"/><div className="p-6 lg:p-12">
-  <h1 className="mb-5 text-2xl font-semibold text-blue-950">Contenidos de producción</h1>
-  <ModuleTabs label="Producción" value={section} items={[{value:'contenidos',label:'Contenidos'},{value:'articulos',label:'Artículos'}]} onChange={value=>setSection(value as 'contenidos'|'articulos')}/>
-  <div role="tabpanel" className="rounded-b-lg border border-blue-200 border-t-0 bg-blue-50 p-4 lg:p-6">{section==='articulos'?<ControlRedaccionTable/>:<ContentsList/>}</div>
+ const [section,setSection]=useUrlState<string>('contents.section','contenidos');
+ const [contentTab,setContentTab]=useUrlState<'revista'|'todos'>('contents.tab','revista');
+ const activeSection=section==='articulos'?'articulos':section==='otros'||(section==='contenidos'&&contentTab==='todos')?'otros':'revista';
+ return <main className="min-h-screen bg-gray-100 text-gray-700"><MiddleNav tituloprincipal="GESTION PRODUCCION" currentLabel="GESTION PRODUCCION"/><div className="p-6 lg:p-12">
+  <ModuleTabs plain label="Producción" value={activeSection} items={[{value:'revista',label:'Contenidos revista'},{value:'otros',label:'Otros contenidos contratados'},{value:'articulos',label:'Artículos'}]} onChange={value=>{setSection(value);if(value!=='articulos')setContentTab(value==='otros'?'todos':'revista');}}/>
+  <div role="tabpanel" className="pt-5">{activeSection==='articulos'?<ControlRedaccionTable plain/>:<ContentsList tab={activeSection==='otros'?'todos':'revista'}/>}</div>
  </div></main>;
 }
