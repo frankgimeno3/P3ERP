@@ -145,7 +145,7 @@
   "/dashboard/produccion/contenidos": {
     "summary": "GESTION PRODUCCION reúne contenidos de revista, otros contenidos contratados y artículos con seguimiento por número previsto.",
     "steps": [
-      "La página tiene tres pestañas: Contenidos revista, Otros contenidos contratados y Artículos. Artículos reutiliza Control de redacción, con Pendientes como vista inicial y Publicados sin columna Estado.",
+      "La página tiene tres pestañas contiguas unidas al panel: Contenidos revista, Otros contenidos contratados y Artículos. Artículos reutiliza Control de redacción, con Pendientes como vista inicial y Publicados sin columna Estado.",
       "Pulsa una fila de artículos para editar ubicación, cuenta, título, estado, responsable (Frank, Paco o Ricardo), fecha de paso a producción, portada (Vidrio, Ventanas u Otro), números previstos y páginas.",
       "Confirma la publicación de cada número previsto. Si solo han salido algunos, el estado es Parcialmente publicado y sigue en Pendientes; al completar todos pasa a Publicados. La publicación en Vidrioperfil se registra por separado.",
       "Los estados importados se conservan en origen. Pendiente o Pendiente de pasar se muestran como Pendiente pasar producción; Hecho se muestra como Corregido, sin marcarlo publicado.",
