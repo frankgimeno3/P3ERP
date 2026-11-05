@@ -1,5 +1,8 @@
 [
   {"old":"","name":"produccion_cargas_materiales","description":"Cargas de materiales confirmadas e idempotentes; cada UUID identifica una única subida y su contenido."},
+  {"old":"","name":"direccion_propiedades","description":"Inventario de parkings, vehículos y otros bienes de la empresa."},
+  {"old":"","name":"direccion_propiedades_cargos","description":"Cargos previstos vinculados a propiedades; admite vínculos históricos y reglas individuales de cargos compartidos, sin duplicar previsiones."},
+  {"old":"","name":"direccion_propiedades_movimientos","description":"Historial bancario de propiedades, incluidos cargos y devoluciones de seguros anteriores."},
   {"old":"agentes_db","name":"agentes_db","description":"Agentes y usuarios del ERP, con rol, estado, perfil y emails alternativos de Cognito vinculados a una misma identidad."},
   {"old":"roles_db","name":"agentes_roles","description":"Roles y permisos asignables a los agentes."},
   {"old":"cuentas_db","name":"comercial_cuentas","description":"Empresas y cuentas comerciales, incluidos sus datos de facturación."},

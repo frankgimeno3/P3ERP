@@ -98,6 +98,7 @@ export const dashboardMenu: DashboardMenuModule[] = [
         page("Contratación", "/dashboard/direccion/laboral/contratacion"),
       ]),
       page("Horas Juan", "/dashboard/direccion/horas-juan"),
+      page("Propiedades", "/dashboard/direccion/propiedades"),
       page("Copias de seguridad", "/dashboard/direccion/copias-seguridad"),
       page("Tablas RDS", "/dashboard/direccion/rds"),
       page("Eventos de usuarios", "/dashboard/direccion/eventos-de-usuarios"),

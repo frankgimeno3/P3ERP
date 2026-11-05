@@ -508,6 +508,20 @@
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
     ]
   },
+  "/dashboard/direccion/propiedades": {
+    "summary": "Inventario de parkings, vehículos y otros bienes de la empresa, con sus cargos previstos e historial bancario.",
+    "steps": [
+      "Pulsa Registrar propiedad y completa nombre, tipo e identificación. Puedes añadir dirección, referencia catastral y, para vehículos, marca y modelo. Los identificadores y las referencias catastrales no pueden duplicarse.",
+      "Los filtros están reunidos en una tarjeta inicialmente cerrada. Permiten filtrar nombre, tipo, identificación, ubicación, cargos vigentes y estado.",
+      "Plazas por parking reúne las plazas por su campo Parking / conjunto. Pulsa una plaza para abrir su ficha. La dirección del acceso y la dirección catastral se guardan por separado: un recibo de IBI con otra calle no crea otro parking ni otra plaza.",
+      "Abre una fila para editar su ficha. Archivar conserva el historial y las previsiones existentes; no cancela los cargos. La ficha se cierra con × o Escape.",
+      "En Cargos previstos y recurrentes puedes asociar un cargo existente, editarlo o crear uno nuevo con proveedor, banco, importes y programación. El selector con búsqueda exige seleccionar una opción válida. Editar un cargo compartido actualiza su única previsión para todas las propiedades vinculadas.",
+      "Un vínculo puede abarcar el cargo completo o una regla concreta, por ejemplo la plaza de una derrama compartida. Se muestra solo el importe de la regla elegida. Asociar el mismo cargo a varias propiedades no duplica su previsión ni reparte automáticamente su importe.",
+      "Marcar histórico conserva la asociación anterior. Desvincular elimina únicamente el vínculo. Ninguna de estas acciones cancela ni elimina el cargo; su planificación se gestiona en los cargos previstos de Contabilidad.",
+      "El historial muestra movimientos asociados al cargo y evidencias bancarias vinculadas expresamente, con fechas operativa y valor separadas. Una devolución no crea una recurrencia ni un cobro de cliente.",
+      "Las altas, ediciones y cambios de vínculos se auditan. Si otra persona modifica la ficha, recarga antes de guardar. Solo Dirección y Superadmin tienen acceso."
+    ]
+  },
   "/dashboard/direccion/rds": {
     "summary": "Consulta la finalidad y la estructura actual de las tablas y vistas de RDS.",
     "steps": [

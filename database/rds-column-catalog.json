@@ -1,4 +1,32 @@
 {
+  "direccion_propiedades": {
+    "id_propiedad": "Identificador estable de la propiedad.",
+    "tipo": "Parking, vehículo u otros.",
+    "nombre": "Nombre del bien en el inventario.",
+    "identificador": "Matrícula, plaza o referencia propia; único dentro de su tipo cuando se indica.",
+    "direccion": "Dirección o ubicación, conservada sin inferir equivalencias entre parkings.",
+    "conjunto": "Parking al que pertenece la plaza; agrupa el inventario sin crear un bien adicional.",
+    "plaza": "Número o código de la plaza dentro del parking.",
+    "direccion_catastral": "Dirección del IBI; puede diferir de la entrada del parking.",
+    "referencia_catastral": "Referencia catastral única cuando se conoce.",
+    "marca": "Marca del vehículo, si procede.",
+    "modelo": "Modelo del vehículo, si procede.",
+    "notas": "Información y evidencia aportadas sobre el bien.",
+    "activo": "Permite archivar conservando vínculos e historial."
+  },
+  "direccion_propiedades_cargos": {
+    "id_propiedad": "Propiedad a la que se asocia el cargo.",
+    "id_cargo_recurrente": "Cargo existente; el vínculo no crea otra previsión.",
+    "id_regla": "Regla concreta del cargo, o vacío para el cargo completo. Permite identificar una plaza dentro de una derrama agrupada.",
+    "estado": "Vínculo vigente o histórico; no modifica la planificación del cargo.",
+    "notas": "Motivo o evidencia de la asociación."
+  },
+  "direccion_propiedades_movimientos": {
+    "id_propiedad": "Propiedad del historial.",
+    "id_linea_banco": "Movimiento original, conservando fechas operativa y valor.",
+    "relacion": "Cargo, devolución, histórico u otro; no cambia la revisión bancaria.",
+    "notas": "Explicación de la relación con la propiedad."
+  },
   "eventos_de_usuarios": {
     "id": "Identificador interno e inmutable del evento.",
     "fecha": "Instante real del cambio, con zona horaria; la vista lo muestra en hora de Madrid.",

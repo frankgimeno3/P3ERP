@@ -1305,3 +1305,26 @@ Control de redacción comparten registros. Las altas reciben identificadores
 `hp_aa_nnn.nnn`; editar un artículo vinculado sincroniza su contenido existente.
 
 Modo prueba: comercial_cuentas, comercial_contactos, comercial_propuestas_db, comercial_contratos, produccion_contenidos, tesoreria_ordenes y administracion_facturas_clientes tienen es_prueba (booleano); PRUEBA- identifica sus datos y sus derivados. comercial_propuestas_db.enviada solo registra envíos expresamente marcados, una vez completada la propuesta. La migración 20261013_0005 instala herencia y permite el borrado confirmado de eventos mediante su API, conservando el bloqueo de UPDATE/TRUNCATE.
+
+### Propiedades de Dirección
+
+La migración `20261103_0001_properties.sql` crea `direccion_propiedades`
+(PK `id_propiedad`, tipo `parking`/`vehiculo`/`otros`, nombre, identificador,
+dirección, referencia catastral, marca, modelo, notas, activo y timestamps).
+El identificador es único por tipo y la referencia catastral es única cuando
+están informados. Archivar conserva relaciones y no cancela gastos.
+
+`direccion_propiedades_cargos` relaciona propiedades y cargos existentes
+(PK compuesta), con `estado` vigente/histórico, `notas` e `id_regla` opcional.
+Una regla identifica una plaza dentro de un cargo compartido. Los triggers
+impiden vincular reglas ajenas o eliminar de la programación una regla
+vinculada. Estas relaciones no duplican cargos ni vencimientos.
+
+`direccion_propiedades_movimientos` conserva evidencias bancarias (PK propiedad,
+movimiento), con relación cargo/devolución/histórico/otro y notas. Todas las FK
+propagan cambios de identificador y borrados; las cascadas se auditan.
+Las tres tablas instalan la auditoría antes de su primera escritura.
+
+`20261103_0002_property_parking_groups.sql` añade `conjunto`, `plaza` y
+`direccion_catastral` al inventario. Una plaza mantiene una única identidad
+aunque la entrada del parking y el recibo de IBI indiquen calles distintas.
