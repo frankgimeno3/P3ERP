@@ -1,3 +1,4 @@
+import { juanDateEs } from '@/app/lib/horasJuanReport.js';
 export type InformeTipo = 'normal' | 'informativa' | 'anticipo';
 export interface InformeJuan {
   id_horas_juan: number; mes: number; anio: number; nombre: string; tipo: InformeTipo;
@@ -8,4 +9,4 @@ export interface InformeJuan {
 }
 export const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 export const euros = (value: number | null) => value === null ? '—' : new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(value);
-export const fechaEs = (value: string) => { const [y,m,d] = value.slice(0,10).split('-'); return `${d}.${m}.${y}`; };
+export const fechaEs = juanDateEs;

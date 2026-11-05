@@ -544,7 +544,7 @@
       "En normal e informativa introduce horas y minutos; se convierten a horas decimales y se valoran a 15 € por hora.",
       "Revisa o modifica el importe anterior a compensar e indica su motivo cuando no sea cero.",
       "Alterna entre Informes y Adeudos para consultar quién debe el saldo pendiente y abrir su informe de origen.",
-      "Desde el informe puedes guardar únicamente el documento como PDF o eliminarlo; los anticipos avisan de los cierres vinculados que también se borrarán.",
+      "Desde el informe puedes guardar el documento completo como PDF, con las mismas secciones y fechas de la vista previa. Si faltan datos o no son válidos, Guardar PDF queda bloqueado y se indican los campos pendientes. También puedes eliminarlo; los anticipos avisan de los cierres vinculados que también se borrarán.",
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
     ]
   },
