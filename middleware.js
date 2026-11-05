@@ -3,6 +3,7 @@ import { jwtVerify, createRemoteJWKSet } from "jose";
 import { COGNITO } from "./env.js";
 import { getPgPool } from "./server/database/pgClient.js";
 import { canAccessApiPath, canAccessDashboardPath, normalizeRole } from "./app/config/roleAccess.ts";
+import { canonicalProductionPath } from './app/config/productionRoutes.js';
 
 import {loginUrl,loginDestination} from "./app/config/loginRedirect.js";
 import {managesTasks} from './server/features/laboral/TaskAccess.js';
@@ -103,6 +104,8 @@ export async function middleware(request) {
 
     if ((pathname === "/" || pathname === "/admin")) return NextResponse.redirect(new URL(loginDestination(request.nextUrl.search),request.url));
     if (pathname.startsWith("/dashboard") && !canAccessDashboardPath(role, pathname)) return forbidden();
+    const productionPath = canonicalProductionPath(pathname);
+    if (productionPath !== pathname) { const url = request.nextUrl.clone(); url.pathname = productionPath; return NextResponse.redirect(url, 308); }
     if (isApi && !canAccessApiPath(role, pathname, request.method)) return forbidden();
     const personalTask = pathname.match(/^\/tareas\/([^/]+)\/?$/);
     if(personalTask&&!managesTasks(role)){

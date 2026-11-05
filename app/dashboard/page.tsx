@@ -13,17 +13,17 @@ import MyTasksPanel from '@/app/components/tasks/MyTasksPanel';
 import { canViewModule, normalizeRole } from "@/app/config/roleAccess";
 
 const tabs = [
-  { key: "tareas", label: "Mis tareas pendientes" },
+  { key: "tareas", label: "Mis tareas" },
   { key: "contenidos", label: "Mis contenidos" },
   { key: "clientes", label: "Mis cuentas" },
   { key: "propuestas", label: "Mis propuestas pendientes" },
 ];
 
 const moduleTutorials: Record<string, string> = {
-  Comercial: "El modulo comercial concentra cuentas, contactos, propuestas, contratos y documentacion. Sirve para gestionar el trabajo con clientes y potenciales clientes desde el primer contacto hasta la firma.",
+  Comercial: "El modulo comercial concentra cuentas, contactos, propuestas y contratos. Sirve para gestionar el trabajo con clientes y potenciales clientes desde el primer contacto hasta la firma.",
   Produccion: "El modulo de produccion permite seguir los contenidos comprometidos, ver la hoja de produccion, consultar y mantener la hoja de producción.",
-  Administracion: "El modulo de administracion agrupa facturacion, cobros, suscripciones, ferias, proveedores, tickets y pagos. Conecta la venta y la produccion con la gestion economica y documental.",
-  Operaciones: "El modulo de operaciones se usa para gestionar usuarios, roles, importaciones, exportaciones y configuraciones estructurales de los modulos, como servicios y operaciones internas.",
+  Administracion: "El modulo de administracion agrupa facturacion, cobros, suscripciones, proveedores, tickets y pagos. Conecta la venta y la produccion con la gestion economica y documental.",
+  Operaciones: "El modulo de operaciones reúne ferias, seguimiento editorial de artículos, revistas y documentación, además de tareas, servicios y operaciones internas.",
   Direccion: "El modulo de direccion reune vistas de control, bancos y previsiones para revisar la situacion general y tomar decisiones con datos conectados.",
 };
 

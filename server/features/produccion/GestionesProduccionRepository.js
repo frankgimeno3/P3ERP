@@ -2,24 +2,12 @@ import crypto from 'node:crypto';
 import { getPgPool } from '../../database/pgClient.js';
 import { getRevistas, getRevistaById } from '../revista/RevistaRepository.js';
 import { assertObjectExistsInS3, createPresignedUpload } from '../mediateca/S3Service.js';
-import { normalizeMediatecaRouteSegment } from '../mediateca/MediatecaRepository.js';
 import {articleMatchesMagazine} from '../../../app/config/editorialMagazine.js';
+import { productionMediaFolder } from './ProductionMediaFolders.js';
+import { contentTypes as managementContentTypes } from '../../../app/lib/productionManagement.js';
+import { externalUserEvent } from '../userEvents/ExternalUserEvents.js';
 
 const states = new Set(['no revisado produccion', 'incidencia', 'ok produccion']);
-const clean = value => normalizeMediatecaRouteSegment(value);
-
-async function childFolder(db, parentId, name) {
-  const normalized = clean(name);
-  if (!normalized) throw new Error('Nombre de carpeta no válido');
-  const found = await db.query(`SELECT mediateca_folder_id FROM mediateca_carpetas
-    WHERE mediateca_parent_folder_id IS NOT DISTINCT FROM $1 AND mediateca_folder_name=$2
-    ORDER BY mediateca_folder_created_at LIMIT 1`, [parentId, normalized]);
-  if (found.rows[0]) return found.rows[0].mediateca_folder_id;
-  const id = crypto.randomUUID();
-  await db.query(`INSERT INTO mediateca_carpetas(mediateca_folder_id,mediateca_folder_name,mediateca_parent_folder_id)
-    VALUES($1,$2,$3)`, [id, normalized, parentId]);
-  return id;
-}
 
 async function folderPath(db, folderId) {
   const names = [];
@@ -34,34 +22,8 @@ async function folderPath(db, folderId) {
 }
 
 export async function ensureMagazineFolders(revistas = null) {
-  const magazines = revistas || await getRevistas();
-  if (!magazines.length) return magazines;
-  const missing = await getPgPool().query(`SELECT r.id_revista FROM servicios_revistas r
-    LEFT JOIN mediateca_carpetas prod ON prod.mediateca_parent_folder_id IS NULL AND prod.mediateca_folder_name='documentos_produccion'
-    LEFT JOIN mediateca_carpetas root ON root.mediateca_parent_folder_id=prod.mediateca_folder_id AND root.mediateca_folder_name='documentos_revistas'
-    LEFT JOIN mediateca_carpetas folder ON folder.mediateca_parent_folder_id=root.mediateca_folder_id AND folder.mediateca_folder_name=r.id_revista
-    LEFT JOIN mediateca_carpetas articles ON articles.mediateca_parent_folder_id=folder.mediateca_folder_id AND articles.mediateca_folder_name='articulos'
-    LEFT JOIN mediateca_carpetas ads ON ads.mediateca_parent_folder_id=folder.mediateca_folder_id AND ads.mediateca_folder_name='anuncios'
-    WHERE r.id_revista=ANY($1::text[]) AND (folder.mediateca_folder_id IS NULL OR articles.mediateca_folder_id IS NULL OR ads.mediateca_folder_id IS NULL)
-    LIMIT 1`, [magazines.map(row => row.id_revista)]);
-  if (!missing.rowCount) return magazines;
-  const db = await getPgPool().connect();
-  try {
-    await db.query('BEGIN');
-    await db.query("SELECT pg_advisory_xact_lock(hashtext('documentos_revistas_folders'))");
-    const production = await childFolder(db, null, 'documentos_produccion');
-    const root = await childFolder(db, production, 'documentos_revistas');
-    for (const revista of magazines) {
-      const folder = await childFolder(db, root, revista.id_revista);
-      await childFolder(db, folder, 'articulos');
-      await childFolder(db, folder, 'anuncios');
-    }
-    await db.query('COMMIT');
-    return magazines;
-  } catch (error) {
-    await db.query('ROLLBACK');
-    throw error;
-  } finally { db.release(); }
+  // Categories are shared by all magazines; never recreate per-magazine trees.
+  return revistas || await getRevistas();
 }
 
 export function magazineRegion(revista) {
@@ -90,12 +52,7 @@ function matchesLegacy(content, revista) {
 }
 
 function contentTypes(content) {
-  if (content.tipo_contenido === 'articulo') return ['articulos'];
-  if (content.tipo_contenido === 'anuncio') return ['anuncios'];
-  const types = [];
-  if (!/NO PROCEDE/i.test(content.anuncio_hoja || '')) types.push('anuncios');
-  if (!/NO PROCEDE/i.test(content.articulo_hoja || '')) types.push('articulos');
-  return types;
+  return managementContentTypes(content).filter(type => type !== 'otro').map(type => type === 'articulo' ? 'articulos' : 'anuncios');
 }
 
 function matchesEditorial(article, revista) {
@@ -159,18 +116,8 @@ export async function getMagazineManagement(idRevista) {
     contenidos: matches.map(content => ({ ...content, paginas_definitivas:finalPages.filter(page=>page.contenido_id===content.id_contenido&&(content.tipo==='articulos')===/art[ií]culo/i.test(page.tipo_pagina)).map(page=>page.numero_pagina),materiales: materials.filter(m => m.id_contenido === content.id_contenido && m.tipo === content.tipo) })) };
 }
 
-async function materialFolder(db, { idContenido, idRevista, tipo }) {
-  await db.query("SELECT pg_advisory_xact_lock(hashtext('documentos_revistas_folders'))");
-  const production = await childFolder(db, null, 'documentos_produccion');
-  if (idRevista) {
-    const root = await childFolder(db, production, 'documentos_revistas');
-    const revista = await childFolder(db, root, idRevista);
-    const category = await childFolder(db, revista, tipo);
-    return childFolder(db, category, idContenido);
-  }
-  const other = await childFolder(db, production, 'otros_contenidos');
-  const category = await childFolder(db, other, tipo);
-  return childFolder(db, category, idContenido);
+async function materialFolder(db, { idRevista, tipo }) {
+  return (await productionMediaFolder(db, { idRevista, tipo })).id;
 }
 
 export async function ensureProductionContentFolders(db, idContenido, idPublicacion = '') {
@@ -183,10 +130,13 @@ export async function ensureProductionContentFolders(db, idContenido, idPublicac
 async function validateDestination(db, data) {
   const idContenido = String(data.id_contenido || '').trim();
   const idRevista = String(data.id_revista || '').trim();
-  const tipo = data.tipo === 'articulos' ? 'articulos' : data.tipo === 'anuncios' ? 'anuncios' : null;
+  const tipo = ['articulos', 'anuncios', 'otros'].includes(data.tipo) ? data.tipo : null;
   if (!idContenido || !tipo) throw new Error('Contenido y tipo obligatorios');
-  const content = (await db.query('SELECT id_contenido FROM produccion_contenidos WHERE id_contenido=$1', [idContenido])).rows[0];
+  if (idRevista && tipo === 'otros') throw new Error('Otros contenidos no pueden asignarse a revista');
+  const content = (await db.query('SELECT * FROM produccion_contenidos WHERE id_contenido=$1', [idContenido])).rows[0];
   if (!content) throw new Error('Contenido no encontrado');
+  const singular = tipo === 'articulos' ? 'articulo' : tipo === 'anuncios' ? 'anuncio' : 'otro';
+  if (!managementContentTypes(content).includes(singular)) throw new Error('El material no corresponde al tipo del contenido');
   if (idRevista && !(await db.query('SELECT 1 FROM servicios_revistas WHERE id_revista=$1', [idRevista])).rowCount) throw new Error('Revista no encontrada');
   return { idContenido, idRevista, tipo };
 }
@@ -206,10 +156,10 @@ export async function presignProductionMaterial(data) {
   return { ...signed, folderPath: path };
 }
 
-export async function addProductionMaterial(data, verifyObject = assertObjectExistsInS3) {
-  const db = await getPgPool().connect();
+export async function addProductionMaterial(data, verifyObject = assertObjectExistsInS3, transactionDb = null) {
+  const db = transactionDb || await getPgPool().connect();
   try {
-    await db.query('BEGIN');
+    if (!transactionDb) await db.query('BEGIN');
     const destination = await validateDestination(db, data);
     const folderId = await materialFolder(db, destination);
     const path = await folderPath(db, folderId);
@@ -224,21 +174,24 @@ export async function addProductionMaterial(data, verifyObject = assertObjectExi
     const name = String(data.nombre_material || data.filename || '').trim();
     if (!name) throw new Error('Indica el nombre del material');
     await db.query(`INSERT INTO mediateca_archivos(mediateca_content_id,mediateca_folder_id,mediateca_content_name,
-      mediateca_s3_key,mediateca_content_src,mediateca_content_mime_type,mediateca_content_type)
-      VALUES($1,$2,$3,$4,$5,$6,$7)`, [mediaId,folderId,clean(name),s3Key,data.cdnUrl || '',data.contentType || '',String(data.contentType || '').includes('pdf') ? 'pdf' : 'image']);
+      mediateca_s3_key,mediateca_content_src,mediateca_content_mime_type,mediateca_content_type,mediateca_content_description)
+      VALUES($1,$2,$3,$4,$5,$6,$7,$8)`, [mediaId,folderId,name,s3Key,'',data.contentType || '',String(data.contentType || '').includes('pdf') ? 'pdf' : String(data.contentType || '').startsWith('image/') ? 'image' : 'file',String(data.descripcion || '')]);
     const id = `material_${crypto.randomUUID().slice(0,12)}`;
     const result = await db.query(`INSERT INTO produccion_materiales
-      (id_material,nombre_material,validacion_produccion,comentarios,mediateca_id,archivo_url,id_contenido,id_revista,tipo,fecha_aportado)
-      VALUES($1,$2,'no revisado produccion','',$3,$4,$5,$6,$7,now()) RETURNING *`,
-      [id,name,mediaId,data.cdnUrl || '',destination.idContenido,destination.idRevista || null,destination.tipo]);
+      (id_material,nombre_material,validacion_produccion,comentarios,mediateca_id,archivo_url,id_contenido,id_revista,tipo,descripcion_material,fecha_aportado)
+      VALUES($1,$2,'no revisado produccion','',$3,$4,$5,$6,$7,$8,now()) RETURNING *`,
+      [id,name,mediaId,'',destination.idContenido,destination.idRevista || null,destination.tipo,String(data.descripcion || '')]);
     await db.query(`UPDATE produccion_contenidos SET array_ids_materiales = COALESCE(array_ids_materiales,'[]'::jsonb) || $1::jsonb,
       updated_at=now() WHERE id_contenido=$2`, [JSON.stringify([id]),destination.idContenido]);
     if (destination.idRevista) await db.query(`INSERT INTO produccion_revistas_contenidos(id_revista,id_contenido,tipo)
       VALUES($1,$2,$3) ON CONFLICT DO NOTHING`, [destination.idRevista,destination.idContenido,destination.tipo]);
-    await db.query('COMMIT');
+    if (!transactionDb) {
+      await db.query('COMMIT');
+      await externalUserEvent('crear', 's3_material_produccion', mediaId, null, { s3Key, nombre: name, contenido: destination.idContenido });
+    }
     return result.rows[0];
-  } catch (error) { await db.query('ROLLBACK'); throw error; }
-  finally { db.release(); }
+  } catch (error) { if (!transactionDb) await db.query('ROLLBACK'); throw error; }
+  finally { if (!transactionDb) db.release(); }
 }
 
 export async function reviewProductionMaterial(id, data) {

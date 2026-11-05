@@ -21,7 +21,7 @@ export default function EditorDocumentacionPage() {
       <MiddleNav tituloprincipal={`Editor: ${labels[tipo] || tipo}`} />
       <div className="min-h-screen w-full bg-gray-100 px-12 py-8 text-gray-600">
         <div className="mb-4">
-          <Link href="/dashboard/comercial/documentacion" className="border border-gray-300 bg-white px-4 py-2 text-sm hover:bg-gray-50">
+          <Link href="/dashboard/operaciones/documentacion" className="border border-gray-300 bg-white px-4 py-2 text-sm hover:bg-gray-50">
             Volver a documentación
           </Link>
         </div>

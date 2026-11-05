@@ -106,7 +106,7 @@
       "Los cambios del agente gestor se guardan automáticamente y transfieren los contenidos pendientes. El agente de la propuesta de origen es inalterable. Sin IVA no se muestra Importe BI: el importe se denomina Importe total."
     ]
   },
-  "/dashboard/comercial/documentacion": {
+  "/dashboard/operaciones/documentacion": {
     "summary": "Centraliza las guías internas y otros documentos de consulta.",
     "steps": [
       "Selecciona Guías de uso u Otros documentos.",
@@ -129,43 +129,41 @@
       "Cada año, Anteriores y Sin año tienen las pestañas Revista (principal) y Otros antes de los filtros. Revista omite Tipo revista/servicio y Caduca (web). Otros muestra Material y Tipo de servicio, sin Anuncio, Artículo ni Página. La división utiliza el destino y la publicación del contenido."
     ]
   },
-  "/dashboard/produccion/revistas": {
+  "/dashboard/operaciones/revistas": {
     "summary": "Gestiona revistas pendientes y planifica sus siete eventos en un calendario de 24 meses.",
     "steps": [
       "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "En Pendientes el orden es Vidrio Plano, Ventanas, Quién es Quién y el resto. Estas tres revistas tienen subpestañas de edición; no se repite la columna ni el filtro de edición. Número es la primera columna. Un solo desplegable Filtros, inicialmente cerrado, muestra los filtros compactos de las columnas visibles.",
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
-      "Agregar revista crea un número pendiente de publicar. Desde Pendientes, Abrir accede a /dashboard/produccion/revistas/[id_revista]. El estado se modifica exclusivamente dentro de la ficha.",
+      "Agregar revista crea un número pendiente de publicar. Desde Pendientes, Abrir accede a /dashboard/operaciones/revistas/[id_revista]. El estado se modifica exclusivamente dentro de la ficha.",
       "Calendario muestra 24 meses desde el actual, con semanas de lunes a domingo y etiquetas de eventos por día. A la derecha, el panel fijo permite filtrar eventos y editar sus fechas con dd / mm / yyyy.",
       "Cada número conserva en la base de datos las fechas de petición y recordatorio de materiales, deadline previsto y real, envío a imprenta, impresión estimada y envío de revistas.",
       "Consultar el listado o el calendario no modifica las páginas, los recuentos ni las fechas de actualización de las publicaciones.",
       "La tabla distingue Número, Formato (digital/impresa), Especial y Fecha de publicación sin mostrar el identificador. Vidrio y Ventanas disponen de América Latina, Iberia y ESPECIALES; los especiales quedan excluidos de las ediciones regulares. Cada ficha muestra los artículos correspondientes con estado, cuenta, título y páginas, incluyendo todos los números previstos y especiales."
     ]
   },
-  "/dashboard/produccion/contenidos": {
-    "summary": "GESTION PRODUCCION reúne contenidos de revista, otros contenidos contratados y artículos con seguimiento por número previsto.",
+  "/dashboard/produccion/gestion": {
+    "summary": "Contenidos pendientes de publicar, clasificados en Artículos, Anuncios y Otros.",
     "steps": [
-      "La página tiene tres pestañas contiguas unidas al panel: Contenidos revista, Otros contenidos contratados y Artículos. Artículos reutiliza Control de redacción, con Pendientes como vista inicial y Publicados sin columna Estado.",
-      "Pulsa una fila de artículos para editar ubicación, cuenta, título, estado, responsable (Frank, Paco o Ricardo), fecha de paso a producción, portada (Vidrio, Ventanas u Otro), números previstos y páginas.",
-      "Confirma la publicación de cada número previsto. Si solo han salido algunos, el estado es Parcialmente publicado y sigue en Pendientes; al completar todos pasa a Publicados. La publicación en Vidrioperfil se registra por separado.",
-      "Los estados importados se conservan en origen. Pendiente o Pendiente de pasar se muestran como Pendiente pasar producción; Hecho se muestra como Corregido, sin marcarlo publicado.",
-      "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
-      "Contenidos revista muestra primero el número, seguido de revista, región y sector, y permite abrir sus anuncios y artículos.",
-      "Otros contenidos contratados muestra los registros de producción; abre la tarjeta Filtros y pulsa una fila para entrar en el detalle del contenido.",
-      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
-      "Al abrir una revista se accede directamente a /dashboard/produccion/contenidos/revistas/[id_revista]/contenidos.",
-      "Los contenidos nuevos reciben un c?digo hp_aa_000.000 del servidor. Se conservan los identificadores num?ricos procedentes de la hoja antigua y la referencia original cuando se corrige un c?digo duplicado.",
-      "Artículos reutiliza el mismo catálogo que la página Artículos del menú, antes Control de redacción: no crea una segunda lista. Todo artículo tiene un contenido asociado y puede llevar un vínculo extra post-contrato."
+      "Agregar contenidos abre un asistente de cinco fases: tipo, vínculo contratado, datos, materiales y confirmación. No se sube ningún archivo antes de confirmar.",
+      "Si está contratado, selecciona empresa, contrato y contenido pendiente de ese tipo. Se reutiliza el mismo contenido y su modo prueba, sin duplicar líneas ni modificar importes.",
+      "Sin vínculo contratado, elige cuenta o Sin empresa, nombre y descripción opcional. Solo artículos y anuncios pueden asignarse a una revista.",
+      "Aporta un ZIP como material descargable o añade archivos individuales sucesivamente. Cada material tiene nombre y descripción opcional. Máximo 100 materiales y 200 MB por archivo.",
+      "La confirmación comprueba los datos antes de habilitar Subir. Los materiales se guardan en S3 y se registran junto al contenido en una transacción; reintentar no duplica la carga. Al terminar se abre el detalle con sus materiales.",
+      "Artículos y Anuncios abren Filtrar por revista de forma predeterminada. Selecciona una revista para ver su tabla de contenidos pendientes, o pulsa Mostrar todos para incluir todas las revistas y los contenidos sin revista. Otros muestra directamente todos sus contenidos pendientes.",
+      "Cada tabla reúne los filtros en una única tarjeta Filtros, inicialmente cerrada. Pulsa un contenido para abrir su ficha. Las publicaciones parciales siguen pendientes.",
+      "Los contenidos importados que incluían artículo y anuncio aparecen en ambas vistas con el mismo ID y contrato; no se duplican sus líneas de facturación.",
+      "Las URLs antiguas de contenidos se redirigen a /dashboard/produccion/gestion."
     ]
   },
-  "/dashboard/produccion/contenidos/[id]": {
+  "/dashboard/produccion/gestion/[id]": {
     "summary": "Detalle de un contenido de producción y sus materiales.",
     "steps": [
       "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "Edita especificaciones, Publicación / Nº web, agente por nombre, fecha límite con día, mes y año separados y estado; pulsa Guardar cambios. Agregar materiales permite subir un archivo vinculado al contenido."
     ]
   },
-  "/dashboard/produccion/contenidos/revistas/[id_revista]": {
+  "/dashboard/produccion/gestion/revistas/[id_revista]": {
     "summary": "Revisa los materiales de la revista y organiza su planillo previo por bloques de contenido.",
     "steps": [
       "Datos de la revista permite editar las siete fechas de eventos, fecha de publicación y estado. Guardar datos conserva los cambios en el número de revista.",
@@ -186,7 +184,7 @@
       "Publicar asignaciones definitivas abre una revision de paginas antes de confirmar. La version debe seguir vigente; la publicacion es atomica y repetirla no duplica las asignaciones. Los contratos y contenidos se conservan. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados."
     ]
   },
-  "/dashboard/administracion/ferias": {
+  "/dashboard/operaciones/ferias": {
     "summary": "Separa el catálogo de ferias de sus ediciones concretas.",
     "steps": [
       "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
@@ -201,7 +199,7 @@
       "El formato visual de Administración comparte controles y pestañas: pestañas principales sobre fondo blanco, contenido azul claro y subpestañas con contenido blanco."
     ]
   },
-  "/dashboard/administracion/ferias/catalogo/[id]": {
+  "/dashboard/operaciones/ferias/catalogo/[id]": {
     "summary": "Muestra los datos generales de una feria del catálogo.",
     "steps": [
       "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
@@ -799,9 +797,12 @@
   "/dashboard": {
     "summary": "Panel personal del agente.",
     "steps": [
-      "Mis tareas pendientes es la primera pestaña y muestra las tareas pendientes o en curso asignadas a tu agente. Ver todas mis tareas abre pendientes y terminadas. Los filtros de Tarea, Estado y Descripción están encima de la tabla, reunidos en un único desplegable Filtros, inicialmente cerrado. Al abrirlo se muestran todos juntos; cerrarlo conserva los filtros aplicados. El filtro Estado es un select con las opciones Todos los estados, Pendiente y En curso.",
-      "En Mis tareas pendientes, Agregar tarea abre un modal con nombre y descripción. La tarea se asigna al agente autenticado, queda pendiente y aparece en la lista al guardarla. No permite elegir otro agente. Los filtros de cada tabla se muestran juntos en una tarjeta Filtros inicialmente cerrada, con una etiqueta fina encima de cada campo. Cerrarla conserva los filtros aplicados.",
-      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
+      "Mis tareas es la primera pestaña y contiene Pendientes, Todas y Calendario. Pendientes conserva las tareas pendientes o en curso asignadas a tu agente; Todas incluye también completadas y canceladas. Los filtros de cada tabla están juntos en una tarjeta Filtros inicialmente cerrada.",
+      "En Mis tareas, Agregar tarea abre un modal con nombre y descripción. La tarea se asigna al agente autenticado, queda pendiente y aparece en la lista al guardarla. No permite elegir otro agente. Los filtros de cada tabla se muestran juntos en una tarjeta Filtros inicialmente cerrada, con una etiqueta fina encima de cada campo. Cerrarla conserva los filtros aplicados.",
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
+      "Calendario abre siempre el mes actual con el título mes - año y flechas para navegar al mes anterior o siguiente. Tiene seis columnas, de lunes a sábado; las tareas con fecha aparecen como etiquetas. A la derecha están las tarjetas del mes y las tareas sin fecha, con Filtros encima. Las tareas de domingo se conservan en las tarjetas.",
+      "Al pasar el cursor o enfocar una tarea en el calendario se resalta en azul su etiqueta y su tarjeta; al hacerlo en la tarjeta se resalta también la etiqueta.",
+      "Las descripciones de tareas muestran como máximo 55 palabras. Abrir permite leer el texto completo en un modal que se cierra con × o Escape."
     ]
   },
   "/dashboard/contabilidad/prevision-liquidez/vista-juan": {
@@ -861,7 +862,8 @@
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
       "El acceso de cada carpeta se vincula a un módulo o ruta del ERP y se cruza con las restricciones de roles heredadas. Si no puedes abrir esa ruta, no ves su carpeta ni accedes a sus archivos. Las raíces protegidas conservan su módulo; al editar una subcarpeta puedes elegir una página para restringir su acceso.",
       "Los archivos almacenados en S3 se abren desde una ruta del ERP que vuelve a comprobar los permisos; el visor no utiliza una dirección pública permanente de CloudFront.",
-      "El rol Contabilidad accede a documentos de Administración, Contabilidad y Comercial; no ve documentos de Dirección o Producción ni carpetas vinculadas a Operaciones."
+      "El rol Contabilidad accede a documentos de Administración, Contabilidad y Comercial; no ve documentos de Dirección o Producción ni carpetas vinculadas a Operaciones.",
+      "Los materiales de producción se guardan en material_articulos, material_anuncios u otros, dentro de documentos_produccion. Si van a revista se usan las mismas categorías dentro de documentos_produccion/documentos_revistas. No se crean subcarpetas por revista ni por contenido. Los ZIP y otros archivos se muestran como Archivo, con descarga desde el ERP."
     ]
   },
   "/dashboard/operaciones/data/importar/cuentas": {
@@ -880,14 +882,14 @@
       "Confirmar guarda el lote en una transaccion. Repetir el mismo lote no duplica registros y los cambios concurrentes requieren revisar otra vez."
     ]
   },
-  "/dashboard/produccion/revistas/[id_revista]": {
+  "/dashboard/operaciones/revistas/[id_revista]": {
     "summary": "Ficha de revista con datos de planificación y contenidos.",
     "steps": [
       "Datos de la revista permite editar las siete fechas de eventos, fecha de publicación y estado. Guardar datos conserva los cambios en el número de revista.",
       "Las pestañas Datos de la revista y Contenidos cambian la URL. Contenidos utiliza el sufijo /contenidos y conserva anuncios, artículos y planillo previo."
     ]
   },
-  "/dashboard/produccion/revistas/[id_revista]/contenidos": {
+  "/dashboard/operaciones/revistas/[id_revista]/contenidos": {
     "summary": "Revisa los materiales de la revista y organiza su planillo previo por bloques de contenido.",
     "steps": [
       "Datos de la revista permite editar las siete fechas de eventos, fecha de publicación y estado. Guardar datos conserva los cambios en el número de revista.",
@@ -908,7 +910,7 @@
       "Publicar asignaciones definitivas abre una revision de paginas antes de confirmar. La version debe seguir vigente; la publicacion es atomica y repetirla no duplica las asignaciones. Los contratos y contenidos se conservan. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados."
     ]
   },
-  "/dashboard/produccion/contenidos/revistas/[id_revista]/contenidos": {
+  "/dashboard/produccion/gestion/revistas/[id_revista]/contenidos": {
     "summary": "Revisa los materiales de la revista y organiza su planillo previo por bloques de contenido.",
     "steps": [
       "Datos de la revista permite editar las siete fechas de eventos, fecha de publicación y estado. Guardar datos conserva los cambios en el número de revista.",
@@ -977,13 +979,14 @@
       "El formato visual de Administración comparte controles y pestañas: pestañas principales sobre fondo blanco, contenido azul claro y subpestañas con contenido blanco."
     ]
   },
-  "/dashboard/produccion/articulos": {
-    "summary": "Gestiona artículos editoriales, que son contenidos independientes del contrato, con seguimiento de pendientes y publicados.",
+  "/dashboard/operaciones/articulos": {
+    "summary": "Seguimiento editorial de contenidos de tipo artículo, conservando sus datos históricos y números previstos.",
     "steps": [
       "Pendientes es la vista principal; Publicados conserva el archivo sin borrar los artículos. Una publicación parcial sigue pendiente hasta completar todos los números previstos.",
-      "Añadir artículo abre un modal con cuenta, título, estado, responsable, fechas dd/mm/yyyy, páginas y destinos España, Latam, Especial y Hueco. El artículo crea un único contenido y las versiones impresa y digital muestran el mismo artículo del número.",
+      "Las altas se realizan desde Producción → Gestión producción → Agregar contenidos. No hay un alta independiente de artículos. Pulsa una fila para editar los datos editoriales del mismo contenido.",
       "Puede vincularse opcionalmente como extra post-contrato a un contrato de su cuenta. Los extras se guardan separados de las líneas firmadas y no modifican importes ni generan cobros. Retirar o cambiar el vínculo mantiene sincronizada la ficha del contrato.",
-      "Los filtros están agrupados en una tarjeta inicialmente cerrada. No se borran registros al moverlos a Publicados."
+      "Los filtros están agrupados en una tarjeta inicialmente cerrada. No se borran registros al moverlos a Publicados.",
+      "Los contenidos nuevos de tipo artículo también aparecen aquí. Los que aún no tienen datos editoriales abren su ficha de producción; los históricos conservan su seguimiento editorial."
     ]
   },
   "/dashboard/direccion/eventos-de-usuarios": {

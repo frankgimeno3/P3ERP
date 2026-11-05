@@ -239,10 +239,23 @@
     "es_prueba": "Indica que el registro es de prueba. Su identificador empieza por PRUEBA- y los registros derivados heredan el modo."
   },
   "produccion_contenidos": {
-    "es_prueba": "Indica que el registro es de prueba. Su identificador empieza por PRUEBA- y los registros derivados heredan el modo."
+    "es_prueba": "Indica que el registro es de prueba. Su identificador empieza por PRUEBA- y los registros derivados heredan el modo.",
+    "tipo_contenido": "Tipo del contenido: articulo, anuncio u otro; las importaciones conservan los entregables históricos.",
+    "descripcion_contenido": "Descripción opcional del contenido."
   },
   "administracion_lineas_factura": {
     "modo_precio": "Calculado, tachado, gratis o personalizado.",
     "precio_total_personalizado": "Base personalizada de la línea antes de los ajustes generales."
+  },
+  "produccion_materiales": {
+    "descripcion_material": "Descripción opcional aportada con el material; separada de los comentarios de revisión."
+  },
+  "mediateca_archivos": {
+    "mediateca_content_description": "Descripción del archivo aportada durante el alta del material."
+  },
+  "produccion_cargas_materiales": {
+    "id_carga": "UUID único de la subida confirmada; impide duplicar contenidos y materiales al reintentar.",
+    "id_contenido": "Contenido al que pertenece la carga de materiales.",
+    "created_at": "Fecha de confirmación de la carga."
   }
 }

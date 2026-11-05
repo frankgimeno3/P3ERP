@@ -96,9 +96,10 @@ export async function deleteObjectFromS3(s3Key) {
   await getClient().send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
 }
 
-export async function assertObjectExistsInS3(s3Key) {
+export async function assertObjectExistsInS3(s3Key, expected = null) {
   if (!bucket) throw new Error('El bucket S3 no está configurado.');
-  await getClient().send(new HeadObjectCommand({ Bucket: bucket, Key: s3Key }));
+  const object = await getClient().send(new HeadObjectCommand({ Bucket: bucket, Key: s3Key }));
+  if (expected && (object.ContentLength !== expected.size || object.ContentType !== expected.contentType)) throw new Error('El archivo subido no coincide con el tamaño o tipo confirmado.');
 }
 
 export async function createPresignedDownload(s3Key) {

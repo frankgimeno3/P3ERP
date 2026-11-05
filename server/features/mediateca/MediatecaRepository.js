@@ -56,6 +56,7 @@ function normalizeMedia(row, folderPath = "") {
   return {
     id: row.mediateca_content_id,
     name: row.mediateca_content_name || "",
+    description: row.mediateca_content_description || "",
     s3Key: row.mediateca_s3_key || "",
     url: buildUrl(row),
     folderId: row.mediateca_folder_id || null,

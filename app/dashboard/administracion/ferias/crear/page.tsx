@@ -87,7 +87,7 @@ export default function CrearFeriaPage() {
     try {
       setError("");
       const created = await FeriaService.createFeria(form);
-      router.push(`/dashboard/administracion/ferias/${created.id_feria}`);
+      router.push(`/dashboard/operaciones/ferias/${created.id_feria}`);
     } catch (error: any) {
       setError(error?.message || "No se ha podido crear la feria.");
     }
@@ -97,7 +97,7 @@ export default function CrearFeriaPage() {
     <div className="flex min-h-screen w-full flex-col bg-gray-200 text-gray-700">
       <MiddleNav tituloprincipal="Crear feria" />
       <div className="min-h-screen w-full bg-gray-100 px-12 py-10">
-        <button type="button" onClick={() => router.push("/dashboard/administracion/ferias")} className="mb-5 rounded bg-white px-4 py-2 text-sm text-blue-950 shadow-sm hover:bg-gray-50">Volver</button>
+        <button type="button" onClick={() => router.push("/dashboard/operaciones/ferias")} className="mb-5 rounded bg-white px-4 py-2 text-sm text-blue-950 shadow-sm hover:bg-gray-50">Volver</button>
         {error && <div className="mb-4 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
         <section className="bg-white p-6 shadow-sm">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

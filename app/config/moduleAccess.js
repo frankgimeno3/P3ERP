@@ -1,4 +1,5 @@
 import {accountingRoles,canonicalAccountingPath} from './accountingRoutes.js';
+import {canonicalProductionPath} from './productionRoutes.js';
 export const appRoles = ['base', 'comercial', 'direccion', 'administracion', 'contabilidad', 'operaciones', 'superadmin'];
 export const roleRank = {base:0, comercial:0.5, direccion:0, administracion:1, contabilidad:1, operaciones:2, superadmin:3};
 export function normalizeRole(role) {
@@ -16,7 +17,7 @@ export function canViewModule(role,moduleId) {
 }
 const within=(path,root)=>path===root||path.startsWith(root+'/');
 export function canAccessDashboardPath(role,pathname) {
-  pathname=canonicalAccountingPath(pathname);
+  pathname=canonicalProductionPath(canonicalAccountingPath(pathname));
   if(within(pathname,'/dashboard/comercial/contratos/crear'))return roleRank[normalizeRole(role)]>=roleRank.administracion;
   for(const area of ['direccion','operaciones','administracion','produccion','contabilidad'])if(within(pathname,'/dashboard/'+area))return canViewModule(role,area);
   return true;

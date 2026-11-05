@@ -12,8 +12,8 @@ function load(file){if(cache.has(file))return cache.get(file);const mod={exports
  if(id==='@/app/apiClient')return {__esModule:true,default:api};
  if(id.includes('MiddleNav'))return {__esModule:true,default:()=>null};
  if(id.includes('MediatecaService'))return {MediatecaService:{getFolders:async()=>[{id:'f',name:'carpeta',path:'carpeta',allowedRoles:[],effectiveRoles:['direccion','superadmin'],accessInherited:true}],getMedia:async()=>[{id:'m',name:'archivo',folderPath:'carpeta',type:'pdf',effectiveRoles:['direccion','superadmin']}]}};
- if(id.startsWith('@/'))return load(['.tsx','.ts','.js'].map(ext=>id.slice(2)+ext).find(fs.existsSync));
- if(id.startsWith('./'))return load(['.tsx','.ts','.js'].map(ext=>path.join(path.dirname(file),id)+ext).find(fs.existsSync));
+ if(id.startsWith('@/'))return load(['','.tsx','.ts','.js'].map(ext=>id.slice(2)+ext).find(fs.existsSync));
+ if(id.startsWith('./'))return load(['','.tsx','.ts','.js'].map(ext=>path.join(path.dirname(file),id)+ext).find(fs.existsSync));
  return require(id);
 },mod,mod.exports);cache.set(file,mod.exports);return mod.exports;}
 const root=createRoot(document.getElementById('root'));

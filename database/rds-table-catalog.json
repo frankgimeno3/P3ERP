@@ -1,4 +1,5 @@
 [
+  {"old":"","name":"produccion_cargas_materiales","description":"Cargas de materiales confirmadas e idempotentes; cada UUID identifica una única subida y su contenido."},
   {"old":"agentes_db","name":"agentes_db","description":"Agentes y usuarios del ERP, con rol, estado, perfil y emails alternativos de Cognito vinculados a una misma identidad."},
   {"old":"roles_db","name":"agentes_roles","description":"Roles y permisos asignables a los agentes."},
   {"old":"cuentas_db","name":"comercial_cuentas","description":"Empresas y cuentas comerciales, incluidos sus datos de facturación."},
@@ -43,7 +44,7 @@
   {"old":"newsleters_db","name":"servicios_newsletters","description":"Cabeceras y ediciones de newsletters."},
   {"old":"publicaciones_db","name":"servicios_publicaciones","description":"Ediciones y publicaciones concretas de los soportes editoriales."},
   {"old":"contenidos_db","name":"produccion_contenidos","description":"Entregables y contenidos asociados a publicaciones y contratos."},
-  {"old":"control_redaccion_db","name":"produccion_control_redaccion","description":"Flujo de artículos editoriales vinculados a contenidos: corrección, producción, publicaciones previstas, estado parcial o final y contratos extra."},
+  {"old":"control_redaccion_db","name":"produccion_control_redaccion","description":"Datos editoriales y de publicación de contenidos de tipo artículo; conserva los datos históricos del contenido vinculado."},
   {"old":"materiales_db","name":"produccion_materiales","description":"Materiales de producción vinculados a contenidos y cuentas."},
   {"old":"produccion_revistas_contenidos","name":"produccion_revistas_contenidos","description":"Asociaciones de contenidos con revistas, separadas por artículos y anuncios."},
   {"old":"comentarios_db","name":"general_comentarios","description":"Comentarios asociados a entidades del ERP."},

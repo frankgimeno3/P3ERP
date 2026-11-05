@@ -2,6 +2,26 @@
 
 Source: PostgreSQL `public` schema from the configured RDS connection.
 
+## Production content intake
+
+Migration `20261105_0001_production_management.sql` keeps `produccion_contenidos` as the
+single content inventory (`tipo_contenido`: articulo, anuncio or otro). Historical
+imports with combined article/advertisement deliverables retain their original IDs
+and contract references. `produccion_control_redaccion` stores editorial metadata
+of its linked content, rather than a separate article inventory.
+
+`descripcion_contenido`, `produccion_materiales.descripcion_material` and
+`mediateca_archivos.mediateca_content_description` preserve optional descriptions.
+Mediateca supports generic `file` objects, including ZIP archives, in addition to
+images and PDFs. `produccion_cargas_materiales` records a unique UUID per confirmed
+batch and its content ID (ON UPDATE CASCADE), preventing duplicate retries. Audit
+triggers are installed before the first write to this table.
+
+Production materials use shared `material_articulos`, `material_anuncios` and
+`otros` folders under `documentos_produccion`, with the same categories under
+`documentos_revistas` for magazine materials. The migration runner flattens old
+folders while preserving S3 keys, media/material IDs and content links.
+
 Migration `20261014_0001_contract_managers_order_rekey.sql` adds immutable `comercial_contratos.id_agente_propuesta_contrato` (the original proposal agent); existing `id_agente_contrato` remains the current manager. It adds `modo_precio` and `precio_total_personalizado` to invoice lines. Order foreign keys in receipts, bank movements and receipt applications now cascade ID updates, preserving associations during transactional renumbering. Selected invoice orders and general pricing adjustments reuse `administracion_facturas_clientes.datos_importacion`; historical fiscal records and source files remain unchanged.
 
 Migration `20261013_0006_chained_account_comments.sql` adds the transaction/request index to user events and `p3_account_operation_comment()` to summarize chained contract/order changes in one account comment per authenticated request. It does not modify business rows or add columns.

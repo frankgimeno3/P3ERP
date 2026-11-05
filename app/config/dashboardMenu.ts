@@ -32,7 +32,6 @@ export const dashboardMenu: DashboardMenuModule[] = [
       page("Contactos", "/dashboard/comercial/contactos"),
       page("Propuestas", "/dashboard/comercial/propuestas"),
       page("Contratos", "/dashboard/comercial/contratos"),
-      page("Documentación", "/dashboard/comercial/documentacion"),
     ],
   },
   {
@@ -40,16 +39,13 @@ export const dashboardMenu: DashboardMenuModule[] = [
     label: "Producción",
     children: [
       page("Hoja de producción", "/dashboard/produccion/hoja_produccion"),
-      page("Artículos", "/dashboard/produccion/articulos"),
-      page("GESTION PRODUCCION", "/dashboard/produccion/contenidos"),
-      page("Revistas", "/dashboard/produccion/revistas"),
+      page("Gestión producción", "/dashboard/produccion/gestion"),
     ],
   },
   {
     id: "administracion",
     label: "Administración",
     children: [
-      page("Ferias", "/dashboard/administracion/ferias"),
       group("liquidaciones", "Liquidaciones", [
         page("Tarjetas", "/dashboard/administracion/liquidaciones/tarjetas"),
         page("Tickets", "/dashboard/administracion/liquidaciones/tickets"),
@@ -71,6 +67,10 @@ export const dashboardMenu: DashboardMenuModule[] = [
     id: "operaciones",
     label: "Operaciones",
     children: [
+      page("Ferias", "/dashboard/operaciones/ferias"),
+      page("Artículos", "/dashboard/operaciones/articulos"),
+      page("Revistas", "/dashboard/operaciones/revistas"),
+      page("Documentación", "/dashboard/operaciones/documentacion"),
       page("Tareas", "/dashboard/operaciones/tareas"),
       page("Servicios", "/dashboard/operaciones/servicios"),
       page("Gestión de BBDD", "/dashboard/operaciones/data"),

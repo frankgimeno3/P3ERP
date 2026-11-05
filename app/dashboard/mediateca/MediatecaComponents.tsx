@@ -19,8 +19,9 @@ export type MediatecaMedia = {
   s3Key: string;
   url?: string;
   folderPath: string;
-  type: "pdf" | "image";
+  type: "pdf" | "image" | "file";
   mimeType?: string;
+  description?: string;
   effectiveRoles?: string[];
 };
 
@@ -412,7 +413,7 @@ export function MediatecaBrowser({
     try {const result=await MediatecaService.deleteMedia(item.id);setTrashId(result.trashId);await load();}catch(cause:any){setError(cause.message);}
   }
 
-  const canUseSelection = selected && (selected.type === "image" || allowPdfSelection);
+  const canUseSelection = selected && (selected.type === "image" || (selected.type === "pdf" && allowPdfSelection));
 
   return (
     <div className="space-y-5 [&_button:enabled]:cursor-pointer [&_button:enabled]:transition [&_button:enabled]:hover:brightness-95 [&_button:disabled]:cursor-default">
@@ -519,19 +520,20 @@ export function MediatecaBrowser({
                   <tr key={item.id} className={isSelected ? "border-t bg-blue-50" : "border-t hover:bg-gray-50"}>
                     {picker && (
                       <td className="p-3">
-                        <input type="checkbox" checked={isSelected} disabled={!allowPdfSelection && item.type === "pdf"} onChange={() => setSelectedId(isSelected ? "" : item.id)} />
+                        <input type="checkbox" checked={isSelected} disabled={item.type === 'file' || (!allowPdfSelection && item.type === "pdf")} onChange={() => setSelectedId(isSelected ? "" : item.id)} />
                       </td>
                     )}
                     <td className="p-3">
                       <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded border bg-gray-100">
-                        {item.type === "image" ? <img src={src} alt="" className="h-full w-full object-cover" /> : <span className="text-xs font-bold text-red-700">PDF</span>}
+                        {item.type === "image" ? <img src={src} alt="" className="h-full w-full object-cover" /> : <span className="text-xs font-bold text-blue-900">{item.type === 'pdf' ? 'PDF' : 'Archivo'}</span>}
                       </div>
                     </td>
                     <td className="p-3">
                       {src ? <a className="font-medium text-blue-800 hover:underline" href={src} target="_blank" rel="noreferrer">{item.name}</a> : item.name}
                       <p className="font-mono text-[10px] text-gray-600">{item.id}</p>
+                      {item.description && <p className="mt-1 max-w-sm text-xs text-gray-600">{item.description}</p>}
                     </td>
-                    <td className="p-3">{item.type === "pdf" ? "PDF" : "Imagen"}</td>
+                    <td className="p-3">{item.type === 'file' ? 'Archivo' : item.type === "pdf" ? "PDF" : "Imagen"}</td>
                     <td className="p-3 font-mono text-xs text-gray-600">{item.folderPath || "(raiz)"}</td><td className="p-3 text-xs">{(item.effectiveRoles||[]).join(', ')||'Heredado'}</td>
                     <td className="space-x-2 p-3 text-right">
                       {!picker && <button type="button" onClick={() => setRenameTarget(item)} className="rounded bg-gray-100 px-3 py-1 text-xs">Renombrar</button>}

@@ -1,4 +1,5 @@
 import {testMode,testIdentifier} from '../identifiers/TestMode.js';
+import { contentTypes } from '../../../app/lib/productionManagement.js';
 import { getPgPool } from "../../database/pgClient.js";
 import {allocateContentIdentifier} from '../identifiers/BusinessIdentifiers.js';
 import { normalizeProductionDeadline } from "../../../app/lib/productionContentFields.js";
@@ -45,6 +46,9 @@ function normalizeHojaProd(row) {
 function normalizeContenido(row) {
   return {
     nombre_contenido: row.nombre_contenido ?? "",
+    descripcion_contenido: row.descripcion_contenido ?? "",
+    tipo_contenido: row.tipo_contenido ?? "",
+    categorias_gestion: contentTypes(row),
     especificaciones_contenido: row.especificaciones_contenido ?? "",
     publicacion_num_web: row.publicacion_num_web ?? "",
     cliente_hoja: row.cliente_hoja ?? "",
