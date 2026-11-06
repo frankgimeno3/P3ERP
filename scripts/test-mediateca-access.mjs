@@ -36,6 +36,7 @@ await assert.rejects(()=>assertMediatecaAccess(request('base','media/file'),{med
 await assert.rejects(()=>assertMediatecaAccess(new Request('https://p3.test'),{},db),e=>e.status===401);
 const p=getPgPool(),original=p.query.bind(p);p.query=db.query;
 try{
+ for(const role of ['base','comercial','administracion','contabilidad','operaciones'])await assert.rejects(()=>guardMediatecaRequest(request(role,'access')),e=>e.status===403);
  await assert.rejects(()=>guardMediatecaRequest(request('base','media/file')),e=>e.status===403);
  await assert.rejects(()=>guardMediatecaRequest(request('base','media/file/content')),e=>e.status===403);
  await assert.rejects(()=>guardMediatecaRequest(request('operaciones','folders/public','DELETE')),e=>e.status===403);

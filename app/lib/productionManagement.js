@@ -20,7 +20,8 @@ export function contentTypes(row) {
 }
 export function contentPending(row) {
   const state = normalize(row.estado_contenido || row.estado);
-  return !['publicado', 'publicada', 'publicados', 'publicadas', 'cancelado', 'cancelada'].includes(state);
+  if (/parcial/.test(state)) return true;
+  return !/^(publicad[oa]s?(?:\s|$)|cancelad[oa]s?(?:\s|$)|anulad[oa]s?(?:\s|$)|no sale$|no se publica$)/.test(state.trim());
 }
 export function validateContentIntake(data) {
   const errors = [];

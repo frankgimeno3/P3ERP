@@ -276,6 +276,8 @@
     "precio_total_personalizado": "Base personalizada de la línea antes de los ajustes generales."
   },
   "produccion_materiales": {
+    "es_version_acabada": "Indica que el material es una versión acabada del contenido; conserva su propio archivo en S3.",
+    "numero_version": "Número correlativo por contenido desde 1, mostrado como V01, V02...; las versiones anteriores se conservan.",
     "descripcion_material": "Descripción opcional aportada con el material; separada de los comentarios de revisión."
   },
   "mediateca_archivos": {

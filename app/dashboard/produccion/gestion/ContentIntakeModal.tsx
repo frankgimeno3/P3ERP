@@ -69,7 +69,7 @@ export default function ContentIntakeModal({ onClose }: { onClose: () => void })
       }
       setProgress('Registrando el contenido y sus materiales…');
       const result = (await apiClient.post('/api/v1/produccion/gestion', { ...body, materiales: uploaded.current })).data;
-      router.push(`/dashboard/produccion/gestion/${encodeURIComponent(result.id_contenido)}`);
+      router.push(`/dashboard/produccion/repositorio/contenidos/${encodeURIComponent(result.id_contenido)}`);
     } catch (e: any) { setError(e.message || 'No se pudo completar la subida. Puedes reintentar sin duplicar los materiales.'); }
     finally { setBusy(false); }
   };

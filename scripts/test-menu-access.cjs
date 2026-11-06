@@ -15,6 +15,17 @@ function load(file){
 const {dashboardMenu}=load('app/config/dashboardMenu.ts');
 const {visibleEntries}=load('app/general_components/componentes_recurrentes/loggedLeftMenu.tsx');
 const {appRoles,canAccessDashboardPath,canViewModule}=load('app/config/moduleAccess.js');
+const {canAccessApiPath}=load('app/config/roleAccess.ts');
+const production=dashboardMenu.find(module=>module.id==='produccion');
+const management=production.children.find(entry=>entry.id==='gestion-contenidos');
+assert(management);assert.deepEqual(management.children.map(entry=>entry.label),['Contenido revista','Otro contenido']);
+assert(production.children.some(entry=>entry.href==='/dashboard/produccion/repositorio'));
+for(const role of appRoles){
+ const allowed=['direccion','superadmin'].includes(role);
+ assert.equal(canAccessDashboardPath(role,'/dashboard/mediateca'),allowed);
+ assert.equal(canAccessDashboardPath(role,'/dashboard/direccion/mediateca'),allowed);
+ for(const method of ['GET','POST','PATCH','DELETE'])for(const resource of ['media','media/id/content','media/presign','folders','papelera','access'])assert.equal(canAccessApiPath(role,'/api/v1/mediateca/'+resource,method),allowed,`${role} ${resource} ${method}`);
+}
 const flatten=entries=>entries.flatMap(entry=>entry.type==='page'?[entry.href]:flatten(entry.children));
 for(const role of appRoles){
  const visible=dashboardMenu.filter(module=>canViewModule(role,module.id)).flatMap(module=>flatten(visibleEntries(module.children,role)));

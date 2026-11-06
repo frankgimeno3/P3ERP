@@ -122,7 +122,7 @@
       "Despliega Filtros, cerrado inicialmente, para buscar por los campos de la hoja. La tabla no muestra Código CRM, Publicación / Nº web, Factura ni Comentarios.",
       "Usa los controles para incluir publicados o contenidos fuera de contrato.",
       "El cliente se muestra con el nombre actual de su cuenta vinculada, aunque el Excel original usase otro nombre. El agente es quien sigue ese contenido para obtener materiales y puede ser distinto del agente comercial del contrato.",
-      "Pulsa una fila para abrir /hoja_produccion/[id]. Puedes editar especificaciones en un área de texto, Publicación / Nº web, agente por nombre, fecha límite con día, mes y año separados y estado. Pulsa Guardar cambios para conservar la edición. También puedes subir materiales. Volver regresa a la hoja de producción.",
+      "Pulsa una fila para abrir la ficha del contenido en Repositorio. Puedes editar especificaciones, Publicación / Nº web, agente por nombre, fecha límite con día, mes y año separados y estado. Las altas de materiales y versiones se realizan desde Gestión contenidos; Repositorio conserva la consulta y edición de datos.",
       "Las pestañas incluyen el año actual y todos los años presentes en los contenidos. Anteriores conserva los contenidos históricos importados; Sin año permite localizar los que aún no tienen fecha. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados.",
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
       "Los contenidos nuevos reciben un c?digo hp_aa_000.000 del servidor. Se conservan los identificadores num?ricos procedentes de la hoja antigua y la referencia original cuando se corrige un c?digo duplicado.",
@@ -142,28 +142,63 @@
       "La tabla distingue Número, Formato (digital/impresa), Especial y Fecha de publicación sin mostrar el identificador. Vidrio y Ventanas disponen de América Latina, Iberia y ESPECIALES; los especiales quedan excluidos de las ediciones regulares. Cada ficha muestra los artículos correspondientes con estado, cuenta, título y páginas, incluyendo todos los números previstos y especiales."
     ]
   },
-  "/dashboard/produccion/gestion": {
-    "summary": "Contenidos pendientes de publicar, clasificados en Artículos, Anuncios y Otros.",
+  "/dashboard/produccion/gestion-contenidos/revista": {
+    "summary": "Gestión de contenidos de revista pendientes de publicar, organizada por publicación.",
     "steps": [
       "Agregar contenidos abre un asistente de cinco fases: tipo, vínculo contratado, datos, materiales y confirmación. No se sube ningún archivo antes de confirmar.",
       "Si está contratado, selecciona empresa, contrato y contenido pendiente de ese tipo. Se reutiliza el mismo contenido y su modo prueba, sin duplicar líneas ni modificar importes.",
       "Sin vínculo contratado, elige cuenta o Sin empresa, nombre y descripción opcional. Solo artículos y anuncios pueden asignarse a una revista.",
       "Aporta un ZIP como material descargable o añade archivos individuales sucesivamente. Cada material tiene nombre y descripción opcional. Máximo 100 materiales y 200 MB por archivo.",
       "La confirmación comprueba los datos antes de habilitar Subir. Los materiales se guardan en S3 y se registran junto al contenido en una transacción; reintentar no duplica la carga. Al terminar se abre el detalle con sus materiales.",
-      "Artículos y Anuncios abren Filtrar por revista de forma predeterminada. Selecciona una revista para ver su tabla de contenidos pendientes, o pulsa Mostrar todos para incluir todas las revistas y los contenidos sin revista. Otros muestra directamente todos sus contenidos pendientes.",
-      "El título y Agregar contenidos comparten fila. Cada tabla reúne los filtros en una única tarjeta Filtros, inicialmente cerrada. En Filtrar por revista, tanto en Artículos como en Anuncios, Publicación permite elegir VIDRIO ESPAÑA, VENTANAS ESPAÑA, VIDRIO LATAM, VENTANAS LATAM, QQ VIDRIO, QQ VENTANAS o HUECO. España corresponde a Iberia, LATAM a América Latina y QQ a Quién es Quién, según su edición. Región y Sector son desplegables combinables con Publicación. Otros incluye la columna Servicio con el nombre del servicio asociado. Pulsa un contenido para abrir su ficha. Las publicaciones parciales siguen pendientes.",
+      "Las siete pestañas en fila son VIDRIO ESPAÑA, VENTANAS ESPAÑA, VIDRIO LATAM, VENTANAS LATAM, QQ VIDRIO, QQ VENTANAS y HUECO. España corresponde a Iberia, LATAM a América Latina y QQ a Quién es Quién según su edición.",
+      "La tabla muestra los números de la publicación elegida. Pulsa cualquier parte de una fila o utiliza Enter o espacio para abrir sus contenidos. Los filtros se reúnen en una tarjeta inicialmente cerrada. Arriba a la derecha están Agregar contenidos y Ver otro contenido.",
       "Los contenidos importados que incluían artículo y anuncio aparecen en ambas vistas con el mismo ID y contrato; no se duplican sus líneas de facturación.",
-      "Las URLs antiguas de contenidos se redirigen a /dashboard/produccion/gestion."
+      "Las rutas antiguas de gestión llevan a esta página; las fichas concretas de contenidos y materiales se abren siempre en Repositorio."
     ]
   },
-  "/dashboard/produccion/gestion/[id]": {
+  "/dashboard/produccion/gestion-contenidos/otros": {
+    "summary": "Contenidos pendientes que no están asignados a revista.",
+    "steps": [
+      "Muestra contenidos sin destino de revista, con servicio, empresa, agente y estado. Los publicados, anulados y cancelados se consultan en Repositorio.",
+      "Arriba a la derecha puedes Agregar contenidos o ir a Ver contenido revista. Las altas utilizan el mismo asistente de cinco fases y respetan el modo prueba del contrato o de la cuenta.",
+      "Pulsa la fila para abrir la ficha en Repositorio. Aportar material y Subir versión registran archivos para ese contenido desde esta página. Cada versión acabada recibe automáticamente el siguiente número y conserva los archivos anteriores.",
+      "Los filtros se reúnen en una única tarjeta inicialmente cerrada."
+    ]
+  },
+  "/dashboard/produccion/gestion-contenidos/revista/[id_revista]": {
+    "summary": "Contenidos pendientes de una revista por fase de producción.",
+    "steps": [
+      "Las pestañas son 0 Contratado pendiente de recibir, 1 Pendiente redacción, 2 Pendiente maquetación, 3 Pendiente corrección, 4 Pendiente revisión y 5 Todo. Todo reúne los contenidos pendientes de esa revista; publicados y cancelados se conservan en Repositorio.",
+      "Cada fase tiene subpestañas Anuncios y Artículos, con sus cantidades. La tabla muestra nombre del contenido, páginas asignadas, empresa y agente. Pulsa la fila o usa Enter o espacio para abrir la ficha.",
+      "La fase se toma del estado del contenido. Para registros históricos sin fase explícita se consideran los materiales recibidos, el contrato y el tipo; un material acabado pendiente pasa a revisión. Puedes elegir las nuevas fases desde Datos y detalles de su ficha.",
+      "Aportar material y Subir versión abren el formulario de carga desde Gestión contenidos. Las versiones se guardan como materiales, con indicador de versión acabada y número correlativo desde V01, sin sobrescribir versiones anteriores."
+    ]
+  },
+  "/dashboard/produccion/repositorio": {
+    "summary": "Consulta de todos los contenidos y materiales, incluidos pendientes, publicados y cancelados.",
+    "steps": [
+      "Alterna Contenidos y Materiales. Todos los estados permanecen disponibles y se localizan mediante la tarjeta de filtros, inicialmente cerrada.",
+      "Pulsa cualquier parte de una fila o usa Enter o espacio para abrir su ficha. Las URLs antiguas de fichas de contenido se redirigen aquí.",
+      "Repositorio no ofrece altas de contenidos ni de materiales. Para crearlos o subir versiones utiliza Producción → Gestión contenidos."
+    ]
+  },
+  "/dashboard/produccion/repositorio/materiales/[id]": {
+    "summary": "Ficha de material o versión acabada del repositorio de producción.",
+    "steps": [
+      "Muestra nombre, descripción, identificador y, si procede, versión acabada V01, V02 y siguientes. Abre el archivo con una descarga autorizada del ERP.",
+      "El enlace al contenido abre su ficha en Repositorio. Puedes guardar la revisión y los comentarios del material; no crear nuevos materiales desde esta ficha."
+    ]
+  },
+  "/dashboard/produccion/repositorio/contenidos/[id]": {
     "summary": "Detalle de un contenido de producción y sus materiales.",
     "steps": [
       "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
-      "Edita especificaciones, Publicación / Nº web, agente por nombre, fecha límite con día, mes y año separados y estado; pulsa Guardar cambios. Agregar materiales permite subir un archivo vinculado al contenido."
+      "La ficha tiene tres apartados: Datos y detalles, Materiales y Versión acabada. Cada material ordinario se muestra en una tarjeta que abre su ficha en Repositorio.",
+      "Edita especificaciones, Publicación / Nº web, agente por nombre, fecha límite con día, mes y año separados y estado; pulsa Guardar cambios.",
+      "La tabla de versiones acabadas aparece de más actual a más antigua, V02 antes de V01. Cada versión es un material con archivo propio en S3 y conserva las anteriores. Desde Repositorio no se crean contenidos ni materiales: las altas y las nuevas versiones se realizan desde Gestión contenidos."
     ]
   },
-  "/dashboard/produccion/gestion/revistas/[id_revista]": {
+  "/dashboard/operaciones/revistas/[id_revista]/contenidos": {
     "summary": "Revisa los materiales de la revista y organiza su planillo previo por bloques de contenido.",
     "steps": [
       "Datos de la revista permite editar las siete fechas de eventos, fecha de publicación y estado. Guardar datos conserva los cambios en el número de revista.",
@@ -863,20 +898,20 @@
       "Traspaso propio abre un modal para emparejar un cargo y un ingreso entre Sabadell y Santander por importe opuesto y fecha cercana. Se revisan ambos con una sola operación; reabrir uno reabre los dos. Puede confirmarse que falta la contrapartida sin inventar un ingreso. Las previsiones de traspasos son puntuales; se vinculan cuando llega el movimiento. No generan cobros comerciales ni cargos recurrentes."
     ]
   },
-  "/dashboard/mediateca": {
-    "summary": "Archivos y carpetas con eliminacion recuperable.",
+  "/dashboard/direccion/mediateca": {
+    "summary": "Mediateca de Dirección, accesible únicamente a Dirección y Superadmin, con eliminación recuperable.",
     "steps": [
       "La columna Acceso muestra los roles efectivos de cada carpeta y archivo. Heredado indica que la subcarpeta utiliza los permisos de su padre. Una subcarpeta puede restringir el acceso, pero no ampliarlo; Superadmin conserva acceso. Los roles se eligen entre los existentes del ERP.",
       "Documentos de Dirección hereda el módulo Dirección (Dirección y Superadmin). Documentos de Administración hereda Administración (Administración, Operaciones y Superadmin). Contratos firmados hereda Comercial y documentos de producción hereda Producción, actualmente accesibles a todos los roles. Las restricciones adicionales de subcarpetas pueden reducir estos permisos.",
       "Las carpetas no autorizadas se ocultan y sus archivos no se pueden consultar ni gestionar mediante la API. Mover exige acceso al origen y al destino. La papelera solo muestra eliminaciones a las que tienes acceso; eliminar una carpeta con descendientes privados también requiere permiso sobre ellos.",
       "La ruta muestra la carpeta actual. Durante una consulta aparece Cargando mediateca; una respuesta antigua no sustituye una carpeta abierta posteriormente.",
       "Eliminar mueve los registros a la papelera y conserva los archivos. Deshacer permite recuperar la ultima eliminacion.",
-      "Papelera muestra eliminaciones anteriores y permite restaurarlas despues de recargar. Las carpetas requieren permiso de operaciones; los conflictos de identidad impiden sobrescribir contenido.",
+      "Papelera muestra eliminaciones anteriores y permite restaurarlas después de recargar. Dirección y Superadmin gestionan las carpetas; los conflictos de identidad impiden sobrescribir contenido.",
       "Los errores muestran Reintentar y retiran el contenido anterior para evitar mostrar una carpeta sin permiso. Los filtros de cada tabla se muestran juntos en una tarjeta Filtros inicialmente cerrada, con una etiqueta fina encima de cada campo. Cerrarla conserva los filtros aplicados.",
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
       "El acceso de cada carpeta se vincula a un módulo o ruta del ERP y se cruza con las restricciones de roles heredadas. Si no puedes abrir esa ruta, no ves su carpeta ni accedes a sus archivos. Las raíces protegidas conservan su módulo; al editar una subcarpeta puedes elegir una página para restringir su acceso.",
       "Los archivos almacenados en S3 se abren desde una ruta del ERP que vuelve a comprobar los permisos; el visor no utiliza una dirección pública permanente de CloudFront.",
-      "El rol Contabilidad accede a documentos de Administración, Contabilidad y Comercial; no ve documentos de Dirección o Producción ni carpetas vinculadas a Operaciones.",
+      "Mediateca se abre desde Dirección y ya no aparece en el nav principal. Las páginas y todas sus API bloquean a los demás roles, incluso mediante una URL directa. Las restricciones adicionales de carpetas se mantienen. Los materiales de producción se consultan desde su ficha en Repositorio mediante las API de Producción.",
       "Los materiales de producción se guardan en material_articulos, material_anuncios u otros, dentro de documentos_produccion. Si van a revista se usan las mismas categorías dentro de documentos_produccion/documentos_revistas. No se crean subcarpetas por revista ni por contenido. Los ZIP y otros archivos se muestran como Archivo, con descarga desde el ERP."
     ]
   },
@@ -904,27 +939,6 @@
     ]
   },
   "/dashboard/operaciones/revistas/[id_revista]/contenidos": {
-    "summary": "Revisa los materiales de la revista y organiza su planillo previo por bloques de contenido.",
-    "steps": [
-      "Datos de la revista permite editar las siete fechas de eventos, fecha de publicación y estado. Guardar datos conserva los cambios en el número de revista.",
-      "Las pestañas Datos de la revista y Contenidos cambian la URL. Contenidos utiliza el sufijo /contenidos y conserva anuncios, artículos y planillo previo.",
-      "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
-      "Alterna Anuncios y Artículos; cada pestaña separa no revisados, incidencias, OK producción y no recibidos.",
-      "Despliega un contenido para ver sus archivos, fecha de aportación, estado y comentarios de producción.",
-      "Abre el contenido para agregar materiales desde su carpeta de revista.",
-      "Planillo previo combina la hoja de producción y el control de redacción: orden por recepción de materiales; sin fecha real, usa el orden de la hoja e indica esa limitación. Las extensiones no conocidas son provisionales y se ajustan con Páginas.",
-      "La miniatura muestra pliegos de dos páginas, portada a la derecha y última página a la izquierda, con su pareja derecha invisible. No hay contraportada. La numeración en toda la vista es Portada, Interior portada, 1, 2, 3… Sumario e índice se reservan inicialmente en las páginas 3 y 5, pero pueden desplazarse al reorganizar contenidos.",
-      "Mover bloque usa la misma numeración de revista en el selector de destino, tabla y miniatura. No permite insertar en una parte intermedia. Los anuncios y artículos de dos páginas comienzan en una página par y terminan en la impar consecutiva; los destinos incompatibles están deshabilitados. Usa los huecos suficientes sin desplazar lo posterior; en otro caso inserta el bloque y desplaza lo posterior entero. El origen queda libre.",
-      "Quitar bloque confirma todas las páginas asociadas y permite dejar huecos rojos o adelantar lo posterior. El contenido original permanece disponible para volver a añadirlo.",
-      "Añadir página inserta un espacio libre sin partir contenidos. Si un desplazamiento altera la orientación de un anuncio o artículo de dos páginas, se intercala un hueco antes del contenido para conservar su pareja par/impar. Se mantiene un total par, añadiendo si hace falta una página libre al final. Solo la portada permanece fija al inicio.",
-      "Intercambiar por aparece en anuncios y artículos de una página: permite elegir otro contenido de una página de la misma revista y cambia solamente sus dos posiciones.",
-      "Asignar contenido está siempre activo en los huecos rojos. Permite traer un contenido ya colocado, si cabe entero, dejando su origen rojo o cubriendo ese origen en cascada. También permite cerrar el hueco sin asignar contenido.",
-      "La cascada adelanta contenidos completos de una página, saltando los bloques de varias páginas sin alterar sus posiciones. Retira huecos finales conservando un total par; un hueco sin contenido posterior elegible debe permanecer. El modal muestra todas las páginas afectadas antes de confirmar.",
-      "Cada operación muestra las posiciones afectadas y se guarda automáticamente, con control de ediciones simultáneas. El planillo previo no modifica el definitivo ni los contratos.",
-      "Publicar asignaciones definitivas abre una revision de paginas antes de confirmar. La version debe seguir vigente; la publicacion es atomica y repetirla no duplica las asignaciones. Los contratos y contenidos se conservan. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados."
-    ]
-  },
-  "/dashboard/produccion/gestion/revistas/[id_revista]/contenidos": {
     "summary": "Revisa los materiales de la revista y organiza su planillo previo por bloques de contenido.",
     "steps": [
       "Datos de la revista permite editar las siete fechas de eventos, fecha de publicación y estado. Guardar datos conserva los cambios en el número de revista.",

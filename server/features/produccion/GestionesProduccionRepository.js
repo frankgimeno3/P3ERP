@@ -44,6 +44,9 @@ function matchesLegacy(content, revista) {
   if (!new RegExp(`(?:N[ºO°]\\s*|\\b)${safeNumber}$`).test(label)) return false;
   const sector = magazineSector(revista);
   const region = magazineRegion(revista);
+  const title = String(revista.revista || '').normalize('NFD').replace(/\p{M}/gu,'').toUpperCase();
+  if (/QUIEN ES QUIEN/.test(title)) return /QQ|QUIEN ES QUIEN/.test(label) && (sector==='Vidrio'?/VIDRIO/.test(label):/VENTANA/.test(label));
+  if (/HUECO/.test(title)) return /HUECO/.test(label);
   if (sector === 'Vidrio' && !/VIDRIO|\bVP\b/.test(label)) return false;
   if (sector === 'Ventanas' && !/VENTANAS|VPCS/.test(label)) return false;
   if (region === 'España' && !/ESPANA|IBERIA/.test(label)) return false;
@@ -83,7 +86,9 @@ export async function getMagazineManagement(idRevista) {
   const revista = await getRevistaById(idRevista);
   if (!revista) return null;
   const number=String(revista.numero_publicacion||'').replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-  const { rows: contents } = await getPgPool().query(`SELECT c.*,cu.nombre_empresa,a.nombre_completo_agente
+  const { rows: contents } = await getPgPool().query(`SELECT c.*,cu.nombre_empresa,a.nombre_completo_agente,
+    COALESCE(NULLIF(c.id_contrato,''),(SELECT ct.id_contrato FROM comercial_contratos ct
+      WHERE ct.array_contenidos @> jsonb_build_array(jsonb_build_object('id_contenido',c.id_contenido)) ORDER BY ct.id_contrato LIMIT 1)) AS id_contrato
     FROM produccion_contenidos c
     LEFT JOIN comercial_cuentas cu ON cu.id_cuenta=c.id_cuenta
     LEFT JOIN agentes_db a ON a.id_agente=c.id_agente
@@ -110,7 +115,7 @@ export async function getMagazineManagement(idRevista) {
   });
   const ids = [...new Set(matches.map(item => item.id_contenido))];
   const materials = ids.length ? (await getPgPool().query(`SELECT m.* FROM produccion_materiales m
-    WHERE m.id_contenido=ANY($1::text[]) AND m.id_revista=$2 ORDER BY m.fecha_aportado,m.id_material`, [ids, revista.id_revista])).rows : [];
+    WHERE m.id_contenido=ANY($1::text[]) AND (m.id_revista=$2 OR m.id_revista IS NULL) ORDER BY m.fecha_aportado,m.id_material`, [ids, revista.id_revista])).rows : [];
   const finalPages=(await getPgPool().query('SELECT contenido_id,numero_pagina,tipo_pagina FROM contenidos_revistas_db WHERE revista_id=$1 ORDER BY numero_pagina',[revista.id_revista])).rows;
   return { revista: { ...revista, region: magazineRegion(revista), sector: magazineSector(revista) },
     contenidos: matches.map(content => ({ ...content, paginas_definitivas:finalPages.filter(page=>page.contenido_id===content.id_contenido&&(content.tipo==='articulos')===/art[ií]culo/i.test(page.tipo_pagina)).map(page=>page.numero_pagina),materiales: materials.filter(m => m.id_contenido === content.id_contenido && m.tipo === content.tipo) })) };
@@ -133,8 +138,9 @@ async function validateDestination(db, data) {
   const tipo = ['articulos', 'anuncios', 'otros'].includes(data.tipo) ? data.tipo : null;
   if (!idContenido || !tipo) throw new Error('Contenido y tipo obligatorios');
   if (idRevista && tipo === 'otros') throw new Error('Otros contenidos no pueden asignarse a revista');
-  const content = (await db.query('SELECT * FROM produccion_contenidos WHERE id_contenido=$1', [idContenido])).rows[0];
+  const content = (await db.query('SELECT * FROM produccion_contenidos WHERE id_contenido=$1 FOR UPDATE', [idContenido])).rows[0];
   if (!content) throw new Error('Contenido no encontrado');
+  if (data.es_version_acabada !== undefined && typeof data.es_version_acabada !== 'boolean') throw new Error('Revisa el tipo de material');
   const singular = tipo === 'articulos' ? 'articulo' : tipo === 'anuncios' ? 'anuncio' : 'otro';
   if (!managementContentTypes(content).includes(singular)) throw new Error('El material no corresponde al tipo del contenido');
   if (idRevista && !(await db.query('SELECT 1 FROM servicios_revistas WHERE id_revista=$1', [idRevista])).rowCount) throw new Error('Revista no encontrada');
@@ -161,6 +167,12 @@ export async function addProductionMaterial(data, verifyObject = assertObjectExi
   try {
     if (!transactionDb) await db.query('BEGIN');
     const destination = await validateDestination(db, data);
+    const previous = (await db.query('SELECT * FROM produccion_materiales WHERE mediateca_id=$1', [data.mediaId || null])).rows[0];
+    if (previous) {
+      if (previous.id_contenido !== destination.idContenido || previous.tipo !== destination.tipo || Boolean(previous.es_version_acabada) !== (data.es_version_acabada===true)) throw new Error('El archivo ya pertenece a otro material');
+      if (!transactionDb) await db.query('COMMIT');
+      return previous;
+    }
     const folderId = await materialFolder(db, destination);
     const path = await folderPath(db, folderId);
     const s3Key = String(data.s3Key || '');
@@ -177,10 +189,12 @@ export async function addProductionMaterial(data, verifyObject = assertObjectExi
       mediateca_s3_key,mediateca_content_src,mediateca_content_mime_type,mediateca_content_type,mediateca_content_description)
       VALUES($1,$2,$3,$4,$5,$6,$7,$8)`, [mediaId,folderId,name,s3Key,'',data.contentType || '',String(data.contentType || '').includes('pdf') ? 'pdf' : String(data.contentType || '').startsWith('image/') ? 'image' : 'file',String(data.descripcion || '')]);
     const id = `material_${crypto.randomUUID().slice(0,12)}`;
+    const finished = data.es_version_acabada === true;
+    const version = finished ? (await db.query('SELECT COALESCE(max(numero_version),0)+1 AS version FROM produccion_materiales WHERE id_contenido=$1 AND es_version_acabada', [destination.idContenido])).rows[0].version : null;
     const result = await db.query(`INSERT INTO produccion_materiales
-      (id_material,nombre_material,validacion_produccion,comentarios,mediateca_id,archivo_url,id_contenido,id_revista,tipo,descripcion_material,fecha_aportado)
-      VALUES($1,$2,'no revisado produccion','',$3,$4,$5,$6,$7,$8,now()) RETURNING *`,
-      [id,name,mediaId,'',destination.idContenido,destination.idRevista || null,destination.tipo,String(data.descripcion || '')]);
+      (id_material,nombre_material,validacion_produccion,comentarios,mediateca_id,archivo_url,id_contenido,id_revista,tipo,descripcion_material,fecha_aportado,es_version_acabada,numero_version)
+      VALUES($1,$2,'no revisado produccion','',$3,$4,$5,$6,$7,$8,now(),$9,$10) RETURNING *`,
+      [id,name,mediaId,'',destination.idContenido,destination.idRevista || null,destination.tipo,String(data.descripcion || ''),finished,version]);
     await db.query(`UPDATE produccion_contenidos SET array_ids_materiales = COALESCE(array_ids_materiales,'[]'::jsonb) || $1::jsonb,
       updated_at=now() WHERE id_contenido=$2`, [JSON.stringify([id]),destination.idContenido]);
     if (destination.idRevista) await db.query(`INSERT INTO produccion_revistas_contenidos(id_revista,id_contenido,tipo)

@@ -6,6 +6,7 @@ export {normalizeRole,roleRank,canViewModule,canAccessDashboardPath} from "./mod
 export function canAccessApiPath(role: unknown, pathname: string, method: string) {
   const normalized = normalizeRole(role) as AppRole;
   pathname=canonicalAccountingPath(pathname);
+  if (/^\/api\/v1\/mediateca(?:\/|$)/.test(pathname)) return ['direccion','superadmin'].includes(normalized);
   if(/^\/api\/v1\/contabilidad(?:\/|$)/.test(pathname))return accountingRoles.includes(normalized);
   if(normalized==='contabilidad' && /^\/api\/v1\/(produccion|operaciones)(?:\/|$)/.test(pathname))return false;
   if(pathname.startsWith('/api/v1/operaciones/agentes/asuntos/'))return ['direccion','operaciones','superadmin'].includes(normalized);

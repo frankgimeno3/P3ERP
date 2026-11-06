@@ -39,7 +39,11 @@ export const dashboardMenu: DashboardMenuModule[] = [
     label: "Producción",
     children: [
       page("Hoja de producción", "/dashboard/produccion/hoja_produccion"),
-      page("Gestión producción", "/dashboard/produccion/gestion"),
+      group("gestion-contenidos", "Gestión contenidos", [
+        page("Contenido revista", "/dashboard/produccion/gestion-contenidos/revista"),
+        page("Otro contenido", "/dashboard/produccion/gestion-contenidos/otros"),
+      ]),
+      page("Repositorio", "/dashboard/produccion/repositorio"),
     ],
   },
   {
@@ -99,6 +103,7 @@ export const dashboardMenu: DashboardMenuModule[] = [
       ]),
       page("Horas Juan", "/dashboard/direccion/horas-juan"),
       page("Propiedades", "/dashboard/direccion/propiedades"),
+      page("Mediateca", "/dashboard/direccion/mediateca"),
       page("Copias de seguridad", "/dashboard/direccion/copias-seguridad"),
       page("Tablas RDS", "/dashboard/direccion/rds"),
       page("Eventos de usuarios", "/dashboard/direccion/eventos-de-usuarios"),

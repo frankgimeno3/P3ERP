@@ -24,6 +24,7 @@ export function requestMediatecaRole(request){
  const raw=request.headers.get('x-p3-actor-role');
  const value=role(raw);
  if(!request.headers.get('x-p3-actor-id')||!mediatecaRoles.includes(raw))throw Object.assign(new Error('No autenticado.'),{status:401});
+ if(!['direccion','superadmin'].includes(value))throw Object.assign(new Error('Mediateca solo está disponible para Dirección y Superadmin.'),{status:403});
  return value;
 }
 export async function assertMediatecaAccess(request,{folderId,path,mediaId}={},db=getPgPool()){
@@ -39,8 +40,8 @@ export async function assertMediatecaAccess(request,{folderId,path,mediaId}={},d
 }
 export async function guardMediatecaRequest(request){
  const url=new URL(request.url),path=url.pathname;
- if(path.endsWith('/access'))return;
  const actor=requestMediatecaRole(request);
+ if(path.endsWith('/access'))return;
  if(path.includes('/papelera')){
   if(request.method==='POST'){
    const row=(await getPgPool().query('SELECT folders,media FROM mediateca_papelera WHERE id=$1 AND restored_at IS NULL',[(await request.clone().json()).id])).rows[0];

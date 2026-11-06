@@ -9,7 +9,7 @@ async function getId(params) {
 }
 
 export async function PATCH(request, { params }) {
-  if (!['operaciones','superadmin'].includes(request.headers.get('x-p3-actor-role'))) return NextResponse.json({ message: 'Permiso denegado' }, { status: 403 });
+  if (!['direccion','superadmin'].includes(request.headers.get('x-p3-actor-role'))) return NextResponse.json({ message: 'Permiso denegado' }, { status: 403 });
   try {
     const id = await getId(params);
     const body = await request.json();
@@ -20,7 +20,7 @@ export async function PATCH(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
-  if (!['operaciones','superadmin'].includes(request.headers.get('x-p3-actor-role'))) return NextResponse.json({ message: 'Permiso denegado' }, { status: 403 });
+  if (!['direccion','superadmin'].includes(request.headers.get('x-p3-actor-role'))) return NextResponse.json({ message: 'Permiso denegado' }, { status: 403 });
   try {
     const id = await getId(params);
     return NextResponse.json(await deleteFolder(id));

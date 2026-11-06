@@ -48,7 +48,7 @@
   {"old":"publicaciones_db","name":"servicios_publicaciones","description":"Ediciones y publicaciones concretas de los soportes editoriales."},
   {"old":"contenidos_db","name":"produccion_contenidos","description":"Entregables y contenidos asociados a publicaciones y contratos."},
   {"old":"control_redaccion_db","name":"produccion_control_redaccion","description":"Datos editoriales y de publicación de contenidos de tipo artículo; conserva los datos históricos del contenido vinculado."},
-  {"old":"materiales_db","name":"produccion_materiales","description":"Materiales de producción vinculados a contenidos y cuentas."},
+  {"old":"materiales_db","name":"produccion_materiales","description":"Materiales de producción y versiones acabadas de contenidos, con secuencia V01, V02 y conservación de los archivos anteriores."},
   {"old":"produccion_revistas_contenidos","name":"produccion_revistas_contenidos","description":"Asociaciones de contenidos con revistas, separadas por artículos y anuncios."},
   {"old":"comentarios_db","name":"general_comentarios","description":"Comentarios asociados a entidades del ERP."},
   {"old":"registro_eventos","name":"general_eventos","description":"Historial de acciones en cuentas y contactos."},

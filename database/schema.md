@@ -1,5 +1,10 @@
 # RDS Schema Snapshot
 
+## Versiones acabadas de producción
+
+Migración `20261106_0001_production_finished_versions.sql`: `produccion_materiales.es_version_acabada boolean NOT NULL DEFAULT false` y `numero_version integer`.
+Los materiales ordinarios no tienen número; las versiones acabadas exigen contenido y número positivo, único por contenido. La numeración se asigna con bloqueo de la fila de contenido y comienza en 1 (V01). Las versiones anteriores y sus archivos S3 se conservan; no se mueve ni se duplica el contenido. El índice `production_finished_version_unique` protege las cargas concurrentes. Las altas, revisiones y relaciones utilizan los clientes compartidos y la auditoría existente.
+
 Source: PostgreSQL `public` schema from the configured RDS connection.
 
 ## Production content intake

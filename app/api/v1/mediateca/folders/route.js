@@ -19,7 +19,7 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
-  if (!['operaciones','superadmin'].includes(request.headers.get('x-p3-actor-role'))) return NextResponse.json({ message: 'Permiso denegado' }, { status: 403 });
+  if (!['direccion','superadmin'].includes(request.headers.get('x-p3-actor-role'))) return NextResponse.json({ message: 'Permiso denegado' }, { status: 403 });
   try {
     const body = await request.json();
     return NextResponse.json(await createFolder(body), { status: 201 });
