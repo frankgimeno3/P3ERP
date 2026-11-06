@@ -544,7 +544,7 @@
     ]
   },
   "/dashboard/direccion/propiedades": {
-    "summary": "Inventario de parkings, vehículos y otros bienes de la empresa, con sus cargos previstos e historial bancario.",
+    "summary": "Dirección → Finanzas → Propiedades: inventario de parkings, vehículos y otros bienes de la empresa, con sus cargos previstos e historial bancario.",
     "steps": [
       "Pulsa Registrar propiedad y completa nombre, tipo e identificación. Puedes añadir dirección, referencia catastral y, para vehículos, marca y modelo. Los identificadores y las referencias catastrales no pueden duplicarse.",
       "Los filtros están reunidos en una tarjeta inicialmente cerrada. Permiten filtrar nombre, tipo, identificación, ubicación, cargos vigentes y estado.",
@@ -558,7 +558,7 @@
     ]
   },
   "/dashboard/direccion/rds": {
-    "summary": "Consulta la finalidad y la estructura actual de las tablas y vistas de RDS.",
+    "summary": "Dirección → ERP → Tablas RDS: consulta la finalidad y la estructura actual de las tablas y vistas de RDS.",
     "steps": [
       "Abre una tabla o vista para ver sus columnas, tipos, claves primarias, referencias a otras tablas, valores por defecto y descripciones.",
       "La estructura se consulta directamente en PostgreSQL al abrir la página; los cambios de esquema aparecen automáticamente. La fecha Consultado indica cuándo se obtuvo el esquema. Las descripciones funcionales se completan con el catálogo del ERP y los comentarios de RDS.",
@@ -566,7 +566,7 @@
     ]
   },
   "/dashboard/direccion/copias-seguridad": {
-    "summary": "Copias recuperables de base de datos y documentos, y exportaciones selectivas.",
+    "summary": "Dirección → ERP → Copias de seguridad: copias recuperables de base de datos y documentos, y exportaciones selectivas.",
     "steps": [
       "Crear copia recuperable inicia un trabajo en segundo plano. Puedes dejar la pagina y volver: el estado y la descarga permanecen disponibles.",
       "Una copia recuperable contiene un volcado PostgreSQL, los documentos de S3 y un manifiesto con hashes SHA-256. Solo se ofrece descargar cuando termina y se verifica su integridad.",
@@ -585,7 +585,7 @@
     ]
   },
   "/dashboard/direccion/horas-juan": {
-    "summary": "Crea y consulta informes mensuales de horas, anticipos y ajustes de Juan.",
+    "summary": "Dirección → Finanzas → Horas Juan: crea y consulta informes mensuales de horas, anticipos y ajustes de Juan.",
     "steps": [
       "Pulsa Crear informe y elige mes, año y tipo: normal, anticipo o informativa.",
       "En normal e informativa introduce horas y minutos; se convierten a horas decimales y se valoran a 15 € por hora.",
@@ -899,7 +899,7 @@
     ]
   },
   "/dashboard/direccion/mediateca": {
-    "summary": "Mediateca de Dirección, accesible únicamente a Dirección y Superadmin, con eliminación recuperable.",
+    "summary": "Dirección → ERP → Mediateca: accesible únicamente a Dirección y Superadmin, con eliminación recuperable.",
     "steps": [
       "La columna Acceso muestra los roles efectivos de cada carpeta y archivo. Heredado indica que la subcarpeta utiliza los permisos de su padre. Una subcarpeta puede restringir el acceso, pero no ampliarlo; Superadmin conserva acceso. Los roles se eligen entre los existentes del ERP.",
       "Documentos de Dirección hereda el módulo Dirección (Dirección y Superadmin). Documentos de Administración hereda Administración (Administración, Operaciones y Superadmin). Contratos firmados hereda Comercial y documentos de producción hereda Producción, actualmente accesibles a todos los roles. Las restricciones adicionales de subcarpetas pueden reducir estos permisos.",
@@ -1018,7 +1018,7 @@
     ]
   },
   "/dashboard/direccion/eventos-de-usuarios": {
-    "summary": "Historial de altas, ediciones y borrados realizados por usuarios en todo P3ERP, con fecha, hora, datos afectados e IP observada.",
+    "summary": "Dirección → ERP → Eventos de usuarios: historial de altas, ediciones y borrados realizados por usuarios en todo P3ERP, con fecha, hora, datos afectados e IP observada.",
     "steps": [
       "Consulta fecha y hora (Madrid), usuario, tipo, tabla o entidad, descripción e IP. Solo Dirección y Superadmin tienen acceso.",
       "Todos los filtros se agrupan en Filtros, inicialmente cerrado. Filtra por fechas, usuario, tipo, tabla, descripción e IP y navega de cien en cien eventos.",

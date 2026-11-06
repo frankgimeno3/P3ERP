@@ -101,12 +101,16 @@ export const dashboardMenu: DashboardMenuModule[] = [
         page("Calendario laboral", "/dashboard/direccion/laboral/calendario-laboral"),
         page("Contratación", "/dashboard/direccion/laboral/contratacion"),
       ]),
-      page("Horas Juan", "/dashboard/direccion/horas-juan"),
-      page("Propiedades", "/dashboard/direccion/propiedades"),
-      page("Mediateca", "/dashboard/direccion/mediateca"),
-      page("Copias de seguridad", "/dashboard/direccion/copias-seguridad"),
-      page("Tablas RDS", "/dashboard/direccion/rds"),
-      page("Eventos de usuarios", "/dashboard/direccion/eventos-de-usuarios"),
+      group("finanzas", "Finanzas", [
+        page("Horas Juan", "/dashboard/direccion/horas-juan"),
+        page("Propiedades", "/dashboard/direccion/propiedades"),
+      ]),
+      group("erp", "ERP", [
+        page("Mediateca", "/dashboard/direccion/mediateca"),
+        page("Copias de seguridad", "/dashboard/direccion/copias-seguridad"),
+        page("Tablas RDS", "/dashboard/direccion/rds"),
+        page("Eventos de usuarios", "/dashboard/direccion/eventos-de-usuarios"),
+      ]),
     ],
   },
 ];
