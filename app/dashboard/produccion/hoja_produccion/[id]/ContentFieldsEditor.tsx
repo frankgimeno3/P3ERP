@@ -5,11 +5,12 @@ import DatePartsInput from '@/app/components/DatePartsInput';
 import { AgenteService } from '@/app/service/AgenteService';
 import { ContenidoService } from '@/app/service/ContenidoService';
 import { normalizeProductionDeadline, productionStates } from '@/app/lib/productionContentFields';
+import {contentMagazineFormats} from '@/app/lib/contentMagazineFormat';
 
-type Content = { id_contenido:string; especificaciones_contenido?:string; publicacion_num_web?:string; id_agente?:string; deadline_contenido?:string; estado?:string };
+type Content = { id_contenido:string; especificaciones_contenido?:string; publicacion_num_web?:string; id_agente?:string; deadline_contenido?:string; estado?:string;formato_revista?:string };
 type Agent = { id_agente:string; nombre_completo_agente:string };
 export default function ContentFieldsEditor({content,onSaved}:{content:Content;onSaved:(content:any)=>void}) {
-  const [draft,setDraft]=useState({especificaciones_contenido:content.especificaciones_contenido||'',publicacion_num_web:content.publicacion_num_web||'',id_agente:content.id_agente||'',deadline_contenido:content.deadline_contenido||'',estado:content.estado||''});
+  const [draft,setDraft]=useState({especificaciones_contenido:content.especificaciones_contenido||'',publicacion_num_web:content.publicacion_num_web||'',id_agente:content.id_agente||'',deadline_contenido:content.deadline_contenido||'',estado:content.estado||'',formato_revista:content.formato_revista||'impreso_digital'});
   const [agents,setAgents]=useState<Agent[]>([]),[loadingAgents,setLoadingAgents]=useState(true),[saving,setSaving]=useState(false),[error,setError]=useState(''),[saved,setSaved]=useState(false);
   useEffect(()=>{let active=true;AgenteService.getAgentes().then((rows:Agent[])=>{if(active)setAgents(Array.from(new Map(rows.map(row=>[row.id_agente,row])).values()));}).catch(()=>{if(active)setError('No se pudieron cargar los agentes. Recarga la página para volver a intentarlo.');}).finally(()=>{if(active)setLoadingAgents(false);});return()=>{active=false;};},[]);
   const patch=(key:keyof typeof draft,value:string)=>{setDraft(previous=>({...previous,[key]:value}));setSaved(false);};
@@ -25,6 +26,7 @@ export default function ContentFieldsEditor({content,onSaved}:{content:Content;o
       <label>Publicación / Nº web<input className={control} value={draft.publicacion_num_web} onChange={event=>patch('publicacion_num_web',event.target.value)}/></label>
       <div><p className="mb-1">Agente</p><SearchableSelect label="Agente" disabled={saving||loadingAgents} value={draft.id_agente} onChange={value=>patch('id_agente',value)} options={[{value:'',label:'Sin asignar'},...agents.map(agent=>({value:agent.id_agente,label:agent.nombre_completo_agente||'Agente sin nombre'}))]}/></div>
       <DatePartsInput label="Fecha límite" value={draft.deadline_contenido} onChange={value=>patch('deadline_contenido',value)} disabled={saving}/>
+      <label>Formato en revista<select className={`${control} enabled:cursor-pointer enabled:hover:border-blue-950`} value={draft.formato_revista} onChange={event=>patch('formato_revista',event.target.value)}>{contentMagazineFormats.map(item=><option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
       <label>Estado<select className={`${control} enabled:cursor-pointer enabled:hover:border-blue-950`} value={draft.estado} onChange={event=>patch('estado',event.target.value)}><option value="">Sin estado</option>{Array.from(new Set([...productionStates,...(content.estado?[content.estado]:[])])).map(state=><option key={state} value={state}>{state}</option>)}</select></label>
     </fieldset>
     {error&&<p role="alert" className="mt-3 text-red-700">{error}</p>}

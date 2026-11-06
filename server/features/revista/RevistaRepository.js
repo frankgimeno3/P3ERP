@@ -1,4 +1,6 @@
+import crypto from 'node:crypto';
 import {magazineEvents,magazineDate} from '../../../app/config/magazineEvents.js';
+import {groupMagazineIssues,resolveMagazineIssueId} from './MagazineIssue.js';
 import { getPgPool } from "../../database/pgClient.js";
 
 let contenidosRevistasTableCache = null;
@@ -43,13 +45,13 @@ function normalizeRevista(row) {
           : rawTitle;
   const rawEdition = String(row.edicion ?? row.edicion_publicacion ?? "").trim().replace(/^Edición\s+/i, "");
   const edition = rawTitle === "Quién es Quién" ? `Edición ${rawEdition}` : rawEdition;
-  const version = String(row.version_publicacion ?? row.impresa_o_digital ?? "").toLowerCase();
-  const versionLabel = /impresa.*digital|digital.*impresa/.test(version) ? "versión digital e impresa" : version.includes("impresa") ? "versión impresa" : version.includes("digital") ? "versión digital" : "";
   const serial = String(row.numero_publicacion ?? row.publicacion ?? "").trim();
-  const detail = [serial, ["Vidrio Plano", "Ventanas, Puertas, Cerramientos y Protección Solar"].includes(rawTitle) ? versionLabel : ""].filter(Boolean).join(" · ");
+  const detail = serial;
   return {
     id_publicacion: row.id_publicacion ?? "",
     id_revista: row.id_revista,
+    id_numero_revista: row.id_numero_revista || null,
+    ids_revistas: row.ids_revistas || [row.id_revista],
     medio_publicacion: title,
     edicion_publicacion: edition,
     detalle_publicacion: detail || row.detalle_publicacion || "",
@@ -93,6 +95,7 @@ export async function getRevistas() {
   const { rows } = await pool.query(`
     SELECT
       r.*,
+      ARRAY(SELECT a.id_revista FROM servicios_revistas a WHERE COALESCE(a.id_numero_revista,a.id_revista)=r.id_revista ORDER BY a.id_revista) AS ids_revistas,
       p.id_publicacion,
       p.medio_publicacion,
       p.edicion_publicacion,
@@ -103,7 +106,7 @@ export async function getRevistas() {
       p.deadline_materiales,
       p.fecha_recordatorio,
       p.fecha_pedir_materiales,p.deadline_real_materiales,p.fecha_envio_imprenta,p.fecha_estimada_impresion,p.fecha_envio_revistas,
-      p.version_publicacion
+      p.version_publicacion,p.num_paginas,p.contenido_editorial
     FROM servicios_publicaciones p
     LEFT JOIN servicios_revistas r ON r.id_revista = p.revista_id
     WHERE (p.tipo_publicacion = 'revista' OR p.medio_publicacion ILIKE '%revista%')
@@ -123,84 +126,29 @@ export async function getRevistas() {
     const time=Date.parse(iso);
     return Number.isNaN(time)?Number.MAX_SAFE_INTEGER:time;
   };
-  return rows.map(normalizeRevista).sort((a,b)=>publicationTime(a.fecha_publicacion)-publicationTime(b.fecha_publicacion));
+  return groupMagazineIssues(rows.map(normalizeRevista)).sort((a,b)=>publicationTime(a.fecha_publicacion)-publicationTime(b.fecha_publicacion));
 }
 
 export async function getRevistaById(idRevista) {
-  const pool = getPgPool();
-  const hasPlanillo = await hasContenidosRevistasTable(pool);
-  const { rows } = await pool.query(
-    hasPlanillo ? `
-      SELECT
-        r.*,
-        p.id_publicacion,
-        p.numero_publicacion,
-        p.fecha_publicacion,
-        p.fecha_recordatorio,
-      p.fecha_pedir_materiales,p.deadline_real_materiales,p.fecha_envio_imprenta,p.fecha_estimada_impresion,p.fecha_envio_revistas,
-        p.estado_publicacion,
-        p.version_publicacion,
-        p.deadline_materiales,
-        p.contenido_editorial,
-        p.num_paginas,
-        coalesce(
-          jsonb_agg(
-            jsonb_build_object(
-              'contenido_revista_id', cr.contenido_revista_id,
-              'contenido_id', c.id_contenido,
-              'cuenta', coalesce(cu.nombre_empresa, c.id_cuenta, ''),
-              'servicio', coalesce(s.nombre_servicio_es, c.servicio, ''),
-              'contenido', coalesce(c.especificaciones_contenido, ''),
-              'estado', coalesce(c.estado_contenido, ''),
-              'deadline_contenido', coalesce(c.deadline_contenido, ''),
-              'numero_pagina', cr.numero_pagina,
-              'tipo_pagina', cr.tipo_pagina,
-              'pagina_del_contenido', cr.pagina_del_contenido
-            )
-            ORDER BY cr.numero_pagina ASC, cr.pagina_del_contenido ASC
-          ) FILTER (WHERE cr.contenido_revista_id IS NOT NULL),
-          '[]'::jsonb
-        ) AS contenidos
-      FROM servicios_revistas r
-      LEFT JOIN servicios_publicaciones p ON p.revista_id = r.id_revista AND (p.tipo_publicacion = 'revista' OR p.tipo_publicacion = '')
-      LEFT JOIN contenidos_revistas_db cr ON cr.revista_id = r.id_revista
-      LEFT JOIN produccion_contenidos c ON c.id_contenido = cr.contenido_id
-      LEFT JOIN comercial_cuentas cu ON cu.id_cuenta = c.id_cuenta
-      LEFT JOIN servicios_db s ON s.id_servicio = c.servicio
-      WHERE r.id_revista = $1 OR p.id_publicacion = $1
-      GROUP BY r.id_revista, p.id_publicacion, p.numero_publicacion, p.fecha_publicacion, p.fecha_recordatorio,
-      p.fecha_pedir_materiales,p.deadline_real_materiales,p.fecha_envio_imprenta,p.fecha_estimada_impresion,p.fecha_envio_revistas, p.estado_publicacion, p.deadline_materiales
-      LIMIT 1
-    ` : `
-      SELECT
-        r.*,
-        p.id_publicacion,
-        p.numero_publicacion,
-        p.fecha_publicacion,
-        p.fecha_recordatorio,
-      p.fecha_pedir_materiales,p.deadline_real_materiales,p.fecha_envio_imprenta,p.fecha_estimada_impresion,p.fecha_envio_revistas,
-        p.estado_publicacion,
-        p.version_publicacion,
-        p.deadline_materiales,
-        p.contenido_editorial,
-        p.num_paginas,
-        '[]'::jsonb AS contenidos
-      FROM servicios_revistas r
-      LEFT JOIN servicios_publicaciones p ON p.revista_id = r.id_revista AND (p.tipo_publicacion = 'revista' OR p.tipo_publicacion = '')
-      WHERE r.id_revista = $1 OR p.id_publicacion = $1
-      LIMIT 1
-    `,
-    [idRevista],
-  );
-
-  return rows[0] ? normalizeRevista(rows[0]) : null;
+  const issue=(await getRevistas()).find(row=>row.id_revista===idRevista||row.ids_revistas.includes(idRevista)||row.ids_publicaciones.includes(idRevista));
+  if(!issue)return null;
+  if(!await hasContenidosRevistasTable())return {...issue,contenidos:[]};
+  const contents=(await getPgPool().query(`SELECT cr.*,COALESCE(cu.nombre_empresa,c.id_cuenta,'') cuenta,
+    COALESCE(s.nombre_servicio_es,c.servicio,'') servicio,COALESCE(c.especificaciones_contenido,'') contenido,
+    c.estado_contenido estado,c.deadline_contenido,c.formato_revista
+    FROM contenidos_revistas_db cr LEFT JOIN produccion_contenidos c ON c.id_contenido=cr.contenido_id
+    LEFT JOIN comercial_cuentas cu ON cu.id_cuenta=c.id_cuenta LEFT JOIN servicios_db s ON s.id_servicio=c.servicio
+    WHERE cr.revista_id=ANY($1::text[]) ORDER BY cr.numero_pagina,cr.pagina_del_contenido`,[issue.ids_revistas])).rows;
+  return {...issue,contenidos:contents};
 }
 
 export async function updateRevista(idRevista, data = {}) {
   data=validatedMagazineDates(data);
   const pool = getPgPool();
 
-  const revistaFields = ["especial", "edicion", "revista", "impresa_o_digital"];
+  idRevista=await resolveMagazineIssueId(idRevista)||idRevista;
+  if(data.numero_publicacion!==undefined||data.publicacion!==undefined)data.numero_revista=String(data.numero_publicacion??data.publicacion);
+  const revistaFields = ["especial", "edicion", "revista", "numero_revista"];
   const revistaValues = [];
   const revistaSets = [];
   for (const field of revistaFields) {
@@ -213,7 +161,7 @@ export async function updateRevista(idRevista, data = {}) {
   if (revistaSets.length) {
     revistaValues.push(idRevista);
     await pool.query(
-      `UPDATE servicios_revistas SET ${revistaSets.join(", ")}, updated_at = NOW() WHERE id_revista = $${revistaValues.length}`,
+      `UPDATE servicios_revistas SET ${revistaSets.join(", ")}, updated_at = NOW() WHERE id_revista = $${revistaValues.length} OR id_numero_revista = $${revistaValues.length}`,
       revistaValues,
     );
   }
@@ -228,8 +176,6 @@ export async function updateRevista(idRevista, data = {}) {
     fecha_publicacion: "fecha_publicacion",
     fecha_recordatorio: "fecha_recordatorio",
     estado_publicacion: "estado_publicacion",
-    version_publicacion: "version_publicacion",
-    impresa_o_digital: "version_publicacion",
     contenido_editorial: "contenido_editorial",
   };
   for (const [inputField, dbField] of Object.entries(publicacionFieldMap)) {
@@ -258,14 +204,9 @@ export async function updateRevista(idRevista, data = {}) {
 }
 
 async function resolvePublicationId(idPublicacion, pool = getPgPool()) {
-  const { rows } = await pool.query(
-    `SELECT id_publicacion FROM servicios_publicaciones
-     WHERE id_publicacion=$1 OR revista_id=$1
-     ORDER BY CASE WHEN id_publicacion=$1 THEN 0 ELSE 1 END
-     LIMIT 1`,
-    [idPublicacion],
-  );
-  return rows[0]?.id_publicacion || "";
+  return (await pool.query(`SELECT id_publicacion FROM servicios_publicaciones
+    WHERE revista_id=p3_magazine_issue_id($1) OR (id_publicacion=$1 AND (revista_id IS NULL OR revista_id=''))
+    ORDER BY (COALESCE(version_publicacion,'') ILIKE '%impres%'),id_publicacion LIMIT 1`,[idPublicacion])).rows[0]?.id_publicacion||'';
 }
 
 export async function getPaginasPublicacion(idPublicacion) {
@@ -557,87 +498,26 @@ export async function deletePublicationPages(idPublicacion, data = {}) {
 
 export async function createRevista(data = {}) {
   data=validatedMagazineDates(data);
-  const pool = getPgPool();
-  if (!data.id_revista && data.revista && (data.publicacion || data.numero_publicacion)) {
-    const existing = await pool.query(`SELECT r.id_revista FROM servicios_revistas r
-      JOIN servicios_publicaciones p ON p.revista_id=r.id_revista AND p.tipo_publicacion='revista'
-      WHERE lower(btrim(r.revista))=lower(btrim($1)) AND lower(btrim(r.edicion))=lower(btrim($2))
-        AND btrim(p.numero_publicacion)=$3 AND lower(COALESCE(p.version_publicacion,r.impresa_o_digital,''))=lower($4)
-        AND lower(COALESCE(r.especial,''))=lower($5) LIMIT 1`,
-      [data.revista, data.edicion || '', String(data.publicacion || data.numero_publicacion),data.impresa_o_digital||data.version_publicacion||'digital',data.especial||'']);
-    if (existing.rowCount) throw new Error('Ya existe esa revista para la edición, número, formato y especial indicados.');
-  }
-  const idRevista = data.id_revista?.trim() || `rev_${Date.now()}`;
-  const idPublicacion = data.id_publicacion?.trim() || `pub_${idRevista}_${Date.now()}`;
-
-  const { rows } = await pool.query(
-    `
-      INSERT INTO servicios_revistas (id_revista, edicion, revista, publicacion, deadline_materiales, fecha_publicacion, especial, impresa_o_digital)
-      VALUES ($1, $2, $3, '', '', '', $4, $5)
-      ON CONFLICT (id_revista) DO UPDATE
-      SET edicion = EXCLUDED.edicion,
-          revista = EXCLUDED.revista,
-          especial = EXCLUDED.especial,
-          impresa_o_digital = EXCLUDED.impresa_o_digital,
-          updated_at = NOW()
-      RETURNING id_revista
-    `,
-    [idRevista, data.edicion || "", data.revista || "", data.especial || "", data.impresa_o_digital || data.version_publicacion || "digital"],
-  );
-
-  await pool.query(
-    `
-      INSERT INTO servicios_publicaciones (
-        id_publicacion,
-        nombre_publicacion,
-        fecha_publicacion,
-        estado_publicacion,
-        medio_publicacion,
-        edicion_publicacion,
-        detalle_publicacion,
-        tipo_publicacion,
-        revista_id,
-        numero_publicacion,
-        version_publicacion,
-        deadline_materiales,
-        fecha_recordatorio
-      )
-      VALUES ($1, $2, $3, $4, 'revista', $5, $6, 'revista', $7, $8, $9, $10, $11)
-      ON CONFLICT (id_publicacion) DO UPDATE
-      SET fecha_publicacion = EXCLUDED.fecha_publicacion,
-          estado_publicacion = EXCLUDED.estado_publicacion,
-          edicion_publicacion = EXCLUDED.edicion_publicacion,
-          detalle_publicacion = EXCLUDED.detalle_publicacion,
-          tipo_publicacion = EXCLUDED.tipo_publicacion,
-          revista_id = EXCLUDED.revista_id,
-          numero_publicacion = EXCLUDED.numero_publicacion,
-          version_publicacion = EXCLUDED.version_publicacion,
-          deadline_materiales = EXCLUDED.deadline_materiales,
-          fecha_recordatorio = EXCLUDED.fecha_recordatorio,
-          updated_at = NOW()
-    `,
-    [
-      idPublicacion,
-      `${data.revista || ""} ${data.edicion || ""} ${data.publicacion || data.numero_publicacion || ""}`.trim(),
-      data.fecha_publicacion || "",
-      data.estado_publicacion === 'publicada' ? 'publicada' : 'pendiente de publicar',
-      data.edicion || "",
-      data.revista || "",
-      rows[0].id_revista,
-      data.publicacion || data.numero_publicacion || "",
-      data.impresa_o_digital || data.version_publicacion || "digital",
-      data.deadline_materiales || "",
-      data.fecha_recordatorio || "",
-    ],
-  );
-
-  await setNumeroPaginas(idPublicacion, data.num_paginas || 9);
-
-  await updateRevista(rows[0].id_revista,Object.fromEntries(magazineEvents.filter(event=>data[event.key]!==undefined).map(event=>[event.key,data[event.key]])));
-  return getRevistaById(rows[0].id_revista);
+  const number=String(data.numero_publicacion||data.publicacion||'').trim(),title=String(data.revista||'').trim();
+  if(!title||!number)throw new Error('Indica revista y número.');
+  const pool=getPgPool(),db=await pool.connect();
+  const id=data.id_revista?.trim()||'rev_'+crypto.randomUUID(),publication=data.id_publicacion?.trim()||'pub_'+id;
+  try {
+    await db.query('BEGIN');await db.query("SET LOCAL lock_timeout='3s'");
+    await db.query('SELECT pg_advisory_xact_lock(hashtext($1))',['magazine-issue:'+title.toLowerCase()+':'+String(data.edicion||'').toLowerCase()+':'+number]);
+    await db.query('INSERT INTO servicios_revistas(id_revista,revista,edicion,especial,numero_revista) VALUES($1,$2,$3,$4,$5)',[id,title,data.edicion||'',data.especial||'',number]);
+    const num=normalizePageCount(data.num_paginas||9),events=magazineEvents.map(event=>event.key);
+    await db.query(`INSERT INTO servicios_publicaciones(id_publicacion,nombre_publicacion,revista_id,numero_publicacion,medio_publicacion,edicion_publicacion,detalle_publicacion,tipo_publicacion,version_publicacion,estado_publicacion,num_paginas,fecha_publicacion,${events.join(',')})
+      VALUES($1,$2,$3,$4,$5,$6,$4,'revista','',$7,$8,$9,${events.map((_,i)=>'$'+(i+10)).join(',')})`,
+      [publication,[title,data.edicion,number].filter(Boolean).join(' '),id,number,title,data.edicion||'',data.estado_publicacion==='publicada'?'publicada':'pendiente de publicar',num,data.fecha_publicacion||'',...events.map(key=>data[key]||'')]);
+    for(let i=0;i<num;i++){const page=i-1;await db.query('INSERT INTO servicios_paginas_revista(id_pagina_publicacion,publication_id,pagina_actual,pagina_preferente,tipo) VALUES($1,$2,$3,$4,$5)',['pag_'+publication+'_'+page,publication,page,pagePreference(page),preferredPageType(pagePreference(page))]);}
+    await db.query('COMMIT');
+  }catch(error){await db.query('ROLLBACK');if(error.code==='23505')throw new Error('Ya existe ese número para la revista, edición y especial.');throw error;}finally{db.release();}
+  return getRevistaById(id);
 }
 
 export async function setRevistaPublicationStatus(idRevista, status) {
+  idRevista=await resolveMagazineIssueId(idRevista)||idRevista;
   if (!['publicada','pendiente de publicar'].includes(status)) throw new Error('Estado de revista no válido');
   const result=await getPgPool().query(`UPDATE servicios_publicaciones SET estado_publicacion=$2,updated_at=now()
     WHERE revista_id=$1 AND tipo_publicacion='revista' RETURNING id_publicacion`,[idRevista,status]);

@@ -1,3 +1,4 @@
+import {resolveMagazineIssueId} from '../revista/MagazineIssue.js';
 import {getPgPool} from '../../database/pgClient.js';
 import {contentServiceGroup} from '../../../app/lib/contentServiceGroups.js';
 import {contentPending,contentTypes} from '../../../app/lib/productionManagement.js';
@@ -28,8 +29,8 @@ export async function getPendingMagazineContents() {
  const editorialById=new Map(),linked=new Map();
  for(const row of editorials.rows){if(!editorialById.has(row.id_contenido))editorialById.set(row.id_contenido,[]);editorialById.get(row.id_contenido).push(row);}
  for(const row of links.rows){if(!linked.has(row.id_contenido))linked.set(row.id_contenido,new Set());linked.get(row.id_contenido).add(row.id_revista);}
- return contents.filter(row=>row.es_revista&&contentPending(row)).map(row=>({...row,es_editorial:editorialById.has(row.id_contenido),revistas_vinculadas:magazines.filter(m=>linked.get(row.id_contenido)?.has(m.id_revista)
-  || (!!m.id_publicacion&&(row.id_publicacion===m.id_publicacion||row.contenido_especifico_id===m.id_publicacion))
+ return contents.filter(row=>row.es_revista&&contentPending(row)).map(row=>({...row,es_editorial:editorialById.has(row.id_contenido),revistas_vinculadas:magazines.filter(m=>(m.ids_revistas||[m.id_revista]).some(id=>linked.get(row.id_contenido)?.has(id))
+  || (m.ids_publicaciones||[m.id_publicacion]).some(id=>!!id&&(row.id_publicacion===id||row.contenido_especifico_id===id))
   || editorialById.get(row.id_contenido)?.some(article=>articleMatchesMagazine(article,m))||matchesLegacy(row,m)).map(m=>m.id_revista)}));
 }
 export async function assignContentMagazine(idRevista,data,transactionDb=null) {
@@ -41,6 +42,8 @@ export async function assignContentMagazine(idRevista,data,transactionDb=null) {
   if(!transactionDb)await db.query('BEGIN');await db.query("SET LOCAL lock_timeout='3s'");
   const row=(await db.query('SELECT * FROM produccion_contenidos WHERE id_contenido=$1 FOR UPDATE',[data.id_contenido])).rows[0];
   if(!row)fail('Contenido no encontrado.',404);
+  idRevista=await resolveMagazineIssueId(idRevista,db);
+  if(!idRevista)fail('Revista no encontrada.',404);
   if(new Date(row.updated_at).getTime()!==new Date(data.expectedVersion).getTime())fail('El contenido ha cambiado. Recarga antes de asignarlo.',409);
   if(!contentPending(row))fail('El contenido ya está publicado o cancelado.',409);
   if(!(await db.query('SELECT 1 FROM servicios_revistas WHERE id_revista=$1 FOR SHARE',[idRevista])).rowCount)fail('Revista no encontrada.',404);

@@ -1,5 +1,6 @@
 import {testMode,testIdentifier} from '../identifiers/TestMode.js';
 import { contentTypes } from '../../../app/lib/productionManagement.js';
+import {validateContentMagazineFormat,contentMagazineFormatLabel} from '../../../app/lib/contentMagazineFormat.js';
 import { getPgPool } from "../../database/pgClient.js";
 import {allocateContentIdentifier} from '../identifiers/BusinessIdentifiers.js';
 import { normalizeProductionDeadline } from "../../../app/lib/productionContentFields.js";
@@ -23,6 +24,8 @@ function normalizeHojaProd(row) {
   return {
     es_revista: row.tipo_publicacion==='revista'||Boolean(row.destino_revista)||/revista|vidrio plano|ventanas|hueco|quién es quién/i.test(String(row.tipo_revista_servicio||'')+' '+String(row.nombre_publicacion||'')),
     material: row.estado_material_contenido||[row.anuncio_hoja,row.articulo_hoja].filter(v=>v&&!/no procede/i.test(v)).join(' · '),
+    formato_revista: row.formato_revista || 'impreso_digital',
+    formato: contentMagazineFormatLabel(row),
     id_contenido: row.id_contenido,
     codigo_crm: row.codigo_crm_hoja || row.id_cuenta || "",
     agente: row.nombre_completo_agente || row.id_agente || "",
@@ -48,6 +51,7 @@ function normalizeContenido(row) {
     nombre_contenido: row.nombre_contenido ?? "",
     descripcion_contenido: row.descripcion_contenido ?? "",
     tipo_contenido: row.tipo_contenido ?? "",
+    formato_revista: row.formato_revista || 'impreso_digital',
     categorias_gestion: contentTypes(row),
     especificaciones_contenido: row.especificaciones_contenido ?? "",
     publicacion_num_web: row.publicacion_num_web ?? "",
@@ -404,9 +408,10 @@ export async function updateContenidoProduccion(idContenido, data = {}) {
   const values = [];
   const sets = [];
 
-  for (const field of ["especificaciones_contenido", "publicacion_num_web", "id_agente", "deadline_contenido"]) {
+  for (const field of ["especificaciones_contenido", "publicacion_num_web", "id_agente", "deadline_contenido", "formato_revista"]) {
     if (!Object.prototype.hasOwnProperty.call(data, field)) continue;
     let value = String(data[field] ?? '');
+    if(field==='formato_revista')value=validateContentMagazineFormat(value);
     if (field === 'deadline_contenido') {
       try { value = normalizeProductionDeadline(value); }
       catch (error) { error.statusCode = 400; throw error; }
@@ -517,6 +522,7 @@ export async function createContenidoProduccion(data = {}) {
     ],
   );
 
+  if(data.formato_revista!==undefined){rows[0].formato_revista=validateContentMagazineFormat(data.formato_revista);await client.query('UPDATE produccion_contenidos SET formato_revista=$2 WHERE id_contenido=$1',[idContenido,rows[0].formato_revista]);}
   if (rows[0]?.id_cuenta) {
     await addCuentaEntityEvent({
       idCuenta: rows[0].id_cuenta,

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports -- Browser test harness for TSX. */
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),ts=require('typescript');
 const {JSDOM}=require(process.env.P3_SELECTOR_TEST_MODULES ? path.join(process.env.P3_SELECTOR_TEST_MODULES,'jsdom') : 'jsdom');
 const dom=new JSDOM('<div id="root"></div>',{url:'http://localhost'});
@@ -6,7 +5,7 @@ Object.assign(global,{window:dom.window,document:dom.window.document,navigator:d
 dom.window.HTMLElement.prototype.scrollIntoView=function(){};
 const React=require('react'),{createRoot}=require('react-dom/client');
 const calls=[],navigations=[],cache=new Map();
-const api={post:async(url,data)=>{calls.push({url,data});return {data:{id:1,...data}};}};
+const api={get:async url=>({data:url.includes('cuentas')?[{id_cuenta:'client',nombre_empresa:'Empresa'}]:[]}),post:async(url,data)=>{calls.push({url,data});return {data:{id:1,...data}};}};
 function load(file){
   if(cache.has(file))return cache.get(file);
   const js=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{jsx:ts.JsxEmit.ReactJSX,module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true}}).outputText;
@@ -33,12 +32,16 @@ const select=async(node,value)=>React.act(async()=>{node.value=value;node.dispat
 (async()=>{
  const Modal=load('app/dashboard/produccion/control_redaccion/NewArticleModal.tsx').default;let saved,closed=0;
  await React.act(async()=>root.render(React.createElement(Modal,{onCreated:row=>{saved=row;},onClose:()=>{closed++;}})));
- assert(document.querySelector('[role="dialog"]'));await input(label('Empresa'),'Empresa');await input(label('Título'),'Artículo');await input(label('Páginas'),'2');await select(label('Responsable corrección'),'Frank');
+ assert(document.querySelector('[role="dialog"]'));await React.act(async()=>new Promise(resolve=>setTimeout(resolve,300)));
+ await React.act(async()=>document.querySelector('[aria-label="Cuenta"]').click());await React.act(async()=>document.querySelector('[role="option"]').click());
+ await input(label('Título'),'Artículo');await input(label('Páginas'),'2');await select(label('Responsable corrección'),'Frank');
+ assert.equal(label('Formato en revista').value,'impreso_digital');await select(label('Formato en revista'),'impreso');
  const submit=async()=>React.act(async()=>document.querySelector('form').dispatchEvent(new dom.window.Event('submit',{bubbles:true,cancelable:true})));
  await submit();assert.equal(calls.length,0);assert.match(document.querySelector('[role="alert"]').textContent,/al menos/);
- await input(label('Nº Hueco previsto'),'12');await React.act(async()=>document.querySelector('input[type="checkbox"]').click());await submit();
+ await input(label('Hueco previsto'),'12');await React.act(async()=>[...document.querySelectorAll('label')].find(node=>node.textContent.trim()==='Publicado en Vidrioperfil').querySelector('input').click());await submit();
  assert(saved);assert.equal(calls[0].data.estado_publicacion_vidrioperfil,true);assert.equal(calls[0].data.revista,'');assert.equal(calls[0].data.hueco_previsto,'12');
+ assert.equal(calls[0].data.formato_revista,'impreso');
  await React.act(async()=>window.dispatchEvent(new dom.window.KeyboardEvent('keydown',{key:'Escape'})));assert.equal(closed,1);
- await React.act(async()=>document.querySelector('[aria-label="Cerrar nuevo artículo"]').click());assert.equal(closed,2);
+ await React.act(async()=>document.querySelector('[aria-label="Cerrar artículo"]').click());assert.equal(closed,2);
  await React.act(async()=>root.unmount());dom.window.close();console.log('PASS: article modal fields, placement validation, checkbox submission, optional magazine, Escape and close button.');
 })().catch(error=>{console.error(error);process.exitCode=1;});

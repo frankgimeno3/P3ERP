@@ -42,7 +42,7 @@
   {"old":"servicios_db","name":"servicios_db","description":"Catálogo de servicios, soportes, publicaciones y precios."},
   {"old":"tarifas_db","name":"servicios_tarifas","description":"Documentos y versiones de tarifas comerciales."},
   {"old":"paginas_tarifas","name":"servicios_paginas_tarifa","description":"Páginas de tarifa y servicios incluidos en cada una."},
-  {"old":"revistas_db","name":"servicios_revistas","description":"Cabeceras de revistas y sus características."},
+  {"old":"revistas_db","name":"servicios_revistas","description":"Números únicos de revista por cabecera, edición y especial. Conserva alias históricos; el formato impreso/digital pertenece al contenido."},
   {"old":"revistas_paginas_db","name":"servicios_paginas_revista","description":"Páginas y preferencias de ubicación en revistas."},
   {"old":"newsleters_db","name":"servicios_newsletters","description":"Cabeceras y ediciones de newsletters."},
   {"old":"publicaciones_db","name":"servicios_publicaciones","description":"Ediciones y publicaciones concretas de los soportes editoriales."},

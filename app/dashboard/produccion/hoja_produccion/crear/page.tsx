@@ -1,5 +1,6 @@
 "use client";
 
+import {contentMagazineFormats} from "@/app/lib/contentMagazineFormat";
 import DateInputRow from "@/app/components/DateInputRow";
 import React, { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -14,7 +15,7 @@ const initialForm = {
   id_cuenta: "",
   id_agente: "",
   id_publicacion: "",
-  tipo: "",
+  tipo: "",formato_revista:"impreso_digital",
   especificaciones_contenido: "",
   estado_contenido: "Pendiente de publicar",
   pagina: "",
@@ -112,7 +113,7 @@ export default function CrearContenidoHojaProduccionPage() {
               <input value={form.tipo} onChange={(e) => handleChange("tipo", e.target.value)} className={fieldClass} />
             </label>
 
-            <label className="space-y-1">
+            <label className="block text-sm">Formato en revista<select value={form.formato_revista} onChange={event=>handleChange("formato_revista",event.target.value)} className={`${fieldClass} cursor-pointer hover:border-blue-950`}>{contentMagazineFormats.map(item=><option key={item.value} value={item.value}>{item.label}</option>)}</select></label><label className="space-y-1">
               <span className="text-sm font-medium">Estado</span>
               <select value={form.estado_contenido} onChange={(e) => handleChange("estado_contenido", e.target.value)} className={fieldClass}>
                 <option value="Pendiente de publicar">Pendiente de publicar</option>

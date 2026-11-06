@@ -53,6 +53,7 @@ try {
   assert.ok(trial.id_contenido.startsWith('PRUEBA-'));
   const magazine = 'rev_test';
   await db.query("INSERT INTO servicios_revistas(id_revista,revista,edicion,publicacion) VALUES($1,'Vidrio Plano','Iberia','1')", [magazine]);
+  await db.query("INSERT INTO servicios_publicaciones(id_publicacion,revista_id,tipo_publicacion,numero_publicacion) VALUES('pub_test_intake',$1,'revista','1')",[magazine]);
   const article = await completeContentIntake({ ...data, tipo: 'articulo', para_revista: true, id_revista: magazine, id_carga: randomUUID(), materiales: [file('material_articulos', true)] }, async () => {});
   assert.equal((await db.query('SELECT tipo FROM produccion_revistas_contenidos WHERE id_contenido=$1', [article.id_contenido])).rows[0].tipo, 'articulos');
   const root = (await db.query("SELECT mediateca_folder_id FROM mediateca_carpetas WHERE mediateca_folder_name='documentos_revistas'")).rows[0].mediateca_folder_id;

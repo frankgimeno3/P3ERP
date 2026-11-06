@@ -1,3 +1,4 @@
+import {resolveMagazineIssueId} from '../revista/MagazineIssue.js';
 import {getPgPool} from '../../database/pgClient.js';
 import {flatplanRows,validateFlatplan} from '../../../app/lib/preliminaryFlatplan.js';
 import {randomUUID} from 'node:crypto';
@@ -5,6 +6,7 @@ export async function publishFlatplan(id,version,apply=false,pool=getPgPool()) {
   const db=await pool.connect();
   try{
     await db.query('BEGIN');
+    id=await resolveMagazineIssueId(id,db)||id;
     const book=(await db.query('SELECT plan,version FROM produccion_planillos_previos WHERE id_revista=$1 FOR UPDATE',[id])).rows[0];
     if(!book||book.version!==version)throw Object.assign(new Error('El planillo ha cambiado. Revisa la versión actual antes de publicar.'),{status:409});
     validateFlatplan(book.plan);

@@ -13,6 +13,7 @@ import MiddleNav from "../../../general_components/componentes_recurrentes/Middl
 import { HojaProduccionService } from "@/app/service/HojaProduccionService";
 
 interface HojaProduccionContenido {
+  formato: string;
   es_revista: boolean;
   material: string;
   id_contenido: string;
@@ -42,7 +43,7 @@ const columns: [keyof HojaProduccionContenido, string][] = [
   ["contrato", "Contrato"],
   ["publicacion_num_web", "Publicación / Nº web"],
   ["tipo", "Tipo revista / servicio"],
-  ["contenido", "Contenido/-"],
+  ["contenido", "Contenido/-"],["formato","Formato revista"],
   ["anuncio", "Anuncio"],
   ["articulo", "Artículo"],
   ["estado", "Estado"],
@@ -57,7 +58,7 @@ const baseTableColumns = columns.filter(([field]) => !["codigo_crm", "publicacio
 const Materiales: FC = () => {
   const router = useRouter();
   const [kind,setKind]=useState('revista');
-  const activeColumns: [keyof HojaProduccionContenido,string][] = kind==='revista'?columns.filter(([key])=>!['tipo','caducidad'].includes(key)):columns.filter(([key])=>!['anuncio','articulo','pagina'].includes(key)).map(([key,label])=>[key,key==='tipo'?'Tipo de servicio':label]);
+  const activeColumns: [keyof HojaProduccionContenido,string][] = kind==='revista'?columns.filter(([key])=>!['tipo','caducidad'].includes(key)):columns.filter(([key])=>!['anuncio','articulo','pagina','formato'].includes(key)).map(([key,label])=>[key,key==='tipo'?'Tipo de servicio':label]);
   if(kind==='otros')activeColumns.splice(activeColumns.findIndex(([key])=>key==='estado'),0,['material','Material']);
   const tableColumns=activeColumns.filter(([key])=>baseTableColumns.some(([field])=>field===key)||key==='material');
   const currentYear = new Intl.DateTimeFormat('en', {year:'numeric',timeZone:'Europe/Madrid'}).format(new Date());

@@ -1,5 +1,11 @@
 # RDS Schema Snapshot
 
+## Números de revista unificados
+
+Migración `20261106_0002_unified_magazine_issues.sql`: `servicios_revistas.numero_revista` identifica el número y `id_numero_revista` conserva los identificadores históricos duplicados como alias de una cabecera principal. El índice `revista_numero_unico` impide duplicar una revista, edición, especial y número. `p3_magazine_issue_id()` resuelve tanto IDs antiguos de revista como publicaciones históricas al número único. Las publicaciones de catálogo mantienen sus IDs y referencias de contratos; sus formatos históricos no generan filas distintas en la interfaz. Las relaciones de contenido, materiales y páginas y los planillos se vinculan al número principal. Los objetos S3 conservan sus claves.
+
+`produccion_contenidos.formato_revista text NOT NULL DEFAULT 'impreso_digital'` admite `impreso`, `digital` e `impreso_digital`. Los contenidos de contrato parten de ambos formatos; los formatos históricos explícitos sin contrato se conservan. Cada contenido y artículo puede editar su formato sin crear otra revista ni duplicar su facturación. Las migraciones y los cambios de formato y relaciones se auditan con los clientes compartidos.
+
 ## Versiones acabadas de producción
 
 Migración `20261106_0001_production_finished_versions.sql`: `produccion_materiales.es_version_acabada boolean NOT NULL DEFAULT false` y `numero_version integer`.

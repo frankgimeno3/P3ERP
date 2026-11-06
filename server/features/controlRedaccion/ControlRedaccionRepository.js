@@ -2,6 +2,7 @@ import { getPgPool } from '../../database/pgClient.js';
 import {validateArticle,articleDisplayState,articlePublicationStatus} from '../../../app/config/editorialArticle.js';
 import {allocateContentIdentifier} from '../identifiers/BusinessIdentifiers.js';
 import {articleMatchesMagazine} from '../../../app/config/editorialMagazine.js';
+import {validateContentMagazineFormat} from '../../../app/lib/contentMagazineFormat.js';
 
 const view=row=>({...row,empresa:row.nombre_cuenta||row.empresa,estado_original:row.estado,estado:articleDisplayState(row),publicaciones_estado:articlePublicationStatus(row)});
 async function account(db,row){
@@ -47,17 +48,20 @@ export async function createArticle(data,pool=getPgPool()) {
     const columns=Object.keys(row),values=columns.map(c=>c==='publicaciones_estado'?JSON.stringify(row[c]):row[c]);
     const article=(await db.query(`INSERT INTO produccion_control_redaccion (${columns.join(',')}) VALUES (${columns.map((_,index)=>'$'+(index+1)).join(',')}) RETURNING *`,values)).rows[0];
     const idContenido=await ensureArticleContent(db,article);
+    const format=validateContentMagazineFormat(data.formato_revista||'impreso_digital');
+    await db.query('UPDATE produccion_contenidos SET formato_revista=$2 WHERE id_contenido=$1',[idContenido,format]);
     await syncExtra(db,{...article,id_contenido:idContenido});
     await db.query('COMMIT');
-    return view({...article,id_contenido:idContenido});
+    return view({...article,id_contenido:idContenido,formato_revista:format});
   } catch (error) { await db.query('ROLLBACK'); throw error; }
   finally { if(db!==pool) db.release(); }
 }
 
 export async function getControlRedaccion(db=getPgPool()) {
   const { rows } = await db.query(`
-    SELECT r.*,c.nombre_empresa nombre_cuenta
+    SELECT r.*,c.nombre_empresa nombre_cuenta,pc.formato_revista
     FROM produccion_control_redaccion r LEFT JOIN comercial_cuentas c USING(id_cuenta)
+    LEFT JOIN produccion_contenidos pc ON pc.id_contenido=r.id_contenido
     ORDER BY CASE r.prioridad WHEN 'A' THEN 1 WHEN 'B' THEN 2 WHEN 'C' THEN 3 ELSE 4 END,
       r.empresa,r.id
   `);
@@ -76,6 +80,8 @@ export async function updateArticle(id,data,pool=getPgPool()){
   const columns=Object.keys(row),values=columns.map(c=>c==='publicaciones_estado'?JSON.stringify(row[c]):row[c]);
   const updated=(await db.query(`UPDATE produccion_control_redaccion SET ${columns.map((c,i)=>c+'=$'+(i+1)).join(',')},updated_at=now() WHERE id=$${columns.length+1} RETURNING *`,[...values,id])).rows[0];
   const contentId=await ensureArticleContent(db,updated);
+  if(data.formato_revista!==undefined)await db.query('UPDATE produccion_contenidos SET formato_revista=$2 WHERE id_contenido=$1',[contentId,validateContentMagazineFormat(data.formato_revista)]);
+  updated.formato_revista=(await db.query('SELECT formato_revista FROM produccion_contenidos WHERE id_contenido=$1',[contentId])).rows[0]?.formato_revista;
   await db.query('UPDATE produccion_contenidos SET nombre_contenido=$2,especificaciones_contenido=$2,cliente_hoja=$3,estado_contenido=$4,id_cuenta=COALESCE($5,id_cuenta),pagina_hoja=$6,updated_at=now() WHERE id_contenido=$1',[contentId,row.titulo,row.empresa,row.estado,row.id_cuenta||null,row.paginas]);
   updated.id_contenido=contentId;await syncExtra(db,updated);
   await db.query('COMMIT');return view(updated);

@@ -1,4 +1,5 @@
 "use client";
+import {findMagazineIssue} from '@/app/lib/magazineReference';
 import SortableTable from '@/app/components/SortableTable';
 
 import DateInputRow from "@/app/components/DateInputRow";
@@ -256,7 +257,7 @@ function LineaEditor({
         <label className="flex flex-col gap-1 text-sm md:col-span-2">
           Publicación
           <select
-            value={linea.id_publicacion || ""}
+            value={findMagazineIssue(revistas,linea.id_publicacion)?.id_publicacion || linea.id_publicacion || ""}
             onChange={(event) => {
               onPatch({ id_publicacion: event.target.value });
               onApplyRevista(event.target.value);

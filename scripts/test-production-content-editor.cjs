@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),ts=require('typescript');
 const {JSDOM}=require(process.env.P3_SELECTOR_TEST_MODULES ? path.join(process.env.P3_SELECTOR_TEST_MODULES,'jsdom') : 'jsdom');
 const dom=new JSDOM('<div id="root"></div>',{url:'http://localhost'});
@@ -33,7 +32,10 @@ const field=name=>[...document.querySelectorAll('label')].find(label=>label.text
   await change(document.querySelector('[aria-label="Fecha límite: dd"]'),'28');
   await React.act(async()=>document.querySelector('form').dispatchEvent(new dom.window.Event('submit',{bubbles:true,cancelable:true})));
   assert.equal(calls.length,1);
-  assert.deepEqual(calls[0],{id:'content',data:{especificaciones_contenido:'Primera línea\nSegunda línea',publicacion_num_web:'WEB 123',id_agente:'agent',deadline_contenido:'28/02/2026',estado:'Publicado'}});
+  assert.deepEqual(calls[0],{id:'content',data:{especificaciones_contenido:'Primera línea\nSegunda línea',publicacion_num_web:'WEB 123',id_agente:'agent',deadline_contenido:'28/02/2026',estado:'Publicado',formato_revista:'impreso_digital'}});
+  await change(field('Formato en revista'),'digital');
+  await React.act(async()=>document.querySelector('form').dispatchEvent(new dom.window.Event('submit',{bubbles:true,cancelable:true})));
+  assert.equal(calls[1].data.formato_revista,'digital');
   assert.match(document.querySelector('[role="status"]').textContent,/guardados/);
   await React.act(async()=>root.unmount());console.log('PASS: editable controls, agent name, legacy status, date validation and save payload');
 })().catch(error=>{console.error(error);process.exitCode=1;});

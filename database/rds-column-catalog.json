@@ -1,4 +1,8 @@
 {
+  "servicios_revistas": {
+    "numero_revista": "Número editorial único por revista, edición y especial, compartido por todos los formatos de contenido.",
+    "id_numero_revista": "Número principal para un identificador histórico duplicado por formato; NULL identifica una cabecera activa."
+  },
   "direccion_propiedades": {
     "id_propiedad": "Identificador estable de la propiedad.",
     "tipo": "Parking, vehículo u otros.",
@@ -267,6 +271,7 @@
     "es_prueba": "Indica que el registro es de prueba. Su identificador empieza por PRUEBA- y los registros derivados heredan el modo."
   },
   "produccion_contenidos": {
+    "formato_revista": "Formato del contenido: impreso, digital o impreso_digital. Los contenidos contratados parten de impreso_digital.",
     "es_prueba": "Indica que el registro es de prueba. Su identificador empieza por PRUEBA- y los registros derivados heredan el modo.",
     "tipo_contenido": "Tipo del contenido: articulo, anuncio u otro; las importaciones conservan los entregables históricos.",
     "descripcion_contenido": "Descripción opcional del contenido."

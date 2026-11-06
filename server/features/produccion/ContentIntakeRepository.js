@@ -6,6 +6,8 @@ import { externalUserEvent } from '../userEvents/ExternalUserEvents.js';
 import { productionMediaFolder } from './ProductionMediaFolders.js';
 import { addProductionMaterial, getContentMagazineOptions } from './GestionesProduccionRepository.js';
 import { contentTypes, contentPending, materialType, validateContentIntake, validateIntakeFiles } from '../../../app/lib/productionManagement.js';
+import {validateContentMagazineFormat} from '../../../app/lib/contentMagazineFormat.js';
+import {getRevistaById} from '../revista/RevistaRepository.js';
 
 const invalid = message => Object.assign(new Error(message), { status: 400 });
 
@@ -41,9 +43,7 @@ export async function validateContentSelection(data, db = getPgPool()) {
   }
   let magazine = null;
   if (data.id_revista) {
-    magazine = (await db.query(`SELECT r.id_revista,r.revista,r.edicion,p.id_publicacion,p.numero_publicacion FROM servicios_revistas r
-      LEFT JOIN LATERAL (SELECT id_publicacion,numero_publicacion FROM servicios_publicaciones WHERE revista_id=r.id_revista ORDER BY id_publicacion LIMIT 1) p ON true
-      WHERE r.id_revista=$1`, [data.id_revista])).rows[0];
+    magazine = await getRevistaById(data.id_revista);
     if (!magazine) throw invalid('Selecciona una revista válida.');
     if (content) {
       const options = await getContentMagazineOptions(content.id_contenido);
@@ -53,6 +53,7 @@ export async function validateContentSelection(data, db = getPgPool()) {
     const options = await getContentMagazineOptions(content.id_contenido);
     if (options.length) throw invalid('Selecciona la revista de este contenido contratado.');
   }
+  if(data.formato_revista!==undefined)validateContentMagazineFormat(data.formato_revista);
   return { content, account, magazine };
 }
 
@@ -104,9 +105,9 @@ export async function completeContentIntake(data, verifyObject = assertObjectExi
       const esPrueba = await testMode(db, { accountId: account?.id_cuenta });
       id = await allocateContentIdentifier(db, '', esPrueba);
       await db.query(`INSERT INTO produccion_contenidos(id_contenido,nombre_contenido,descripcion_contenido,especificaciones_contenido,tipo_contenido,
-        id_cuenta,cliente_hoja,destino_revista,id_publicacion,contenido_especifico_id,estado_contenido,estado_material_contenido,hoja_prod,es_prueba)
-        VALUES($1,$2,$3,$3,$4,$5,$6,$7,$8,$9,'Pendiente de publicar','no revisado produccion',true,$10)`,
-      [id, String(data.nombre).trim(), String(data.descripcion || '').trim(), data.tipo, account?.id_cuenta || null, account?.nombre_empresa || '', Boolean(magazine), magazine?.id_publicacion || null, magazine?.id_publicacion || '', esPrueba]);
+        id_cuenta,cliente_hoja,destino_revista,id_publicacion,contenido_especifico_id,estado_contenido,estado_material_contenido,hoja_prod,es_prueba,formato_revista)
+        VALUES($1,$2,$3,$3,$4,$5,$6,$7,$8,$9,'Pendiente de publicar','no revisado produccion',true,$10,$11)`,
+      [id, String(data.nombre).trim(), String(data.descripcion || '').trim(), data.tipo, account?.id_cuenta || null, account?.nombre_empresa || '', Boolean(magazine), magazine?.id_publicacion || null, magazine?.id_publicacion || '', esPrueba,data.formato_revista||'impreso_digital']);
       if (magazine) await db.query('INSERT INTO produccion_revistas_contenidos(id_revista,id_contenido,tipo) VALUES($1,$2,$3) ON CONFLICT DO NOTHING', [magazine.id_revista, id, materialType(data.tipo)]);
     }
     for (const file of data.materiales) await addProductionMaterial({ ...file, id_contenido: id, id_revista: magazine?.id_revista || '', tipo: materialType(data.tipo) }, async () => {}, db);

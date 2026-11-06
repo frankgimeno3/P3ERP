@@ -139,7 +139,7 @@
       "Calendario muestra 24 meses desde el actual, con semanas de lunes a domingo y etiquetas de eventos por día. A la derecha, el panel fijo permite filtrar eventos y editar sus fechas con dd / mm / yyyy.",
       "Cada número conserva en la base de datos las fechas de petición y recordatorio de materiales, deadline previsto y real, envío a imprenta, impresión estimada y envío de revistas.",
       "Consultar el listado o el calendario no modifica las páginas, los recuentos ni las fechas de actualización de las publicaciones.",
-      "La tabla distingue Número, Formato (digital/impresa), Especial y Fecha de publicación sin mostrar el identificador. Vidrio y Ventanas disponen de América Latina, Iberia y ESPECIALES; los especiales quedan excluidos de las ediciones regulares. Cada ficha muestra los artículos correspondientes con estado, cuenta, título y páginas, incluyendo todos los números previstos y especiales."
+      "Cada revista, edición, especial y número aparece una sola vez, sin separar impreso y digital. La tabla distingue Número, Especial y Fecha de publicación. El formato se guarda y edita en cada contenido o artículo: Impreso, Digital o Impreso + digital. Los contenidos por contrato parten de Impreso + digital. Vidrio y Ventanas disponen de América Latina, Iberia y ESPECIALES; los especiales quedan excluidos de las ediciones regulares. Cada ficha reúne sus contenidos y artículos con su formato."
     ]
   },
   "/dashboard/produccion/gestion-contenidos/revista": {
@@ -151,9 +151,9 @@
       "Aporta un ZIP como material descargable o añade archivos individuales sucesivamente. Cada material tiene nombre y descripción opcional. Máximo 100 materiales y 200 MB por archivo.",
       "La confirmación comprueba los datos antes de habilitar Subir. Los materiales se guardan en S3 y se registran junto al contenido en una transacción; reintentar no duplica la carga. Al terminar se abre el detalle con sus materiales.",
       "Las siete pestañas en fila son VIDRIO ESPAÑA, VENTANAS ESPAÑA, VIDRIO LATAM, VENTANAS LATAM, QQ VIDRIO, QQ VENTANAS y HUECO. España corresponde a Iberia, LATAM a América Latina y QQ a Quién es Quién según su edición.",
-      "La tabla muestra cada número junto a su formato: Digital, Impresa o Digital e impresa. Un mismo número impreso y digital tiene filas distintas y cada una abre su propia ficha. Las pestañas se ajustan al espacio disponible sin scroll y el panel no lleva borde exterior. Pulsa cualquier parte de una fila o utiliza Enter o espacio para abrir sus contenidos. Los filtros se reúnen en una tarjeta inicialmente cerrada. Arriba a la derecha están Agregar contenidos y Ver otro contenido.",
+      "La tabla muestra un único número por revista, edición y especial. Impreso y digital comparten ficha, calendario y contenidos. Cada contenido indica su formato: Impreso, Digital o Impreso + digital. Los enlaces antiguos de ambas variantes abren el mismo número; los identificadores históricos se conservan. Las pestañas se ajustan al espacio disponible sin scroll y el panel no lleva borde exterior. Pulsa la fila o utiliza Enter o espacio para abrir sus contenidos. Arriba a la derecha están Agregar contenidos y Ver otro contenido.",
       "Los contenidos importados que incluían artículo y anuncio aparecen en ambas vistas con el mismo ID y contrato; no se duplican sus líneas de facturación.",
-      "Los contenidos cuyo canal o servicio es Revista se gestionan aquí aunque todavía no tengan destino. Pendientes de asignar revista muestra solo los que no tienen una publicación válida vinculada, incluida la planificación editorial histórica. Asignar revista exige elegir una publicación concreta y su formato mediante el selector; conserva el contenido, sus materiales y los vínculos anteriores, y audita la nueva asociación.",
+      "Los contenidos cuyo canal o servicio es Revista se gestionan aquí aunque todavía no tengan destino. Pendientes de asignar revista muestra solo los que no tienen una publicación válida vinculada, incluida la planificación editorial histórica. Asignar revista exige elegir el número concreto; su formato se edita en la ficha del contenido. La asociación conserva el contenido, sus materiales y sus vínculos anteriores, con auditoría.",
       "Las rutas antiguas de gestión llevan a esta página; las fichas concretas de contenidos y materiales se abren siempre en Repositorio."
     ]
   },
@@ -170,7 +170,7 @@
     "summary": "Contenidos pendientes de una revista por fase de producción.",
     "steps": [
       "Las pestañas son Fase 1, Fase 2, Fase 3, Fase 4, Fase 5 y Todo, sin fase cero. Cada una lleva un icono a su derecha y, al seleccionarla, muestra debajo su título: Contratado pendiente de recibir, Pendiente redacción, Pendiente maquetación, Pendiente corrección o Pendiente revisión. Sus iconos son reloj, tecla con lápiz, imagen con lápiz, ojo y visto bueno; Todo utiliza un informe con una lista por puntos y no lleva número de fase. Todo reúne los contenidos pendientes de esa revista; publicados y cancelados se conservan en Repositorio.",
-      "Cada fase tiene subpestañas Anuncios y Artículos, con sus cantidades. La tabla muestra nombre del contenido, páginas asignadas, empresa y agente. Pulsa la fila o usa Enter o espacio para abrir la ficha.",
+      "Las fases 1–5 quedan agrupadas a la izquierda y Todo a la derecha. Cada fase tiene subpestañas Anuncios y Artículos con sus cantidades. La tabla muestra nombre del contenido, formato, páginas asignadas, empresa y agente. Pulsa la fila o usa Enter o espacio para abrir la ficha.",
       "La fase se toma del estado del contenido. Para registros históricos sin fase explícita se consideran los materiales recibidos, el contrato y el tipo; un material acabado pendiente pasa a revisión. Puedes elegir las nuevas fases desde Datos y detalles de su ficha.",
       "Abre la ficha del contenido para Aportar material o Subir versión desde sus apartados correspondientes. Las versiones se guardan como materiales, con indicador de versión acabada y número correlativo desde V01, sin sobrescribir versiones anteriores."
     ]
@@ -195,7 +195,7 @@
     "steps": [
       "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "La ficha tiene tres apartados: Datos y detalles, Materiales y Versión acabada. Cada material ordinario se muestra en una tarjeta que abre su ficha en Repositorio.",
-      "Edita especificaciones, Publicación / Nº web, agente por nombre, fecha límite con día, mes y año separados y estado; pulsa Guardar cambios.",
+      "Edita especificaciones, Publicación / Nº web, agente por nombre, fecha límite con día, mes y año separados, estado y formato en revista. Elige Impreso, Digital o Impreso + digital; los contenidos por contrato parten de Impreso + digital. Pulsa Guardar cambios. El formato también se muestra y edita desde el control de artículos.",
       "La tabla de versiones acabadas aparece de más actual a más antigua, V02 antes de V01. Cada versión es un material con archivo propio en S3 y conserva las anteriores. Usa Aportar material dentro de Materiales o Subir versión dentro de Versión acabada; si el contenido admite varios tipos o revistas, elige el destino en el formulario. Los contenidos nuevos se crean desde Gestión contenidos."
     ]
   },

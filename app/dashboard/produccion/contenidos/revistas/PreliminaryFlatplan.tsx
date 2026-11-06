@@ -5,15 +5,16 @@ import TableFilters from '@/app/components/TableFilters';
 import {useEffect,useMemo,useRef,useState} from 'react';
 import PublishFlatplan from './PublishFlatplan';
 import apiClient from '@/app/apiClient';
+import {contentMagazineFormatLabel} from '@/app/lib/contentMagazineFormat';
 import SearchableSelect from '@/app/components/SearchableSelect';
 import {flatplanRows,mutateFlatplan,flatplanMagazinePageLabel} from '@/app/lib/preliminaryFlatplan';
 
-type Block={id:string;contentId?:string;account:string;type:string;detail:string;pages:number;uncertain?:boolean;arrival?:string;sourceNote?:string;originalPages?:string;cover?:string};
+type Block={formato_revista?:string;id:string;contentId?:string;account:string;type:string;detail:string;pages:number;uncertain?:boolean;arrival?:string;sourceNote?:string;originalPages?:string;cover?:string};
 type Plan={slots:(string|null)[];blocks:Block[];excluded:string[]};
 type Book={plan:Plan;version:number;sources:Block[]};
 type Operation={type:'move'|'remove'|'insert-empty'|'add'|'resize'|'remove-empty'|'swap'|'fill-hole';blockId?:string};
 const button='rounded border px-3 py-2 text-sm transition enabled:cursor-pointer enabled:hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-40';
-const description=(row:any)=>row.block?`${row.block.account||row.block.type} · ${row.block.type} · parte ${row.part}/${row.total}`:'Página libre';
+const description=(row:any)=>row.block?`${row.block.account||row.block.type} · ${row.block.type} · ${contentMagazineFormatLabel(row.block)} · parte ${row.part}/${row.total}`:'Página libre';
 export default function PreliminaryFlatplan({magazineId}:{magazineId:string}) {
  const [book,setBook]=useState<Book|null>(null),[error,setError]=useState(''),[busy,setBusy]=useState(false),[operation,setOperation]=useState<Operation|null>(null);
  const [target,setTarget]=useState(''),[sourceId,setSourceId]=useState(''),[count,setCount]=useState(1),[compact,setCompact]=useState(false),[selected,setSelected]=useState<number|null>(null);
@@ -25,7 +26,7 @@ export default function PreliminaryFlatplan({magazineId}:{magazineId:string}) {
   const key=(e:KeyboardEvent)=>{if(e.key==='Escape'){e.preventDefault();setOperation(null);returnFocus.current?.focus();}if(e.key==='Tab'){const nodes=dialog.current?.querySelectorAll<HTMLElement>('button:not(:disabled),input:not(:disabled),[tabindex="0"]');if(!nodes?.length)return;const first=nodes[0],last=nodes[nodes.length-1];if(e.shiftKey&&(document.activeElement===first||document.activeElement===dialog.current)){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}};
   document.addEventListener('keydown',key);return()=>document.removeEventListener('keydown',key);
  },[operation]);
- const rows=useMemo(()=>book?flatplanRows(book.plan):[],[book]);
+ const rows=useMemo(()=>book?flatplanRows(book.plan).map((row:any)=>({...row,block:row.block?{...row.block,formato_revista:book.sources.find(source=>source.id===row.block.id)?.formato_revista||row.block.formato_revista}:null})):[],[book]);
  const open=(op:Operation,index?:number)=>{returnFocus.current=document.activeElement as HTMLElement;setOperation(op);setTarget(index===undefined?'':String(index));setSourceId('');setCount(op.blockId?rows.filter((r:any)=>r.block?.id===op.blockId).length:1);setCompact(false);setError('');};
  const close=()=>{setOperation(null);returnFocus.current?.focus();};
  const source=book?.sources.find(s=>s.id===sourceId),block=book?.plan.blocks.find(b=>b.id===operation?.blockId);

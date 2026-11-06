@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+import {resolveMagazineIssueId} from '../revista/MagazineIssue.js';
 import { getPgPool } from '../../database/pgClient.js';
 import { getRevistas, getRevistaById } from '../revista/RevistaRepository.js';
 import { assertObjectExistsInS3, createPresignedUpload } from '../mediateca/S3Service.js';
@@ -75,9 +76,9 @@ export async function getContentMagazineOptions(idContenido) {
   const linked = new Set(explicit.rows.map(row => row.id_revista));
   const article = (await getPgPool().query(`SELECT revista,espana_previsto_numero,latam_previsto_numero,especial_numero,hueco_previsto
     FROM produccion_control_redaccion WHERE id_contenido=$1`, [idContenido])).rows[0];
-  return magazines.filter(revista => linked.has(revista.id_revista)
-    || content.id_publicacion === revista.id_publicacion
-    || content.contenido_especifico_id === revista.id_publicacion
+  return magazines.filter(revista => (revista.ids_revistas||[revista.id_revista]).some(id=>linked.has(id))
+    || (revista.ids_publicaciones||[revista.id_publicacion]).includes(content.id_publicacion)
+    || (revista.ids_publicaciones||[revista.id_publicacion]).includes(content.contenido_especifico_id)
     || (article && matchesEditorial(article, revista))
     || matchesLegacy(content, revista));
 }
@@ -85,6 +86,7 @@ export async function getContentMagazineOptions(idContenido) {
 export async function getMagazineManagement(idRevista) {
   const revista = await getRevistaById(idRevista);
   if (!revista) return null;
+  const magazineIds=revista.ids_revistas||[revista.id_revista],publicationIds=revista.ids_publicaciones||[revista.id_publicacion];
   const number=String(revista.numero_publicacion||'').replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
   const { rows: contents } = await getPgPool().query(`SELECT c.*,cu.nombre_empresa,a.nombre_completo_agente,
     COALESCE(NULLIF(c.id_contrato,''),(SELECT ct.id_contrato FROM comercial_contratos ct
@@ -92,12 +94,12 @@ export async function getMagazineManagement(idRevista) {
     FROM produccion_contenidos c
     LEFT JOIN comercial_cuentas cu ON cu.id_cuenta=c.id_cuenta
     LEFT JOIN agentes_db a ON a.id_agente=c.id_agente
-    WHERE c.hoja_prod=true AND (c.id_publicacion=$1 OR c.contenido_especifico_id=$1
-      OR EXISTS(SELECT 1 FROM produccion_revistas_contenidos rc WHERE rc.id_contenido=c.id_contenido AND rc.id_revista=$2)
+    WHERE c.hoja_prod=true AND (c.id_publicacion=ANY($1::text[]) OR c.contenido_especifico_id=ANY($1::text[])
+      OR EXISTS(SELECT 1 FROM produccion_revistas_contenidos rc WHERE rc.id_contenido=c.id_contenido AND rc.id_revista=ANY($2::text[]))
       OR c.publicacion_num_web ~ $3
       OR EXISTS(SELECT 1 FROM produccion_control_redaccion e WHERE e.id_contenido=c.id_contenido))
-    ORDER BY c.id_contenido`,[revista.id_publicacion,revista.id_revista,number?`(?:[^0-9]|^)${number}$`:'a^']);
-  const links = await getPgPool().query('SELECT id_contenido,tipo FROM produccion_revistas_contenidos WHERE id_revista=$1', [revista.id_revista]);
+    ORDER BY c.id_contenido`,[publicationIds,magazineIds,number?`(?:[^0-9]|^)${number}$`:'a^']);
+  const links = await getPgPool().query('SELECT id_contenido,tipo FROM produccion_revistas_contenidos WHERE id_revista=ANY($1::text[])', [magazineIds]);
   const editorials = await getPgPool().query(`SELECT id_contenido,revista,espana_previsto_numero,latam_previsto_numero,especial_numero,hueco_previsto
     FROM produccion_control_redaccion WHERE id_contenido IS NOT NULL`);
   const editorialIds = new Set(editorials.rows.filter(article => matchesEditorial(article, revista)).map(article => article.id_contenido));
@@ -107,7 +109,7 @@ export async function getMagazineManagement(idRevista) {
     byContent.get(link.id_contenido).add(link.tipo);
   }
   const matches = contents.flatMap(content => {
-    const direct = content.id_publicacion === revista.id_publicacion || content.contenido_especifico_id === revista.id_publicacion;
+    const direct = publicationIds.includes(content.id_publicacion) || publicationIds.includes(content.contenido_especifico_id);
     const legacy = matchesLegacy(content, revista);
     const explicit = byContent.get(content.id_contenido);
     if (!direct && !legacy && !explicit && !editorialIds.has(content.id_contenido)) return [];
@@ -115,8 +117,8 @@ export async function getMagazineManagement(idRevista) {
   });
   const ids = [...new Set(matches.map(item => item.id_contenido))];
   const materials = ids.length ? (await getPgPool().query(`SELECT m.* FROM produccion_materiales m
-    WHERE m.id_contenido=ANY($1::text[]) AND (m.id_revista=$2 OR m.id_revista IS NULL) ORDER BY m.fecha_aportado,m.id_material`, [ids, revista.id_revista])).rows : [];
-  const finalPages=(await getPgPool().query('SELECT contenido_id,numero_pagina,tipo_pagina FROM contenidos_revistas_db WHERE revista_id=$1 ORDER BY numero_pagina',[revista.id_revista])).rows;
+    WHERE m.id_contenido=ANY($1::text[]) AND (m.id_revista=ANY($2::text[]) OR m.id_revista IS NULL) ORDER BY m.fecha_aportado,m.id_material`, [ids, magazineIds])).rows : [];
+  const finalPages=(await getPgPool().query('SELECT contenido_id,numero_pagina,tipo_pagina FROM contenidos_revistas_db WHERE revista_id=ANY($1::text[]) ORDER BY numero_pagina',[magazineIds])).rows;
   return { revista: { ...revista, region: magazineRegion(revista), sector: magazineSector(revista) },
     contenidos: matches.map(content => ({ ...content, paginas_definitivas:finalPages.filter(page=>page.contenido_id===content.id_contenido&&(content.tipo==='articulos')===/art[ií]culo/i.test(page.tipo_pagina)).map(page=>page.numero_pagina),materiales: materials.filter(m => m.id_contenido === content.id_contenido && m.tipo === content.tipo) })) };
 }
@@ -134,7 +136,9 @@ export async function ensureProductionContentFolders(db, idContenido, idPublicac
 
 async function validateDestination(db, data) {
   const idContenido = String(data.id_contenido || '').trim();
-  const idRevista = String(data.id_revista || '').trim();
+  const requestedMagazine = String(data.id_revista || '').trim();
+  const idRevista = requestedMagazine ? await resolveMagazineIssueId(requestedMagazine,db) : '';
+  if(requestedMagazine&&!idRevista)throw new Error('Revista no encontrada');
   const tipo = ['articulos', 'anuncios', 'otros'].includes(data.tipo) ? data.tipo : null;
   if (!idContenido || !tipo) throw new Error('Contenido y tipo obligatorios');
   if (idRevista && tipo === 'otros') throw new Error('Otros contenidos no pueden asignarse a revista');

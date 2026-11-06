@@ -1,5 +1,6 @@
 "use client";
 import {useEffect,useState} from "react";
+import {findMagazineIssue} from '@/app/lib/magazineReference';
 import {RevistaService} from "@/app/service/RevistaService";
 export type Linea = {
   id_linea_propuesta?: string;
@@ -89,6 +90,8 @@ export function ServiceWizardBody({ step, linea, grupos, servicios, revistas, on
     });
     return Array.from(options.values());
   };
+  const selectedIssue=findMagazineIssue(revistas,linea.id_publicacion);
+  if(selectedIssue)linea={...linea,id_publicacion:selectedIssue.id_publicacion,medio_publicacion:selectedIssue.medio_publicacion,edicion_publicacion:selectedIssue.edicion_publicacion,detalle_publicacion:selectedIssue.detalle_publicacion};
   const availableRevistas=revistas.filter(item=>String(item.estado_publicacion||'').toLowerCase()!=='publicada');
   const medios = uniqueValues(availableRevistas.map((item) => item.medio_publicacion));
   const editions = uniqueValues(availableRevistas.filter((item) => optionKey(item.medio_publicacion) === optionKey(linea.medio_publicacion)).map((item) => item.edicion_publicacion));

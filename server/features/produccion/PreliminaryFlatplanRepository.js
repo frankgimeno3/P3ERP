@@ -19,7 +19,7 @@ export function flatplanSources(contents, editorials=[]) {
    const cover=tipo==='anuncios'?/INT[.\s]*PORT|INTERIOR.*PORT/.test(spec)?'inside':/PORTADA/.test(spec)&&!/CONTRA/.test(spec)?'cover':null:null;
    const pages=cover?1:explicit?Number(explicit[1]):types.length>1?tipo==='articulos'?Math.max(1,numbered.length-Number(specCount?.[1]||1)):Number(specCount?.[1]||1):/DOBLE|P\.2\+P\.3/.test(spec)?2:specCount?Number(specCount[1]):numbered.length>1?numbered.length:1;
    const uncertain=!cover&&!explicit&&!/DOBLE|P\.2\+P\.3/.test(spec)&&(tipo==='articulos'&&types.length>1?numbered.length<=Number(specCount?.[1]||1):!specCount&&numbered.length===0);
-   sources.push({id:`${id}:${tipo}`,contentId:id,type:tipo==='articulos'?'Artículo':'Anuncio',account:c.nombre_empresa||c.cliente_hoja||editorial?.empresa||'Sin cuenta',detail:editorial?.titulo||c.nombre_contenido||c.especificaciones_contenido||id,pages:Math.max(1,Math.min(100,pages)),uncertain,cover,arrival:materials.length?new Date(Math.min(...materials)).toISOString():null,sourceOrder:Number(c.datos_importacion?.fila||c.datos_importacion?.original?.sourceRow||editorial?.id||0),sourceNote:materials.length?'Fecha de recepción de materiales': 'Sin fecha de recepción: orden de la hoja importada',originalPages:raw});
+   sources.push({id:`${id}:${tipo}`,contentId:id,formato_revista:c.formato_revista||'impreso_digital',type:tipo==='articulos'?'Artículo':'Anuncio',account:c.nombre_empresa||c.cliente_hoja||editorial?.empresa||'Sin cuenta',detail:editorial?.titulo||c.nombre_contenido||c.especificaciones_contenido||id,pages:Math.max(1,Math.min(100,pages)),uncertain,cover,arrival:materials.length?new Date(Math.min(...materials)).toISOString():null,sourceOrder:Number(c.datos_importacion?.fila||c.datos_importacion?.original?.sourceRow||editorial?.id||0),sourceNote:materials.length?'Fecha de recepción de materiales': 'Sin fecha de recepción: orden de la hoja importada',originalPages:raw});
   }
  }
  // Legacy editorial rows can exist without a production content ID. Include
@@ -42,6 +42,7 @@ async function sourceData(id) {
 }
 export async function getPreliminaryFlatplan(id, pool=getPgPool(), load=sourceData) {
  const data=await load(id);if(!data)return null;
+ id=data.revista.id_revista||id;
  let stored=(await pool.query('SELECT plan,version FROM produccion_planillos_previos WHERE id_revista=$1',[id])).rows[0];
  if(!stored){await pool.query('INSERT INTO produccion_planillos_previos(id_revista,plan) VALUES($1,$2::jsonb) ON CONFLICT DO NOTHING',[id,JSON.stringify(createFlatplan(data.sources,Number(data.revista.num_paginas)||8))]);stored=(await pool.query('SELECT plan,version FROM produccion_planillos_previos WHERE id_revista=$1',[id])).rows[0];}
  const aligned=alignFlatplan(stored.plan);
@@ -54,6 +55,7 @@ export async function getPreliminaryFlatplan(id, pool=getPgPool(), load=sourceDa
 }
 export async function updatePreliminaryFlatplan(id,body, pool=getPgPool(), load=sourceData) {
  const data=await load(id);if(!data)return null;
+ id=data.revista.id_revista||id;
  const db=await pool.connect();
  try {
   await db.query('BEGIN');
