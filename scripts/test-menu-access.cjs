@@ -27,6 +27,13 @@ for(const role of appRoles){
  for(const method of ['GET','POST','PATCH','DELETE'])for(const resource of ['media','media/id/content','media/presign','folders','papelera','access'])assert.equal(canAccessApiPath(role,'/api/v1/mediateca/'+resource,method),allowed,`${role} ${resource} ${method}`);
 }
 const flatten=entries=>entries.flatMap(entry=>entry.type==='page'?[entry.href]:flatten(entry.children));
+const operations=dashboardMenu.find(module=>module.id==='operaciones');
+const tables=operations.children.find(entry=>entry.id==='tablas');
+const database=operations.children.find(entry=>entry.id==='bbdd');
+assert.deepEqual(tables.children.map(entry=>entry.label),['Ferias','Artículos','Revistas','Documentación','Servicios']);
+assert.deepEqual(database.children.map(entry=>entry.label),['Import-export','Eliminación cuentas']);
+assert(operations.children.some(entry=>entry.type==='page'&&entry.href==='/dashboard/operaciones/tareas'));
+assert.equal(new Set(flatten(operations.children)).size,flatten(operations.children).length);
 for(const role of appRoles){
  const visible=dashboardMenu.filter(module=>canViewModule(role,module.id)).flatMap(module=>flatten(visibleEntries(module.children,role)));
  for(const href of visible)assert(canAccessDashboardPath(role,href),`${role} must never see blocked link ${href}`);

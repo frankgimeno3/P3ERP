@@ -23,6 +23,9 @@ const MiddleNav: FC<MiddleNavProps> = ({ tituloprincipal, currentLabel }) => {
     '/dashboard/produccion',
     '/dashboard/administracion',
     '/dashboard/operaciones',
+    '/dashboard/produccion/gestion-contenidos',
+    '/dashboard/produccion/repositorio/contenidos',
+    '/dashboard/produccion/repositorio/materiales',
     '/dashboard/operaciones/data/importar',
     '/dashboard/operaciones/data/exportar'
     ];
@@ -37,10 +40,21 @@ const MiddleNav: FC<MiddleNavProps> = ({ tituloprincipal, currentLabel }) => {
   };
 
    const renderSegmentLabel = (segment: string, fullPath: string) => {
+    const labels:Record<string,string>={
+      '/dashboard/produccion/gestion-contenidos':'Gestión contenidos',
+      '/dashboard/produccion/gestion-contenidos/revista':'Contenido revista',
+      '/dashboard/produccion/gestion-contenidos/otros':'Otro contenido',
+      '/dashboard/produccion/repositorio':'Repositorio',
+      '/dashboard/produccion/repositorio/contenidos':'Contenidos',
+      '/dashboard/produccion/repositorio/materiales':'Materiales',
+      '/dashboard/operaciones/data':'Import-export',
+      '/dashboard/operaciones/gestion_cuentas':'Eliminación cuentas',
+    };
     if (fullPath === '/' || fullPath === '/dashboard') {
       return <Home className="h-4 w-4 text-white" />;  
     }
     if (currentLabel && fullPath === buildPath(pathSegments.length - 1)) return currentLabel;
+    if(labels[fullPath])return labels[fullPath];
     let label = segment;
     try { label = decodeURIComponent(segment); } catch { /* Preserve malformed legacy segments. */ }
     return label.charAt(0).toUpperCase() + label.slice(1);

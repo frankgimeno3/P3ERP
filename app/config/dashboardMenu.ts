@@ -71,15 +71,18 @@ export const dashboardMenu: DashboardMenuModule[] = [
     id: "operaciones",
     label: "Operaciones",
     children: [
-      page("Ferias", "/dashboard/operaciones/ferias"),
-      page("Artículos", "/dashboard/operaciones/articulos"),
-      page("Revistas", "/dashboard/operaciones/revistas"),
-      page("Documentación", "/dashboard/operaciones/documentacion"),
+      group("tablas", "Tablas", [
+        page("Ferias", "/dashboard/operaciones/ferias"),
+        page("Artículos", "/dashboard/operaciones/articulos"),
+        page("Revistas", "/dashboard/operaciones/revistas"),
+        page("Documentación", "/dashboard/operaciones/documentacion"),
+        page("Servicios", "/dashboard/operaciones/servicios"),
+      ]),
       page("Tareas", "/dashboard/operaciones/tareas"),
-      page("Servicios", "/dashboard/operaciones/servicios"),
-      page("Gestión de BBDD", "/dashboard/operaciones/data"),
-
-      page("Gestión de cuentas", "/dashboard/operaciones/gestion_cuentas"),
+      group("bbdd", "BBDD", [
+        page("Import-export", "/dashboard/operaciones/data"),
+        page("Eliminación cuentas", "/dashboard/operaciones/gestion_cuentas"),
+      ]),
     ],
   },
   {

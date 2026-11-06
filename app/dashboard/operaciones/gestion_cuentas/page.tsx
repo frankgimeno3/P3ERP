@@ -55,10 +55,10 @@ export default function GestionCuentasPage() {
 
   return (
     <div className="min-h-screen bg-gray-100 text-gray-700">
-      <MiddleNav tituloprincipal="Gestion de cuentas" />
+      <MiddleNav tituloprincipal="Eliminación cuentas" />
       <main className="px-12 py-10">
         <section className="mb-6 bg-white p-6 shadow-sm">
-          <h1 className="text-xl font-semibold text-blue-950">Gestion de cuentas</h1>
+          <h1 className="text-xl font-semibold text-blue-950">Eliminación cuentas</h1>
           <p className="mt-2 text-sm text-gray-500">Tabla operativa para localizar y eliminar cuentas.</p>
         </section>
 

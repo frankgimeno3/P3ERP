@@ -10,6 +10,7 @@ import { AgenteService } from "@/app/service/AgenteService";
 import { CuentaService } from "@/app/service/CuentaService";
 import MisPendientes from "@/app/dashboard/comercial/propuestas/componentesPropuestas/tablaspropuestas/MisPendientes";
 import MyTasksPanel from '@/app/components/tasks/MyTasksPanel';
+import MyContentsPanel from '@/app/components/contents/MyContentsPanel';
 import { canViewModule, normalizeRole } from "@/app/config/roleAccess";
 
 const tabs = [
@@ -201,7 +202,7 @@ export default function DashboardPage() {
                     </p>
                     <p>Desde esta página también puedes acceder rápidamente a información vinculada contigo:</p>
                     <ul className="list-disc space-y-1 pl-5">
-                      <li><strong>Mis contenidos:</strong> los contenidos relacionados con las campañas que gestionas.</li>
+                      <li><strong>Mis contenidos:</strong> contenidos asignados a ti, organizados en Requiere atención, Pendiente de recibir y En proceso.</li>
                       <li><strong>Mis cuentas:</strong> las cuentas de clientes o potenciales clientes que tienes asignadas.</li>
                       <li><strong>Mis propuestas pendientes:</strong> las propuestas que has creado y que todavía esperan la aceptación o el rechazo del cliente.</li>
                     </ul>
@@ -268,11 +269,12 @@ export default function DashboardPage() {
               <button
                 type="button"
                 onClick={() => router.push("/dashboard/produccion/hoja_produccion/crear")}
-                className="rounded bg-blue-950 px-4 py-2 text-sm font-medium text-white hover:bg-blue-900"
+                className="cursor-pointer rounded bg-blue-950 px-4 py-2 text-sm font-medium text-white hover:bg-blue-900"
               >
                 Agregar contenido
               </button>
             </div>
+            <MyContentsPanel/>
           </div>
         )}
 

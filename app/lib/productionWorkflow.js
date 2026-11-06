@@ -17,6 +17,7 @@ export function productionStage(row) {
   if (/corregido|revision/.test(state)) return 'revision';
   if (/correccion/.test(state)) return 'correccion';
   if (/maquetacion|pasar produccion/.test(state)) return 'maquetacion';
+  if (/pendiente.*recibir|no recibid|no aportad/.test(clean(row.estado_material_contenido))) return 'recibir';
   if ((row.materiales || []).some(m=>m.es_version_acabada)) return 'revision';
   const received=(row.materiales || []).length || /recibido|ok|maquet/.test(clean(row.tipo==='articulos'?row.articulo_hoja:row.anuncio_hoja));
   if (!received && row.id_contrato) return 'recibir';

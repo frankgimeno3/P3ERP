@@ -109,6 +109,7 @@
   "/dashboard/operaciones/documentacion": {
     "summary": "Centraliza las guías internas y otros documentos de consulta.",
     "steps": [
+      "Accede desde Operaciones > Tablas. Esta carpeta agrupa Ferias, Artículos, Revistas, Documentación y Servicios.",
       "Selecciona Guías de uso u Otros documentos.",
       "En las guías, elige módulo y página y abre su explicación.",
       "En otros documentos, consulta el calendario laboral o el de publicaciones y deadlines.",
@@ -132,6 +133,7 @@
   "/dashboard/operaciones/revistas": {
     "summary": "Gestiona revistas pendientes y planifica sus siete eventos en un calendario de 24 meses.",
     "steps": [
+      "Accede desde Operaciones > Tablas. Esta carpeta agrupa Ferias, Artículos, Revistas, Documentación y Servicios.",
       "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "En Pendientes el orden es Vidrio Plano, Ventanas, Quién es Quién y el resto. Estas tres revistas tienen subpestañas de edición; no se repite la columna ni el filtro de edición. Número es la primera columna. Un solo desplegable Filtros, inicialmente cerrado, muestra los filtros compactos de las columnas visibles.",
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
@@ -151,10 +153,11 @@
       "Aporta un ZIP como material descargable o añade archivos individuales sucesivamente. Cada material tiene nombre y descripción opcional. Máximo 100 materiales y 200 MB por archivo.",
       "La confirmación comprueba los datos antes de habilitar Subir. Los materiales se guardan en S3 y se registran junto al contenido en una transacción; reintentar no duplica la carga. Al terminar se abre el detalle con sus materiales.",
       "Las siete pestañas en fila son VIDRIO ESPAÑA, VENTANAS ESPAÑA, VIDRIO LATAM, VENTANAS LATAM, QQ VIDRIO, QQ VENTANAS y HUECO. España corresponde a Iberia, LATAM a América Latina y QQ a Quién es Quién según su edición.",
-      "La tabla muestra un único número por revista, edición y especial. Impreso y digital comparten ficha, calendario y contenidos. Cada contenido indica su formato: Impreso, Digital o Impreso + digital. Los enlaces antiguos de ambas variantes abren el mismo número; los identificadores históricos se conservan. Las pestañas se ajustan al espacio disponible sin scroll y el panel no lleva borde exterior. Pulsa la fila o utiliza Enter o espacio para abrir sus contenidos. Arriba a la derecha están Agregar contenidos y Ver otro contenido.",
+      "La tabla muestra un único número por revista, edición y especial. Impreso y digital comparten ficha, calendario y contenidos. Cada contenido indica su formato: Impreso, Digital o Impreso + digital. Los enlaces antiguos de ambas variantes abren el mismo número; los identificadores históricos se conservan. Las pestañas se ajustan al espacio disponible sin scroll y el panel no lleva borde exterior y la tabla utiliza bordes gris muy claro. Pulsa la fila o utiliza Enter o espacio para abrir sus contenidos. Arriba a la derecha están Agregar contenidos y Otro contenido pendiente.",
       "Los contenidos importados que incluían artículo y anuncio aparecen en ambas vistas con el mismo ID y contrato; no se duplican sus líneas de facturación.",
       "Los contenidos cuyo canal o servicio es Revista se gestionan aquí aunque todavía no tengan destino. Pendientes de asignar revista muestra solo los que no tienen una publicación válida vinculada, incluida la planificación editorial histórica. Asignar revista exige elegir el número concreto; su formato se edita en la ficha del contenido. La asociación conserva el contenido, sus materiales y sus vínculos anteriores, con auditoría.",
-      "Las rutas antiguas de gestión llevan a esta página; las fichas concretas de contenidos y materiales se abren siempre en Repositorio."
+      "Las rutas antiguas de gestión llevan a esta página; las fichas concretas de contenidos y materiales se abren siempre en Repositorio.",
+      "La barra de navegación superior muestra el recorrido de esta página y permite volver a los listados y al dashboard; también aparece en las fichas de contenidos y materiales."
     ]
   },
   "/dashboard/produccion/gestion-contenidos/otros": {
@@ -163,7 +166,8 @@
       "Muestra solo contenidos que no son de revista, con servicio, empresa, agente y estado. Las pestañas utilizan los canales del catálogo de servicios excepto Revista, con contadores y una vista Todos. Los registros importados sin canal conservan sus datos: NEWS se agrupa en Vidrioperfil newsletter, WEB y BANNER en Vidrioperfil portal, y suscripciones o newsletters personalizados en su canal correspondiente. Los contenidos de revista, incluso sin número asignado, se gestionan exclusivamente en Contenido revista. Los publicados, anulados y cancelados se consultan en Repositorio.",
       "Arriba a la derecha puedes Agregar contenidos o ir a Ver contenido revista. Las altas utilizan el mismo asistente de cinco fases y respetan el modo prueba del contrato o de la cuenta.",
       "La tabla no tiene columna de materiales ni botones de carga. Pulsa la fila para abrir la ficha en Repositorio: Aportar material está en su apartado Materiales y Subir versión en Versión acabada. Cada versión recibe automáticamente el siguiente número y conserva los archivos anteriores.",
-      "Los filtros se reúnen en una única tarjeta inicialmente cerrada."
+      "Los filtros se reúnen en una única tarjeta inicialmente cerrada.",
+      "La barra de navegación superior muestra el recorrido de esta página y permite volver a los listados y al dashboard; también aparece en las fichas de contenidos y materiales."
     ]
   },
   "/dashboard/produccion/gestion-contenidos/revista/[id_revista]": {
@@ -172,7 +176,8 @@
       "Las pestañas son Fase 1, Fase 2, Fase 3, Fase 4, Fase 5 y Todo, sin fase cero. Cada una lleva un icono a su derecha y, al seleccionarla, muestra debajo su título: Contratado pendiente de recibir, Pendiente redacción, Pendiente maquetación, Pendiente corrección o Pendiente revisión. Sus iconos son reloj, tecla con lápiz, imagen con lápiz, ojo y visto bueno; Todo utiliza un informe con una lista por puntos y no lleva número de fase. Todo reúne los contenidos pendientes de esa revista; publicados y cancelados se conservan en Repositorio.",
       "Las fases 1–5 quedan agrupadas a la izquierda y Todo a la derecha. Cada fase tiene subpestañas Anuncios y Artículos con sus cantidades. La tabla muestra nombre del contenido, formato, páginas asignadas, empresa y agente. Pulsa la fila o usa Enter o espacio para abrir la ficha.",
       "La fase se toma del estado del contenido. Para registros históricos sin fase explícita se consideran los materiales recibidos, el contrato y el tipo; un material acabado pendiente pasa a revisión. Puedes elegir las nuevas fases desde Datos y detalles de su ficha.",
-      "Abre la ficha del contenido para Aportar material o Subir versión desde sus apartados correspondientes. Las versiones se guardan como materiales, con indicador de versión acabada y número correlativo desde V01, sin sobrescribir versiones anteriores."
+      "Abre la ficha del contenido para Aportar material o Subir versión desde sus apartados correspondientes. Las versiones se guardan como materiales, con indicador de versión acabada y número correlativo desde V01, sin sobrescribir versiones anteriores.",
+      "La barra de navegación superior muestra el recorrido de esta página y permite volver a los listados y al dashboard; también aparece en las fichas de contenidos y materiales."
     ]
   },
   "/dashboard/produccion/repositorio": {
@@ -180,14 +185,16 @@
     "steps": [
       "Alterna Contenidos y Materiales. Todos los estados permanecen disponibles y se localizan mediante la tarjeta de filtros, inicialmente cerrada.",
       "Pulsa cualquier parte de una fila o usa Enter o espacio para abrir su ficha. Las URLs antiguas de fichas de contenido se redirigen aquí.",
-      "Las tablas de Repositorio no ofrecen altas de contenidos ni de materiales. Los contenidos se crean desde Gestión contenidos; los materiales y versiones se aportan desde la ficha concreta del contenido."
+      "Las tablas de Repositorio no ofrecen altas de contenidos ni de materiales. Los contenidos se crean desde Gestión contenidos; los materiales y versiones se aportan desde la ficha concreta del contenido.",
+      "La barra de navegación superior muestra el recorrido de esta página y permite volver a los listados y al dashboard; también aparece en las fichas de contenidos y materiales."
     ]
   },
   "/dashboard/produccion/repositorio/materiales/[id]": {
     "summary": "Ficha de material o versión acabada del repositorio de producción.",
     "steps": [
       "Muestra nombre, descripción, identificador y, si procede, versión acabada V01, V02 y siguientes. Abre el archivo con una descarga autorizada del ERP.",
-      "El enlace al contenido abre su ficha en Repositorio. Puedes guardar la revisión y los comentarios del material; no crear nuevos materiales desde esta ficha."
+      "El enlace al contenido abre su ficha en Repositorio. Puedes guardar la revisión y los comentarios del material; no crear nuevos materiales desde esta ficha.",
+      "La barra de navegación superior muestra el recorrido de esta página y permite volver a los listados y al dashboard; también aparece en las fichas de contenidos y materiales."
     ]
   },
   "/dashboard/produccion/repositorio/contenidos/[id]": {
@@ -196,7 +203,8 @@
       "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "La ficha tiene tres apartados: Datos y detalles, Materiales y Versión acabada. Cada material ordinario se muestra en una tarjeta que abre su ficha en Repositorio.",
       "Edita especificaciones, Publicación / Nº web, agente por nombre, fecha límite con día, mes y año separados, estado y formato en revista. Elige Impreso, Digital o Impreso + digital; los contenidos por contrato parten de Impreso + digital. Pulsa Guardar cambios. El formato también se muestra y edita desde el control de artículos.",
-      "La tabla de versiones acabadas aparece de más actual a más antigua, V02 antes de V01. Cada versión es un material con archivo propio en S3 y conserva las anteriores. Usa Aportar material dentro de Materiales o Subir versión dentro de Versión acabada; si el contenido admite varios tipos o revistas, elige el destino en el formulario. Los contenidos nuevos se crean desde Gestión contenidos."
+      "La tabla de versiones acabadas aparece de más actual a más antigua, V02 antes de V01. Cada versión es un material con archivo propio en S3 y conserva las anteriores. Usa Aportar material dentro de Materiales o Subir versión dentro de Versión acabada; si el contenido admite varios tipos o revistas, elige el destino en el formulario. Los contenidos nuevos se crean desde Gestión contenidos.",
+      "La barra de navegación superior muestra el recorrido de esta página y permite volver a los listados y al dashboard; también aparece en las fichas de contenidos y materiales."
     ]
   },
   "/dashboard/operaciones/revistas/[id_revista]/contenidos": {
@@ -223,6 +231,7 @@
   "/dashboard/operaciones/ferias": {
     "summary": "Separa el catálogo de ferias de sus ediciones concretas.",
     "steps": [
+      "Accede desde Operaciones > Tablas. Esta carpeta agrupa Ferias, Artículos, Revistas, Documentación y Servicios.",
       "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "Al crear una edición, elige Intercambio en un selector Sí/No de la primera fila y escribe inicio y finalización en tres campos: día, mes y año.",
       "En ediciones, el filtro Pa?s usa el pa?s de la feria del cat?logo; Intercambio se elige con S?/No y las fechas se introducen por d?a, mes y a?o.",
@@ -376,7 +385,7 @@
     ]
   },
   "/dashboard/operaciones/data": {
-    "summary": "Centraliza los cambios con Excel y las actualizaciones de cuentas y contactos procedentes de Vtiger.",
+    "summary": "Import-export, en Operaciones > BBDD, centraliza los cambios con Excel y las actualizaciones de cuentas y contactos procedentes de Vtiger.",
     "steps": [
       "Usa Cambios con Excel para acceder a las importaciones y exportaciones habituales.",
       "En Actualizaciones Vtiger, adjunta un CSV o Excel y valida que sus columnas coincidan exactamente con el formato esperado.",
@@ -417,12 +426,11 @@
     ]
   },
   "/dashboard/operaciones/gestion_cuentas": {
-    "summary": "Configura procesos operativos relacionados con cuentas.",
+    "summary": "Eliminación cuentas, en Operaciones > BBDD, permite localizar y eliminar cuentas.",
     "steps": [
-      "Selecciona la gestión que necesitas revisar.",
-      "Consulta cuentas, responsables y estado.",
-      "Actualiza los datos operativos y guarda. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados.",
-      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
+      "Filtra por ID, empresa, país o agente. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada, con una etiqueta fina encima de cada campo.",
+      "Consulta los datos de la cuenta y pulsa Eliminar en su fila. La eliminación requiere confirmar la cuenta concreta; un error se muestra sin retirar la fila.",
+      "Pulsa el SVG de una columna para alternar el orden ascendente y descendente."
     ]
   },
   "/dashboard/contabilidad": {
@@ -721,6 +729,7 @@
   "/dashboard/operaciones/servicios": {
     "summary": "Gestiona el catálogo real de servicios y canales utilizado en propuestas.",
     "steps": [
+      "Accede desde Operaciones > Tablas. Esta carpeta agrupa Ferias, Artículos, Revistas, Documentación y Servicios.",
       "Alterna las pestañas Servicios y Canales. Los botones superiores permiten crear ambos registros y agregar una revista mediante el mismo formulario del catálogo de Revistas.",
       "Pulsa un canal para ver y editar su nombre y consultar sus servicios. Crear servicio asociado fija ese canal.",
       "Pulsa un servicio desde cualquiera de las tablas para abrir su ficha y editar código al crear, canal, tarifa, soporte, fechas, concepto de factura, disponibilidad y contenido en cuatro idiomas. Oculto evita que aparezca en propuestas.",
@@ -834,6 +843,7 @@
   "/dashboard/operaciones/tareas": {
     "summary": "Supervisa las tareas por agente, consulta el calendario e importa tareas de vtiger por fases.",
     "steps": [
+      "Tareas permanece directamente en Operaciones, fuera de las carpetas Tablas y BBDD.",
       "Alterna Tareas por agente, Calendario y Sin agente. Las tareas sin responsables se muestran exclusivamente en esa pestaña adicional, en lugar de aparecer debajo de los agentes. El calendario muestra los meses a la izquierda y filtros y tarjetas a la derecha. Puedes cambiar el año, seleccionar un día y abrir el detalle de cada tarea.",
       "Importar tareas de vtiger abre un asistente de cuatro fases: cargar CSV, revisar agentes, revisar cuentas y confirmar. Las coincidencias únicas de nombre o correo se proponen automáticamente; los nombres ambiguos quedan sin asociar. Puedes asignar varios agentes a una tarea, y no se crean agentes ni cuentas. Los responsables y relaciones originales se conservan siempre.",
       "La revisión muestra tareas nuevas, ya registradas y sin asociación. Confirmar guarda el lote completo. Repetir el mismo archivo no duplica ni sobrescribe tareas. Como vtiger no exporta un ID, un registro con campos modificados se considera nuevo. Todos los campos originales se pueden consultar en el detalle, incluidas las descripciones completas y horarios.",
@@ -852,7 +862,8 @@
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
       "Calendario abre el mes actual con el título mes - año y flechas para navegar al mes anterior o siguiente, incluidos los cambios de año. Muestra los siete días, de lunes a domingo, con todos los días del mes en su posición real y los años bisiestos. Hoy se destaca en azul con su etiqueta y se actualiza según la hora de Madrid; el botón Hoy regresa al mes actual. Las tareas de domingo aparecen también en su casilla. A la derecha están las tarjetas del mes y las tareas sin fecha, con Filtros encima.",
       "Al pasar el cursor o enfocar una tarea en el calendario se resalta en azul su etiqueta y su tarjeta; al hacerlo en la tarjeta se resalta también la etiqueta.",
-      "Las descripciones de tareas muestran como máximo 55 palabras. Abrir permite leer el texto completo en un modal que se cierra con × o Escape."
+      "Las descripciones de tareas muestran como máximo 55 palabras. Abrir permite leer el texto completo en un modal que se cierra con × o Escape.",
+      "Mis contenidos muestra solo los contenidos pendientes asignados a tu agente; si no tienen agente propio, utiliza el gestor actual del contrato. Requiere atención reúne incidencias y fechas límite vencidas. Pendiente muestra la fase 1: material pendiente de recibir. En proceso reúne las fases 2 a 5. Cada subpestaña tiene su contador; un contenido con incidencia o vencido también permanece en su fase. Pulsa una fila para abrir su ficha en Repositorio. Los filtros se muestran juntos en una tarjeta inicialmente cerrada."
     ]
   },
   "/dashboard/contabilidad/prevision-liquidez/vista-juan": {
@@ -1011,6 +1022,7 @@
   "/dashboard/operaciones/articulos": {
     "summary": "Seguimiento editorial de contenidos de tipo artículo, conservando sus datos históricos y números previstos.",
     "steps": [
+      "Accede desde Operaciones > Tablas. Esta carpeta agrupa Ferias, Artículos, Revistas, Documentación y Servicios.",
       "Pendientes es la vista principal; Publicados conserva el archivo sin borrar los artículos. Una publicación parcial sigue pendiente hasta completar todos los números previstos.",
       "Las altas se realizan desde Producción → Gestión producción → Agregar contenidos. No hay un alta independiente de artículos. Pulsa una fila para editar los datos editoriales del mismo contenido.",
       "Puede vincularse opcionalmente como extra post-contrato a un contrato de su cuenta. Los extras se guardan separados de las líneas firmadas y no modifican importes ni generan cobros. Retirar o cambiar el vínculo mantiene sincronizada la ficha del contrato.",
