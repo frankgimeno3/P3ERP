@@ -16,6 +16,7 @@ export type DashboardMenuEntry = DashboardMenuPage | DashboardMenuGroup;
 export type DashboardMenuModule = {
   id: string;
   label: string;
+  icon: "briefcase" | "pencil" | "euro" | "monitor" | "book" | "pointer";
   children: DashboardMenuEntry[];
 };
 
@@ -27,6 +28,7 @@ export const dashboardMenu: DashboardMenuModule[] = [
   {
     id: "comercial",
     label: "Comercial",
+    icon: "briefcase",
     children: [
       page("Cuentas", "/dashboard/comercial/cuentas"),
       page("Contactos", "/dashboard/comercial/contactos"),
@@ -37,18 +39,20 @@ export const dashboardMenu: DashboardMenuModule[] = [
   {
     id: "produccion",
     label: "Producción",
+    icon: "pencil",
     children: [
       page("Hoja de producción", "/dashboard/produccion/hoja_produccion"),
       group("gestion-contenidos", "Gestión contenidos", [
         page("Contenido revista", "/dashboard/produccion/gestion-contenidos/revista"),
         page("Otro contenido", "/dashboard/produccion/gestion-contenidos/otros"),
       ]),
-      page("Repositorio", "/dashboard/produccion/repositorio"),
+      page("Almacenamiento", "/dashboard/produccion/repositorio"),
     ],
   },
   {
     id: "administracion",
     label: "Administración",
+    icon: "euro",
     children: [
       group("liquidaciones", "Liquidaciones", [
         page("Tarjetas", "/dashboard/administracion/liquidaciones/tarjetas"),
@@ -70,6 +74,7 @@ export const dashboardMenu: DashboardMenuModule[] = [
   {
     id: "operaciones",
     label: "Operaciones",
+    icon: "monitor",
     children: [
       group("tablas", "Tablas", [
         page("Ferias", "/dashboard/operaciones/ferias"),
@@ -88,6 +93,7 @@ export const dashboardMenu: DashboardMenuModule[] = [
   {
     id: "contabilidad",
     label: "Contabilidad",
+    icon: "book",
     children: [
         page("Extractos", "/dashboard/contabilidad/extractos"),
         page("Conciliación", "/dashboard/contabilidad/extractos/conciliacion"),
@@ -97,6 +103,7 @@ export const dashboardMenu: DashboardMenuModule[] = [
   {
     id: "direccion",
     label: "Dirección",
+    icon: "pointer",
     children: [
       group("laboral", "LABORAL", [
         page("Agentes", "/dashboard/operaciones/agentes"),
@@ -124,4 +131,11 @@ export function flattenMenuEntries(entries: DashboardMenuEntry[], groupLabel?: s
       ? [{ ...entry, groupLabel }]
       : flattenMenuEntries(entry.children, entry.label),
   );
+}
+
+/** La coincidencia más concreta evita seleccionar a la vez una página y su descendiente. */
+export function getDashboardMenuLocation(pathname: string) {
+  return dashboardMenu.flatMap(module => flattenMenuEntries(module.children).map(page => ({page, module})))
+    .filter(({page}) => pathname === page.href || pathname.startsWith(`${page.href}/`))
+    .sort((a, b) => b.page.href.length - a.page.href.length)[0];
 }

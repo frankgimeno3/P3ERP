@@ -44,7 +44,7 @@ const MiddleNav: FC<MiddleNavProps> = ({ tituloprincipal, currentLabel }) => {
       '/dashboard/produccion/gestion-contenidos':'Gestión contenidos',
       '/dashboard/produccion/gestion-contenidos/revista':'Contenido revista',
       '/dashboard/produccion/gestion-contenidos/otros':'Otro contenido',
-      '/dashboard/produccion/repositorio':'Repositorio',
+      '/dashboard/produccion/repositorio':'Almacenamiento',
       '/dashboard/produccion/repositorio/contenidos':'Contenidos',
       '/dashboard/produccion/repositorio/materiales':'Materiales',
       '/dashboard/operaciones/data':'Import-export',
@@ -62,7 +62,7 @@ const MiddleNav: FC<MiddleNavProps> = ({ tituloprincipal, currentLabel }) => {
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-2 bg-gradient-to-r from-zinc-700 to-gray-800 px-4 py-2.5 text-white md:px-6">
-      <h2 className="min-w-0 max-w-full break-all text-xs font-semibold uppercase text-zinc-100 md:max-w-[38%] md:text-sm">{tituloprincipal}</h2>
+      <h2 data-page-title className="min-w-0 max-w-full break-all text-xs font-semibold uppercase text-zinc-100 md:max-w-[38%] md:text-sm">{tituloprincipal}</h2>
       <div className="flex min-w-0 flex-row flex-wrap items-center gap-1 pr-2 text-xs md:max-w-[60%] md:pr-4">
         {pathSegments.map((segment, index) => {
           const fullPath = buildPath(index);

@@ -30,7 +30,7 @@ const click=async(text)=>{const node=[...document.querySelectorAll('button')].fi
  await click('En proceso (2)');assert.equal(document.querySelectorAll('tbody tr').length,2);assert(!document.querySelector('tbody').textContent.includes('Esperando material'));
  await React.act(async()=>document.querySelector('tbody tr').dispatchEvent(new dom.window.KeyboardEvent('keydown',{key:'Enter',bubbles:true})));
  assert.equal(navigation.at(-1),'/dashboard/produccion/repositorio/contenidos/process');
- for(const [file,url,title] of [['gestion-contenidos','/dashboard/produccion/gestion-contenidos/revista/rev_216','Gestión contenidos'],['repositorio','/dashboard/produccion/repositorio/materiales/material_1','Repositorio de producción']]){
+ for(const [file,url,title] of [['gestion-contenidos','/dashboard/produccion/gestion-contenidos/revista/rev_216','Gestión contenidos'],['repositorio','/dashboard/produccion/repositorio/materiales/material_1','Almacenamiento de producción']]){
   pathname=url;const Layout=load(`app/dashboard/produccion/${file}/layout.tsx`).default;
   await React.act(async()=>root.render(React.createElement(Layout,null,React.createElement('div',{'data-page':true},'Ficha'))));
   assert.equal(document.querySelector('h2').textContent,title);assert(document.querySelector('[data-page]'));
