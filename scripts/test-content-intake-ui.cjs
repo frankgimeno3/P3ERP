@@ -5,8 +5,17 @@ Object.assign(global, { window: dom.window, document: dom.window.document, navig
 dom.window.HTMLElement.prototype.scrollIntoView = function () {};
 const React = require('react'), { createRoot } = require('react-dom/client'), cache = new Map(), calls = [], navigations = [];
 global.fetch = async (...args) => { calls.push({ method: 'PUT', url: args[0] }); return { ok: true }; };
+const magazines = [
+  ['vidrio-espana', 'Vidrio Plano', 'Iberia', 'España', 'Vidrio'],
+  ['ventanas-espana', 'Ventanas, Puertas, Cerramientos y Protección Solar', 'Iberia', 'España', 'Ventanas'],
+  ['vidrio-latam', 'Revista del Vidrio Plano', 'América Latina', 'América', 'Vidrio'],
+  ['ventanas-latam', 'Revista Ventanas', 'América Latina', 'América', 'Ventanas'],
+  ['qq-vidrio', 'Revista Quién es Quién', 'Edición Vidrio', 'Otro', 'Vidrio'],
+  ['qq-ventanas', 'Quién es Quién', 'Ventanas, Puertas, Cerramientos y Protección solar', 'Otro', 'Ventanas'],
+  ['hueco', 'Hueco Arquitectura', '2026', 'Otro', 'Hueco'],
+].map(([id_revista, revista, edicion, region, sector]) => ({ id_revista, revista, edicion, region, sector, numero_publicacion: id_revista }));
 const api = {
-  get: async url => { calls.push({ method: 'GET', url }); return { data: url.includes('opciones') ? { contracts: [], contents: [], magazines: [] } : url.includes('gestiones-produccion') ? [{ id_revista: 'mag', revista: 'Revista prueba', numero_publicacion: '1' }] : url.endsWith('/produccion/contenidos') ? [{ id_contenido: 'article_new', nombre_contenido: 'Artículo nuevo', categorias_gestion: ['articulo'], estado_contenido: 'Pendiente' }] : url.includes('/gestion') ? [{ id_contenido: 'test', nombre_contenido: 'Contenido pendiente', estado: 'Pendiente' }] : [] }; },
+  get: async url => { calls.push({ method: 'GET', url }); return { data: url.includes('opciones') ? { contracts: [], contents: [], magazines: [] } : url.includes('gestiones-produccion') ? magazines : url.endsWith('/produccion/contenidos') ? [{ id_contenido: 'article_new', nombre_contenido: 'Artículo nuevo', categorias_gestion: ['articulo'], estado_contenido: 'Pendiente' }] : url.includes('/gestion') ? [{ id_contenido: 'test', nombre_contenido: 'Contenido pendiente', nombre_servicio: 'Newsletter profesional', estado: 'Pendiente' }] : [] }; },
   post: async (url, data) => { calls.push({ method: 'POST', url, data }); return { data: url.endsWith('/validar') ? { ok: true, nombre: data.nombre, cuenta: 'Sin empresa' } : url.endsWith('/presign') ? { files: [{ uploadUrl: 'https://upload.invalid/file', mediaId: 'media', s3Key: 'key' }] } : { id_contenido: 'created' } }; }
 };
 function load(file) {
@@ -26,19 +35,50 @@ const root = createRoot(document.getElementById('root'));
 const click = async text => { const node = [...document.querySelectorAll('button')].find(n => n.textContent === text); assert(node, text); await React.act(async () => node.click()); };
 const submit = () => React.act(async () => document.querySelector('form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true })));
 const input = (node, value) => React.act(async () => { Object.getOwnPropertyDescriptor(dom.window.HTMLInputElement.prototype, 'value').set.call(node, value); node.dispatchEvent(new dom.window.Event('input', { bubbles: true })); });
+const select = (label, value) => React.act(async () => {
+  const node = document.querySelector(`select[aria-label="Filtrar ${label}"]`); assert(node, label);
+  Object.getOwnPropertyDescriptor(dom.window.HTMLSelectElement.prototype, 'value').set.call(node, value);
+  node.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+});
 (async () => {
+  const { productionMagazineFamily, productionMagazineSector } = load('app/config/productionMagazineFilters.js');
+  for (const magazine of magazines) {
+    assert.equal(productionMagazineFamily(magazine), magazine.id_revista);
+    assert.equal(productionMagazineSector(magazine), magazine.sector);
+  }
+  assert.equal(productionMagazineFamily({ revista: 'Revista desconocida', edicion: 'Iberia' }), '');
   const { canonicalProductionPath } = load('app/config/productionRoutes.js');
   assert.equal(canonicalProductionPath('/dashboard/produccion/contenidos/content'), '/dashboard/produccion/gestion/content');
   assert.equal(canonicalProductionPath('/dashboard/administracion/ferias/one'), '/dashboard/operaciones/ferias/one');
   assert.equal(canonicalProductionPath('/dashboard/produccion/contenidos-extra'), '/dashboard/produccion/contenidos-extra');
   const Page = load('app/dashboard/produccion/gestion/page.tsx').default;
   await React.act(async () => root.render(React.createElement(Page)));
-  assert.equal(document.querySelector('main').firstElementChild.textContent, 'Contenidos pendientes de publicar');
+  assert(document.querySelector('main > header h1').textContent.includes('Contenidos pendientes de publicar'));
+  assert(document.querySelector('main > header button').textContent.includes('Agregar contenidos'));
   assert.deepEqual([...document.querySelectorAll('[role="tab"]')].map(n => n.textContent), ['Artículos', 'Anuncios', 'Otros']);
   assert.equal([...document.querySelectorAll('button')].find(n => n.textContent === 'Filtrar por revista').getAttribute('aria-pressed'), 'true');
-  await click('Revista prueba'); assert(document.querySelector('tbody').textContent.includes('Contenido pendiente'));
+  for (const tab of ['Artículos', 'Anuncios']) {
+    await click(tab);
+    assert.equal(document.querySelectorAll('details').length, 1);
+    assert.equal(document.querySelector('details').open, false);
+    assert(!document.querySelector('[aria-label="Filtrar Revista"]'));
+    assert.equal(document.querySelector('[aria-label="Filtrar Publicación"]').options.length, 8);
+    for (const magazine of magazines) {
+      await select('Publicación', magazine.id_revista);
+      assert.equal(document.querySelectorAll('tbody tr').length, 1);
+      assert(document.querySelector('tbody').textContent.includes(magazine.id_revista));
+    }
+    await select('Publicación', ''); await select('Región', 'España'); await select('Sector', 'Vidrio');
+    assert.equal(document.querySelectorAll('tbody tr').length, 1);
+    assert(document.querySelector('tbody').textContent.includes('vidrio-espana'));
+    await select('Publicación', 'qq-vidrio'); assert.equal(document.querySelectorAll('tbody tr').length, 0);
+    await select('Publicación', ''); await select('Región', ''); await select('Sector', '');
+  }
+  await click('vidrio-espana'); assert(document.querySelector('tbody').textContent.includes('Contenido pendiente'));
   await click('Mostrar todos'); assert(document.querySelector('tbody a').href.endsWith('/gestion/test'));
   await click('Otros'); assert(![...document.querySelectorAll('button')].some(n => n.textContent === 'Filtrar por revista'));
+  assert([...document.querySelectorAll('th')].some(node => node.textContent.includes('Servicio')));
+  assert(document.querySelector('tbody').textContent.includes('Newsletter profesional'));
   await click('Agregar contenidos'); await React.act(async () => new Promise(resolve => setTimeout(resolve, 250)));
   await submit(); assert(document.querySelector('[role="alert"]').textContent.includes('tipo'));
   await click('Otro'); await submit(); await click('No'); await submit();

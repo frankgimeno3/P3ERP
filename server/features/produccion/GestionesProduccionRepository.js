@@ -3,6 +3,7 @@ import { getPgPool } from '../../database/pgClient.js';
 import { getRevistas, getRevistaById } from '../revista/RevistaRepository.js';
 import { assertObjectExistsInS3, createPresignedUpload } from '../mediateca/S3Service.js';
 import {articleMatchesMagazine} from '../../../app/config/editorialMagazine.js';
+import {productionMagazineSector} from '../../../app/config/productionMagazineFilters.js';
 import { productionMediaFolder } from './ProductionMediaFolders.js';
 import { contentTypes as managementContentTypes } from '../../../app/lib/productionManagement.js';
 import { externalUserEvent } from '../userEvents/ExternalUserEvents.js';
@@ -32,8 +33,7 @@ export function magazineRegion(revista) {
 }
 
 export function magazineSector(revista) {
-  const name = String(revista.revista || '').toLowerCase();
-  return name.includes('vidrio') ? 'Vidrio' : name.includes('ventana') ? 'Ventanas' : 'Otro';
+  return productionMagazineSector(revista);
 }
 
 function matchesLegacy(content, revista) {
