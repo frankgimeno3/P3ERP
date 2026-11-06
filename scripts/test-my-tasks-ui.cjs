@@ -25,14 +25,19 @@ function load(file) {
 const root = createRoot(document.getElementById('root'));
 const click = async text => { const node = [...document.querySelectorAll('button')].find(n => n.textContent === text); assert(node, text); await React.act(async () => node.click()); };
 (async () => {
-  const { taskCalendarMonth, taskCalendarDay } = load('app/lib/myTaskCalendar.js');
+  const { calendarToday, taskCalendarMonth, taskCalendarDay } = load('app/lib/myTaskCalendar.js');
   assert.equal(taskCalendarDay({ fecha_limite: '05/11/2026' }), '2026-11-05');
   assert.equal(taskCalendarDay({ fecha_inicio: '2026-02-30' }), '');
-  for (let m = 0; m < 12; m++) {
-    const days = taskCalendarMonth(2026, m).flat().filter(Boolean);
-    for (let d = 1; d <= new Date(2026, m + 1, 0).getDate(); d++) assert.equal(days.includes(d), new Date(2026, m, d).getDay() !== 0);
-    assert.ok(taskCalendarMonth(2026, m).every(week => week.length === 6 && week.some(Boolean)));
+  assert.equal(taskCalendarDay({fecha_inicio:'2026-02-30T00:00:00Z'}),'');
+  assert.equal(taskCalendarDay({fecha_inicio:'2026-11-06T23:30:00Z'}),'2026-11-07');
+  assert.equal(calendarToday(new Date('2026-06-30T22:30:00Z')),'2026-07-01');
+  for(const y of [2000,2024,2026,2027,2100])for (let m = 0; m < 12; m++) {
+    const weeks=taskCalendarMonth(y,m),days=weeks.flat().filter(Boolean),last=new Date(y,m+1,0).getDate();
+    assert.deepEqual(days,Array.from({length:last},(_,i)=>i+1));
+    for(const week of weeks)for(const [column,d] of week.entries())if(d)assert.equal(column,(new Date(y,m,d).getDay()+6)%7);
+    assert.ok(weeks.every(week => week.length === 7 && week.some(Boolean)));
   }
+  assert.deepEqual(taskCalendarMonth(2026,10)[0],[null,null,null,null,null,null,1]);
   const Panel = load('app/components/tasks/MyTasksPanel.tsx').default;
   await React.act(async () => root.render(React.createElement(Panel)));
   assert.deepEqual([...document.querySelectorAll('[role="tab"]')].map(n => n.textContent), ['Pendientes', 'Todas', 'Calendario']);
@@ -44,8 +49,12 @@ const click = async text => { const node = [...document.querySelectorAll('button
   await click('Todas'); assert(document.querySelector('tbody').textContent.includes('Terminada'));
   await click('Calendario');
   const title = document.querySelector('h2').textContent;
-  assert(title.includes(String(year))); assert.equal(document.querySelectorAll('.grid-cols-6')[0].children.length, 6);
-  assert(!document.querySelector('[data-calendar-task="sunday"]')); assert(document.querySelector('[data-task-card="sunday"]'));
+  assert(title.includes(String(year))); assert.equal(document.querySelectorAll('.grid-cols-7')[0].children.length, 7);
+  assert(document.querySelector('[data-calendar-task="sunday"]')); assert(document.querySelector('[data-task-card="sunday"]'));
+  assert(document.querySelector(`[data-calendar-date="${date(1)}"]`));
+  assert.equal(document.querySelectorAll('[aria-current="date"]').length,1);
+  assert.equal(document.querySelector('[aria-current="date"]').getAttribute('data-calendar-date'),calendarToday());
+  assert(document.querySelector('[aria-current="date"]').textContent.includes('Hoy'));
   const label = document.querySelector('[data-calendar-task="one"]'), card = document.querySelector('[data-task-card="one"]');
   await React.act(async () => label.dispatchEvent(new dom.window.MouseEvent('mouseover', { bubbles: true, relatedTarget: document.body })));
   assert(label.classList.contains('border-blue-600')); assert(card.classList.contains('border-blue-600'));
@@ -53,7 +62,10 @@ const click = async text => { const node = [...document.querySelectorAll('button
   await React.act(async () => card.dispatchEvent(new dom.window.MouseEvent('mouseover', { bubbles: true, relatedTarget: document.body })));
   assert(card.classList.contains('border-blue-600')); assert(label.classList.contains('border-blue-600'));
   await React.act(async () => document.querySelector('[aria-label="Mes anterior"]').click()); assert.notEqual(document.querySelector('h2').textContent, title);
+  assert(!document.querySelector('[aria-current="date"]'));
+  await click('Hoy');assert.equal(document.querySelector('h2').textContent,title);assert(document.querySelector('[aria-current="date"]'));
+  await React.act(async () => document.querySelector('[aria-label="Mes anterior"]').click());
   await React.act(async () => document.querySelector('[aria-label="Mes siguiente"]').click()); assert.equal(document.querySelector('h2').textContent, title);
   await React.act(async () => root.unmount()); dom.window.close();
-  console.log('PASS: pending/all tabs, 55-word preview, description modal, six-day month, Sunday cards, navigation and bidirectional hover.');
+  console.log('PASS: calendar includes every date and Sunday, weekday alignment, leap years, Madrid time, today marker and return, navigation and task hover.');
 })().catch(error => { console.error(error); process.exitCode = 1; });

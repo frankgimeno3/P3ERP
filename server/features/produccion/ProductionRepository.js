@@ -1,5 +1,8 @@
 import {getPgPool} from '../../database/pgClient.js';
 import {contentServiceGroup} from '../../../app/lib/contentServiceGroups.js';
+import {contentPending,contentTypes} from '../../../app/lib/productionManagement.js';
+import {getMagazineList,matchesLegacy} from './GestionesProduccionRepository.js';
+import {articleMatchesMagazine} from '../../../app/config/editorialMagazine.js';
 
 export async function getContentServiceGroups() {
  return (await getPgPool().query('SELECT id_medio,nombre_medio FROM servicios_grupos_servicios ORDER BY nombre_medio,id_medio')).rows;
@@ -15,7 +18,40 @@ export async function getRepositoryContents() {
   FROM produccion_contenidos c LEFT JOIN comercial_cuentas cu ON cu.id_cuenta=c.id_cuenta
   LEFT JOIN agentes_db a ON a.id_agente=c.id_agente LEFT JOIN servicios_db s ON s.id_servicio=c.servicio
   ORDER BY c.created_at DESC,c.id_contenido`)).rows;
- return rows.map(row=>{const id=contentServiceGroup(row);return {...row,grupo_servicio:id,nombre_grupo_servicio:groups.find(group=>group.id_medio===id)?.nombre_medio||id};});
+ return rows.map(row=>{const id=contentServiceGroup(row);return {...row,es_revista:Boolean(row.es_revista||id==='revista'),grupo_servicio:id,nombre_grupo_servicio:groups.find(group=>group.id_medio===id)?.nombre_medio||id};});
+}
+export async function getPendingMagazineContents() {
+ const [contents,magazines,links,editorials]=await Promise.all([
+  getRepositoryContents(),getMagazineList(),getPgPool().query('SELECT id_contenido,id_revista FROM produccion_revistas_contenidos'),
+  getPgPool().query('SELECT id_contenido,revista,espana_previsto_numero,latam_previsto_numero,especial_numero,hueco_previsto FROM produccion_control_redaccion WHERE id_contenido IS NOT NULL'),
+ ]);
+ const editorialById=new Map(),linked=new Map();
+ for(const row of editorials.rows){if(!editorialById.has(row.id_contenido))editorialById.set(row.id_contenido,[]);editorialById.get(row.id_contenido).push(row);}
+ for(const row of links.rows){if(!linked.has(row.id_contenido))linked.set(row.id_contenido,new Set());linked.get(row.id_contenido).add(row.id_revista);}
+ return contents.filter(row=>row.es_revista&&contentPending(row)).map(row=>({...row,es_editorial:editorialById.has(row.id_contenido),revistas_vinculadas:magazines.filter(m=>linked.get(row.id_contenido)?.has(m.id_revista)
+  || (!!m.id_publicacion&&(row.id_publicacion===m.id_publicacion||row.contenido_especifico_id===m.id_publicacion))
+  || editorialById.get(row.id_contenido)?.some(article=>articleMatchesMagazine(article,m))||matchesLegacy(row,m)).map(m=>m.id_revista)}));
+}
+export async function assignContentMagazine(idRevista,data,transactionDb=null) {
+ const fail=(message,status=400)=>{throw Object.assign(new Error(message),{status});};
+ if(!['articulos','anuncios'].includes(data.tipo)||!data.id_contenido)fail('Selecciona el contenido y su tipo.');
+ if(!data.expectedVersion)fail('Recarga el contenido antes de asignarlo.',409);
+ const db=transactionDb||await getPgPool().connect();
+ try {
+  if(!transactionDb)await db.query('BEGIN');await db.query("SET LOCAL lock_timeout='3s'");
+  const row=(await db.query('SELECT * FROM produccion_contenidos WHERE id_contenido=$1 FOR UPDATE',[data.id_contenido])).rows[0];
+  if(!row)fail('Contenido no encontrado.',404);
+  if(new Date(row.updated_at).getTime()!==new Date(data.expectedVersion).getTime())fail('El contenido ha cambiado. Recarga antes de asignarlo.',409);
+  if(!contentPending(row))fail('El contenido ya está publicado o cancelado.',409);
+  if(!(await db.query('SELECT 1 FROM servicios_revistas WHERE id_revista=$1 FOR SHARE',[idRevista])).rowCount)fail('Revista no encontrada.',404);
+  const editorial=(await db.query('SELECT 1 FROM produccion_control_redaccion WHERE id_contenido=$1',[row.id_contenido])).rowCount;
+  const allowed=contentTypes(row).filter(type=>type!=='otro').map(type=>type==='articulo'?'articulos':'anuncios');
+  if(editorial&&!allowed.includes('articulos'))allowed.push('articulos');
+  if(!allowed.includes(data.tipo))fail('El tipo seleccionado no corresponde al contenido.');
+  await db.query('INSERT INTO produccion_revistas_contenidos(id_revista,id_contenido,tipo) VALUES($1,$2,$3) ON CONFLICT DO NOTHING',[idRevista,row.id_contenido,data.tipo]);
+  await db.query('UPDATE produccion_contenidos SET destino_revista=true,hoja_prod=true,updated_at=clock_timestamp() WHERE id_contenido=$1',[row.id_contenido]);
+  if(!transactionDb)await db.query('COMMIT');return {ok:true,id_revista:idRevista,id_contenido:row.id_contenido};
+ } catch(error){if(!transactionDb)await db.query('ROLLBACK');throw error;} finally{if(!transactionDb)db.release();}
 }
 export async function getRepositoryMaterials(contentId='') {
  return (await getPgPool().query(`SELECT m.*,COALESCE(m.id_contenido,c.id_contenido) AS id_contenido,c.nombre_contenido,c.estado_contenido,cu.nombre_empresa AS nombre_cuenta

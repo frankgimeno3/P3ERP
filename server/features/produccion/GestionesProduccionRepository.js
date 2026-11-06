@@ -36,7 +36,7 @@ export function magazineSector(revista) {
   return productionMagazineSector(revista);
 }
 
-function matchesLegacy(content, revista) {
+export function matchesLegacy(content, revista) {
   const label = String(content.publicacion_num_web || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().trim();
   const number = String(revista.numero_publicacion || revista.numero || '').trim();
   if (!label || !number) return false;
@@ -142,7 +142,7 @@ async function validateDestination(db, data) {
   if (!content) throw new Error('Contenido no encontrado');
   if (data.es_version_acabada !== undefined && typeof data.es_version_acabada !== 'boolean') throw new Error('Revisa el tipo de material');
   const singular = tipo === 'articulos' ? 'articulo' : tipo === 'anuncios' ? 'anuncio' : 'otro';
-  if (!managementContentTypes(content).includes(singular)) throw new Error('El material no corresponde al tipo del contenido');
+  if (!managementContentTypes(content).includes(singular) && !(await db.query('SELECT 1 FROM produccion_revistas_contenidos WHERE id_contenido=$1 AND tipo=$2 LIMIT 1',[idContenido,tipo])).rowCount) throw new Error('El material no corresponde al tipo del contenido');
   if (idRevista && !(await db.query('SELECT 1 FROM servicios_revistas WHERE id_revista=$1', [idRevista])).rowCount) throw new Error('Revista no encontrada');
   return { idContenido, idRevista, tipo };
 }

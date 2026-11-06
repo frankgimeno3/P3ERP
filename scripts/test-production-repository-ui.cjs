@@ -7,8 +7,9 @@ dom.window.HTMLElement.prototype.scrollIntoView=function(){};
 const React=require('react'),{createRoot}=require('react-dom/client'),root=createRoot(document.getElementById('root')),cache=new Map(),navigation=[],writes=[];
 const magazines=[['Vidrio Plano','Iberia'],['Ventanas','Iberia'],['Vidrio Plano','América Latina'],['Ventanas','América Latina'],['Quién es Quién','Vidrio'],['Quién es Quién','Ventanas'],['Hueco Arquitectura','2026']].map(([revista,edicion],i)=>({id_revista:'rev'+i,revista,edicion,numero_publicacion:String(i+100),version_publicacion:'digital'}));
 magazines.push({...magazines[0],id_revista:'rev0_impresa',version_publicacion:'impresa'});
-const groups=[{id_medio:'vidrioperfil_newsletter',nombre_medio:'Vidrioperfil newsletter'},{id_medio:'vidrioperfil_portal',nombre_medio:'Vidrioperfil portal'},{id_medio:'otros',nombre_medio:'Otros'}];
+const groups=[{id_medio:'vidrioperfil_newsletter',nombre_medio:'Vidrioperfil newsletter'},{id_medio:'vidrioperfil_portal',nombre_medio:'Vidrioperfil portal'},{id_medio:'otros',nombre_medio:'Otros'},{id_medio:'revista',nombre_medio:'Revista'}];
 const otherRows=[{id_contenido:'news',nombre_contenido:'Newsletter pendiente',estado_contenido:'Pendiente Publicar',grupo_servicio:'vidrioperfil_newsletter'}, {id_contenido:'portal',nombre_contenido:'Banner pendiente',estado_contenido:'Pendiente Publicar',grupo_servicio:'vidrioperfil_portal'}];
+const magazinePending={id_contenido:'unassigned',nombre_contenido:'Revista sin destino',estado_contenido:'Pendiente Publicar',tipo_revista_servicio:'Revista',grupo_servicio:'revista',es_revista:false,updated_at:'2026-11-06T10:00:00.000Z',revistas_vinculadas:[]};
 const contents=[
  {id_contenido:'waiting',nombre_contenido:'Contratado sin material',tipo:'anuncios',id_contrato:'contract',estado_contenido:'Pendiente Publicar',materiales:[]},
  {id_contenido:'writing',nombre_contenido:'Artículo redacción',tipo:'articulos',estado_contenido:'Pendiente redacción',materiales:[]},
@@ -19,7 +20,7 @@ const contents=[
  {id_contenido:'cancelled',nombre_contenido:'Cancelado',tipo:'articulos',estado_contenido:'ANULADO',materiales:[]},
 ];
 const materials=[{id_material:'raw',nombre_material:'Original recibido',id_contenido:'layout',es_version_acabada:false},{id_material:'v1',nombre_material:'Acabado inicial',id_contenido:'layout',es_version_acabada:true,numero_version:1},{id_material:'v2',nombre_material:'Acabado corregido',id_contenido:'layout',es_version_acabada:true,numero_version:2}];
-const api={get:async(url,config)=>({data:url.includes('/para-contenido/')?magazines:url.endsWith('/gestiones-produccion')?magazines:url.includes('/gestiones-produccion/')?{revista:magazines[0],contenidos:contents}:config?.params?.tipo==='materiales'?materials:config?.params?.tipo==='grupos'?groups:[...contents.map(row=>({...row,es_revista:true})),...otherRows]}),post:async(url,data)=>{writes.push({url,data});return {data:url.endsWith('/presign')?{uploadUrl:'https://upload.invalid',mediaId:'uuid',s3Key:'key'}:{}};}};
+const api={get:async(url,config)=>({data:url.includes('/para-contenido/')?magazines:url.endsWith('/gestiones-produccion')?magazines:url.includes('/gestiones-produccion/')?{revista:magazines[0],contenidos:contents}:config?.params?.tipo==='materiales'?materials:config?.params?.tipo==='grupos'?groups:config?.params?.tipo==='pendientes-revista'?[magazinePending]:[...contents.map(row=>({...row,es_revista:true})),...otherRows,magazinePending]}),post:async(url,data)=>{writes.push({url,data});return {data:url.endsWith('/presign')?{uploadUrl:'https://upload.invalid',mediaId:'uuid',s3Key:'key'}:{}};}};
 global.fetch=async()=>({ok:true});
 function load(file){
  if(cache.has(file))return cache.get(file);const m={exports:{}};
@@ -53,21 +54,31 @@ const rowNames=()=>document.querySelector('tbody').textContent;
  assert.equal(document.querySelectorAll('[role=tab]').length,7);assert(document.querySelector('header button').textContent==='Agregar contenidos');
  assert(document.querySelector('header a').href.endsWith('/gestion-contenidos/otros'));
  for(const [i,tab] of [...document.querySelectorAll('[role=tab]')].entries()){
-  await React.act(async()=>tab.click());assert.equal(document.querySelectorAll('tbody tr').length,i===0?2:1);assert(rowNames().includes(String(100+i)));
+  await React.act(async()=>tab.click());assert.equal(document.querySelectorAll('[role=tabpanel] tbody tr').length,i===0?2:1);assert(rowNames().includes(String(100+i)));
   if(i===0){assert(rowNames().includes('100 · Digital'));assert(rowNames().includes('100 · Impresa'));}
  }
  await React.act(async()=>document.querySelector('tbody tr').dispatchEvent(new dom.window.KeyboardEvent('keydown',{key:'Enter',bubbles:true})));
  assert.equal(navigation.at(-1),'/dashboard/produccion/gestion-contenidos/revista/rev6');
+ const unassigned=document.querySelector('[aria-label="Contenidos de revista sin asignar"]');assert(unassigned.textContent.includes('Revista sin destino'));
+ await click('Asignar revista');assert(document.querySelector('[role=dialog]'));
+ const destination=document.querySelector('[aria-label="Publicación de destino"]');
+ await React.act(async()=>destination.click());await React.act(async()=>document.querySelector('[role=option]').click());
+ await React.act(async()=>document.querySelector('[role=dialog] form').dispatchEvent(new dom.window.Event('submit',{bubbles:true,cancelable:true})));
+ assert.equal(writes.at(-1).data.id_contenido,'unassigned');assert.equal(writes.at(-1).data.expectedVersion,magazinePending.updated_at);assert(writes.at(-1).url.endsWith('/rev0'));
  await render('app/dashboard/produccion/gestion-contenidos/revista/[id_revista]/page.tsx');
+ assert.deepEqual([...document.querySelector('[aria-label="Fase de producción"]').querySelectorAll('button')].map(n=>n.textContent),['Fase 1','Fase 2','Fase 3','Fase 4','Fase 5','Todo']);
+ assert.equal(document.querySelectorAll('[aria-label="Fase de producción"] button svg').length,6);
+ assert(document.querySelector('h2').textContent==='Contratado pendiente de recibir');
  assert(rowNames().includes('Contratado sin material'));assert(document.querySelector('[aria-label="Tipo de contenido"]').textContent.includes('Anuncios (1)'));
- await click('1 · Pendiente redacción');await click('Artículos (1)');assert(rowNames().includes('Artículo redacción'));
- await click('2 · Pendiente maquetación');await click('Anuncios (1)');assert(rowNames().includes('12, 13'));assert(rowNames().includes('Empresa'));assert(rowNames().includes('Agente'));
+ await click('Fase 2');await click('Artículos (1)');assert(rowNames().includes('Artículo redacción'));assert(document.querySelector('h2').textContent==='Pendiente redacción');
+ await click('Fase 3');await click('Anuncios (1)');assert(rowNames().includes('12, 13'));assert(rowNames().includes('Empresa'));assert(rowNames().includes('Agente'));
  assert(![...document.querySelectorAll('th')].some(n=>n.textContent==='Materiales'));
- await click('3 · Pendiente corrección');assert(rowNames().includes('Anuncio corrección'));
- await click('4 · Pendiente revisión');await click('Artículos (1)');assert(rowNames().includes('Artículo revisión'));
- await click('5 · Todo');assert(document.querySelector('[aria-label="Tipo de contenido"]').textContent.includes('Anuncios (3)'));assert(!rowNames().includes('Ya publicado'));assert(!rowNames().includes('Cancelado'));
+ await click('Fase 4');assert(rowNames().includes('Anuncio corrección'));
+ await click('Fase 5');await click('Artículos (1)');assert(rowNames().includes('Artículo revisión'));
+ await click('Todo');assert(document.querySelector('[aria-label="Tipo de contenido"]').textContent.includes('Anuncios (3)'));assert(!rowNames().includes('Ya publicado'));assert(!rowNames().includes('Cancelado'));
  await render('app/dashboard/produccion/gestion-contenidos/otros/page.tsx');
  assert.equal(document.querySelectorAll('tbody tr').length,2);assert(![...document.querySelectorAll('th')].some(n=>n.textContent==='Materiales'));
+ assert(!document.querySelector('tbody').textContent.includes('Revista sin destino'));assert(!document.querySelector('[aria-label="Grupo de servicios"]').textContent.includes('Revista'));
  assert(![...document.querySelectorAll('button')].some(n=>/Aportar|Subir/.test(n.textContent)));
  await click('Vidrioperfil newsletter (1)');assert(rowNames().includes('Newsletter pendiente'));assert(!rowNames().includes('Banner pendiente'));
  await click('Vidrioperfil portal (1)');assert(rowNames().includes('Banner pendiente'));assert(!rowNames().includes('Newsletter pendiente'));

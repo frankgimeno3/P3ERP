@@ -343,6 +343,8 @@ export async function getContenidoProduccionById(idContenido) {
         ${servicioExpr} AS servicio,
         cu.nombre_empresa,
         s.nombre_servicio_es,
+        (SELECT jsonb_agg(DISTINCT CASE WHEN rc.tipo='articulos' THEN 'articulo' WHEN rc.tipo='anuncios' THEN 'anuncio' ELSE 'otro' END)
+         FROM produccion_revistas_contenidos rc WHERE rc.id_contenido=c.id_contenido) AS categorias_gestion,
         ${hasRevistasTable ? `
           coalesce(
             jsonb_agg(

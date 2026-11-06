@@ -1,12 +1,12 @@
 import {contentPending} from './productionManagement.js';
 const clean = value => String(value || '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
 export const productionStages = [
-  {value:'recibir',label:'0 · Contratado pendiente de recibir'},
-  {value:'redaccion',label:'1 · Pendiente redacción'},
-  {value:'maquetacion',label:'2 · Pendiente maquetación'},
-  {value:'correccion',label:'3 · Pendiente corrección'},
-  {value:'revision',label:'4 · Pendiente revisión'},
-  {value:'todo',label:'5 · Todo'},
+  {value:'recibir',label:'Fase 1',title:'Contratado pendiente de recibir'},
+  {value:'redaccion',label:'Fase 2',title:'Pendiente redacción'},
+  {value:'maquetacion',label:'Fase 3',title:'Pendiente maquetación'},
+  {value:'correccion',label:'Fase 4',title:'Pendiente corrección'},
+  {value:'revision',label:'Fase 5',title:'Pendiente revisión'},
+  {value:'todo',label:'Todo',title:'Todo'},
 ];
 export const versionLabel = number => `V${String(number).padStart(2,'0')}`;
 export function productionStage(row) {
