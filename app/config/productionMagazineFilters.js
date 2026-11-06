@@ -1,5 +1,14 @@
 const clean = value => String(value || '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
 
+export function magazineFormat(row) {
+  const raw=String(row.version_publicacion || row.impresa_o_digital || '').trim(),format=clean(raw);
+  if (/digital/.test(format) && /impres/.test(format)) return 'Digital e impresa';
+  if (/digital/.test(format)) return 'Digital';
+  if (/impres/.test(format)) return 'Impresa';
+  return raw || 'Sin formato';
+}
+export const magazineNumberLabel = row => `${row.numero_publicacion || row.numero || '—'} · ${magazineFormat(row)}`;
+
 export const productionMagazineFamilies = [
   ['vidrio-espana', 'VIDRIO ESPAÑA'],
   ['ventanas-espana', 'VENTANAS ESPAÑA'],

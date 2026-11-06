@@ -122,7 +122,7 @@
       "Despliega Filtros, cerrado inicialmente, para buscar por los campos de la hoja. La tabla no muestra Código CRM, Publicación / Nº web, Factura ni Comentarios.",
       "Usa los controles para incluir publicados o contenidos fuera de contrato.",
       "El cliente se muestra con el nombre actual de su cuenta vinculada, aunque el Excel original usase otro nombre. El agente es quien sigue ese contenido para obtener materiales y puede ser distinto del agente comercial del contrato.",
-      "Pulsa una fila para abrir la ficha del contenido en Repositorio. Puedes editar especificaciones, Publicación / Nº web, agente por nombre, fecha límite con día, mes y año separados y estado. Las altas de materiales y versiones se realizan desde Gestión contenidos; Repositorio conserva la consulta y edición de datos.",
+      "Pulsa una fila para abrir la ficha del contenido en Repositorio. Puedes editar especificaciones, Publicación / Nº web, agente por nombre, fecha límite con día, mes y año separados y estado. En los apartados Materiales y Versión acabada de esa ficha puedes aportar archivos y nuevas versiones.",
       "Las pestañas incluyen el año actual y todos los años presentes en los contenidos. Anteriores conserva los contenidos históricos importados; Sin año permite localizar los que aún no tienen fecha. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados.",
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
       "Los contenidos nuevos reciben un c?digo hp_aa_000.000 del servidor. Se conservan los identificadores num?ricos procedentes de la hoja antigua y la referencia original cuando se corrige un c?digo duplicado.",
@@ -151,7 +151,7 @@
       "Aporta un ZIP como material descargable o añade archivos individuales sucesivamente. Cada material tiene nombre y descripción opcional. Máximo 100 materiales y 200 MB por archivo.",
       "La confirmación comprueba los datos antes de habilitar Subir. Los materiales se guardan en S3 y se registran junto al contenido en una transacción; reintentar no duplica la carga. Al terminar se abre el detalle con sus materiales.",
       "Las siete pestañas en fila son VIDRIO ESPAÑA, VENTANAS ESPAÑA, VIDRIO LATAM, VENTANAS LATAM, QQ VIDRIO, QQ VENTANAS y HUECO. España corresponde a Iberia, LATAM a América Latina y QQ a Quién es Quién según su edición.",
-      "La tabla muestra los números de la publicación elegida. Pulsa cualquier parte de una fila o utiliza Enter o espacio para abrir sus contenidos. Los filtros se reúnen en una tarjeta inicialmente cerrada. Arriba a la derecha están Agregar contenidos y Ver otro contenido.",
+      "La tabla muestra cada número junto a su formato: Digital, Impresa o Digital e impresa. Un mismo número impreso y digital tiene filas distintas y cada una abre su propia ficha. Las pestañas se ajustan al espacio disponible sin scroll y el panel no lleva borde exterior. Pulsa cualquier parte de una fila o utiliza Enter o espacio para abrir sus contenidos. Los filtros se reúnen en una tarjeta inicialmente cerrada. Arriba a la derecha están Agregar contenidos y Ver otro contenido.",
       "Los contenidos importados que incluían artículo y anuncio aparecen en ambas vistas con el mismo ID y contrato; no se duplican sus líneas de facturación.",
       "Las rutas antiguas de gestión llevan a esta página; las fichas concretas de contenidos y materiales se abren siempre en Repositorio."
     ]
@@ -159,9 +159,9 @@
   "/dashboard/produccion/gestion-contenidos/otros": {
     "summary": "Contenidos pendientes que no están asignados a revista.",
     "steps": [
-      "Muestra contenidos sin destino de revista, con servicio, empresa, agente y estado. Los publicados, anulados y cancelados se consultan en Repositorio.",
+      "Muestra contenidos sin destino de revista, con servicio, empresa, agente y estado. Las pestañas utilizan los canales del catálogo de servicios, con contadores y una vista Todos. Los registros importados sin canal conservan sus datos: NEWS se agrupa en Vidrioperfil newsletter, WEB y BANNER en Vidrioperfil portal, y las etiquetas de revista, suscripción o newsletter personalizado en su canal correspondiente. Los publicados, anulados y cancelados se consultan en Repositorio.",
       "Arriba a la derecha puedes Agregar contenidos o ir a Ver contenido revista. Las altas utilizan el mismo asistente de cinco fases y respetan el modo prueba del contrato o de la cuenta.",
-      "Pulsa la fila para abrir la ficha en Repositorio. Aportar material y Subir versión registran archivos para ese contenido desde esta página. Cada versión acabada recibe automáticamente el siguiente número y conserva los archivos anteriores.",
+      "La tabla no tiene columna de materiales ni botones de carga. Pulsa la fila para abrir la ficha en Repositorio: Aportar material está en su apartado Materiales y Subir versión en Versión acabada. Cada versión recibe automáticamente el siguiente número y conserva los archivos anteriores.",
       "Los filtros se reúnen en una única tarjeta inicialmente cerrada."
     ]
   },
@@ -171,7 +171,7 @@
       "Las pestañas son 0 Contratado pendiente de recibir, 1 Pendiente redacción, 2 Pendiente maquetación, 3 Pendiente corrección, 4 Pendiente revisión y 5 Todo. Todo reúne los contenidos pendientes de esa revista; publicados y cancelados se conservan en Repositorio.",
       "Cada fase tiene subpestañas Anuncios y Artículos, con sus cantidades. La tabla muestra nombre del contenido, páginas asignadas, empresa y agente. Pulsa la fila o usa Enter o espacio para abrir la ficha.",
       "La fase se toma del estado del contenido. Para registros históricos sin fase explícita se consideran los materiales recibidos, el contrato y el tipo; un material acabado pendiente pasa a revisión. Puedes elegir las nuevas fases desde Datos y detalles de su ficha.",
-      "Aportar material y Subir versión abren el formulario de carga desde Gestión contenidos. Las versiones se guardan como materiales, con indicador de versión acabada y número correlativo desde V01, sin sobrescribir versiones anteriores."
+      "Abre la ficha del contenido para Aportar material o Subir versión desde sus apartados correspondientes. Las versiones se guardan como materiales, con indicador de versión acabada y número correlativo desde V01, sin sobrescribir versiones anteriores."
     ]
   },
   "/dashboard/produccion/repositorio": {
@@ -179,7 +179,7 @@
     "steps": [
       "Alterna Contenidos y Materiales. Todos los estados permanecen disponibles y se localizan mediante la tarjeta de filtros, inicialmente cerrada.",
       "Pulsa cualquier parte de una fila o usa Enter o espacio para abrir su ficha. Las URLs antiguas de fichas de contenido se redirigen aquí.",
-      "Repositorio no ofrece altas de contenidos ni de materiales. Para crearlos o subir versiones utiliza Producción → Gestión contenidos."
+      "Las tablas de Repositorio no ofrecen altas de contenidos ni de materiales. Los contenidos se crean desde Gestión contenidos; los materiales y versiones se aportan desde la ficha concreta del contenido."
     ]
   },
   "/dashboard/produccion/repositorio/materiales/[id]": {
@@ -195,7 +195,7 @@
       "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "La ficha tiene tres apartados: Datos y detalles, Materiales y Versión acabada. Cada material ordinario se muestra en una tarjeta que abre su ficha en Repositorio.",
       "Edita especificaciones, Publicación / Nº web, agente por nombre, fecha límite con día, mes y año separados y estado; pulsa Guardar cambios.",
-      "La tabla de versiones acabadas aparece de más actual a más antigua, V02 antes de V01. Cada versión es un material con archivo propio en S3 y conserva las anteriores. Desde Repositorio no se crean contenidos ni materiales: las altas y las nuevas versiones se realizan desde Gestión contenidos."
+      "La tabla de versiones acabadas aparece de más actual a más antigua, V02 antes de V01. Cada versión es un material con archivo propio en S3 y conserva las anteriores. Usa Aportar material dentro de Materiales o Subir versión dentro de Versión acabada; si el contenido admite varios tipos o revistas, elige el destino en el formulario. Los contenidos nuevos se crean desde Gestión contenidos."
     ]
   },
   "/dashboard/operaciones/revistas/[id_revista]/contenidos": {
