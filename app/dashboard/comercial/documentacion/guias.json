@@ -177,7 +177,7 @@
       "Las fases 1–5 quedan agrupadas a la izquierda y Todo a la derecha. Cada fase tiene subpestañas Anuncios y Artículos con sus cantidades. La tabla muestra nombre del contenido, formato, páginas asignadas, empresa y agente. Pulsa la fila o usa Enter o espacio para abrir la ficha.",
       "La fase se toma del estado del contenido. Para registros históricos sin fase explícita se consideran los materiales recibidos, el contrato y el tipo; un material acabado pendiente pasa a revisión. Puedes elegir las nuevas fases desde Datos y detalles de su ficha.",
       "Abre la ficha del contenido para Aportar material o Subir versión desde sus apartados correspondientes. Las versiones se guardan como materiales, con indicador de versión acabada y número correlativo desde V01, sin sobrescribir versiones anteriores.",
-      "La barra de navegación superior muestra el recorrido de esta página y permite volver a los listados y al dashboard; también aparece en las fichas de contenidos y materiales."
+      "Usa el midnav superior para volver a los listados y al dashboard. No se repite un enlace Volver dentro de la página."
     ]
   },
   "/dashboard/produccion/repositorio": {
@@ -194,7 +194,7 @@
     "steps": [
       "Muestra nombre, descripción, identificador y, si procede, versión acabada V01, V02 y siguientes. Abre el archivo con una descarga autorizada del ERP.",
       "El enlace al contenido abre su ficha en Almacenamiento. Puedes guardar la revisión y los comentarios del material; no crear nuevos materiales desde esta ficha.",
-      "La barra de navegación superior muestra el recorrido de esta página y permite volver a los listados y al dashboard; también aparece en las fichas de contenidos y materiales."
+      "Usa el midnav superior para volver a los listados y al dashboard. No se repite un enlace Volver dentro de la página."
     ]
   },
   "/dashboard/produccion/repositorio/contenidos/[id]": {
@@ -204,7 +204,7 @@
       "La ficha tiene tres apartados: Datos y detalles, Materiales y Versión acabada. Cada material ordinario se muestra en una tarjeta que abre su ficha en Almacenamiento.",
       "Edita especificaciones, Publicación / Nº web, agente por nombre, fecha límite con día, mes y año separados, estado y formato en revista. Elige Impreso, Digital o Impreso + digital; los contenidos por contrato parten de Impreso + digital. Pulsa Guardar cambios. El formato también se muestra y edita desde el control de artículos.",
       "La tabla de versiones acabadas aparece de más actual a más antigua, V02 antes de V01. Cada versión es un material con archivo propio en S3 y conserva las anteriores. Usa Aportar material dentro de Materiales o Subir versión dentro de Versión acabada; si el contenido admite varios tipos o revistas, elige el destino en el formulario. Los contenidos nuevos se crean desde Gestión contenidos.",
-      "La barra de navegación superior muestra el recorrido de esta página y permite volver a los listados y al dashboard; también aparece en las fichas de contenidos y materiales."
+      "Usa el midnav superior para volver a los listados y al dashboard. No se repite un enlace Volver dentro de la página."
     ]
   },
   "/dashboard/operaciones/revistas/[id_revista]/contenidos": {
