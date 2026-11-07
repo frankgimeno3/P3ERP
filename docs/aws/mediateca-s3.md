@@ -2,7 +2,7 @@
 
 Mediateca, materiales y versiones acabadas comparten `S3Service.js`. El bucket confirmado es `mediateca-plynium-bucket`, región España `eu-south-2`. Es el valor del proyecto cuando no existe una variable de entorno; `AWS_S3_BUCKET`/`S3_BUCKET` y `AWS_S3_REGION`/`S3_REGION` permiten sobrescribirlo. `IAM_REGION` también es compatible. El bucket del proyecto usa España aunque el proveedor de alojamiento defina AWS_REGION para sus servidores en otra región. Las claves nunca se guardan en Git.
 
-La prueba local de una URL firmada PUT devolvió `403 AccessDenied`. Las credenciales locales identifican al usuario IAM `fichajesp3user`, de la misma cuenta del bucket. Tampoco permiten consultar políticas IAM ni la configuración CORS. No se cambió ninguna política AWS ni se creó un objeto de prueba.
+La prueba inicial de una URL firmada PUT devolvió `403 AccessDenied`. Las credenciales locales identifican al usuario IAM `fichajesp3user`, de la misma cuenta del bucket. El usuario añadió la política insertada `P3ERP-Mediateca-S3`, conservando la de Cognito. Tras ese cambio se verificaron subida PUT 200, metadatos HEAD correctos, lectura GET 200 con los mismos bytes y eliminación del archivo temporal. La prueba utiliza el servicio compartido de P3ERP y los cambios externos quedan auditados. Esta comprobación técnica no identifica por sí sola las credenciales guardadas en Vercel.
 
 ## Permisos de objetos
 

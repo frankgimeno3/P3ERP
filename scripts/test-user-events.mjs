@@ -3,6 +3,7 @@ import {randomUUID} from 'node:crypto';
 import env from '@next/env';
 import {getPgPool} from '../server/database/pgClient.js';
 import {withUserEventContext} from '../server/features/userEvents/EventContext.js';
+import {externalUserEvent} from '../server/features/userEvents/ExternalUserEvents.js';
 import {signEventIdentity,verifyEventIdentity} from '../server/features/userEvents/EventIdentity.js';
 import {Sequelize} from 'sequelize';
 import pg from 'pg';
@@ -16,6 +17,13 @@ try{
  await db.query('BEGIN');await db.query("SET LOCAL lock_timeout='5s';SET LOCAL statement_timeout='25s'");
  await db.query(`CREATE TABLE public.${parent}(id TEXT PRIMARY KEY,nombre_cuenta TEXT,nif TEXT,password TEXT,archivo BYTEA,datos JSONB,updated_at TIMESTAMPTZ DEFAULT now());CREATE TABLE public.${child}(id TEXT PRIMARY KEY,parent_id TEXT REFERENCES public.${parent}(id) ON DELETE CASCADE,detalle TEXT)`);
  await db.query('SELECT public.p3_install_user_event_triggers()');
+ const externalRequest=randomUUID(),originalQuery=pool.query;
+ try{
+  pool.query=(...args)=>db.query(...args);
+  await withUserEventContext({...context,actorId:null,actorName:null,ip:null,ipSource:'maintenance',requestId:externalRequest},()=>externalUserEvent('crear','s3_prueba_auditoria','PRUEBA',null,{temporal:true}));
+  const unknown=(await db.query('SELECT id_usuario,usuario,ip,datos_nuevos FROM eventos_de_usuarios WHERE id_solicitud=$1',[externalRequest])).rows;
+  assert.equal(unknown.length,1);assert.equal(unknown[0].id_usuario,'');assert.equal(unknown[0].usuario,'ACCIÓN AUTOMÁTIZADA');assert.equal(unknown[0].ip,null);assert.deepEqual(unknown[0].datos_nuevos,{temporal:true});
+ }finally{pool.query=originalQuery;}
  await withUserEventContext(context,async()=>{
   await db.query('DO $block$ BEGIN PERFORM 1; END $block$');
   await assert.rejects(()=>db.query('SELECT 1; COMMIT'),/por separado/);
