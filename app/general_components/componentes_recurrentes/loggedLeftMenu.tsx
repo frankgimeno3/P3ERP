@@ -30,10 +30,14 @@ function entryContainsPath(entry: DashboardMenuEntry, pathname: string): boolean
 
 export default function LoggedLeftMenu() {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(true);
-  const [open, setOpen] = useState<Record<string, boolean>>({});
   const { user, error } = useCurrentUser();
   const role = user?.role || (error ? 'base' : null);
+  return <PageLeftMenu key={pathname} pathname={pathname} role={role} />;
+}
+
+function PageLeftMenu({pathname,role}:{pathname:string;role:string|null}) {
+  const [collapsed, setCollapsed] = useState(true);
+  const [open, setOpen] = useState<Record<string, boolean>>({});
   const location = getDashboardMenuLocation(pathname);
   const activeModuleId = location?.module.id || dashboardMenu.find(area => pathname === `/dashboard/${area.id}` || pathname.startsWith(`/dashboard/${area.id}/`))?.id;
 

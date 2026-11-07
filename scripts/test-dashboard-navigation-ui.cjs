@@ -43,25 +43,31 @@ async function click(label){const button=[...document.querySelectorAll('button')
  assert.equal(document.querySelector('aside [aria-current=location]').getAttribute('aria-label'),'Producción');
  await click('Comercial');assert(document.querySelector('a[href="/dashboard/comercial/cuentas"]'));
  pathname='/dashboard/comercial/cuentas';await render('Cuentas');assert.equal(document.title,'Cuentas | Comercial | P3ERP');
+ assert.equal(document.querySelectorAll('aside a').length,0,'Cambiar de página recoge el menú abierto');
  pathname='/dashboard/produccion/gestion-contenidos/revista/rev_216';await render('Vidrio · Iberia · 216');
+ assert.equal(document.querySelectorAll('aside a').length,0);await click('Expandir menú');
  assert.equal(document.title,'Vidrio · Iberia · 216 | Producción | P3ERP');
  assert.equal(document.querySelector('aside [aria-current=page]').textContent,'Contenido revista');
+ await render('Vidrio · Iberia · 216');assert(document.querySelector('[aria-label="Ocultar menú"]'),'Actualizar la misma página conserva la decisión del usuario');
  pathname='/dashboard/produccion/repositorio/contenidos/alpha';await render('Contenido Alpha',true);
+ assert.equal(document.querySelectorAll('aside a').length,0,'Entrar en una ficha vuelve a recogerlo');
  assert.equal(document.title,'Contenido Alpha | Producción | P3ERP');
  await React.act(async()=>{document.title='P3ERP';});assert.equal(document.title,'Contenido Alpha | Producción | P3ERP','Los metadatos heredados tardíos no sustituyen el título de la ficha');
  await render('Contenido actualizado',true);assert.equal(document.title,'Contenido actualizado | Producción | P3ERP','Se actualiza tras cargar o editar el nombre, sin tomar el título del modal');
- pathname='/dashboard/produccion/repositorio';await render('Almacenamiento');assert.equal(document.title,'Almacenamiento | Producción | P3ERP','Volver restaura el título de la ruta');
- pathname='/dashboard/contabilidad/extractos/conciliacion';await render('Conciliación');assert.equal(document.querySelectorAll('aside [aria-current=page]').length,1);
+ pathname='/dashboard/produccion/repositorio';await render('Almacenamiento');assert.equal(document.title,'Almacenamiento | Producción | P3ERP','Volver restaura el título de la ruta');assert.equal(document.querySelectorAll('aside a').length,0,'Volver atrás no recupera la apertura anterior');
+ pathname='/dashboard/contabilidad/extractos/conciliacion';await render('Conciliación');await click('Expandir menú');assert.equal(document.querySelectorAll('aside [aria-current=page]').length,1);
  await click('Ocultar menú');role='contabilidad';await render('Conciliación');
  assert(!document.querySelector('[data-module=produccion]'));assert(!document.querySelector('[data-module=direccion]'));assert(document.querySelector('[data-module=contabilidad]'));
  pathname='/dashboard';await render('Nombre del usuario');assert.equal(document.title,'Mi panel | P3ERP');
  const Layout=load('app/dashboard/layout.tsx').default,MiddleNav=load('app/general_components/componentes_recurrentes/MiddleNav.tsx').default;
  const {dashboardPathExists}=load('app/config/dashboardNavigation.ts');
  role='superadmin';
- const patterns=load('app/config/dashboardRoutePatterns.json').filter(route=>route.startsWith('/dashboard')||route.startsWith('/tareas'));
+ const patterns=load('app/config/dashboardRoutePatterns.json').filter(route=>route.startsWith('/dashboard')||route.startsWith('/tareas')||route.startsWith('/mis-tareas'));
  for(const pattern of patterns){
   pathname=pattern.replace(/\[([^\]]+)\]/g,'registro');
   await React.act(async()=>root.render(React.createElement(Layout,null,React.createElement('main',null,React.createElement('h1',null,'Ficha de prueba')))));
+  assert.equal(document.querySelectorAll('aside a').length,0,`${pattern}: menú inicialmente recogido`);
+  if(document.querySelector('aside')){await click('Expandir menú');assert(document.querySelector('[aria-label="Ocultar menú"]'),`${pattern}: el usuario puede abrirlo`);}
   const bars=document.querySelectorAll('[data-dashboard-midnav]');assert.equal(bars.length,1,pattern);
   for(const link of bars[0].querySelectorAll('a'))assert(dashboardPathExists(link.getAttribute('href')),`${pattern}: enlace sin página ${link.getAttribute('href')}`);
  }
