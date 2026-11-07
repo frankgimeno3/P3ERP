@@ -9,6 +9,7 @@ import { productionMediaFolder } from './ProductionMediaFolders.js';
 import { contentTypes as managementContentTypes,validateIntakeFiles } from '../../../app/lib/productionManagement.js';
 import { externalUserEvent } from '../userEvents/ExternalUserEvents.js';
 import {productionStage} from '../../../app/lib/productionWorkflow.js';
+import {resolveInvalidMaterialState,setProductionTypeState} from './ProductionMaterialState.js';
 import {editorialContentExpression} from './ProductionContentScope.js';
 
 const states = new Set(['no revisado produccion', 'incidencia', 'ok produccion']);
@@ -119,7 +120,7 @@ export async function getMagazineManagement(idRevista) {
   });
   const ids = [...new Set(matches.map(item => item.id_contenido))];
   const materials = ids.length ? (await getPgPool().query(`SELECT m.* FROM produccion_materiales m
-    WHERE m.id_contenido=ANY($1::text[]) AND (m.id_revista=ANY($2::text[]) OR m.id_revista IS NULL) ORDER BY m.fecha_aportado,m.id_material`, [ids, magazineIds])).rows : [];
+    WHERE m.eliminado_at IS NULL AND m.id_contenido=ANY($1::text[]) AND (m.id_revista=ANY($2::text[]) OR m.id_revista IS NULL) ORDER BY m.fecha_aportado,m.id_material`, [ids, magazineIds])).rows : [];
   const finalPages=(await getPgPool().query('SELECT contenido_id,numero_pagina,tipo_pagina FROM contenidos_revistas_db WHERE revista_id=ANY($1::text[]) ORDER BY numero_pagina',[magazineIds])).rows;
   return { revista: { ...revista, region: magazineRegion(revista), sector: magazineSector(revista) },
     contenidos: matches.map(content => ({ ...content, paginas_definitivas:finalPages.filter(page=>page.contenido_id===content.id_contenido&&(content.tipo==='articulos')===/art[ií]culo/i.test(page.tipo_pagina)).map(page=>page.numero_pagina),materiales: materials.filter(m => m.id_contenido === content.id_contenido && m.tipo === content.tipo) })) };
@@ -177,6 +178,7 @@ export async function addProductionMaterial(data, verifyObject = assertObjectExi
     const destination = await validateDestination(db, data);
     const previous = (await db.query('SELECT * FROM produccion_materiales WHERE mediateca_id=$1', [data.mediaId || null])).rows[0];
     if (previous) {
+      if(previous.eliminado_at)throw new Error('El archivo ya fue eliminado. Restáuralo desde la papelera del contenido.');
       if (previous.id_contenido !== destination.idContenido || previous.tipo !== destination.tipo || Boolean(previous.es_version_acabada) !== (data.es_version_acabada===true)) throw new Error('El archivo ya pertenece a otro material');
       if (!transactionDb) await db.query('COMMIT');
       return previous;
@@ -205,7 +207,10 @@ export async function addProductionMaterial(data, verifyObject = assertObjectExi
       [id,name,mediaId,'',destination.idContenido,destination.idRevista || null,destination.tipo,String(data.descripcion || ''),finished,version]);
     await db.query(`UPDATE produccion_contenidos SET array_ids_materiales = COALESCE(array_ids_materiales,'[]'::jsonb) || $1::jsonb,
       updated_at=now() WHERE id_contenido=$2`, [JSON.stringify([id]),destination.idContenido]);
-    if(productionStage({...destination.content,tipo:destination.tipo,materiales:[]})==='recibir')await db.query("UPDATE produccion_contenidos SET estado_contenido=$2,estado_material_contenido='Recibido',updated_at=now() WHERE id_contenido=$1",[destination.idContenido,destination.tipo==='articulos'?'Pendiente redacción':'Pendiente de gestionar Charly']);
+    if(!finished){
+      if(destination.tipo==='anuncios')await resolveInvalidMaterialState(db,destination.content);
+      else if(productionStage({...destination.content,tipo:destination.tipo,materiales:[]})==='recibir')await setProductionTypeState(db,destination.content,destination.tipo,destination.tipo==='articulos'?'Pendiente redacción':'Pendiente de gestionar Charly');
+    }
     if (destination.idRevista) await db.query(`INSERT INTO produccion_revistas_contenidos(id_revista,id_contenido,tipo)
       VALUES($1,$2,$3) ON CONFLICT DO NOTHING`, [destination.idRevista,destination.idContenido,destination.tipo]);
     if (!transactionDb) {
@@ -217,13 +222,19 @@ export async function addProductionMaterial(data, verifyObject = assertObjectExi
   finally { if (!transactionDb) db.release(); }
 }
 
-export async function reviewProductionMaterial(id, data) {
+export async function reviewProductionMaterial(id, data,transactionDb=null) {
   const status = String(data.validacion_produccion || '').toLowerCase();
   if (!states.has(status)) throw new Error('Estado de revisión no válido');
-  const result = await getPgPool().query(`UPDATE produccion_materiales
-    SET validacion_produccion=$2,comentarios=$3,updated_at=now() WHERE id_material=$1 RETURNING *`,
-    [id,status,String(data.comentarios || '')]);
-  return result.rows[0] || null;
+  const db=transactionDb||await getPgPool().connect();
+  try{
+    if(!transactionDb)await db.query('BEGIN');
+    const owner=(await db.query('SELECT id_contenido FROM produccion_materiales WHERE id_material=$1',[id])).rows[0];
+    const content=owner?.id_contenido?(await db.query('SELECT * FROM produccion_contenidos WHERE id_contenido=$1 FOR UPDATE',[owner.id_contenido])).rows[0]:null;
+    const result=await db.query(`UPDATE produccion_materiales SET validacion_produccion=$2,material_valido=($2<>'incidencia'),comentarios=$3,updated_at=clock_timestamp() WHERE id_material=$1 AND eliminado_at IS NULL RETURNING *`,[id,status,String(data.comentarios||'')]);
+    const material=result.rows[0];
+    if(content&&material?.tipo==='anuncios'&&!material.es_version_acabada)await resolveInvalidMaterialState(db,content,status==='incidencia');
+    if(!transactionDb)await db.query('COMMIT');return material||null;
+  }catch(error){if(!transactionDb)await db.query('ROLLBACK');throw error;}finally{if(!transactionDb)db.release();}
 }
 
 export async function addProductionMaterials(data,verifyObject=assertObjectExistsInS3,transactionDb=null) {

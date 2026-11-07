@@ -8,7 +8,7 @@ import { ruleStart, withRuleIds } from '../server/features/banco/BankReviewAnaly
 const source = fs.readFileSync('app/api/v1/contabilidad/bancos/revision/route.js', 'utf8')
   .replace(/^import .*;\r?\n/gm, '').replace(/export /g, '');
 const repository = fs.readFileSync('server/features/prevision/RecurringChargeRepository.js', 'utf8').replace(/^import .*;\r?\n/gm, '').replace(/export /g, '');
-async function run({ line = {}, linked = false, entity = true, action = 'assign', entityType = 'nomina', existingCharge = true, extra = {} } = {}) {
+async function run({ line = {}, linked = false, entity = true, action = 'assign', entityType = 'nomina', existingCharge = true, internal = false, extra = {} } = {}) {
   const calls = [];
   const db = { release() {}, async query(sql, values) {
     calls.push({ sql, values });
@@ -19,7 +19,7 @@ async function run({ line = {}, linked = false, entity = true, action = 'assign'
     if (sql.startsWith('INSERT INTO tesoreria_cargos_recurrentes')) return { rows: [{ id_cargo_recurrente: 2 }] };
     return { rows: [] };
   } };
-  const context = vm.createContext({ extendCharge: async () => {}, randomUUID, ruleStart, withRuleIds, NextResponse: { json: (body, options) => ({ body, status: options?.status || 200 }) }, getPgPool: () => ({ connect: async () => db }) });
+  const context = vm.createContext({ readInternalTransfers:async()=>internal?[{id_linea_cargo:'bank-1',id_linea_abono:'bank-2'}]:[],extendCharge: async () => {}, randomUUID, ruleStart, withRuleIds, NextResponse: { json: (body, options) => ({ body, status: options?.status || 200 }) }, getPgPool: () => ({ connect: async () => db }) });
   vm.runInContext(repository + '\n' + source, context);
   const response = await context.PUT({ json: async () => ({ ids: ['bank-1'], action, entityType, entityId: 'person-1', ...extra }) });
   return { response, calls };
@@ -31,7 +31,7 @@ assert(result.calls.some(c => c.sql === 'COMMIT'));
 result = await run({ action: 'validate-assignment' });
 assert.equal(result.response.body.ok, true);
 assert(!result.calls.some(c => c.sql.startsWith('UPDATE')));
-for (const scenario of [{ line: { importe: 100 } }, { entity: false }, { line: { id_agente: 'other' } }, { line: { id_proveedor: 'supplier' } }, { line: { id_pago: 'payment' } }, { linked: true }]) {
+for (const scenario of [{ line: { importe: 100 } }, { entity: false }, { line: { id_agente: 'other' } }, { line: { id_proveedor: 'supplier' } }, { line: { id_pago: 'payment' } }, { linked: true },{internal:true}]) {
   result = await run(scenario);
   assert(result.response.status >= 400);
   assert(!result.calls.some(c => c.sql.startsWith('UPDATE')));

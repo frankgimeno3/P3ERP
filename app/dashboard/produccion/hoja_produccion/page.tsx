@@ -65,7 +65,7 @@ const Materiales: FC = () => {
   const currentYear = new Intl.DateTimeFormat('en', {year:'numeric',timeZone:'Europe/Madrid'}).format(new Date());
   const [year, setYear] = useState(currentYear);
   const [contenidos, setContenidos] = useState<HojaProduccionContenido[]>([]);
-  const tabs = [...new Set([currentYear, ...contenidos.map(c => c.ano_publicacion).filter(y => /^\d{4}$/.test(y))])].sort((a,b)=>Number(b)-Number(a)).concat('Anteriores', ...(contenidos.some(c=>!c.ano_publicacion) ? ['Sin año'] : []));
+  const tabs = [...new Set([currentYear, ...contenidos.map(c => c.ano_publicacion).filter(y => /^\d{4}$/.test(y))])].sort((a,b)=>Number(b)-Number(a)).concat('Anteriores');
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [showPublished, setShowPublished] = useState(false);
   const [showOutOfContract, setShowOutOfContract] = useState(false);
@@ -96,7 +96,7 @@ const Materiales: FC = () => {
 
   const scope = contenidos.filter((contenido) => {
     if(Boolean(contenido.es_revista)!==(kind==='revista'))return false;
-    if ((contenido.ano_publicacion || 'Sin año') !== year) return false;
+    if (contenido.ano_publicacion !== year) return false;
     return activeColumns.every(([field]) => !filters[field]?.trim() || matchesTableFilter(String(contenido[field] ?? "").toLowerCase(), filters[field].trim().toLowerCase()));
   });
   const contenidosFiltrados: HojaProduccionContenido[] = filterSheetVisibility(scope,{outside:showOutOfContract,published:showPublished});
@@ -122,7 +122,7 @@ const Materiales: FC = () => {
                   style={{ marginLeft: index === 0 ? "0px" : "-5px" }}
                   onClick={() => setYear(tab)}
                 >
-                  {tab === 'Sin año' ? tab : `Publicacion en ${tab}`}
+                  {`Publicacion en ${tab}`}
                 </button>
               ))}
             </div>

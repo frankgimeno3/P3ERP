@@ -20,10 +20,18 @@ export function contentTypes(row) {
   if (/anuncio|publicidad|banner|pagina publicitaria|revista/.test(label)) return ['anuncio'];
   return ['otro'];
 }
-export function contentPending(row) {
-  const state = normalize(row.estado_contenido || row.estado);
+export function contentProductionState(row){
+ const type=materialType(row.tipo_contenido),key=['articulos','anuncios','otros'].includes(row.tipo)?row.tipo:type;
+ return Object.hasOwn(row.estados_produccion||{},key)?row.estados_produccion[key]:(row.estado_contenido??row.estado??'');
+}
+function pendingState(value){
+  const state = normalize(value);
   if (/parcial/.test(state)) return true;
   return !/^(publicad[oa]s?(?:\s|$)|cancelad[oa]s?(?:\s|$)|anulad[oa]s?(?:\s|$)|no sale$|no se publica$)/.test(state.trim());
+}
+export function contentPending(row){
+ if(['articulos','anuncios','otros'].includes(row.tipo))return pendingState(contentProductionState(row));
+ return contentTypes(row).some(type=>pendingState(contentProductionState({...row,tipo:materialType(type)})));
 }
 export function validateContentIntake(data) {
   const errors = [];

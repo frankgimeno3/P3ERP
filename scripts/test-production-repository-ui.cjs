@@ -13,6 +13,7 @@ const contents=[
  {id_contenido:'waiting',nombre_contenido:'Contratado sin material',tipo:'anuncios',id_contrato:'contract',estado_contenido:'Contratado pendiente de recibir',materiales:[]},
  {id_contenido:'writing',nombre_contenido:'Artículo redacción',tipo:'articulos',estado_contenido:'Pendiente redacción',materiales:[]},
  {id_contenido:'layout',nombre_contenido:'Anuncio maquetación',tipo:'anuncios',estado_contenido:'Pendiente maquetación',materiales:[],pagina_hoja:'12, 13',paginas_ocupadas:2,nombre_empresa:'Empresa',nombre_completo_agente:'Agente'},
+ {id_contenido:'article-layout',nombre_contenido:'Artículo listo para corrección',tipo:'articulos',estado_contenido:'Pendiente de gestionar Charly',materiales:[{id_material:'downloaded',descargado_produccion:true}]},
  {id_contenido:'correction',nombre_contenido:'Artículo corrección',tipo:'articulos',estado_contenido:'Pendiente corrección',materiales:[]},
  {id_contenido:'review',nombre_contenido:'Artículo revisión',tipo:'articulos',estado_contenido:'Pendiente revisión',materiales:[]},
  {id_contenido:'ready',nombre_contenido:'Anuncio aprobado',tipo:'anuncios',estado_contenido:'Material OK - pendiente de publicar',materiales:[]},
@@ -58,7 +59,7 @@ const rowNames=()=>document.querySelector('tbody').textContent;
  assert.equal(canonicalProductionPath('/dashboard/produccion/gestion/revistas/rev0/contenidos'),'/dashboard/produccion/gestion-contenidos/revista/rev0');
  assert.equal(canonicalProductionPath('/dashboard/mediateca'),'/dashboard/direccion/mediateca');
  await render('app/dashboard/produccion/gestion-contenidos/revista/page.tsx');
- assert(document.querySelector('[aria-label="Contenidos de revista sin asignar"]'));await click('Contenidos revista pendientes publicar');assert.equal(document.querySelectorAll('[role=tab]').length,9);assert.deepEqual([...document.querySelectorAll('header button')].map(n=>n.textContent),['Agregar contenidos sin contrato','Agregar contenido asociado a contrato']);assert(!document.querySelector('header a'));
+ assert(!document.querySelector('[aria-label="Contenidos de revista sin asignar"]'));assert.equal(document.querySelector('[aria-label="Asignación de revista"] button').textContent,'Contenidos revista pendientes publicar');assert.equal(document.querySelector('[aria-label="Asignación de revista"] button').getAttribute('aria-selected'),'true');assert.equal(document.querySelectorAll('[role=tab]').length,9);assert.deepEqual([...document.querySelectorAll('header button')].map(n=>n.textContent),['Agregar contenidos sin contrato','Agregar contenido asociado a contrato']);assert(!document.querySelector('header a'));
  assert(![...document.querySelectorAll('th')].some(n=>n.textContent==='Publicación'||n.textContent==='Edición'));assert([...document.querySelectorAll('th')].some(n=>n.textContent.startsWith('Anuncios pendientes')));
  const countFilter=document.querySelector('[aria-label="Filtrar Anuncios pendientes"]');assert(countFilter);
  for(const [value,count] of [['9',0],['',1]]){await React.act(async()=>{Object.getOwnPropertyDescriptor(dom.window.HTMLInputElement.prototype,'value').set.call(countFilter,value);countFilter.dispatchEvent(new dom.window.Event('input',{bubbles:true}));});assert.equal(document.querySelectorAll('[role=tabpanel] tbody tr').length,count);}
@@ -86,6 +87,7 @@ const rowNames=()=>document.querySelector('tbody').textContent;
  await click('Fase 2');await click('Artículos (1)');assert(rowNames().includes('Artículo redacción'));assert(document.querySelector('h2').textContent==='Pendiente redacción');
  await click('Fase 3');await click('Anuncios a revisar y descargar (1)');assert(rowNames().includes('2'));assert(rowNames().includes('Empresa'));assert(rowNames().includes('Agente'));
  assert(![...document.querySelectorAll('th')].some(n=>n.textContent==='Materiales'));
+ await click('3.2 · Pendiente enviar corrección');assert(!document.querySelector('[aria-label="Tipo de contenido"]'));assert.equal(document.querySelector('h2').textContent,'Artículos pendientes enviar a corrección');assert(rowNames().includes('Artículo listo para corrección'));assert(!rowNames().includes('Anuncio maquetación'));
  await click('Fase 4');await click('Corrección otros');assert(rowNames().includes('Artículo corrección'));assert(!document.querySelector('[aria-label="Tipo de contenido"]').textContent.includes('Anuncios'));
  await click('Fase 5');await click('Artículos (1)');assert(rowNames().includes('Artículo revisión'));assert.equal(document.querySelector('h2').textContent,'Pendiente revisión cliente');
  await click('Fase 6');await click('Anuncios (1)');assert(rowNames().includes('Anuncio aprobado'));assert.equal(document.querySelector('h2').textContent,'Material OK - pendiente de publicar');

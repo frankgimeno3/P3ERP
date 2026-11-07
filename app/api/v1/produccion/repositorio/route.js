@@ -7,6 +7,6 @@ export async function GET(request) {
   if(params.get('tipo')==='grupos')return NextResponse.json(await getContentServiceGroups());
   if(params.get('tipo')==='pendientes-revista')return NextResponse.json(await getPendingMagazineContents());
   if(params.get('tipo')==='pendientes-otros')return NextResponse.json(await getPendingOtherContents());
-  return NextResponse.json(params.get('tipo')==='materiales'?await getRepositoryMaterials(params.get('contenido')||''):await getRepositoryContents());
+  return NextResponse.json(params.get('tipo')==='materiales'?await getRepositoryMaterials(params.get('contenido')||'',params.get('papelera')==='1'):await getRepositoryContents());
  } catch(error) {return NextResponse.json({message:error.message},{status:500});}
 }

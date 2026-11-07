@@ -1,0 +1,38 @@
+import assert from 'node:assert/strict';
+import {randomUUID} from 'node:crypto';
+import env from '@next/env';
+import {getPgPool} from '../server/database/pgClient.js';
+import {withUserEventContext} from '../server/features/userEvents/EventContext.js';
+import {addProductionMaterials,reviewProductionMaterial} from '../server/features/produccion/GestionesProduccionRepository.js';
+import {productionMaterialAction} from '../server/features/produccion/ProductionMaterialActions.js';
+import {updateContenidoProduccion} from '../server/features/contenido/ContenidoRepository.js';
+import {productionStage,productionSubstage} from '../app/lib/productionWorkflow.js';
+import {contentPending} from '../app/lib/productionManagement.js';
+env.loadEnvConfig(process.cwd());
+const pool=getPgPool(),db=await pool.connect(),query=pool.query.bind(pool),id='PRUEBA-tipos-'+randomUUID(),requestId=randomUUID();
+try{await withUserEventContext({enabled:true,actorId:'test-produccion-tipos',actorName:'Prueba de entregas',requestId,method:'POST',route:'maintenance/test-production-type-workflow',ip:null,ipSource:'prueba'},async()=>{
+ await db.query('BEGIN');pool.query=(...args)=>db.query(...args);
+ await db.query("INSERT INTO produccion_contenidos(id_contenido,nombre_contenido,articulo_hoja,anuncio_hoja,estado_contenido,es_prueba,hoja_prod) VALUES($1,'Prueba mixta','Pendiente','Pendiente','Contratado pendiente de recibir',true,true)",[id]);
+ const get=async tipo=>({...((await db.query('SELECT * FROM produccion_contenidos WHERE id_contenido=$1',[id])).rows[0]),tipo,materiales:(await db.query('SELECT * FROM produccion_materiales WHERE id_contenido=$1 AND tipo=$2',[id,tipo])).rows});
+ const upload=async tipo=>{const mediaId=randomUUID();return (await addProductionMaterials({id_contenido:id,tipo,materiales:[{filename:'test.pdf',nombre_material:'Prueba',size:4,contentType:'application/pdf',mediaId,s3Key:`mediateca/documentos_produccion/material_${tipo}/${mediaId}/test.pdf`}]},async()=>{},db))[0];};
+ assert.equal(productionStage(await get('anuncios')),'recibir');
+ const ad=await upload('anuncios');assert.equal(productionSubstage(await get('anuncios')),'3.1');assert.equal(productionStage(await get('articulos')),'recibir');
+ await productionMaterialAction(id,{accion:'marcar',ids:[ad.id_material],descargado:true},db);assert.equal(productionSubstage(await get('anuncios')),'3.1');
+ await productionMaterialAction(id,{accion:'validar',ids:[ad.id_material],valido:true},db);assert.equal(productionStage(await get('anuncios')),'publicacion');assert.equal(productionStage(await get('articulos')),'recibir');
+ await productionMaterialAction(id,{accion:'validar',ids:[ad.id_material],valido:false},db);assert.equal(productionStage(await get('anuncios')),'recibir');assert.equal((await get('anuncios')).estados_produccion.anuncios,'Material inválido');
+ const replacement=await upload('anuncios');assert.equal(productionSubstage(await get('anuncios')),'3.1');
+ await reviewProductionMaterial(replacement.id_material,{validacion_produccion:'ok produccion'},db);assert.equal(productionStage(await get('anuncios')),'publicacion');
+ await upload('articulos');assert.equal(productionStage(await get('articulos')),'redaccion');assert.equal(productionStage(await get('anuncios')),'publicacion');
+ let row=await get('articulos');
+ await assert.rejects(updateContenidoProduccion(id,{url_indesign_recurso7:'javascript:alert(1)'}),/URL/);
+ await assert.rejects(updateContenidoProduccion(id,{estados_produccion:{anuncios:'Pendiente redacción'},expectedVersion:row.updated_at}),/fases 1, 3.1 y 6/);
+ const updated=await updateContenidoProduccion(id,{estados_produccion:{articulos:'Pendiente de gestionar Charly',anuncios:'Publicado'},url_indesign_recurso7:'https://recurso7.example/indesign',expectedVersion:row.updated_at});
+ assert.equal(updated.url_indesign_recurso7,'https://recurso7.example/indesign');assert.equal(productionStage(await get('articulos')),'maquetacion');assert(!contentPending(await get('anuncios')));assert(contentPending(await get('articulos')));
+ row=await get('articulos');await db.query("UPDATE produccion_contenidos SET updated_at=updated_at+interval '1 millisecond' WHERE id_contenido=$1",[id]);
+ await assert.rejects(updateContenidoProduccion(id,{estados_produccion:{articulos:'Publicado'},expectedVersion:row.updated_at}),e=>e.statusCode===409);
+ const events=(await db.query('SELECT datos_nuevos FROM eventos_de_usuarios WHERE id_solicitud=$1',[requestId])).rows;assert(events.some(e=>e.datos_nuevos?.url_indesign_recurso7==='https://recurso7.example/indesign'));assert(events.some(e=>e.datos_nuevos?.estados_produccion?.anuncios==='Publicado'));
+ await db.query('ROLLBACK');
+ });
+ assert.equal((await db.query('SELECT 1 FROM produccion_contenidos WHERE id_contenido=$1',[id])).rowCount,0);
+ console.log('PASS: anuncios 1→3.1→6, rechazo y reemplazo, validación desde ficha, artículo independiente, URL segura, concurrencia, auditoría y rollback.');
+}catch(e){await db.query('ROLLBACK');throw e;}finally{pool.query=query;db.release();await pool.end();}

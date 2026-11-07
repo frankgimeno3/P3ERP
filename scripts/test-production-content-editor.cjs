@@ -10,7 +10,7 @@ function load(file){
   new Function('require','module','exports',js)(id=>{
     if(id.includes('AgenteService'))return {AgenteService:{getAgentes:async()=>[{id_agente:'agent',nombre_completo_agente:'Nombre del agente'}]}};
     if(id.includes('ContenidoService'))return {ContenidoService:{updateContenido:async(id,data)=>{calls.push({id,data});return {id_contenido:id,...data};}}};
-    if(id.startsWith('@/')){const base=id.slice(2);return load(['.tsx','.ts','.js'].map(ext=>base+ext).find(fs.existsSync));}
+    if(id.startsWith('@/')||id.startsWith('.')){const base=id.startsWith('@/')?id.slice(2):path.join(path.dirname(file),id);return load([base,...['.tsx','.ts','.js'].map(ext=>base+ext)].find(p=>fs.existsSync(p)&&fs.statSync(p).isFile()));}
     return require(id);
   },mod,mod.exports);cache.set(file,mod.exports);return mod.exports;
 }
@@ -37,5 +37,11 @@ const field=name=>[...document.querySelectorAll('label')].find(label=>label.text
   await React.act(async()=>document.querySelector('form').dispatchEvent(new dom.window.Event('submit',{bubbles:true,cancelable:true})));
   assert.equal(calls[1].data.formato_revista,'digital');
   assert.match(document.querySelector('[role="status"]').textContent,/guardados/);
-  await React.act(async()=>root.unmount());console.log('PASS: specifications, valid agent, occupied pages distinct from position, dates and format; workflow state is edited separately.');
+  const Management=load('app/dashboard/produccion/hoja_produccion/[id]/ProductionManagementEditor.tsx').default;
+  await React.act(async()=>root.render(React.createElement(Management,{content:{id_contenido:'mixed',categorias_gestion:['articulo','anuncio'],estado:'Contratado pendiente de recibir',estados_produccion:{articulos:'Pendiente de gestionar Charly',anuncios:'Material OK - pendiente de publicar'},updated_at:'2026-11-07T10:00:00.000Z'},materials:[],onSaved:()=>{}})));
+  const ads=field('Estado del anuncio'),articles=field('Estado del artículo');assert(ads&&articles);assert(![...ads.options].some(o=>o.value==='Pendiente redacción'||o.value==='Pendiente corrección'));assert.equal(ads.value,'Material OK - pendiente de publicar');
+  await change(field('URL InDesign (Recurso 7)'),'https://recurso7.example/archivo');await change(articles,'Pendiente corrección');assert(field('Destino de corrección'));
+  await React.act(async()=>document.querySelector('form').dispatchEvent(new dom.window.Event('submit',{bubbles:true,cancelable:true})));
+  assert.equal(calls.at(-1).data.url_indesign_recurso7,'https://recurso7.example/archivo');assert.equal(calls.at(-1).data.estados_produccion.articulos,'Pendiente corrección');assert.equal(calls.at(-1).data.estados_produccion.anuncios,'Material OK - pendiente de publicar');assert.equal(calls.at(-1).data.expectedVersion,'2026-11-07T10:00:00.000Z');
+  await React.act(async()=>root.unmount());console.log('PASS: datos, fechas y formato; estados independientes de artículo/anuncio, fases válidas, URL InDesign y control de versión.');
 })().catch(error=>{console.error(error);process.exitCode=1;});

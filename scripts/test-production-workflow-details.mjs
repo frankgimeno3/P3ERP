@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
 import env from '@next/env';
-import XLSX from 'xlsx';
+import * as XLSX from 'xlsx/xlsx.mjs';
 import {getPgPool} from '../server/database/pgClient.js';
 import {withUserEventContext} from '../server/features/userEvents/EventContext.js';
 import {productionMaterialAction} from '../server/features/produccion/ProductionMaterialActions.js';
@@ -14,7 +14,7 @@ try{await withUserEventContext({enabled:true,actorId:'test-workflow',actorName:'
  const get=async()=>({...((await db.query('SELECT * FROM produccion_contenidos WHERE id_contenido=$1',[id])).rows[0]),tipo:'anuncios',materiales:(await db.query('SELECT * FROM produccion_materiales WHERE id_contenido=$1 ORDER BY id_material',[id])).rows});
  const material=async n=>{await db.query("INSERT INTO produccion_materiales(id_material,nombre_material,id_contenido,tipo) VALUES($1,'Material de prueba',$2,'anuncios')",[id+n,id]);return id+n;};
  const first=await material('a');assert.equal(productionStage(await get()),'maquetacion');assert.equal(productionSubstage(await get()),'3.1');
- await productionMaterialAction(id,{accion:'marcar',ids:[first],descargado:true},db);assert.equal(productionSubstage(await get()),'3.2');
+ await productionMaterialAction(id,{accion:'marcar',ids:[first],descargado:true},db);assert.equal(productionSubstage(await get()),'3.1','Descargar un anuncio no equivale a validarlo');
  const row=(await get()).materiales[0];assert(row.fecha_descarga_produccion);assert.equal(row.agente_subida,'test-workflow');assert.equal(row.agente_descarga_produccion,'test-workflow');
  const media=randomUUID();await db.query("INSERT INTO mediateca_archivos(mediateca_content_id,mediateca_content_name,mediateca_s3_key) VALUES($1,'Prueba','test/material.pdf')",[media]);await db.query('UPDATE produccion_materiales SET mediateca_id=$2 WHERE id_material=$1',[first,media]);
  await productionMaterialAction(id,{accion:'marcar',ids:[first],descargado:false},db);
@@ -24,9 +24,13 @@ try{await withUserEventContext({enabled:true,actorId:'test-workflow',actorName:'
  const later=await material('b');assert.equal(productionSubstage(await get()),'3.1');
  await assert.rejects(productionMaterialAction(id,{accion:'marcar',ids:['otro'],descargado:true},db),/este contenido/);
  await productionMaterialAction(id,{accion:'validar',ids:[later],valido:false},db);assert.equal(productionStage(await get()),'recibir');assert.equal((await get()).estado_contenido,'Material inválido');
- await db.query("UPDATE produccion_contenidos SET estado_contenido='Pendiente de gestionar Charly',titulo_articulo='Título',texto_articulo='**Texto** con *formato*',paginas_ocupadas=2,posicion_revista=17 WHERE id_contenido=$1",[id]);
- assert.equal(productionSubstage(await get()),'3.1');await productionMaterialAction(id,{accion:'texto-descargado'},db);assert.equal(productionSubstage(await get()),'3.2');
- await db.query("UPDATE produccion_contenidos SET texto_articulo='Texto nuevo' WHERE id_contenido=$1",[id]);assert.equal(productionSubstage(await get()),'3.1');assert.equal(Number((await get()).paginas_ocupadas),2);assert.equal((await get()).posicion_revista,17);
+ await productionMaterialAction(id,{accion:'validar',ids:[later],valido:true},db);assert.equal(productionStage(await get()),'maquetacion');
+ await productionMaterialAction(id,{accion:'marcar',ids:[later],descargado:true},db);
+ await productionMaterialAction(id,{accion:'validar',ids:[first],valido:true},db);assert.equal(productionStage(await get()),'publicacion');
+ await db.query("UPDATE produccion_contenidos SET tipo_contenido='articulo',estados_produccion='{}',estado_contenido='Pendiente de gestionar Charly',titulo_articulo='Título',texto_articulo='**Texto** con *formato*',paginas_ocupadas=2,posicion_revista=17 WHERE id_contenido=$1",[id]);
+ const article=async()=>({...await get(),tipo:'articulos'});
+ assert.equal(productionSubstage(await article()),'3.1');await productionMaterialAction(id,{accion:'texto-descargado'},db);assert.equal(productionSubstage(await article()),'3.2');
+ await db.query("UPDATE produccion_contenidos SET texto_articulo='Texto nuevo' WHERE id_contenido=$1",[id]);assert.equal(productionSubstage(await article()),'3.1');assert.equal(Number((await get()).paginas_ocupadas),2);assert.equal((await get()).posicion_revista,17);
  const task=id+'-task';await db.query("INSERT INTO laboral_tareas_empleado(id,nombre,estado) VALUES($1,'Prueba tarea','pendiente')",[task]);
  await db.query("UPDATE laboral_tareas_empleado SET estado='completada',comentarios_agente='Hecho',agente_finalizacion='falso' WHERE id=$1",[task]);
  const completed=(await db.query('SELECT * FROM laboral_tareas_empleado WHERE id=$1',[task])).rows[0];assert.equal(completed.agente_creacion,'test-workflow');assert.equal(completed.agente_finalizacion,'test-workflow');assert(completed.fecha_finalizacion);

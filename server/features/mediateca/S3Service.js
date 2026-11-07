@@ -107,6 +107,7 @@ export async function assertObjectExistsInS3(s3Key, expected = null) {
   if (!bucket) throw new Error('El bucket S3 no está configurado.');
   const object = await getClient().send(new HeadObjectCommand({ Bucket: bucket, Key: s3Key }));
   if (expected && (object.ContentLength !== expected.size || object.ContentType !== expected.contentType)) throw new Error('El archivo subido no coincide con el tamaño o tipo confirmado.');
+  return {size:object.ContentLength,contentType:object.ContentType};
 }
 
 export async function createPresignedDownload(s3Key) {

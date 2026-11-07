@@ -26,17 +26,17 @@ const root=createRoot(document.getElementById('root'));
  const choose=async year=>{const button=[...document.querySelectorAll('button')].find(b=>b.textContent.trim()===(year==='Sin a\u00f1o'?year:'Publicacion en '+year));assert(button,year);await React.act(async()=>button.click());};
  const current=new Intl.DateTimeFormat('en',{year:'numeric',timeZone:'Europe/Madrid'}).format(new Date());
  assert([...document.querySelectorAll('button')].some(b=>b.textContent.includes(current)));
- for(const [year,index] of [['2025',0],['2027',1],['Anteriores',2],['Sin a\u00f1o',3]]) {
+ for(const [year,index] of [['2025',0],['2027',1],['Anteriores',2]]) {
  await choose(year);await React.act(async()=>[...document.querySelectorAll('button')].find(b=>b.textContent==='Revista').click());
  assert(document.querySelector('tbody').textContent.includes('Customer '+index));assert.equal(document.querySelectorAll('tbody tr').length,1);
  let headers=[...document.querySelectorAll('thead th')].map(th=>th.textContent);assert(!headers.includes('Tipo revista / servicio'));assert(!headers.includes('Caduca (web)'));assert(headers.includes('Página'));
  await React.act(async()=>[...document.querySelectorAll('button')].find(b=>b.textContent==='Otros').click());assert(document.querySelector('tbody').textContent.includes('Other '+index));
  headers=[...document.querySelectorAll('thead th')].map(th=>th.textContent);assert(headers.includes('Material'));assert(headers.includes('Tipo de servicio'));assert(!headers.includes('Anuncio'));assert(!headers.includes('Artículo'));assert(!headers.includes('Página'));
  }
- await choose('Sin a\u00f1o');await React.act(async()=>[...document.querySelectorAll('button')].find(b=>b.textContent==='Revista').click());
+ assert(![...document.querySelectorAll('button')].some(button=>button.textContent.includes('Sin a\u00f1o')));await choose('2027');await React.act(async()=>[...document.querySelectorAll('button')].find(b=>b.textContent==='Revista').click());
  assert(!document.querySelector('a[href="/dashboard/produccion/hoja_produccion/crear"]'));assert(![...document.querySelectorAll('label')].some(label=>label.textContent.startsWith('Comentarios')));
- await React.act(async()=>document.querySelector('[aria-label="Mostrar contenidos fuera de contrato: S\u00ed"]').click());assert.equal(document.querySelectorAll('tbody tr').length,2);assert(document.querySelector('tbody').textContent.includes('Outside 3'));assert(!document.querySelector('tbody').textContent.includes('Outside published'));
+ await React.act(async()=>document.querySelector('[aria-label="Mostrar contenidos fuera de contrato: S\u00ed"]').click());assert.equal(document.querySelectorAll('tbody tr').length,2);assert(document.querySelector('tbody').textContent.includes('Outside 1'));assert(!document.querySelector('tbody').textContent.includes('Outside published'));
  await React.act(async()=>document.querySelector('[aria-label="Mostrar contenido publicado: S\u00ed"]').click());assert.equal(document.querySelectorAll('tbody tr').length,3);
  await React.act(async()=>document.querySelector('[aria-label="Mostrar contenidos fuera de contrato: No"]').click());assert.equal(document.querySelectorAll('tbody tr').length,1);
- await React.act(async()=>root.unmount());dom.window.close();console.log('PASS: current year, historical and future production tabs and contents without year.');
+ await React.act(async()=>root.unmount());dom.window.close();console.log('PASS: current year, historical and future production tabs without a no-year tab.');
 })().catch(error=>{console.error(error);process.exitCode=1;});

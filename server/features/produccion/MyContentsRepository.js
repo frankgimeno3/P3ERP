@@ -13,10 +13,11 @@ export async function getMyContents(actorId,db=getPgPool()) {
   ORDER BY c.created_at DESC,c.id_contenido`,[actorId])).rows.filter(contentPending);
  if(!rows.length)return [];
  const ids=rows.map(row=>row.id_contenido),materials=(await db.query(`SELECT m.* FROM produccion_materiales m
-  WHERE m.id_contenido=ANY($1::text[]) OR EXISTS(SELECT 1 FROM produccion_contenidos c
-    WHERE c.id_contenido=ANY($1::text[]) AND c.array_ids_materiales @> jsonb_build_array(m.id_material))`,[ids])).rows;
+  WHERE m.eliminado_at IS NULL AND (m.id_contenido=ANY($1::text[]) OR EXISTS(SELECT 1 FROM produccion_contenidos c
+    WHERE c.id_contenido=ANY($1::text[]) AND c.array_ids_materiales @> jsonb_build_array(m.id_material)))`,[ids])).rows;
  return rows.map(row=>{
-  const item={...row,tipo:materialType(contentTypes(row)[0]),materiales:materials.filter(m=>m.id_contenido===row.id_contenido||(row.array_ids_materiales||[]).includes(m.id_material))};
+  const items=contentTypes(row).map(type=>({...row,tipo:materialType(type),materiales:materials.filter(m=>(m.id_contenido===row.id_contenido||(row.array_ids_materiales||[]).includes(m.id_material))&&(!m.tipo||m.tipo===materialType(type)))})).filter(contentPending);
+  const item=items.sort((a,b)=>productionStages.findIndex(s=>s.value===productionStage(a))-productionStages.findIndex(s=>s.value===productionStage(b)))[0];
   const fase=productionStage(item),motivo=contentAttentionReason(item);
   return {id_contenido:row.id_contenido,nombre_contenido:row.nombre_contenido||row.especificaciones_contenido||row.id_contenido,nombre_cuenta:row.nombre_cuenta||row.cliente_hoja||'Sin empresa',estado_contenido:row.estado_contenido,deadline_contenido:row.deadline_contenido||'',formato_revista:row.formato_revista,fase,fase_nombre:productionStages.find(stage=>stage.value===fase)?.title||'',motivo_atencion:motivo};
  });

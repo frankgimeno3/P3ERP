@@ -125,7 +125,7 @@
       "Mostrar contenidos fuera de contrato y Mostrar contenido publicado ocupan una fila completa cada uno dentro de Filtros. Fuera de contrato en Sí añade los contenidos sin contrato a los contratados, respetando año, Revista/Otros y el resto de filtros. Los contadores indican cuántos hay en esa selección y avisan de los publicados o cerrados que siguen ocultos. Mostrar contenido publicado en No excluye también Publicado GRATIS.",
       "El cliente se muestra con el nombre actual de su cuenta vinculada, aunque el Excel original usase otro nombre. El agente es quien sigue ese contenido para obtener materiales y puede ser distinto del agente comercial del contrato.",
       "Pulsa una fila para abrir la ficha del contenido en Almacenamiento. Puedes editar especificaciones, Publicación / Nº web, agente por nombre, fecha límite con día, mes y año separados y estado. En los apartados Materiales y Versión acabada de esa ficha puedes aportar archivos y nuevas versiones.",
-      "Las pestañas incluyen el año actual y todos los años presentes en los contenidos. Anteriores conserva los contenidos históricos importados; Sin año permite localizar los que aún no tienen fecha. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados.",
+      "Las pestañas incluyen el año actual y todos los años presentes en los contenidos. Anteriores conserva los contenidos históricos importados; no hay pestaña Sin año. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados.",
       "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
       "Los contenidos nuevos reciben su identificador del servidor. Se conservan los identificadores históricos y sus referencias.",
       "Cada año, Anteriores y Sin año tienen las pestañas Revista (principal) y Otros antes de los filtros. Revista omite Tipo revista/servicio y Caduca (web). Otros muestra Material y Tipo de servicio, sin Anuncio, Artículo ni Página. La división utiliza el destino y la publicación del contenido.",
@@ -149,10 +149,11 @@
   "/dashboard/produccion/gestion-contenidos/revista": {
     "summary": "Contenidos de revista pendientes de publicar, con o sin revista asignada.",
     "steps": [
-      "La primera pestaña es Pendientes de asignar revista y muestra su contador. Asignar revista vincula el contenido existente a un número sin duplicarlo ni modificar su contrato.",
+      "Contenidos revista pendientes publicar aparece primero y queda seleccionado al entrar. Pendientes de asignar revista es la segunda pestaña y muestra su contador. Asignar revista vincula el contenido existente a un número sin duplicarlo ni modificar su contrato.",
       "Contenidos revista pendientes publicar abre las siete familias de revistas. Cada número aparece una sola vez: el formato impreso, digital o impreso + digital pertenece a cada contenido.",
       "Las tablas muestran número, fechas de publicación y límite de materiales, anuncios, artículos, pendientes de recibir y en proceso. Pulsa una fila para abrir las fases del número. Los filtros se agrupan en una tarjeta inicialmente cerrada.",
-      "Agregar contenidos sin contrato crea un contenido nuevo. Agregar contenido asociado a contrato permite aportar material a un compromiso contratado ya existente. Los asistentes mantienen separado el destino revista de los otros servicios. Las altas con contrato se originan en el contrato o en una propuesta aceptada; no se crean líneas financieras desde producción."
+      "Agregar contenidos sin contrato crea un contenido nuevo. Agregar contenido asociado a contrato permite aportar material a un compromiso contratado ya existente. Los asistentes mantienen separado el destino revista de los otros servicios. Las altas con contrato se originan en el contrato o en una propuesta aceptada; no se crean líneas financieras desde producción.",
+      "Los dos botones de alta comparten el mismo estilo visual."
     ]
   },
   "/dashboard/produccion/gestion-contenidos/otros": {
@@ -160,7 +161,8 @@
     "steps": [
       "Las pestañas muestran un grupo de servicios cada una, incluido Banner news para Vidrioperfil newsletter. Todo reúne los grupos y Otros aparece a su derecha. Suscripción no es un servicio asociable a contenidos.",
       "La tabla muestra contenido, servicio, empresa, agente y fase. Solo muestra pendientes de publicar; los contenidos de revista se asignan en Contenido revista. Los filtros se agrupan en una tarjeta inicialmente cerrada.",
-      "Las altas sin contrato y la aportación a contenido contratado tienen asistentes separados. No hay botones de materiales en la tabla: pulsa el contenido para gestionarlos en su ficha."
+      "Las altas sin contrato y la aportación a contenido contratado tienen asistentes separados. No hay botones de materiales en la tabla: pulsa el contenido para gestionarlos en su ficha.",
+      "Los dos botones de alta comparten el mismo estilo visual."
     ]
   },
   "/dashboard/produccion/gestion-contenidos/revista/[id_revista]": {
@@ -169,7 +171,8 @@
       "Las fases 1 a 6 quedan a la izquierda y Todo a la derecha. Cada pestaña y subpestaña indica su contador. El título explica la fase seleccionada.",
       "Fase 1: contratado pendiente de recibir, incluidos los anuncios con material inválido, destacados en rojo. Fase 2: pendiente redacción. Fase 3: pendiente de gestionar Charly.",
       "La fase 3 separa 3.1 Contenido no descargado y 3.2 Pendiente enviar corrección. Los archivos válidos y el texto del artículo deben estar recogidos por producción. Un archivo o una edición de texto posterior vuelve a quedar pendiente.",
-      "En fase 3 los tipos son Anuncios a revisar y descargar y Artículos a maquetar. La fase 4 separa Corrección GM (persona o equipo) y Corrección otros. La fase 5 es Pendiente revisión cliente. Las fases 4 y 5 muestran solo artículos; los anuncios se revisan en fase 3.",
+      "En 3.1 los tipos son Anuncios a revisar y descargar y Artículos a maquetar. En 3.2 no hay pestañas de tipo: solo se muestran Artículos pendientes enviar a corrección. Los anuncios siguen únicamente 1 → 3.1 → 6: al recibirlos pasan a 3.1, al validarlos pasan a 6 y si no son válidos vuelven a 1 en rojo. Descargar un anuncio no equivale a validarlo.",
+      "Las fases 2, 4 y 5 solo contienen artículos. La fase 4 separa Corrección GM (persona o equipo) y Corrección otros. La fase 5 es Pendiente revisión cliente.",
       "La fase 6 es Material OK - pendiente de publicar. Todo mezcla artículos y anuncios sin separar pestañas. Ambas vistas muestran Posición como primera columna y ordenan inicialmente por ella.",
       "Páginas ocupadas es la extensión del contenido; Posición es su página inicial. Son datos distintos y editables en la ficha. Publicados y anulados se consultan en Almacenamiento. Pulsa una fila para abrir la ficha; los filtros se agrupan en una tarjeta cerrada."
     ]
@@ -190,7 +193,7 @@
       "Muestra nombre, descripción, identificador y, si procede, versión acabada V01, V02 y siguientes. Abre el archivo con una descarga autorizada del ERP.",
       "El enlace al contenido abre su ficha en Almacenamiento. Puedes guardar la revisión y los comentarios del material; no crear nuevos materiales desde esta ficha.",
       "Usa el midnav superior para volver a los listados y al dashboard. No se repite un enlace Volver dentro de la página.",
-      "Abrir archivo registra la descarga por producción después de verificar el archivo en S3. Las casillas, validación y descarga conjunta se gestionan desde la ficha del contenido."
+      "Abrir archivo registra la descarga por producción después de recibir correctamente los bytes desde S3. Las casillas, validación y descarga conjunta se gestionan desde la ficha del contenido. Los archivos retirados se restauran desde la papelera de su contenido antes de usarlos."
     ]
   },
   "/dashboard/produccion/repositorio/contenidos/[id]": {
@@ -199,10 +202,11 @@
       "Datos y detalles permite editar especificaciones, agente, fechas mediante día/mes/año, formato en revista, páginas ocupadas y posición. Empresa y contrato enlazan sus fichas.",
       "Materiales permite aportar varios archivos o un ZIP. Cada tarjeta de selección tiene nombre obligatorio, inicialmente el del archivo, descripción y una cruz para retirarla antes de subir. Las carpetas sin comprimir no se admiten.",
       "Cada material muestra fecha de subida a P3ERP, agente de subida y fecha de descarga por producción. Los datos históricos desconocidos se indican sin inventar un autor. El material pendiente de descargar aparece en rojo.",
-      "Puedes marcar cada material o todos como descargados, descargar uno o descargar todos en ZIP. Una descarga iniciada correctamente registra la descarga; un fallo de almacenamiento no la marca. El ZIP conjunto admite hasta 200 MB; los lotes mayores se descargan individualmente.",
+      "Puedes marcar cada material o todos como descargados, descargar uno o descargar todos en ZIP. El navegador recibe los archivos directamente desde S3 y los marca después de recibir todos los bytes correctamente; un fallo no los marca. El ZIP conjunto admite hasta 200 MB; los lotes mayores se descargan individualmente.",
       "Marcar no válido excluye ese material del seguimiento de descargas. Si es un anuncio, el contenido vuelve a fase 1 como Material inválido y se destaca en rojo.",
       "El texto del artículo tiene título, entradilla y contenido. La barra permite insertar negrita y cursiva con formato Markdown y vista previa; el contador muestra palabras y caracteres. Guarda el texto antes de marcarlo como recogido. Si vuelve a editarse, queda pendiente de recoger.",
-      "Gestiones de producción contiene Estado del contenido y el destino de corrección GM u otros. Los estados antiguos se han unificado; Sin estado no tiene fase. Publicado y Anulado dejan de aparecer en las colas pendientes.",
+      "Gestiones de producción contiene el estado, el destino de corrección GM u otros y URL InDesign (Recurso 7). Puedes guardar un enlace http o https y abrirlo desde la ficha. Cuando hay artículo y anuncio en el mismo contenido, cada entrega tiene su propio estado: validar el anuncio no cambia la fase del artículo. Sin estado no tiene fase. Publicado y Anulado dejan de aparecer en las colas pendientes.",
+      "Cada material y versión permite editar su nombre y descripción o eliminarlo con confirmación. Eliminar lo retira a la papelera del contenido y conserva el original en S3. Restaurar recupera la asociación y lo deja pendiente de descargar. Las versiones retiradas no se renumeran y su número no se reutiliza.",
       "Versión acabada conserva todos los archivos como materiales, numerados V01, V02 y siguientes, de más actual a más antigua. Subir versión utiliza el mismo almacenamiento S3 de Mediateca; su bucket debe estar configurado en el servidor. Los modales se cierran con × o Escape."
     ]
   },

@@ -25,7 +25,7 @@ export async function getPendingMagazineContents() {
  const [contents,magazines,links,editorials,materials]=await Promise.all([
   getRepositoryContents(),getMagazineList(),getPgPool().query('SELECT id_contenido,id_revista FROM produccion_revistas_contenidos'),
   getPgPool().query('SELECT id_contenido,revista,espana_previsto_numero,latam_previsto_numero,especial_numero,hueco_previsto FROM produccion_articulos_contenidos WHERE id_contenido IS NOT NULL'),
-  getPgPool().query('SELECT * FROM produccion_materiales'),
+  getPgPool().query('SELECT * FROM produccion_materiales WHERE eliminado_at IS NULL'),
  ]);
  const editorialById=new Map(),linked=new Map();
  for(const row of editorials.rows){if(!editorialById.has(row.id_contenido))editorialById.set(row.id_contenido,[]);editorialById.get(row.id_contenido).push(row);}
@@ -37,13 +37,13 @@ export async function getPendingMagazineContents() {
 
 function workflowRow(row,materials){
  const types=row.es_editorial?[...new Set([...contentTypes(row).filter(type=>type!=='otro'),'articulo'])]:contentTypes(row);
- const phasesByType=types.map(type=>({tipo:materialType(type),fase:productionStage({...row,tipo:materialType(type),materiales:materials.filter(m=>(m.id_contenido===row.id_contenido||(row.array_ids_materiales||[]).includes(m.id_material))&&(!m.tipo||m.tipo===materialType(type)))})}));
+ const phasesByType=types.filter(type=>contentPending({...row,tipo:materialType(type)})).map(type=>({tipo:materialType(type),fase:productionStage({...row,tipo:materialType(type),materiales:materials.filter(m=>(m.id_contenido===row.id_contenido||(row.array_ids_materiales||[]).includes(m.id_material))&&(!m.tipo||m.tipo===materialType(type)))})}));
  const phases=[...new Set(phasesByType.map(item=>item.fase))];
  return {...row,fase:phases[0],fases_tipos:phasesByType,fase_nombre:phases.map(value=>productionStages.find(stage=>stage.value===value)).filter(Boolean).map(stage=>`${stage.label} · ${stage.title}`).join(' / ')};
 }
 
 export async function getPendingOtherContents(){
- const [rows,materials]=await Promise.all([getRepositoryContents(),getPgPool().query('SELECT * FROM produccion_materiales')]);
+ const [rows,materials]=await Promise.all([getRepositoryContents(),getPgPool().query('SELECT * FROM produccion_materiales WHERE eliminado_at IS NULL')]);
  return rows.filter(row=>!row.es_revista&&row.grupo_servicio!=='suscripcion'&&contentPending(row)).map(row=>workflowRow(row,materials.rows));
 }
 
@@ -81,12 +81,12 @@ export async function assignContentMagazine(idRevista,data,transactionDb=null) {
   if(!transactionDb)await db.query('COMMIT');return {ok:true,id_revista:idRevista,id_contenido:row.id_contenido};
  } catch(error){if(!transactionDb)await db.query('ROLLBACK');throw error;} finally{if(!transactionDb)db.release();}
 }
-export async function getRepositoryMaterials(contentId='') {
- return (await getPgPool().query(`SELECT m.*,COALESCE(m.id_contenido,c.id_contenido) AS id_contenido,c.nombre_contenido,c.estado_contenido,cu.nombre_empresa AS nombre_cuenta
+export async function getRepositoryMaterials(contentId='',includeDeleted=false,db=getPgPool()) {
+ return (await db.query(`SELECT m.*,COALESCE(m.id_contenido,c.id_contenido) AS id_contenido,c.nombre_contenido,c.estado_contenido,cu.nombre_empresa AS nombre_cuenta
   FROM produccion_materiales m LEFT JOIN LATERAL (SELECT c.* FROM produccion_contenidos c
    WHERE c.id_contenido=m.id_contenido OR (m.id_contenido IS NULL AND c.array_ids_materiales @> jsonb_build_array(m.id_material))
    ORDER BY c.id_contenido LIMIT 1) c ON true
   LEFT JOIN comercial_cuentas cu ON cu.id_cuenta=c.id_cuenta
-  WHERE ($1='' OR m.id_contenido=$1 OR EXISTS(SELECT 1 FROM produccion_contenidos linked WHERE linked.id_contenido=$1 AND linked.array_ids_materiales @> jsonb_build_array(m.id_material)))
-  ORDER BY m.es_version_acabada DESC,m.numero_version DESC NULLS LAST,m.created_at DESC,m.id_material`,[contentId])).rows;
+  WHERE ($2::boolean OR m.eliminado_at IS NULL) AND ($1='' OR m.id_contenido=$1 OR EXISTS(SELECT 1 FROM produccion_contenidos linked WHERE linked.id_contenido=$1 AND linked.array_ids_materiales @> jsonb_build_array(m.id_material)))
+  ORDER BY m.es_version_acabada DESC,m.numero_version DESC NULLS LAST,m.created_at DESC,m.id_material`,[contentId,Boolean(contentId&&includeDeleted)])).rows;
 }

@@ -1,0 +1,23 @@
+const {execFileSync}=require('node:child_process');
+const assert=require('node:assert/strict'),fs=require('node:fs'),ts=require('typescript'),XLSX=require('xlsx');
+const {JSDOM}=require('jsdom'),dom=new JSDOM('<body></body>');global.document=dom.window.document;
+let calls=[],fetches=[],clicked=[],blobs=[],failure='',files=[];
+const api={post:async(url,data)=>{calls.push(data);if(data.accion==='preparar-descarga')return {data:{archivos:files}};if(failure==='mark')throw Error('RDS no disponible');return {data:{ok:true}};}};
+global.fetch=async url=>{fetches.push(url);return {ok:failure!=='file',headers:{get:()=>String(3)},arrayBuffer:async()=>new Uint8Array([80,68,70]).buffer};};
+URL.createObjectURL=blob=>{blobs.push(blob);return 'blob:test';};URL.revokeObjectURL=()=>{};global.setTimeout=()=>0;
+dom.window.HTMLAnchorElement.prototype.click=function(){clicked.push(this.download);};
+const m={exports:{}},js=ts.transpileModule(fs.readFileSync('app/lib/productionDownloads.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true}}).outputText;
+const zipModule={exports:{}};new Function('module','exports',ts.transpileModule(fs.readFileSync('app/lib/productionZip.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText)(zipModule,zipModule.exports);
+new Function('require','module','exports',js)(id=>id==='@/app/apiClient'?{__esModule:true,default:api}:id==='./productionZip'?zipModule.exports:require(id),m,m.exports);
+const reset=()=>{calls=[];fetches=[];clicked=[];blobs=[];failure='';files=[{id:'a',nombre:'Artículo.pdf',url:'https://s3.invalid/a',size:3}];};
+(async()=>{
+ reset();await m.exports.downloadContentMaterials('content',['a']);assert.deepEqual(calls.map(c=>c.accion),['preparar-descarga','marcar']);assert.equal(clicked[0],'Artículo.pdf');assert.deepEqual([...new Uint8Array(await blobs[0].arrayBuffer())],[80,68,70]);
+ reset();failure='file';await assert.rejects(m.exports.downloadContentMaterials('content',['a']),/descargar/);assert.equal(calls.length,1);assert.equal(clicked.length,0);
+ reset();failure='mark';await assert.rejects(m.exports.downloadContentMaterials('content',['a']),/RDS/);assert.equal(clicked.length,0);
+ reset();files.push({id:'b',nombre:'Artículo.pdf',url:'https://s3.invalid/b',size:3});await m.exports.downloadContentMaterials('content',['a','b'],true);assert.equal(clicked[0],'materiales.zip');const archive=XLSX.CFB.read(Buffer.from(await blobs[0].arrayBuffer()),{type:'buffer'});assert.equal(archive.FileIndex.filter(entry=>entry.content?.toString()==='PDF').length,2);
+ const zipBytes=Buffer.from(await blobs[0].arrayBuffer());
+ const names=process.platform==='win32'?JSON.parse(execFileSync('powershell.exe',['-NoProfile','-NonInteractive','-Command',"[Console]::OutputEncoding=[Text.UTF8Encoding]::new($false); Add-Type -AssemblyName System.IO.Compression; $zipInput=[IO.MemoryStream]::new(); [Console]::OpenStandardInput().CopyTo($zipInput); $zipInput.Position=0; $zipReader=[IO.Compression.ZipArchive]::new($zipInput,[IO.Compression.ZipArchiveMode]::Read); [Console]::Out.Write((@($zipReader.Entries.FullName)|ConvertTo-Json -Compress)); $zipReader.Dispose()"],{input:zipBytes,encoding:'utf8',windowsHide:true})):JSON.parse(execFileSync('python3',['-c','import sys,io,zipfile,json; print(json.dumps(zipfile.ZipFile(io.BytesIO(sys.stdin.buffer.read())).namelist()))'],{input:zipBytes,encoding:'utf8'}));
+ assert(names.includes('1_Artículo.pdf'));assert(names.includes('2_Artículo.pdf'));
+ reset();files[0].size=201*1024*1024;await assert.rejects(m.exports.downloadContentMaterials('content',['a'],true),/200 MB/);assert.equal(fetches.length,0);assert.equal(calls.length,1);
+ console.log('PASS: descarga directa S3, nombre y extensión, marcado tras recibir bytes, fallos sin marcado/descarga, ZIP en navegador con duplicados y límite de 200 MB.');
+})().catch(e=>{console.error(e);process.exitCode=1;});

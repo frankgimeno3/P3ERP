@@ -1,8 +1,8 @@
-import { randomUUID } from "node:crypto";
+import {changeProductionMaterial} from "../produccion/ProductionMaterialTrash.js";
 import { getPgPool } from "../../database/pgClient.js";
 
 export async function getMateriales() {
-  return (await getPgPool().query("SELECT * FROM produccion_materiales ORDER BY created_at DESC")).rows;
+  return (await getPgPool().query("SELECT * FROM produccion_materiales WHERE eliminado_at IS NULL ORDER BY created_at DESC")).rows;
 }
 
 export async function getMaterial(idMaterial) {
@@ -12,21 +12,9 @@ export async function getMaterial(idMaterial) {
       ORDER BY c.id_contenido LIMIT 1) c ON true WHERE m.id_material=$1`, [idMaterial])).rows[0] || null;
 }
 
-export async function saveMaterial(idMaterial, data = {}) {
-  const materialId = idMaterial || data.id_material || `material_${randomUUID().slice(0, 12)}`;
-  const { rows } = await getPgPool().query(
-    `INSERT INTO produccion_materiales
-      (id_material,nombre_material,validacion_produccion,comentarios,mediateca_id,archivo_url)
-     VALUES ($1,$2,$3,$4,$5,$6)
-     ON CONFLICT (id_material) DO UPDATE SET
-       nombre_material=EXCLUDED.nombre_material,
-       validacion_produccion=EXCLUDED.validacion_produccion,
-       comentarios=EXCLUDED.comentarios,
-       mediateca_id=EXCLUDED.mediateca_id,
-       archivo_url=EXCLUDED.archivo_url,
-       updated_at=NOW()
-     RETURNING *`,
-    [materialId, data.nombre_material || "", data.validacion_produccion || "pendiente validar", data.comentarios || "", data.mediateca_id || null, data.archivo_url || null],
-  );
-  return rows[0];
+export async function saveMaterial(idMaterial,data={}){
+ if(!idMaterial)throw Object.assign(new Error('Los materiales se crean desde la ficha del contenido mediante una subida verificada.'),{status:405});
+ const material=await getMaterial(idMaterial);
+ if(!material?.id_contenido)throw Object.assign(new Error('El material no está asociado a un contenido.'),{status:409});
+ return changeProductionMaterial(material.id_contenido,{accion:'editar',id_material:idMaterial,version:data.version||data.updated_at,nombre_material:data.nombre_material,descripcion_material:data.descripcion_material??material.descripcion_material});
 }

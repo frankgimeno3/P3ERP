@@ -6,7 +6,7 @@ import {allocateContentIdentifier} from '../identifiers/BusinessIdentifiers.js';
 import { normalizeProductionDeadline } from "../../../app/lib/productionContentFields.js";
 import { addCuentaEntityEvent, formatChangeDetail } from "../registroEventos/RegistroEventosRepository.js";
 import {editorialContentExpression} from '../produccion/ProductionContentScope.js';
-import {normalizeProductionState} from '../../../app/lib/productionWorkflow.js';
+import {normalizeProductionState,productionStatesByType,aggregateProductionState} from '../../../app/lib/productionWorkflow.js';
 import {productionStates} from '../../../app/lib/productionContentFields.js';
 
 function getYearFromDate(value) {
@@ -51,6 +51,7 @@ function normalizeHojaProd(row) {
 
 function normalizeContenido(row) {
   return {
+    estados_produccion:row.estados_produccion||{},url_indesign_recurso7:row.url_indesign_recurso7||'',
     paginas_ocupadas:row.paginas_ocupadas, posicion_revista:row.posicion_revista, correccion_destino:row.correccion_destino,
     titulo_articulo:row.titulo_articulo,entradilla_articulo:row.entradilla_articulo,texto_articulo:row.texto_articulo,
     texto_revision:row.texto_revision,texto_revision_descargada:row.texto_revision_descargada,texto_fecha_descarga:row.texto_fecha_descarga,
@@ -418,9 +419,13 @@ export async function updateContenidoProduccion(idContenido, data = {}) {
   const values = [];
   const sets = [];
 
-  for (const field of ["especificaciones_contenido", "publicacion_num_web", "id_agente", "deadline_contenido", "formato_revista", "titulo_articulo", "entradilla_articulo", "texto_articulo", "correccion_destino"]) {
+  for (const field of ["especificaciones_contenido", "publicacion_num_web", "id_agente", "deadline_contenido", "formato_revista", "titulo_articulo", "entradilla_articulo", "texto_articulo", "correccion_destino", "url_indesign_recurso7"]) {
     if (!Object.prototype.hasOwnProperty.call(data, field)) continue;
     let value = String(data[field] ?? '');
+    if(field==='url_indesign_recurso7'){
+      value=value.trim();
+      if(value){try{if(!['http:','https:'].includes(new URL(value).protocol))throw Error();}catch{throw Object.assign(new Error('Introduce una URL InDesign válida (http o https).'),{statusCode:400});}}
+    }
     if(field==='correccion_destino'&&!['gm','otros'].includes(value))throw Object.assign(new Error('Selecciona un destino de corrección válido.'),{statusCode:400});
     if(value.length>(field==='texto_articulo'?500000:10000))throw Object.assign(new Error('El texto es demasiado largo.'),{statusCode:400});
     if(field==='formato_revista')value=validateContentMagazineFormat(value);
@@ -435,10 +440,19 @@ export async function updateContenidoProduccion(idContenido, data = {}) {
     sets.push(`${field} = $${values.length}`);
   }
 
-  if (Object.prototype.hasOwnProperty.call(data, "estado")) {
-    const state=normalizeProductionState(data.estado);
-    if(state&&!productionStates.includes(state))throw Object.assign(new Error('Selecciona un estado de contenido válido.'),{statusCode:400});
-    values.push(state);
+  if (Object.hasOwn(data,'estados_produccion')||Object.hasOwn(data,'estado')) {
+    if(Object.hasOwn(data,'estados_produccion')&&(!data.expectedVersion||!Number.isFinite(new Date(data.expectedVersion).getTime())))throw Object.assign(new Error('Recarga el contenido antes de guardar su gestión.'),{statusCode:409});
+    const states=productionStatesByType(before||{}),input=data.estados_produccion;
+    if(input!==undefined&&(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).some(key=>!Object.hasOwn(states,key))))throw Object.assign(new Error('Revisa los tipos de contenido.'),{statusCode:400});
+    for(const key of Object.keys(states)){
+      if(input!==undefined&&!Object.hasOwn(input,key))continue;
+      const state=normalizeProductionState(input!==undefined?input[key]:data.estado);
+      if(state&&!productionStates.includes(state))throw Object.assign(new Error('Selecciona un estado de contenido válido.'),{statusCode:400});
+      if(key==='anuncios'&&['Pendiente redacción','Pendiente corrección','Pendiente revisión cliente'].includes(state))throw Object.assign(new Error('Los anuncios solo pasan por las fases 1, 3.1 y 6.'),{statusCode:400});
+      states[key]=state;
+    }
+    values.push(JSON.stringify(states));sets.push(`estados_produccion=$${values.length}::jsonb`);
+    values.push(aggregateProductionState(states));
     sets.push(`estado_contenido = $${values.length}`);
   }
 
@@ -462,15 +476,20 @@ export async function updateContenidoProduccion(idContenido, data = {}) {
   if (!sets.length) return getContenidoProduccionById(idContenido);
 
   values.push(idContenido);
+  const idIndex=values.length;
+  let versionWhere='';
+  if(Object.hasOwn(data,'estados_produccion')){values.push(data.expectedVersion);versionWhere=` AND date_trunc('milliseconds',updated_at)=date_trunc('milliseconds',$${values.length}::timestamptz)`;}
   const { rows } = await pool.query(
     `
       UPDATE produccion_contenidos
       SET ${sets.join(", ")}, updated_at = now()
-      WHERE id_contenido = $${values.length}
+      WHERE id_contenido = $${idIndex}${versionWhere}
       RETURNING id_contenido
     `,
     values,
   );
+
+  if(!rows.length&&Object.hasOwn(data,'estados_produccion'))throw Object.assign(new Error('El contenido ha cambiado. Recarga antes de guardar.'),{statusCode:409});
 
   const updated = rows[0] ? await getContenidoProduccionById(rows[0].id_contenido) : null;
   if (before && updated?.id_cuenta) {

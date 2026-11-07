@@ -1,18 +1,20 @@
-/* eslint-disable @typescript-eslint/no-require-imports -- Isolated routing test with mocked authentication. */
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const ts = require('typescript');
 const path = require('node:path');
 const { NextRequest } = require('next/server');
 
+const cache=new Map();
 function load(file) {
+  file=path.resolve(file);if(cache.has(file))return cache.get(file).exports;
   const mod = { exports: {} };
+  cache.set(file,mod);
   const js = ts.transpileModule(fs.readFileSync(file, 'utf8'), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
   }).outputText;
   new Function('require', 'module', 'exports', js)(id => {
     if (id.endsWith('/env.js')) return { COGNITO: { CLIENT_ID: 'test', REGION: 'test', USER_POOL_ID: 'test' } };
-    if (id.includes('pgClient')) return { getPgPool: () => ({ query: async () => ({ rows: [{ id_agente: 'agent', rol_agente: 'superadmin' }] }) }) };
+    if (id.includes('pgClient')) return { getPgPool: () => ({ query: async () => ({ rows: [{ id_agente: 'agent', rol_agente: 'superadmin',estado_agente:'activo' }] }) }) };
     if (id === 'jose') return { createRemoteJWKSet: () => ({}), jwtVerify: async token => ({ payload: token === 'id' ? { token_use: 'id', email: 'test@example.test' } : { token_use: 'access', client_id: 'test' } }) };
     if (id.includes('roleAccess')) return { normalizeRole: role => role, canAccessDashboardPath: () => true, canAccessApiPath: () => true };
     if (id.includes('TaskAccess')) return { managesTasks: () => true };

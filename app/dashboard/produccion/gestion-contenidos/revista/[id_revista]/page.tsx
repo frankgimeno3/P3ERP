@@ -17,7 +17,8 @@ export default function MagazineWorkflowPage(){
  const pending=(data?.contenidos||[]).filter(contentPending);
  const selected=pending.filter((row:any)=>stage==='todo'||productionStage(row)===stage);
  const subdivided=selected.filter((row:any)=>!['maquetacion','correccion'].includes(stage)||productionSubstage(row)===sub);
- const editorialOnly=['correccion','revision'].includes(stage),positionFirst=['todo','publicacion'].includes(stage);
+ const articleCorrection=stage==='maquetacion'&&sub==='3.2';
+ const editorialOnly=['redaccion','correccion','revision'].includes(stage)||articleCorrection,positionFirst=['todo','publicacion'].includes(stage);
  const selectedType=editorialOnly?'articulos':type;
  const rows=subdivided.filter((row:any)=>stage==='todo'||row.tipo===selectedType).map((row:any)=>({...row,
   nombre_contenido:contentDisplayName(row),fase_nombre:productionPhaseName(row),formato:contentMagazineFormatLabel(row),
@@ -29,9 +30,9 @@ export default function MagazineWorkflowPage(){
  return <main className="min-h-screen bg-gray-100 p-6 text-slate-900 lg:p-12">{error&&<p role="alert" className="text-red-700">{error}</p>}{!data&&!error?<p role="status">Cargando revista…</p>:data&&<>
   <h1 className="my-6 text-2xl font-semibold text-blue-950">{data.revista.revista} · {data.revista.edicion} · {magazineNumberLabel(data.revista)}</h1>
   <ModuleTabs plain splitLast label="Fase de producción" value={stage} onChange={changeStage} items={productionStages.map(item=>({...item,label:`${item.label} (${pending.filter((row:any)=>item.value==='todo'||productionStage(row)===item.value).length})`,icon:<ProductionPhaseIcon phase={item.value}/>}))}/>
-  <section role="tabpanel" className="rounded-b-lg bg-white p-5"><h2 className="mb-4 text-xl font-semibold text-blue-950">{productionStages.find(item=>item.value===stage)?.title}</h2>
+  <section role="tabpanel" className="rounded-b-lg bg-white p-5"><h2 className="mb-4 text-xl font-semibold text-blue-950">{articleCorrection?'Artículos pendientes enviar a corrección':productionStages.find(item=>item.value===stage)?.title}</h2>
    {['maquetacion','correccion'].includes(stage)&&<ModuleTabs sub label="Subfase" value={sub} onChange={setSub} items={subs.map(item=>({...item,label:`${item.label} (${selected.filter((row:any)=>productionSubstage(row)===item.value).length})`}))}/>}
-   {stage!=='todo'&&<ModuleTabs sub label="Tipo de contenido" value={selectedType} onChange={setType} items={(editorialOnly?['articulos']:['anuncios','articulos']).map(value=>({value,label:`${stage==='maquetacion'?(value==='anuncios'?'Anuncios a revisar y descargar':'Artículos a maquetar'):(value==='anuncios'?'Anuncios':'Artículos')} (${subdivided.filter((row:any)=>row.tipo===value).length})`}))}/>}
+   {stage!=='todo'&&!articleCorrection&&<ModuleTabs sub label="Tipo de contenido" value={selectedType} onChange={setType} items={(editorialOnly?['articulos']:['anuncios','articulos']).map(value=>({value,label:`${stage==='maquetacion'?(value==='anuncios'?'Anuncios a revisar y descargar':'Artículos a maquetar'):(value==='anuncios'?'Anuncios':'Artículos')} (${subdivided.filter((row:any)=>row.tipo===value).length})`}))}/>}
    <div className="pt-4"><ProductionTable key={stage+sub+selectedType} rows={rows} initialSortColumn={positionFirst?0:undefined} columns={[
     ...(positionFirst?[['posicion','Posición'] as const]:[]),['nombre_contenido','Contenido'],...(stage==='todo'?[['tipo_nombre','Tipo'] as const]:[]),
     ['fase_nombre','Fase'],['formato','Formato'],['paginas_ocupadas','Páginas ocupadas'],['nombre_cuenta','Empresa'],['nombre_agente','Agente']

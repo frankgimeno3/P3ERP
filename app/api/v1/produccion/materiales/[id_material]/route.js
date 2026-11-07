@@ -8,6 +8,5 @@ export async function GET(_request, { params }) {
   return item ? NextResponse.json(item) : NextResponse.json({ message: "Material no encontrado" }, { status: 404 });
 }
 export async function PUT(request, { params }) {
-  const { id_material: id } = await params;
-  return NextResponse.json(await saveMaterial(id, await request.json()));
+  try{const {id_material:id}=await params;return NextResponse.json(await saveMaterial(id,await request.json()));}catch(e){return NextResponse.json({message:e.message},{status:e.status||400});}
 }
