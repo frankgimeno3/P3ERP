@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import SearchableSelect from '@/app/components/SearchableSelect';
 import DatePartsInput from '@/app/components/DatePartsInput';
 import { AgenteService } from '@/app/service/AgenteService';
@@ -12,6 +12,8 @@ type Agent = { id_agente:string; nombre_completo_agente:string };
 export default function ContentFieldsEditor({content,onSaved}:{content:Content;onSaved:(content:any)=>void}) {
   const [draft,setDraft]=useState({especificaciones_contenido:content.especificaciones_contenido||'',publicacion_num_web:content.publicacion_num_web||'',id_agente:content.id_agente||'',deadline_contenido:content.deadline_contenido||'',estado:content.estado||'',formato_revista:content.formato_revista||'impreso_digital'});
   const [agents,setAgents]=useState<Agent[]>([]),[loadingAgents,setLoadingAgents]=useState(true),[saving,setSaving]=useState(false),[error,setError]=useState(''),[saved,setSaved]=useState(false);
+  const previousState=useRef(content.estado||'');
+  useEffect(()=>{const before=previousState.current;setDraft(draft=>draft.estado===before?{...draft,estado:content.estado||''}:draft);previousState.current=content.estado||'';},[content.estado]);
   useEffect(()=>{let active=true;AgenteService.getAgentes().then((rows:Agent[])=>{if(active)setAgents(Array.from(new Map(rows.map(row=>[row.id_agente,row])).values()));}).catch(()=>{if(active)setError('No se pudieron cargar los agentes. Recarga la página para volver a intentarlo.');}).finally(()=>{if(active)setLoadingAgents(false);});return()=>{active=false;};},[]);
   const patch=(key:keyof typeof draft,value:string)=>{setDraft(previous=>({...previous,[key]:value}));setSaved(false);};
   const submit=async(event:React.FormEvent)=>{event.preventDefault();if(saving)return;setError('');setSaved(false);try{

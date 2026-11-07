@@ -145,6 +145,7 @@
   "/dashboard/produccion/contenidos/revistas/[id_revista]/contenidos",
   "/dashboard/produccion/control_redaccion",
   "/dashboard/produccion/gestion",
+  "/dashboard/produccion/gestion-contenidos",
   "/dashboard/produccion/gestion-contenidos/otros",
   "/dashboard/produccion/gestion-contenidos/revista",
   "/dashboard/produccion/gestion-contenidos/revista/[id_revista]",

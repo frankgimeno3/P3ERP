@@ -36,7 +36,7 @@ const click=async(text)=>{const node=[...document.querySelectorAll('button')].fi
   pathname=url;const Layout=load(`app/dashboard/produccion/${file}/layout.tsx`).default;
   await React.act(async()=>root.render(React.createElement(Layout,null,React.createElement('div',{'data-page':true},'Ficha'))));
   assert.equal(document.querySelector('h2').textContent,title);assert(document.querySelector('[data-page]'));
-  assert(![...document.querySelectorAll('a')].some(a=>a.getAttribute('href')==='/dashboard/produccion/gestion-contenidos'));
+  if(file==='gestion-contenidos')assert([...document.querySelectorAll('a')].some(a=>a.getAttribute('href')==='/dashboard/produccion/gestion-contenidos'));
   assert(![...document.querySelectorAll('a')].some(a=>a.getAttribute('href')==='/dashboard/produccion/repositorio/materiales'));
  }
  await React.act(async()=>root.unmount());dom.window.close();console.log('PASS: subpestanas y contadores, atencion sin perder su fase, navegacion y midnav en todas las fichas sin enlaces a carpetas inexistentes.');

@@ -2,9 +2,10 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import env from '@next/env';
 import { getPgPool } from '../server/database/pgClient.js';
-import { completeContentIntake, validateContentSelection } from '../server/features/produccion/ContentIntakeRepository.js';
+import { completeContentIntake, validateContentSelection,getContentIntakeOptions } from '../server/features/produccion/ContentIntakeRepository.js';
 import { flattenProductionMedia } from '../server/features/produccion/ProductionMediaFolders.js';
 import { contentTypes, contentPending, validateIntakeFiles } from '../app/lib/productionManagement.js';
+import {getContenidoProduccionById} from '../server/features/contenido/ContenidoRepository.js';
 
 env.loadEnvConfig(process.cwd());
 const pool = getPgPool(), db = await pool.connect(), schema = 'test_intake_' + randomUUID().replaceAll('-', '');
@@ -17,6 +18,7 @@ try {
   pool.connect = async () => ({ query: (...args) => db.query(...args), release() {} });
   pool.query = (...args) => db.query(...args);
   assert.deepEqual(contentTypes({ articulo_hoja: 'RECIBIDO', anuncio_hoja: 'RECIBIDO' }), ['articulo', 'anuncio']);
+  assert.deepEqual(contentTypes({tipo_contenido:'anuncio',es_editorial:true}),['anuncio','articulo']);
   assert.ok(contentPending({ estado_contenido: 'Parcialmente publicado' }));
   assert.ok(!contentPending({ estado_contenido: 'Publicado' }));
   assert.ok(validateIntakeFiles([{ filename: 'a.pdf', size: 10, nombre_material: 'x' }], 'zip').length);
@@ -44,6 +46,7 @@ try {
   await db.query("UPDATE produccion_contenidos SET id_cuenta='account_test' WHERE id_contenido=$1", [first.id_contenido]);
   const contracted = { ...data, contratado: true, sin_empresa: false, id_cuenta: 'account_test', id_contrato: 'contract_test', id_contenido: first.id_contenido, id_carga: randomUUID(), materiales: [file()] };
   const attached = await completeContentIntake(contracted, async () => {});
+  assert.equal((await getContenidoProduccionById(first.id_contenido)).id_contrato,'contract_test');
   assert.equal(attached.id_contenido, first.id_contenido);
   assert.equal((await db.query('SELECT count(*)::int n FROM produccion_contenidos')).rows[0].n, before);
   await assert.rejects(validateContentSelection({ ...contracted, id_cuenta: 'other_test' }), /no pertenece/);
@@ -55,6 +58,13 @@ try {
   await db.query("INSERT INTO servicios_revistas(id_revista,revista,edicion,publicacion) VALUES($1,'Vidrio Plano','Iberia','1')", [magazine]);
   await db.query("INSERT INTO servicios_publicaciones(id_publicacion,revista_id,tipo_publicacion,numero_publicacion) VALUES('pub_test_intake',$1,'revista','1')",[magazine]);
   const article = await completeContentIntake({ ...data, tipo: 'articulo', para_revista: true, id_revista: magazine, id_carga: randomUUID(), materiales: [file('material_articulos', true)] }, async () => {});
+  await db.query("UPDATE produccion_contenidos SET id_cuenta='account_test',id_contrato='contract_test' WHERE id_contenido=$1",[article.id_contenido]);
+  const scoped=await getContentIntakeOptions({id_cuenta:'account_test',id_contrato:'contract_test',tipo:'articulo',ambito:'revista'});
+  assert(scoped.contents.some(row=>row.id_contenido===article.id_contenido));
+  assert.equal((await getContentIntakeOptions({id_cuenta:'account_test',id_contrato:'contract_test',tipo:'articulo',ambito:'otros'})).contents.length,0);
+  await assert.rejects(validateContentSelection({...contracted,tipo:'articulo',id_contenido:article.id_contenido,ambito:'otros',id_revista:''}),/esta página/);
+  await db.query("UPDATE produccion_contenidos SET estado_contenido='Publicado' WHERE id_contenido=$1",[article.id_contenido]);
+  assert.equal((await getContentIntakeOptions({id_cuenta:'account_test',id_contrato:'contract_test',tipo:'articulo',ambito:'revista'})).contents.length,0);
   assert.equal((await db.query('SELECT tipo FROM produccion_revistas_contenidos WHERE id_contenido=$1', [article.id_contenido])).rows[0].tipo, 'articulos');
   const root = (await db.query("SELECT mediateca_folder_id FROM mediateca_carpetas WHERE mediateca_folder_name='documentos_revistas'")).rows[0].mediateca_folder_id;
   const legacy = randomUUID();

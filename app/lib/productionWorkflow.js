@@ -10,6 +10,7 @@ export const productionStages = [
   {value:'todo',label:'Todo',title:'Todo'},
 ];
 export const versionLabel = number => `V${String(number).padStart(2,'0')}`;
+export function productionPhaseName(row){const stage=productionStages.find(item=>item.value===productionStage(row));return stage?`${stage.label} · ${stage.title}`:'';}
 export function productionStage(row) {
   if (!contentPending(row)) return '';
   const state=clean(row.estado_contenido || row.estado);

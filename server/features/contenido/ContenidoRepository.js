@@ -5,6 +5,7 @@ import { getPgPool } from "../../database/pgClient.js";
 import {allocateContentIdentifier} from '../identifiers/BusinessIdentifiers.js';
 import { normalizeProductionDeadline } from "../../../app/lib/productionContentFields.js";
 import { addCuentaEntityEvent, formatChangeDetail } from "../registroEventos/RegistroEventosRepository.js";
+import {editorialContentExpression} from '../produccion/ProductionContentScope.js';
 
 function getYearFromDate(value) {
   if (!value) return "";
@@ -48,6 +49,7 @@ function normalizeHojaProd(row) {
 
 function normalizeContenido(row) {
   return {
+    es_editorial:Boolean(row.es_editorial),
     nombre_contenido: row.nombre_contenido ?? "",
     descripcion_contenido: row.descripcion_contenido ?? "",
     tipo_contenido: row.tipo_contenido ?? "",
@@ -343,6 +345,8 @@ export async function getContenidoProduccionById(idContenido) {
     `
       SELECT
         c.*,
+        COALESCE(NULLIF(c.id_contrato,''),(SELECT ct.id_contrato FROM comercial_contratos ct WHERE ct.array_contenidos @> jsonb_build_array(jsonb_build_object('id_contenido',c.id_contenido)) ORDER BY ct.id_contrato LIMIT 1)) AS id_contrato,
+        ${editorialContentExpression} AS es_editorial,
         ${contenidoEspecificoExpr} AS contenido_especifico_id,
         ${servicioExpr} AS servicio,
         cu.nombre_empresa,

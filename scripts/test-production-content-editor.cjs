@@ -42,5 +42,12 @@ const field=name=>[...document.querySelectorAll('label')].find(label=>label.text
     assert.equal(calls.at(-1).data.estado,state);
   }
   assert.match(document.querySelector('[role="status"]').textContent,/guardados/);
+  const content={id_contenido:'sync',id_agente:'agent',estado:'No pedido'};
+  await React.act(async()=>root.render(React.createElement(Editor,{key:'sync',content,onSaved:()=>{}})));
+  await React.act(async()=>root.render(React.createElement(Editor,{key:'sync',content:{...content,estado:'Pendiente redacción'},onSaved:()=>{}})));
+  assert.equal(field('Estado').value,'Pendiente redacción','Refresca la fase después de recibir material');
+  await change(field('Estado'),'Pendiente revisión cliente');
+  await React.act(async()=>root.render(React.createElement(Editor,{key:'sync',content:{...content,estado:'Material OK - pendiente de publicar'},onSaved:()=>{}})));
+  assert.equal(field('Estado').value,'Pendiente revisión cliente','Conserva una elección del usuario aún no guardada');
   await React.act(async()=>root.unmount());console.log('PASS: editable controls, agent name, legacy status, date validation and save payload');
 })().catch(error=>{console.error(error);process.exitCode=1;});

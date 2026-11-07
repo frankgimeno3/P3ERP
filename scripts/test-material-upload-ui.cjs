@@ -1,0 +1,34 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),ts=require('typescript');
+const {JSDOM}=require(process.env.P3_SELECTOR_TEST_MODULES?path.join(process.env.P3_SELECTOR_TEST_MODULES,'jsdom'):'jsdom');
+const dom=new JSDOM('<div id="root"></div>',{url:'http://localhost/dashboard/produccion/repositorio/contenidos/content'});
+Object.assign(global,{window:dom.window,document:dom.window.document,HTMLElement:dom.window.HTMLElement,IS_REACT_ACT_ENVIRONMENT:true});Object.defineProperty(global,'navigator',{configurable:true,value:dom.window.navigator});
+const React=require('react'),{createRoot}=require('react-dom/client'),root=createRoot(document.getElementById('root')),cache=new Map(),calls=[];
+let fail=true,saved=0,closed=0;
+global.fetch=async(url,options)=>{calls.push({method:'PUT',url,options});return {ok:true};};
+const api={post:async(url,data)=>{calls.push({method:'POST',url,data});if(url.endsWith('/presign'))return {data:{mediaId:crypto.randomUUID(),s3Key:'key/'+data.filename,uploadUrl:'https://upload.invalid/'+data.filename}};if(fail){fail=false;throw Error('Fallo temporal de registro');}return {data:[]};}};
+function load(file){file=path.resolve(file);if(cache.has(file))return cache.get(file);const mod={exports:{}};cache.set(file,mod.exports);
+ const code=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{jsx:ts.JsxEmit.ReactJSX,module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true}}).outputText;
+ new Function('require','module','exports',code)(id=>{if(id==='@/app/apiClient')return {__esModule:true,default:api};if(id.startsWith('@/')||id.startsWith('.')){const base=id.startsWith('@/')?id.slice(2):path.resolve(path.dirname(file),id);return load(['','.tsx','.ts','.js'].map(ext=>base+ext).find(fs.existsSync));}return require(id);},mod,mod.exports);cache.set(file,mod.exports);return mod.exports;}
+const Modal=load('app/dashboard/produccion/gestion-contenidos/MaterialUploadModal.tsx').default;
+const choose=async(files)=>{const field=document.querySelector('input[type=file]');Object.defineProperty(field,'files',{configurable:true,value:files});await React.act(async()=>field.dispatchEvent(new dom.window.Event('change',{bubbles:true})));};
+const change=async(field,value)=>React.act(async()=>{Object.getOwnPropertyDescriptor(Object.getPrototypeOf(field),'value').set.call(field,value);field.dispatchEvent(new dom.window.Event('input',{bubbles:true}));});
+const submit=async()=>React.act(async()=>document.querySelector('form').dispatchEvent(new dom.window.Event('submit',{bubbles:true,cancelable:true})));
+(async()=>{
+ await React.act(async()=>root.render(React.createElement(Modal,{contentId:'content',type:'articulos',finished:false,onSaved:()=>saved++,onClose:()=>closed++})));
+ assert(document.querySelector('input[type=file]').multiple);
+ const first=new dom.window.File(['pdf'],'original.pdf',{type:'application/pdf'}),zip=new dom.window.File(['zip'],'carpeta.zip',{type:'application/zip'});
+ await choose([first,zip]);assert.equal(document.querySelectorAll('article').length,2);assert.deepEqual([...document.querySelectorAll('article input')].map(n=>n.value),['original.pdf','carpeta.zip']);
+ await React.act(async()=>document.querySelector('[aria-label="Retirar carpeta.zip"]').click());assert.equal(document.querySelectorAll('article').length,1);
+ await change(document.querySelector('article input'),'   ');await submit();assert.equal(calls.length,0);assert(document.querySelector('[role=alert]').textContent.includes('nombre'));
+ await change(document.querySelector('article input'),'Material elegido');await change(document.querySelector('article textarea'),'Descripción elegida');await choose([zip]);
+ const event=new dom.window.Event('drop',{bubbles:true,cancelable:true});Object.defineProperty(event,'dataTransfer',{value:{files:[],items:[{webkitGetAsEntry:()=>({isDirectory:true})}]}});
+ await React.act(async()=>document.querySelector('input[type=file]').dispatchEvent(event));assert(document.querySelector('[role=alert]').textContent.includes('carpetas'));assert.equal(document.querySelectorAll('article').length,2);
+ const nested=new dom.window.File(['pdf'],'archivo.pdf');Object.defineProperty(nested,'webkitRelativePath',{value:'carpeta/archivo.pdf'});await choose([nested]);assert.equal(document.querySelectorAll('article').length,2);assert(document.querySelector('[role=alert]').textContent.includes('carpetas'));
+ await submit();assert.equal(calls.filter(c=>c.method==='PUT').length,2);assert.equal(saved,0);assert(document.querySelector('[role=alert]').textContent.includes('Fallo temporal'));
+ await submit();assert.equal(calls.filter(c=>c.method==='PUT').length,2,'No se vuelven a subir los archivos al reintentar el registro');assert.equal(saved,1);assert.equal(closed,1);
+ const payload=calls.at(-1).data;assert.equal(payload.materiales.length,2);assert.equal(payload.materiales[0].nombre_material,'Material elegido');assert.equal(payload.materiales[0].descripcion,'Descripción elegida');assert.equal(payload.materiales[1].nombre_material,'carpeta.zip');
+ await React.act(async()=>root.render(React.createElement(Modal,{key:'version',contentId:'content',type:'articulos',finished:true,onSaved:()=>saved++,onClose:()=>closed++})));
+ assert(!document.querySelector('input[type=file]').multiple);await choose([first,zip]);assert(document.querySelector('[role=alert]').textContent.includes('único'));assert.equal(document.querySelectorAll('article').length,0);
+ await React.act(async()=>window.dispatchEvent(new dom.window.KeyboardEvent('keydown',{key:'Escape'})));assert.equal(closed,2);
+ await React.act(async()=>root.unmount());dom.window.close();console.log('PASS: seleccion multiple, ZIP, carpetas rechazadas, tarjetas, retirada, nombres obligatorios, edicion, reintento y version individual.');
+})().catch(error=>{console.error(error);process.exitCode=1;});

@@ -11,6 +11,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import MiddleNav from "../../../general_components/componentes_recurrentes/MiddleNav";
 import { HojaProduccionService } from "@/app/service/HojaProduccionService";
+import {filterSheetVisibility,sheetHasContract,sheetPending} from '@/app/lib/productionSheet';
 
 interface HojaProduccionContenido {
   formato: string;
@@ -58,7 +59,7 @@ const baseTableColumns = columns.filter(([field]) => !["codigo_crm", "publicacio
 const Materiales: FC = () => {
   const router = useRouter();
   const [kind,setKind]=useState('revista');
-  const activeColumns: [keyof HojaProduccionContenido,string][] = kind==='revista'?columns.filter(([key])=>!['tipo','caducidad'].includes(key)):columns.filter(([key])=>!['anuncio','articulo','pagina','formato'].includes(key)).map(([key,label])=>[key,key==='tipo'?'Tipo de servicio':label]);
+  const activeColumns: [keyof HojaProduccionContenido,string][] = kind==='revista'?columns.filter(([key])=>!['tipo','caducidad','comentarios'].includes(key)):columns.filter(([key])=>!['anuncio','articulo','pagina','formato','comentarios'].includes(key)).map(([key,label])=>[key,key==='tipo'?'Tipo de servicio':label]);
   if(kind==='otros')activeColumns.splice(activeColumns.findIndex(([key])=>key==='estado'),0,['material','Material']);
   const tableColumns=activeColumns.filter(([key])=>baseTableColumns.some(([field])=>field===key)||key==='material');
   const currentYear = new Intl.DateTimeFormat('en', {year:'numeric',timeZone:'Europe/Madrid'}).format(new Date());
@@ -93,16 +94,14 @@ const Materiales: FC = () => {
     router.push(href);
   };
 
-  const contenidosFiltrados = contenidos.filter((contenido) => {
+  const scope = contenidos.filter((contenido) => {
     if(Boolean(contenido.es_revista)!==(kind==='revista'))return false;
     if ((contenido.ano_publicacion || 'Sin año') !== year) return false;
-    const estado = String(contenido.estado || "").toLowerCase();
-    const hasContrato = Boolean(String(contenido.contrato || "").trim());
-    const isPublished = estado === "publicado" || estado === "publicada";
-    if (!showPublished && isPublished) return false;
-    if (!showOutOfContract && !hasContrato) return false;
     return activeColumns.every(([field]) => !filters[field]?.trim() || matchesTableFilter(String(contenido[field] ?? "").toLowerCase(), filters[field].trim().toLowerCase()));
   });
+  const contenidosFiltrados: HojaProduccionContenido[] = filterSheetVisibility(scope,{outside:showOutOfContract,published:showPublished});
+  const outsideCount = scope.filter(row=>!sheetHasContract(row)&&(showPublished||sheetPending(row))).length;
+  const outsidePublished = scope.filter(row=>!sheetHasContract(row)&&!sheetPending(row)).length;
 
   return (
     <div className="flex flex-col h-full min-h-screen text-[15px] text-gray-600">
@@ -110,6 +109,7 @@ const Materiales: FC = () => {
       <div className="bg-gray-200 min-h-screen p-0 text-gray-600">
         <div className="mb-5 bg-white p-5 text-[13px] text-gray-700 shadow-sm">
           Aqui se muestran todos los contenidos para los que hay compromiso con el cliente. Haz click en un elemento para ver los datos completos. Los artículos y anuncios van por separado en vez de en la misma línea.
+          <p className="mt-2">Para agregar contenido contratado, crea un <Link href="/dashboard/comercial/contratos/crear" className="cursor-pointer text-blue-900 hover:underline">contrato desde cero</Link> que lo contenga o marca como aceptada la <Link href="/dashboard/comercial/propuestas" className="cursor-pointer text-blue-900 hover:underline">propuesta</Link> que incluye ese contenido. Para contenido sin contrato, utiliza <Link href="/dashboard/produccion/gestion-contenidos/revista" className="cursor-pointer text-blue-900 hover:underline">Producción → Gestión contenidos</Link>.</p>
         </div>
         <div className="bg-white rounded-lg shadow-xl p-8">
           <div className="relative mb-4 flex flex-row flex-wrap items-center justify-between gap-3">
@@ -122,14 +122,9 @@ const Materiales: FC = () => {
                   style={{ marginLeft: index === 0 ? "0px" : "-5px" }}
                   onClick={() => setYear(tab)}
                 >
-                  Publicacion en {tab}
+                  {tab === 'Sin año' ? tab : `Publicacion en ${tab}`}
                 </button>
               ))}
-            </div>
-            <div className="flex flex-row flex-wrap items-center justify-end gap-3">
-              <Link href="/dashboard/produccion/hoja_produccion/crear" className="bg-blue-950 text-white rounded-lg px-4 py-2 text-[13px] shadow-xl hover:bg-blue-900 cursor-pointer">
-                Agregar nuevo contenido
-              </Link>
             </div>
           </div>
 
@@ -152,23 +147,23 @@ const Materiales: FC = () => {
                 </label>
               ))}
             </div>
-            <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div className="mt-4 grid grid-cols-1 gap-3">
               <div className="flex flex-col items-start gap-2 border border-gray-200 bg-gray-50 px-3 py-3">
                 <p className="text-[13px] font-semibold text-blue-950">Mostrar contenidos fuera de contrato?</p>
                 <div className="flex flex-row flex-wrap items-center gap-3">
                   <div className="inline-flex overflow-hidden rounded border border-blue-950 bg-white text-[11px]">
-                    <button type="button" onClick={() => setShowOutOfContract(false)} className={`cursor-pointer px-3 py-1 font-medium hover:bg-blue-100 ${!showOutOfContract ? "bg-blue-950 text-white hover:bg-blue-900" : "text-blue-950"}`}>No</button>
-                    <button type="button" onClick={() => setShowOutOfContract(true)} className={`cursor-pointer px-3 py-1 font-medium hover:bg-blue-100 ${showOutOfContract ? "bg-blue-950 text-white hover:bg-blue-900" : "text-blue-950"}`}>Si</button>
+                    <button type="button" aria-label="Mostrar contenidos fuera de contrato: No" aria-pressed={!showOutOfContract} onClick={() => setShowOutOfContract(false)} className={`cursor-pointer px-3 py-1 font-medium hover:bg-blue-100 ${!showOutOfContract ? "bg-blue-950 text-white hover:bg-blue-900" : "text-blue-950"}`}>No</button>
+                    <button type="button" aria-label="Mostrar contenidos fuera de contrato: Sí" aria-pressed={showOutOfContract} onClick={() => setShowOutOfContract(true)} className={`cursor-pointer px-3 py-1 font-medium hover:bg-blue-100 ${showOutOfContract ? "bg-blue-950 text-white hover:bg-blue-900" : "text-blue-950"}`}>Si</button>
                   </div>
-                  <p className="text-[13px] text-gray-600">{showOutOfContract ? "Se muestra contenido dentro y fuera de contrato (gratuito)" : "Se muestra unicamente contenido que aparece en contrato"}</p>
+                  <p role="status" className="text-[13px] text-gray-600">{showOutOfContract ? `Se muestra contenido dentro y fuera de contrato. Fuera de contrato en esta selección: ${outsideCount}.` : `Se muestra únicamente contenido que aparece en contrato. Puedes incluir ${outsideCount} contenido(s) fuera de contrato en esta selección.`}{!showPublished&&outsidePublished>0&&` Hay ${outsidePublished} fuera de contrato publicado(s) o cerrado(s); activa también Mostrar contenido publicado para verlos.`}</p>
                 </div>
               </div>
               <div className="flex flex-col items-start gap-2 border border-gray-200 bg-gray-50 px-3 py-3">
                 <p className="text-[13px] font-semibold text-blue-950">Mostrar contenido publicado?</p>
                 <div className="flex flex-row flex-wrap items-center gap-3">
                   <div className="inline-flex overflow-hidden rounded border border-blue-950 bg-white text-[11px]">
-                    <button type="button" onClick={() => setShowPublished(false)} className={`cursor-pointer px-3 py-1 font-medium hover:bg-blue-100 ${!showPublished ? "bg-blue-950 text-white hover:bg-blue-900" : "text-blue-950"}`}>No</button>
-                    <button type="button" onClick={() => setShowPublished(true)} className={`cursor-pointer px-3 py-1 font-medium hover:bg-blue-100 ${showPublished ? "bg-blue-950 text-white hover:bg-blue-900" : "text-blue-950"}`}>Si</button>
+                    <button type="button" aria-label="Mostrar contenido publicado: No" aria-pressed={!showPublished} onClick={() => setShowPublished(false)} className={`cursor-pointer px-3 py-1 font-medium hover:bg-blue-100 ${!showPublished ? "bg-blue-950 text-white hover:bg-blue-900" : "text-blue-950"}`}>No</button>
+                    <button type="button" aria-label="Mostrar contenido publicado: Sí" aria-pressed={showPublished} onClick={() => setShowPublished(true)} className={`cursor-pointer px-3 py-1 font-medium hover:bg-blue-100 ${showPublished ? "bg-blue-950 text-white hover:bg-blue-900" : "text-blue-950"}`}>Si</button>
                   </div>
                   <p className="text-[13px] text-gray-600">{showPublished ? "Se muestra contenido publicado y pendiente de publicar" : "Se muestra unicamente contenido pendiente de publicar"}</p>
                 </div>

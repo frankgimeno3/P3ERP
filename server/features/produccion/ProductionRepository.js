@@ -1,7 +1,9 @@
 import {resolveMagazineIssueId} from '../revista/MagazineIssue.js';
 import {getPgPool} from '../../database/pgClient.js';
 import {contentServiceGroup} from '../../../app/lib/contentServiceGroups.js';
-import {contentPending,contentTypes} from '../../../app/lib/productionManagement.js';
+import {contentPending,contentTypes,materialType} from '../../../app/lib/productionManagement.js';
+import {productionStage,productionStages} from '../../../app/lib/productionWorkflow.js';
+import {magazineContentExpression,editorialContentExpression} from './ProductionContentScope.js';
 import {getMagazineList,matchesLegacy} from './GestionesProduccionRepository.js';
 import {articleMatchesMagazine} from '../../../app/config/editorialMagazine.js';
 
@@ -12,9 +14,7 @@ export async function getContentServiceGroups() {
 export async function getRepositoryContents() {
  const groups=await getContentServiceGroups();
  const rows=(await getPgPool().query(`SELECT c.*,cu.nombre_empresa AS nombre_cuenta,a.nombre_completo_agente,s.id_medio,
-  (COALESCE(c.destino_revista,false) OR EXISTS(SELECT 1 FROM produccion_revistas_contenidos rc WHERE rc.id_contenido=c.id_contenido)
-   OR EXISTS(SELECT 1 FROM servicios_publicaciones p WHERE p.revista_id IS NOT NULL AND p.revista_id<>'' AND p.id_publicacion IN (c.id_publicacion,c.contenido_especifico_id))
-   OR COALESCE(c.publicacion_num_web,'') ~* '(VIDRIO|VENTANAS|VPCS|QQ|QUI.N ES QUI.N|HUECO).*(ESPA.A|IBERIA|LATAM|AM.RICA|N[ºO°]|[0-9]$)') AS es_revista,
+  ${magazineContentExpression} AS es_revista,${editorialContentExpression} AS es_editorial,
   COALESCE(NULLIF(s.nombre_servicio_es,''),NULLIF(c.tipo_revista_servicio,''),c.servicio,'') AS nombre_servicio
   FROM produccion_contenidos c LEFT JOIN comercial_cuentas cu ON cu.id_cuenta=c.id_cuenta
   LEFT JOIN agentes_db a ON a.id_agente=c.id_agente LEFT JOIN servicios_db s ON s.id_servicio=c.servicio
@@ -22,16 +22,41 @@ export async function getRepositoryContents() {
  return rows.map(row=>{const id=contentServiceGroup(row);return {...row,es_revista:Boolean(row.es_revista||id==='revista'),grupo_servicio:id,nombre_grupo_servicio:groups.find(group=>group.id_medio===id)?.nombre_medio||id};});
 }
 export async function getPendingMagazineContents() {
- const [contents,magazines,links,editorials]=await Promise.all([
+ const [contents,magazines,links,editorials,materials]=await Promise.all([
   getRepositoryContents(),getMagazineList(),getPgPool().query('SELECT id_contenido,id_revista FROM produccion_revistas_contenidos'),
   getPgPool().query('SELECT id_contenido,revista,espana_previsto_numero,latam_previsto_numero,especial_numero,hueco_previsto FROM produccion_control_redaccion WHERE id_contenido IS NOT NULL'),
+  getPgPool().query('SELECT id_material,id_contenido,tipo,es_version_acabada FROM produccion_materiales'),
  ]);
  const editorialById=new Map(),linked=new Map();
  for(const row of editorials.rows){if(!editorialById.has(row.id_contenido))editorialById.set(row.id_contenido,[]);editorialById.get(row.id_contenido).push(row);}
  for(const row of links.rows){if(!linked.has(row.id_contenido))linked.set(row.id_contenido,new Set());linked.get(row.id_contenido).add(row.id_revista);}
- return contents.filter(row=>row.es_revista&&contentPending(row)).map(row=>({...row,es_editorial:editorialById.has(row.id_contenido),revistas_vinculadas:magazines.filter(m=>(m.ids_revistas||[m.id_revista]).some(id=>linked.get(row.id_contenido)?.has(id))
+ return contents.filter(row=>row.es_revista&&contentPending(row)).map(row=>({...workflowRow({...row,es_editorial:editorialById.has(row.id_contenido)},materials.rows),revistas_vinculadas:magazines.filter(m=>(m.ids_revistas||[m.id_revista]).some(id=>linked.get(row.id_contenido)?.has(id))
   || (m.ids_publicaciones||[m.id_publicacion]).some(id=>!!id&&(row.id_publicacion===id||row.contenido_especifico_id===id))
   || editorialById.get(row.id_contenido)?.some(article=>articleMatchesMagazine(article,m))||matchesLegacy(row,m)).map(m=>m.id_revista)}));
+}
+
+function workflowRow(row,materials){
+ const types=row.es_editorial?[...new Set([...contentTypes(row).filter(type=>type!=='otro'),'articulo'])]:contentTypes(row);
+ const phasesByType=types.map(type=>({tipo:materialType(type),fase:productionStage({...row,tipo:materialType(type),materiales:materials.filter(m=>(m.id_contenido===row.id_contenido||(row.array_ids_materiales||[]).includes(m.id_material))&&(!m.tipo||m.tipo===materialType(type)))})}));
+ const phases=[...new Set(phasesByType.map(item=>item.fase))];
+ return {...row,fase:phases[0],fases_tipos:phasesByType,fase_nombre:phases.map(value=>productionStages.find(stage=>stage.value===value)).filter(Boolean).map(stage=>`${stage.label} · ${stage.title}`).join(' / ')};
+}
+
+export async function getPendingOtherContents(){
+ const [rows,materials]=await Promise.all([getRepositoryContents(),getPgPool().query('SELECT id_material,id_contenido,tipo,es_version_acabada FROM produccion_materiales')]);
+ return rows.filter(row=>!row.es_revista&&contentPending(row)).map(row=>workflowRow(row,materials.rows));
+}
+
+export async function getPendingMagazineOverview(){
+ const [magazines,contents]=await Promise.all([getMagazineList(),getPendingMagazineContents()]);
+ return magazines.map(magazine=>{
+  const assigned=contents.filter(row=>row.revistas_vinculadas.includes(magazine.id_revista));
+  const deliverables=assigned.flatMap(row=>row.fases_tipos).filter(item=>item.tipo==='articulos'||item.tipo==='anuncios');
+  const articles=deliverables.filter(item=>item.tipo==='articulos').length;
+  const ads=deliverables.filter(item=>item.tipo==='anuncios').length;
+  const receiving=deliverables.filter(item=>item.fase==='recibir').length;
+  return {...magazine,articulos_pendientes:articles,anuncios_pendientes:ads,contenidos_pendientes:assigned.length,pendiente_recibir:receiving,en_proceso:deliverables.length-receiving};
+ }).filter(row=>row.contenidos_pendientes>0);
 }
 export async function assignContentMagazine(idRevista,data,transactionDb=null) {
  const fail=(message,status=400)=>{throw Object.assign(new Error(message),{status});};

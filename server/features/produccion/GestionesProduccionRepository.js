@@ -6,8 +6,10 @@ import { assertObjectExistsInS3, createPresignedUpload } from '../mediateca/S3Se
 import {articleMatchesMagazine} from '../../../app/config/editorialMagazine.js';
 import {productionMagazineSector} from '../../../app/config/productionMagazineFilters.js';
 import { productionMediaFolder } from './ProductionMediaFolders.js';
-import { contentTypes as managementContentTypes } from '../../../app/lib/productionManagement.js';
+import { contentTypes as managementContentTypes,validateIntakeFiles } from '../../../app/lib/productionManagement.js';
 import { externalUserEvent } from '../userEvents/ExternalUserEvents.js';
+import {productionStage} from '../../../app/lib/productionWorkflow.js';
+import {editorialContentExpression} from './ProductionContentScope.js';
 
 const states = new Set(['no revisado produccion', 'incidencia', 'ok produccion']);
 
@@ -113,7 +115,7 @@ export async function getMagazineManagement(idRevista) {
     const legacy = matchesLegacy(content, revista);
     const explicit = byContent.get(content.id_contenido);
     if (!direct && !legacy && !explicit && !editorialIds.has(content.id_contenido)) return [];
-    return [...(explicit || new Set(editorialIds.has(content.id_contenido) ? ['articulos'] : contentTypes(content)))].map(tipo => ({ ...content, tipo }));
+    return [...new Set([...(explicit||contentTypes(content)),...(editorialIds.has(content.id_contenido)?['articulos']:[])])].map(tipo => ({ ...content, tipo }));
   });
   const ids = [...new Set(matches.map(item => item.id_contenido))];
   const materials = ids.length ? (await getPgPool().query(`SELECT m.* FROM produccion_materiales m
@@ -142,16 +144,18 @@ async function validateDestination(db, data) {
   const tipo = ['articulos', 'anuncios', 'otros'].includes(data.tipo) ? data.tipo : null;
   if (!idContenido || !tipo) throw new Error('Contenido y tipo obligatorios');
   if (idRevista && tipo === 'otros') throw new Error('Otros contenidos no pueden asignarse a revista');
-  const content = (await db.query('SELECT * FROM produccion_contenidos WHERE id_contenido=$1 FOR UPDATE', [idContenido])).rows[0];
+  const content = (await db.query(`SELECT c.*,${editorialContentExpression} AS es_editorial FROM produccion_contenidos c WHERE c.id_contenido=$1 FOR UPDATE`, [idContenido])).rows[0];
   if (!content) throw new Error('Contenido no encontrado');
   if (data.es_version_acabada !== undefined && typeof data.es_version_acabada !== 'boolean') throw new Error('Revisa el tipo de material');
   const singular = tipo === 'articulos' ? 'articulo' : tipo === 'anuncios' ? 'anuncio' : 'otro';
   if (!managementContentTypes(content).includes(singular) && !(await db.query('SELECT 1 FROM produccion_revistas_contenidos WHERE id_contenido=$1 AND tipo=$2 LIMIT 1',[idContenido,tipo])).rowCount) throw new Error('El material no corresponde al tipo del contenido');
   if (idRevista && !(await db.query('SELECT 1 FROM servicios_revistas WHERE id_revista=$1', [idRevista])).rowCount) throw new Error('Revista no encontrada');
-  return { idContenido, idRevista, tipo };
+  return { idContenido, idRevista, tipo,content };
 }
 
 export async function presignProductionMaterial(data) {
+  const errors=validateIntakeFiles([{filename:data.filename,size:data.size??1,nombre_material:data.nombre_material||data.filename,contentType:data.contentType,webkitRelativePath:data.webkitRelativePath,es_carpeta:data.es_carpeta}], 'archivos');
+  if(errors.length)throw new Error(errors.join(' '));
   const db = await getPgPool().connect();
   let path;
   try {
@@ -183,10 +187,10 @@ export async function addProductionMaterial(data, verifyObject = assertObjectExi
     const mediaId = String(data.mediaId || '');
     if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(mediaId)
       || !s3Key.startsWith(`mediateca/${path}/${mediaId}/`)
-      || s3Key.slice(`mediateca/${path}/${mediaId}/`.length).includes('/')) {
+      || !s3Key.slice(`mediateca/${path}/${mediaId}/`.length) || s3Key.slice(`mediateca/${path}/${mediaId}/`.length).includes('/')) {
       throw new Error('Archivo fuera de la carpeta del contenido');
     }
-    await verifyObject(s3Key);
+    await verifyObject(s3Key,data.size!==undefined?{size:data.size,contentType:data.contentType}:null);
     const name = String(data.nombre_material || data.filename || '').trim();
     if (!name) throw new Error('Indica el nombre del material');
     await db.query(`INSERT INTO mediateca_archivos(mediateca_content_id,mediateca_folder_id,mediateca_content_name,
@@ -201,6 +205,7 @@ export async function addProductionMaterial(data, verifyObject = assertObjectExi
       [id,name,mediaId,'',destination.idContenido,destination.idRevista || null,destination.tipo,String(data.descripcion || ''),finished,version]);
     await db.query(`UPDATE produccion_contenidos SET array_ids_materiales = COALESCE(array_ids_materiales,'[]'::jsonb) || $1::jsonb,
       updated_at=now() WHERE id_contenido=$2`, [JSON.stringify([id]),destination.idContenido]);
+    if(productionStage({...destination.content,tipo:destination.tipo,materiales:[]})==='recibir')await db.query("UPDATE produccion_contenidos SET estado_contenido='Pendiente Publicar',estado_material_contenido='Recibido',updated_at=now() WHERE id_contenido=$1",[destination.idContenido]);
     if (destination.idRevista) await db.query(`INSERT INTO produccion_revistas_contenidos(id_revista,id_contenido,tipo)
       VALUES($1,$2,$3) ON CONFLICT DO NOTHING`, [destination.idRevista,destination.idContenido,destination.tipo]);
     if (!transactionDb) {
@@ -219,4 +224,22 @@ export async function reviewProductionMaterial(id, data) {
     SET validacion_produccion=$2,comentarios=$3,updated_at=now() WHERE id_material=$1 RETURNING *`,
     [id,status,String(data.comentarios || '')]);
   return result.rows[0] || null;
+}
+
+export async function addProductionMaterials(data,verifyObject=assertObjectExistsInS3,transactionDb=null) {
+  const errors=validateIntakeFiles(data.materiales,'archivos');
+  if(errors.length)throw new Error(errors.join(' '));
+  if(data.es_version_acabada&&data.materiales.length!==1)throw new Error('Cada versión acabada debe contener un único archivo.');
+  if(new Set(data.materiales.map(file=>file.mediaId)).size!==data.materiales.length)throw new Error('Hay archivos repetidos en la carga.');
+  if(data.materiales.some(file=>!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(file.mediaId||'')))throw new Error('Identificador de archivo no válido.');
+  const db=transactionDb||await getPgPool().connect(),created=[];let rows;
+  try {
+    await db.query(transactionDb?'SAVEPOINT p3_material_batch':'BEGIN');await validateDestination(db,data);
+    const known=new Set((await db.query('SELECT mediateca_id FROM produccion_materiales WHERE mediateca_id=ANY($1::text[])',[data.materiales.map(file=>file.mediaId)])).rows.map(row=>row.mediateca_id));
+    rows=[];
+    for(const file of data.materiales){const row=await addProductionMaterial({id_contenido:data.id_contenido,id_revista:data.id_revista,tipo:data.tipo,es_version_acabada:data.es_version_acabada,mediaId:file.mediaId,s3Key:file.s3Key,filename:file.filename,size:file.size,contentType:file.contentType,nombre_material:file.nombre_material.trim(),descripcion:file.descripcion||''},verifyObject,db);rows.push(row);if(!known.has(file.mediaId))created.push(file);}
+    await db.query(transactionDb?'RELEASE SAVEPOINT p3_material_batch':'COMMIT');
+  }catch(error){await db.query(transactionDb?'ROLLBACK TO SAVEPOINT p3_material_batch':'ROLLBACK');if(transactionDb)await db.query('RELEASE SAVEPOINT p3_material_batch');throw error;}finally{if(!transactionDb)db.release();}
+  if(!transactionDb)for(const file of created)await externalUserEvent('crear','s3_material_produccion',file.mediaId,null,{s3Key:file.s3Key,nombre:file.nombre_material,contenido:data.id_contenido,size:file.size});
+  return rows;
 }

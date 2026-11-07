@@ -268,10 +268,10 @@ export default function DashboardPage() {
               </div>
               <button
                 type="button"
-                onClick={() => router.push("/dashboard/produccion/hoja_produccion/crear")}
+                onClick={() => router.push("/dashboard/produccion/gestion-contenidos/revista")}
                 className="cursor-pointer rounded bg-blue-950 px-4 py-2 text-sm font-medium text-white hover:bg-blue-900"
               >
-                Agregar contenido
+                Gestionar contenidos
               </button>
             </div>
             <MyContentsPanel/>

@@ -79,10 +79,10 @@ const ContenidoCuenta: FC<ContenidoCuentaProps> = ({ id_cuenta }) => {
       <div className="flex items-center justify-between gap-4">
         <h2 className="text-xl font-bold">Contenidos</h2>
         <Link
-          href={`/dashboard/produccion/hoja_produccion/crear?id_cuenta=${id_cuenta}&origen=cuenta`}
+          href={"/dashboard/produccion/gestion-contenidos/otros"}
           className="rounded bg-blue-950 px-4 py-2 text-sm font-medium text-white hover:bg-blue-900"
         >
-          Agregar contenido no asociado a campaña
+          Agregar contenidos sin contrato
         </Link>
       </div>
 

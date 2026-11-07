@@ -5,7 +5,7 @@ Object.assign(global,{window:dom.window,document:dom.window.document,HTMLElement
 Object.defineProperty(global,'navigator',{configurable:true,value:dom.window.navigator});
 dom.window.HTMLElement.prototype.scrollIntoView=function(){};
 const React=require('react'),{createRoot}=require('react-dom/client'),root=createRoot(document.getElementById('root')),cache=new Map(),navigation=[],writes=[];
-const magazines=[['Vidrio Plano','Iberia'],['Ventanas','Iberia'],['Vidrio Plano','América Latina'],['Ventanas','América Latina'],['Quién es Quién','Vidrio'],['Quién es Quién','Ventanas'],['Hueco Arquitectura','2026']].map(([revista,edicion],i)=>({id_revista:'rev'+i,revista,edicion,numero_publicacion:String(i+100),version_publicacion:'digital'}));
+const magazines=[['Vidrio Plano','Iberia'],['Ventanas','Iberia'],['Vidrio Plano','América Latina'],['Ventanas','América Latina'],['Quién es Quién','Vidrio'],['Quién es Quién','Ventanas'],['Hueco Arquitectura','2026']].map(([revista,edicion],i)=>({id_revista:'rev'+i,revista,edicion,numero_publicacion:String(i+100),version_publicacion:'digital',contenidos_pendientes:1,anuncios_pendientes:1,articulos_pendientes:0,pendiente_recibir:1,en_proceso:0}));
 const groups=[{id_medio:'vidrioperfil_newsletter',nombre_medio:'Vidrioperfil newsletter'},{id_medio:'vidrioperfil_portal',nombre_medio:'Vidrioperfil portal'},{id_medio:'otros',nombre_medio:'Otros'},{id_medio:'revista',nombre_medio:'Revista'}];
 const otherRows=[{id_contenido:'news',nombre_contenido:'Newsletter pendiente',estado_contenido:'Pendiente Publicar',grupo_servicio:'vidrioperfil_newsletter'}, {id_contenido:'portal',nombre_contenido:'Banner pendiente',estado_contenido:'Pendiente Publicar',grupo_servicio:'vidrioperfil_portal'}];
 const magazinePending={id_contenido:'unassigned',nombre_contenido:'Revista sin destino',estado_contenido:'Pendiente Publicar',tipo_revista_servicio:'Revista',grupo_servicio:'revista',es_revista:false,updated_at:'2026-11-06T10:00:00.000Z',revistas_vinculadas:[]};
@@ -29,7 +29,7 @@ function load(file){
   if(id==='next/navigation')return {useRouter:()=>({push:url=>navigation.push(url)}),useParams:()=>({id:'layout',id_revista:'rev0'})};
   if(id==='next/link')return {__esModule:true,default:({children,...props})=>React.createElement('a',props,children)};
   if(id==='@/app/apiClient')return {__esModule:true,default:api};
-  if(id.includes('ContenidoService'))return {ContenidoService:{getContenidoById:async()=>({...contents[2],estado:'Pendiente maquetación',tipo_contenido:'anuncio'}),updateContenido:async()=>({})}};
+  if(id.includes('ContenidoService'))return {ContenidoService:{getContenidoById:async()=>({...contents[2],id_cuenta:'company',id_contrato:'contract',estado:'Pendiente maquetación',tipo_contenido:'anuncio'}),updateContenido:async()=>({})}};
   if(id.includes('AgenteService'))return {AgenteService:{getAgentes:async()=>[]}};
   if(id.includes('MaterialService'))return {MaterialService:{getMaterial:async()=>materials[0]}};
   if(id.startsWith('@/')||id.startsWith('.')){const base=id.startsWith('@/')?id.slice(2):path.join(path.dirname(file),id);return load([base,base+'.tsx',base+'.ts',base+'.js'].find(p=>fs.existsSync(p)&&fs.statSync(p).isFile()));}
@@ -58,8 +58,10 @@ const rowNames=()=>document.querySelector('tbody').textContent;
  assert.equal(canonicalProductionPath('/dashboard/produccion/gestion/revistas/rev0/contenidos'),'/dashboard/produccion/gestion-contenidos/revista/rev0');
  assert.equal(canonicalProductionPath('/dashboard/mediateca'),'/dashboard/direccion/mediateca');
  await render('app/dashboard/produccion/gestion-contenidos/revista/page.tsx');
- assert.equal(document.querySelectorAll('[role=tab]').length,7);assert(document.querySelector('header button').textContent==='Agregar contenidos');
- assert(document.querySelector('header a').href.endsWith('/gestion-contenidos/otros'));
+ assert.equal(document.querySelectorAll('[role=tab]').length,7);assert.deepEqual([...document.querySelectorAll('header button')].map(n=>n.textContent),['Agregar contenidos sin contrato','Agregar contenido asociado a contrato']);assert(!document.querySelector('header a'));
+ assert(![...document.querySelectorAll('th')].some(n=>n.textContent==='Publicación'||n.textContent==='Edición'));assert([...document.querySelectorAll('th')].some(n=>n.textContent.startsWith('Anuncios pendientes')));
+ const countFilter=document.querySelector('[aria-label="Filtrar Anuncios pendientes"]');assert(countFilter);
+ for(const [value,count] of [['9',0],['',1]]){await React.act(async()=>{Object.getOwnPropertyDescriptor(dom.window.HTMLInputElement.prototype,'value').set.call(countFilter,value);countFilter.dispatchEvent(new dom.window.Event('input',{bubbles:true}));});assert.equal(document.querySelectorAll('[role=tabpanel] tbody tr').length,count);}
  for(const [i,tab] of [...document.querySelectorAll('[role=tab]')].entries()){
   await React.act(async()=>tab.click());assert.equal(document.querySelectorAll('[role=tabpanel] tbody tr').length,1);assert(rowNames().includes(String(100+i)));
   if(i===0){assert(!rowNames().includes('Digital'));assert(!rowNames().includes('Impresa'));}
@@ -88,6 +90,7 @@ const rowNames=()=>document.querySelector('tbody').textContent;
  await click('Fase 6');await click('Anuncios (1)');assert(rowNames().includes('Anuncio aprobado'));assert.equal(document.querySelector('h2').textContent,'Material OK - pendiente de publicar');
  await click('Todo');assert(document.querySelector('[aria-label="Tipo de contenido"]').textContent.includes('Anuncios (4)'));assert(!rowNames().includes('Ya publicado'));assert(!rowNames().includes('Cancelado'));
  await render('app/dashboard/produccion/gestion-contenidos/otros/page.tsx');
+ assert([...document.querySelectorAll('th')].some(n=>n.textContent.startsWith('Fase')));assert(![...document.querySelectorAll('th')].some(n=>n.textContent.startsWith('Estado')));
  assert.equal(document.querySelectorAll('tbody tr').length,2);assert(![...document.querySelectorAll('th')].some(n=>n.textContent==='Materiales'));
  assert(!document.querySelector('tbody').textContent.includes('Revista sin destino'));assert(!document.querySelector('[aria-label="Grupo de servicios"]').textContent.includes('Revista'));
  assert(![...document.querySelectorAll('button')].some(n=>/Aportar|Subir/.test(n.textContent)));
@@ -97,6 +100,7 @@ const rowNames=()=>document.querySelector('tbody').textContent;
  assert(![...document.querySelectorAll('button')].some(n=>/Agregar|Aportar|Subir/.test(n.textContent)));
  await click('Materiales');assert(rowNames().includes('Original recibido'));assert(rowNames().includes('V02'));
  await render('app/dashboard/produccion/repositorio/contenidos/[id]/page.tsx');
+ assert(document.querySelector('a[href="/dashboard/comercial/cuentas/company"]'));assert(document.querySelector('a[href="/dashboard/comercial/contratos/contract"]'));
  assert.deepEqual([...document.querySelectorAll('h2')].map(n=>n.textContent),['1 · Datos y detalles','2 · Materiales','3 · Versión acabada']);
  assert(document.querySelector('section:nth-of-type(2) a').href.endsWith('/repositorio/materiales/raw'));
  assert.deepEqual([...document.querySelectorAll('tbody tr td:first-child')].map(n=>n.textContent),['V02','V01']);
@@ -106,7 +110,7 @@ const rowNames=()=>document.querySelector('tbody').textContent;
  const file=document.querySelector('input[type=file]');Object.defineProperty(file,'files',{value:[new dom.window.File(['pdf'],'version.pdf',{type:'application/pdf'})]});
  await React.act(async()=>file.dispatchEvent(new dom.window.Event('change',{bubbles:true})));
  await React.act(async()=>document.querySelector('[role=dialog] form').dispatchEvent(new dom.window.Event('submit',{bubbles:true,cancelable:true})));
- assert.equal(writes.at(-1).data.es_version_acabada,true);assert.equal(writes.at(-1).data.id_contenido,'layout');
+ assert.equal(writes.at(-1).data.es_version_acabada,true);assert.equal(writes.at(-1).data.id_contenido,'layout');assert.equal(writes.at(-1).data.materiales.length,1);assert.equal(writes.at(-1).data.materiales[0].nombre_material,'version.pdf');
  await React.act(async()=>root.unmount());dom.window.close();
  console.log('PASS: publication formats, phases, service groups and counts, no material actions in lists, upload from content detail, repository states and descending versions.');
 })().catch(error=>{console.error(error);process.exitCode=1;});
