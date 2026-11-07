@@ -12,7 +12,7 @@ function load(file){
  const code=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{jsx:ts.JsxEmit.ReactJSX,module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true}}).outputText;
  new Function('require','module','exports',code)(id=>{
   if(id==='next/navigation')return {usePathname:()=>pathname};
-  if(id==='next/link')return {__esModule:true,default:({children,...props})=>React.createElement('a',props,children)};
+  if(id==='next/link')return {__esModule:true,default:({children,...props})=>React.createElement('a',{'data-client-navigation':true,...props},children)};
   if(id.includes('loggedNav'))return {__esModule:true,default:()=>null};
   if(id==='@/app/lib/currentUser')return {useCurrentUser:()=>({user:{role}})};
   if(id.startsWith('@/')||id.startsWith('.')){const base=id.startsWith('@/')?id.slice(2):path.join(path.dirname(file),id);return load([base,base+'.tsx',base+'.ts',base+'.js'].find(p=>fs.existsSync(p)&&fs.statSync(p).isFile()));}
@@ -35,6 +35,8 @@ async function click(label){const button=[...document.querySelectorAll('button')
  pathname='/dashboard/comercial/cuentas';await render('Cuentas');assert.equal(document.querySelectorAll('aside a').length,0,'Navegar no despliega el menú');
  pathname='/dashboard/produccion/repositorio';await render('Almacenamiento');await click('Expandir menú');
  const active=document.querySelector('aside [aria-current=page]');assert.equal(active.textContent,'Almacenamiento');
+ assert.equal(document.querySelectorAll('aside a[data-client-navigation]').length,0,'Los enlaces laterales usan navegación de documento con recarga');
+ assert.equal(active.tagName,'A','El menú usa enlaces de documento nativos');
  const sheet=document.querySelector('a[href="/dashboard/produccion/hoja_produccion"]');assert.equal(active.parentElement,sheet.parentElement,'Las páginas del mismo módulo comparten nivel');
  await click('Ocultar menú');
  const modules=[...document.querySelectorAll('[data-module]')];

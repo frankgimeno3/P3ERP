@@ -14,6 +14,9 @@ import { HojaProduccionService } from "@/app/service/HojaProduccionService";
 import {filterSheetVisibility,sheetHasContract,sheetPending} from '@/app/lib/productionSheet';
 
 interface HojaProduccionContenido {
+  referencia_publicacion: string;
+  nombre_contenido: string;
+  especificaciones_contenido: string;
   formato: string;
   es_revista: boolean;
   material: string;
@@ -37,14 +40,14 @@ interface HojaProduccionContenido {
 }
 
 const columns: [keyof HojaProduccionContenido, string][] = [
-  ["id_contenido", "Identificador"],
-  ["agente", "Agente"],
-  ["codigo_crm", "Código CRM"],
+  ["referencia_publicacion", "Publicación / Nº web - Especificaciones"],
   ["cliente", "Cliente"],
+  ["nombre_contenido", "Contenido"],
+  ["agente", "Agente"],
   ["contrato", "Contrato"],
-  ["publicacion_num_web", "Publicación / Nº web"],
+  ["codigo_crm", "Código CRM"],
   ["tipo", "Tipo revista / servicio"],
-  ["contenido", "Contenido/-"],["formato","Formato revista"],
+  ["formato","Formato revista"],
   ["anuncio", "Anuncio"],
   ["articulo", "Artículo"],
   ["estado", "Estado"],
@@ -76,7 +79,10 @@ const Materiales: FC = () => {
     setLoading(true);
     setError(null);
     HojaProduccionService.getContenidos()
-      .then((data) => setContenidos(Array.isArray(data) ? data : []))
+      .then((data) => setContenidos(Array.isArray(data) ? data.map(row=>({...row,
+        referencia_publicacion:[...new Set([row.publicacion_num_web,row.especificaciones_contenido??row.contenido].map(value=>String(value||'').trim()).filter(Boolean))].join(' - '),
+        nombre_contenido:row.nombre_contenido||row.contenido||row.id_contenido,
+      })) : []))
       .catch((error) => {
         setError(error?.message || "No se pudo cargar la hoja de produccion.");
         setContenidos([]);

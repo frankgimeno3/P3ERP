@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { dashboardMenu, getDashboardMenuLocation, type DashboardMenuEntry } from "@/app/config/dashboardMenu";
 import { BriefcaseBusiness, Pencil, Euro, Monitor, BookOpen, MousePointer2 } from 'lucide-react';
@@ -85,9 +84,9 @@ function MenuEntry({ entry, activeHref, open, toggle }: { entry: DashboardMenuEn
   if (entry.type === "page") {
     const active = activeHref === entry.href;
     return (
-      <Link href={entry.href} aria-current={active ? "page" : undefined} className={`block w-full cursor-pointer rounded-r-md border-l-2 py-2 pl-3 pr-2 text-left text-sm font-normal uppercase transition-colors ${active ? "border-blue-500 bg-blue-950/40 font-medium text-blue-300" : "border-gray-700 text-gray-400 hover:bg-gray-800 hover:text-gray-100"}`}>
+      <a href={entry.href} aria-current={active ? "page" : undefined} className={`block w-full cursor-pointer rounded-r-md border-l-2 py-2 pl-3 pr-2 text-left text-sm font-normal uppercase transition-colors ${active ? "border-blue-500 bg-blue-950/40 font-medium text-blue-300" : "border-gray-700 text-gray-400 hover:bg-gray-800 hover:text-gray-100"}`}>
         {entry.label}
-      </Link>
+      </a>
     );
   }
 

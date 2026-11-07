@@ -36,6 +36,8 @@ function normalizeHojaProd(row) {
     contrato: row.id_contrato || "",
     factura: row.factura_hoja || row.factura || "",
     publicacion_num_web: row.publicacion_num_web || row.nombre_publicacion || "",
+    especificaciones_contenido: row.especificaciones_contenido || "",
+    nombre_contenido: row.nombre_contenido || row.especificaciones_contenido || row.contenido_especifico_id || "",
     tipo: row.tipo_revista_servicio || row.servicio_nombre || row.servicio || row.tipo || "",
     contenido: row.especificaciones_contenido || row.contenido_especifico_id || row.nombre_publicacion || "",
     anuncio: row.anuncio_hoja || "",
