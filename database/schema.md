@@ -1341,6 +1341,10 @@ Las tres tablas instalan la auditoría antes de su primera escritura.
 aunque la entrada del parking y el recibo de IBI indiquen calles distintas.
 # Flujo de producción y tareas (2026-11-07)
 
+`20261107_0004_merge_base_commercial.sql` unifica Comercial en Base: combina permisos y accesos adicionales, migra `agentes_db.rol_agente` y retira la fila Comercial. El código interpreta referencias antiguas como Base. Base conserva las funciones comerciales sin adquirir permisos de Administración, Operaciones, Contabilidad ni Dirección.
+
+`20261107_0005_agent_departure.sql` añade `agentes_db.fecha_baja` y `motivo_baja`. La fecha efectiva es independiente de `updated_at`, que registra cuándo se desactivó el acceso. La baja conserva la identidad, relaciones e historial laboral. Un cargo de nómina cerrado queda inactivo y con planificación terminada; sus registros y movimientos históricos se conservan y la operación se audita.
+
 `20261107_0002_production_material_trash.sql` añade `eliminado_at`, `eliminado_por` y `nombre_agente_eliminacion` a materiales. El trigger obtiene el autor autenticado; la papelera retira la asociación activa sin borrar el objeto S3 ni reutilizar números de versión. Restaurar verifica el original y reinicia su marca de descarga. Los listados operativos excluyen la papelera.
 
 `20261107_0003_content_type_workflow.sql` añade `estados_produccion` (JSON por `articulos`, `anuncios`, `otros`) y `url_indesign_recurso7`. El estado principal resume las entregas pendientes para mantener los filtros históricos; las fases de cada entrega se resuelven por separado. Los anuncios solo siguen 1 → 3.1 → 6; validación negativa devuelve a 1, positiva pasa a 6 cuando todos sus materiales válidos están revisados. La descarga por sí sola no valida un anuncio. La subfase 3.2 contiene solo artículos pendientes de enviar a corrección. La URL admite http/https. Los cambios se auditan y la edición de gestión comprueba la versión del contenido para evitar sobreescribir cambios concurrentes.

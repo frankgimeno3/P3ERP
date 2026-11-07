@@ -34,7 +34,7 @@
     "summary": "Consulta y administra la cartera de cuentas de cliente. El total de cuentas se muestra al entrar y no cambia al aplicar filtros.",
     "steps": [
       "Pulsa la cabecera de cualquier columna para ordenar todo el listado de forma ascendente; vuelve a pulsarla para invertir el orden. El icono indica la dirección activa y la ordenación vuelve a la primera página. En el filtro País, escribe para buscar opciones y selecciona un país para aplicar el filtro; Todos los países lo elimina.",
-      "Los selectores de agentes permiten Comercial, Dirección, Administración, Operaciones y Superadmin; los agentes Base no pueden seleccionarse.",
+      "Los selectores comerciales permiten agentes activos con rol Base, Dirección, Administración, Operaciones o Superadmin. Base incluye las funciones del antiguo Comercial. Las asignaciones históricas se conservan al editar otros datos.",
       "La tabla distingue el ID cuenta (Tiger) del Código Edisoft, utilizado para identificar cuentas en los Excel administrativos. Todos los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen juntos, con etiquetas finas encima de cada campo; cerrarla conserva los filtros aplicados. combina los filtros para localizar una cuenta.",
       "Abre una fila para consultar su ficha, contactos, propuestas, comentarios y actividad.",
       "Pulsa Nueva cuenta para iniciar el alta guiada.",
@@ -50,7 +50,7 @@
   "/dashboard/comercial/contactos": {
     "summary": "Gestiona las personas de contacto asociadas a las cuentas. El total de contactos se muestra al entrar y no cambia al aplicar filtros.",
     "steps": [
-      "El agente se gestiona en la cuenta vinculada al contacto. Solo pueden seleccionarse agentes con rol Comercial, Dirección, Administración, Operaciones o Superadmin; los agentes Base quedan excluidos.",
+      "El agente se gestiona en la cuenta vinculada al contacto. Pueden seleccionarse agentes activos con rol Base, Dirección, Administración, Operaciones o Superadmin.",
       "Filtra la lista por los datos conocidos.",
       "Abre un contacto para revisar o modificar su ficha y eventos.",
       "Usa el alta de contacto para registrar una nueva persona y vincularla a una cuenta.",
@@ -65,7 +65,7 @@
     "summary": "Crea y realiza el seguimiento de propuestas comerciales.",
     "steps": [
       "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
-      "Los selectores de agentes permiten Comercial, Dirección, Administración, Operaciones y Superadmin; los agentes Base no pueden seleccionarse.",
+      "Los selectores comerciales permiten agentes activos con rol Base, Dirección, Administración, Operaciones o Superadmin. Base incluye las funciones del antiguo Comercial. Las asignaciones históricas se conservan al editar otros datos.",
       "Cambia entre las vistas de propuestas pendientes y el listado completo.",
       "Abre una propuesta para consultar su contenido, estado y seguimiento.",
       "Crea, edita, replica o actualiza la propuesta según el flujo comercial.",
@@ -86,7 +86,7 @@
     "summary": "Consulta contratos y crea nuevos contratos directamente desde Comercial.",
     "steps": [
       "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
-      "Los selectores de agentes permiten Comercial, Dirección, Administración, Operaciones y Superadmin; los agentes Base no pueden seleccionarse.",
+      "Los selectores comerciales permiten agentes activos con rol Base, Dirección, Administración, Operaciones o Superadmin. Base incluye las funciones del antiguo Comercial. Las asignaciones históricas se conservan al editar otros datos.",
       "Crear contrato solo est? disponible para Administración, Operaciones y Direcci?n. En la ficha se puede cambiar el contacto de la cuenta, iniciar una factura y reemplazar ?rdenes pendientes: las pagadas quedan bloqueadas y las nuevas deben sumar el mismo total.",
       "Pulsa Agregar contrato para introducir cuenta, servicios, cobros y fechas; el alta crea contrato, órdenes, recibos y contenidos de producción. No crea facturas automáticamente.",
       "Localiza el cliente o contrato en el listado. Se muestran como máximo 50 contratos por página; usa Anterior y Siguiente para navegar. Al cambiar filtros o pestaña vuelves a la primera página.",
@@ -399,11 +399,11 @@
   "/dashboard/operaciones/agentes": {
     "summary": "Desde Dirección, Laboral, Agentes, administra agentes, altas en Cognito y su asignación segura de roles.",
     "steps": [
-      "Pulsa Crear agente para iniciar el alta guiada y asigna uno de los roles base, administración, operaciones, dirección o superadmin. Dirección permite entrar en su área y sus API; no equivale a superadmin y no permite administrar usuarios ni roles.",
+      "Pulsa Crear agente para iniciar el alta guiada y asigna uno de los roles Base, Administración, Contabilidad, Operaciones, Dirección o Superadmin. Dirección permite entrar en su área y sus API; no equivale a superadmin y no permite administrar usuarios ni roles.",
       "En la ficha puedes editar el nombre completo y el email del agente y guardar los cambios. El nombre es obligatorio y el email debe ser válido y no pertenecer a otro agente.",
       "Desde el listado de Agentes, Administrar roles abre /dashboard/operaciones/agentes/roles. Roles pertenece a la gestión de agentes de Dirección, Laboral y no tiene entrada propia en la barra lateral. Las direcciones anteriores redirigen a las nuevas.",
       "La columna Cuenta de empleado corresponde a is_empleado_account, activado por defecto. Modifica esta casilla en la ficha del agente para incluirlo o excluirlo de los listados y altas de Laboral; su histórico se conserva.",
-      "Los agentes con histórico laboral no se pueden borrar. Desactiva la cuenta de empleado para conservar nóminas, documentos y demás registros.",
+      "Los agentes con historial laboral conservan su ficha y sus relaciones al quedar inactivos. Fecha efectiva de baja y motivo se guardan en RDS y se muestran en Detalles. Cerrar el cargo de nómina conserva la programación y los pagos anteriores.",
       "El rol determina los módulos visibles y el servidor bloquea las rutas y APIs no autorizadas aunque se intente acceder directamente.",
       "Abre la ficha de un agente para modificarlo o borrarlo; el borrado exige escribir borrar y elimina su cuenta, sus listas y sus tareas, sin afectar las de otros agentes.",
       "La pestaña Asuntos muestra solo empleados activos, sin columna de estado. Abre una fila para gestionar libre disposición, documentos, ausencias y comentarios.",
@@ -420,7 +420,7 @@
   "/dashboard/operaciones/agentes/roles": {
     "summary": "Define roles y permisos desde Dirección, Laboral, Agentes, mediante el botón Administrar roles; esta página no aparece por separado en el menú lateral.",
     "steps": [
-      "El rol Comercial se sitúa entre Base y Administración y permite seleccionar al agente en la gestión comercial.",
+      "Base reúne los antiguos roles Base y Comercial. Puede trabajar en Comercial y Producción, figurar como responsable de cuentas, propuestas y contratos y gestionar tareas de cuentas. Comercial deja de ofrecerse como rol separado; las referencias antiguas se resuelven como Base. Los demás roles conservan sus permisos.",
       "Abre un rol existente o crea uno nuevo.",
       "Activa únicamente los accesos requeridos.",
       "Guarda y comprueba el efecto con un agente que tenga ese rol.",
@@ -774,7 +774,7 @@
     "summary": "Buscar y seleccionar cuenta abre un modal con filtros por empresa, código, país y correo. Elige una cuenta válida y confirma. Se preselecciona su contacto principal si lo tiene.",
     "steps": [
       "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
-      "Los selectores de agentes permiten Comercial, Dirección, Administración, Operaciones y Superadmin; los agentes Base no pueden seleccionarse.",
+      "Los selectores comerciales permiten agentes activos con rol Base, Dirección, Administración, Operaciones o Superadmin. Base incluye las funciones del antiguo Comercial. Las asignaciones históricas se conservan al editar otros datos.",
       "Buscar y seleccionar cuenta abre un modal con filtros por empresa, código, país y correo. Elige una cuenta válida y confirma. Se preselecciona su contacto principal si lo tiene.",
       "En Cobros el primer vencimiento se propone a dos meses; cada cobro añadido toma la fecha del anterior más un mes. El banco inicial depende del país de la cuenta y todas las fechas y bancos pueden editarse.",
       "Al crear, Modo prueba aparece arriba e inicialmente en Sí. Puedes pasarlo a No para datos reales. Los datos de prueba usan PRUEBA- delante del identificador; las relaciones derivadas conservan este modo, incluidos contratos, contenidos, órdenes y facturas. El modo se fija al crear y no se convierte después en real.",
@@ -786,7 +786,7 @@
     "summary": "La fase Servicios comparte el selector y la tabla compacta con los contratos independientes. Sus campos y márgenes se han reducido para aprovechar el ancho disponible.",
     "steps": [
       "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
-      "Los selectores de agentes permiten Comercial, Dirección, Administración, Operaciones y Superadmin; los agentes Base no pueden seleccionarse.",
+      "Los selectores comerciales permiten agentes activos con rol Base, Dirección, Administración, Operaciones o Superadmin. Base incluye las funciones del antiguo Comercial. Las asignaciones históricas se conservan al editar otros datos.",
       "La fase Servicios comparte el selector y la tabla compacta con los contratos independientes. Sus campos y márgenes se han reducido para aprovechar el ancho disponible.",
       "En Cobros el primer vencimiento se propone a dos meses; cada cobro añadido toma la fecha del anterior más un mes. Todas las fechas pueden editarse.",
       "Buscar cuenta consulta resultados paginados sin cargar el catalogo completo. La propuesta carga solo su cuenta; cambiarla reinicia su contacto.",
@@ -800,7 +800,7 @@
     "summary": "En Contactos, una corona amarilla identifica el contacto principal. Marca la casilla de otro contacto y confirma el cambio en el modal. El primer contacto creado en la cuenta se marca automáticamente; las propuestas nuevas lo preseleccionan.",
     "steps": [
       "La ficha se organiza en Datos Comerciales (Datos generales, Comentarios, Contactos y Propuestas) y Datos de gestión (Contratos, Contenidos, Datos administrativos y Registro de eventos). Tareas sigue disponible como pestaña principal.",
-      "Los selectores de agentes permiten Comercial, Dirección, Administración, Operaciones y Superadmin; los agentes Base no pueden seleccionarse.",
+      "Los selectores comerciales permiten agentes activos con rol Base, Dirección, Administración, Operaciones o Superadmin. Base incluye las funciones del antiguo Comercial. Las asignaciones históricas se conservan al editar otros datos.",
       "En Contactos, una corona amarilla identifica el contacto principal. Marca la casilla de otro contacto y confirma el cambio en el modal. El primer contacto creado en la cuenta se marca automáticamente; las propuestas nuevas lo preseleccionan.",
       "En la pestaña Tareas puedes crear y editar acciones de la cuenta. Elige el tipo (material, publicaciones, propuestas, llamada, email o acción), indica el nombre y asigna como mínimo un agente activo con cuenta de empleado. Puedes añadir varios responsables, referencia de campaña o contrato y fecha límite dd / mm / yyyy. Comercial, Administración, Operaciones, Dirección y Superadmin gestionan estas tareas.",
       "La misma tarea aparece en las tareas propias de cada responsable. Desde su detalle los agentes asignados pueden cambiar el estado; el cambio se comparte en la cuenta y en las listas de todos los responsables. Pendientes y Terminadas separan las tareas por estado.",

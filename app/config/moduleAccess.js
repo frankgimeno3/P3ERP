@@ -1,9 +1,10 @@
 import {accountingRoles,canonicalAccountingPath} from './accountingRoutes.js';
 import {canonicalProductionPath} from './productionRoutes.js';
-export const appRoles = ['base', 'comercial', 'direccion', 'administracion', 'contabilidad', 'operaciones', 'superadmin'];
-export const roleRank = {base:0, comercial:0.5, direccion:0, administracion:1, contabilidad:1, operaciones:2, superadmin:3};
+export const appRoles = ['base', 'direccion', 'administracion', 'contabilidad', 'operaciones', 'superadmin'];
+export const roleRank = {base:0.5, direccion:0, administracion:1, contabilidad:1, operaciones:2, superadmin:3};
 export function normalizeRole(role) {
   const value=String(role||'').trim().toLowerCase().normalize('NFD').replace(/\p{M}/gu,'');
+  if(value==='comercial')return 'base';
   return appRoles.includes(value)?value:'base';
 }
 export function canViewModule(role,moduleId) {

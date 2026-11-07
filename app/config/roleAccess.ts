@@ -1,4 +1,4 @@
-export type AppRole = "base" | "comercial" | "direccion" | "administracion" | "contabilidad" | "operaciones" | "superadmin";
+export type AppRole = "base" | "direccion" | "administracion" | "contabilidad" | "operaciones" | "superadmin";
 import {normalizeRole,roleRank} from "./moduleAccess.js";
 import {accountingRoles,canonicalAccountingPath} from './accountingRoutes.js';
 export {normalizeRole,roleRank,canViewModule,canAccessDashboardPath} from "./moduleAccess.js";

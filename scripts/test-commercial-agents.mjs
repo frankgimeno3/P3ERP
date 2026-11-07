@@ -1,25 +1,31 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import path from 'node:path';
 import ts from 'typescript';
 
-function load(path) {
-  const code = ts.transpileModule(fs.readFileSync(path, 'utf8'), {
+const cache=new Map();
+function load(file) {
+  file=path.resolve(file);if(cache.has(file))return cache.get(file);
+  const code = ts.transpileModule(fs.readFileSync(file, 'utf8'), {
     compilerOptions: { module: ts.ModuleKind.CommonJS },
   }).outputText;
   const compiledModule = { exports: {} };
-  new Function('exports', 'module', code)(compiledModule.exports, compiledModule);
+  new Function('require','exports', 'module', code)(id=>load(path.resolve(path.dirname(file),id)),compiledModule.exports, compiledModule);
+  cache.set(file,compiledModule.exports);
   return compiledModule.exports;
 }
 
 const { isCommercialAgent } = load('app/config/commercialAgents.js');
 const { normalizeRole, roleRank, canAccessApiPath, canViewModule } = load('app/config/roleAccess.ts');
-for (const rol_agente of ['comercial', 'direccion', 'administracion', 'operaciones', 'superadmin', ' Comercial ']) {
+for (const rol_agente of ['base','comercial', 'direccion', 'administracion', 'operaciones', 'superadmin', ' Comercial ']) {
   assert(isCommercialAgent({ rol_agente }), rol_agente);
 }
-for (const rol_agente of ['base', '', null, 'desconocido']) assert(!isCommercialAgent({ rol_agente }));
+for (const rol_agente of ['contabilidad', '', null, 'desconocido']) assert(!isCommercialAgent({ rol_agente }));
+assert(!isCommercialAgent({rol_agente:'base',estado_agente:'inactivo'}));assert(isCommercialAgent({rol_agente:'base',estado_agente:'activo'}));
 assert(!isCommercialAgent(null));
-assert.equal(normalizeRole('COMERCIAL'), 'comercial');
-assert(roleRank.base < roleRank.comercial && roleRank.comercial < roleRank.administracion);
+assert.equal(normalizeRole('COMERCIAL'), 'base');
+assert(roleRank.base < roleRank.administracion);
+assert(!load('app/config/moduleAccess.js').appRoles.includes('comercial'));
 assert(canViewModule('comercial', 'comercial'));
 for (const moduleId of ['administracion', 'operaciones', 'direccion']) assert(!canViewModule('comercial', moduleId));
 assert(canAccessApiPath('comercial', '/api/v1/admin/agentes', 'GET'));
@@ -37,8 +43,8 @@ async function main() {
   assert.equal(calls, 1, 'Historical and empty assignments must not trigger validation');
   await assertCommercialAgent({ query: async (_sql, params) => {
     assert.equal(params[0], 'commercial-agent');
-    assert(params[1].includes('comercial'));
-    assert(!params[1].includes('base'));
+    assert(!params[1].includes('comercial'));
+    assert(params[1].includes('base'));
     return { rowCount: 1 };
   } }, 'commercial-agent');
   console.log('PASS commercial agents: selection, role hierarchy, API access and assignment validation.');

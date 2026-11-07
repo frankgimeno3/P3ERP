@@ -19,7 +19,6 @@ export async function getRoles() {
     FROM agentes_roles
     ORDER BY CASE id_rol
       WHEN 'base' THEN 1
-      WHEN 'comercial' THEN 2
       WHEN 'administracion' THEN 3
       WHEN 'operaciones' THEN 4
       WHEN 'contabilidad' THEN 5
@@ -33,6 +32,7 @@ export async function getRoles() {
 }
 
 export async function getRoleById(idRol) {
+  if(idRol==='comercial')idRol='base';
   const pool = getPgPool();
   const { rows } = await pool.query(
     `
@@ -48,6 +48,7 @@ export async function getRoleById(idRol) {
 }
 
 export async function updateRolePermissions(idRol, permisos = [], accesosAdicionales = []) {
+  if(idRol==='comercial')idRol='base';
   const pool = getPgPool();
   const normalizedPermisos = Array.isArray(permisos) ? permisos : [];
   const normalizedAdicionales = Array.isArray(accesosAdicionales) ? accesosAdicionales : [];

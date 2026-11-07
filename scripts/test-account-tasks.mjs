@@ -16,13 +16,15 @@ try{
  pool.query=(...args)=>db.query(...args);pool.connect=async()=>({query:db.query.bind(db),release(){}});
  await db.query("INSERT INTO agentes_db(id_agente,nombre_completo_agente,is_empleado_account) VALUES('owner','Owner',true),('other','Other',true),('manager','Manager',true),('external','External',false)");
  await db.query("INSERT INTO comercial_cuentas(id_cuenta,nombre_empresa) VALUES('account','Account')");
- const manager={id:'manager',role:'comercial'},owner={id:'owner',role:'base'},other={id:'other',role:'base'};
+ const manager={id:'manager',role:'base'},owner={id:'owner',role:'base'},other={id:'other',role:'base'};
  const body={nombre:'Pedir material',tipo:'pedir_material_contratado',agentes:['owner','other'],fecha_limite:'15/10/2026'};
  let task=await saveAccountTask(manager,'account',null,body);
  assert.equal((await accountTasks(manager,{accountId:'account'})).length,1);
  assert.equal((await readTasks(owner))[0].id,task.id);assert.equal((await readTasks(other))[0].id,task.id);
- await assert.rejects(readTasks({id:'external',role:'base'},{id:task.id}),e=>e.status===403);
- await assert.rejects(saveAccountTask(owner,'account',task.id,{...body,version:task.updated_at}),e=>e.status===403);
+ assert.equal((await readTasks({id:'external',role:'base'},{id:task.id})).id,task.id,'Base incorpora los permisos de lectura del antiguo Comercial');
+ await assert.rejects(readTasks({id:'',role:'base'},{id:task.id}),e=>e.status===401);
+ task=await saveAccountTask(owner,'account',task.id,{...body,version:task.updated_at});assert.equal(task.nombre,body.nombre,'Base conserva la gestión de tareas comerciales');
+ await assert.rejects(saveAccountTask({id:'',role:'base'},'account',task.id,{...body,version:task.updated_at}),e=>e.status===401);
  await assert.rejects(saveAccountTask(manager,'account',null,{...body,agentes:[]}),e=>e.status===400);
  await assert.rejects(saveAccountTask(manager,'account',null,{...body,agentes:['external']}),e=>e.status===400);
  await assert.rejects(saveAccountTask(manager,'account',null,{...body,fecha_limite:'31/02/2026'}),e=>e.status===400);

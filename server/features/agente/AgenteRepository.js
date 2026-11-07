@@ -1,7 +1,8 @@
 import { getPgPool } from "../../database/pgClient.js";
 import {allocateAgentIdentifier} from '../identifiers/BusinessIdentifiers.js';
+const dateOnly=value=>value instanceof Date?`${value.getFullYear()}-${String(value.getMonth()+1).padStart(2,'0')}-${String(value.getDate()).padStart(2,'0')}`:String(value||'').slice(0,10);
 
-function normalizeAgente(row) {
+function normalizeAgente(row,includeDeparture=false) {
   return {
     id_agente: row.id_agente,
     nombre_agente: row.nombre_agente ?? "",
@@ -11,13 +12,14 @@ function normalizeAgente(row) {
     DNI_agente: row.dni_agente ?? "",
     rol_agente: row.rol_agente ?? "",
     estado_agente: row.estado_agente ?? "",
+    ...(includeDeparture?{fecha_baja:dateOnly(row.fecha_baja),motivo_baja:row.motivo_baja||''}:{}),
     is_empleado_account: row.is_empleado_account ?? true,
     accesos_personalizados: Boolean(row.accesos_personalizados),
     array_accesos_adicionales: row.array_accesos_adicionales ?? [],
   };
 }
 
-export async function getAgentes() {
+export async function getAgentes({includeDeparture=false}={}) {
   const pool = getPgPool();
   const { rows } = await pool.query(`
     SELECT *
@@ -25,7 +27,7 @@ export async function getAgentes() {
     ORDER BY nombre_completo_agente ASC
   `);
 
-  return rows.map(normalizeAgente);
+  return rows.map(row=>normalizeAgente(row,includeDeparture));
 }
 
 export async function getAgenteByEmail(email) {
@@ -44,7 +46,8 @@ export async function updateAgenteRoles(idAgente, data = {}) {
   if (nombreCompleto !== null && (!nombreCompleto || nombreCompleto.length > 300)) throw Object.assign(new Error('Indica un nombre de hasta 300 caracteres.'), { status: 400 });
   if (email !== null && (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254)) throw Object.assign(new Error('Indica un email válido.'), { status: 400 });
   if (email !== null && await emailAgenteExists(email, idAgente)) throw Object.assign(new Error('Ese email ya pertenece a otro agente.'), { status: 409 });
-  const rolAgente = data.rol_agente === undefined ? null : (String(data.rol_agente || "").trim() || "base");
+  const requestedRole=data.rol_agente===undefined?null:(String(data.rol_agente||'').trim()||'base');
+  const rolAgente=requestedRole==='comercial'?'base':requestedRole;
   const estadoAgente = data.estado_agente === undefined ? null : data.estado_agente ?? "";
   const accesosPersonalizados =
     data.accesos_personalizados === undefined ? null : Boolean(data.accesos_personalizados);
@@ -70,7 +73,7 @@ export async function updateAgenteRoles(idAgente, data = {}) {
     [nombreCompleto, email, rolAgente, estadoAgente, accesosPersonalizados, accesosAdicionales, idAgente, data.is_empleado_account ?? null],
   );
 
-  return rows[0] ? normalizeAgente(rows[0]) : null;
+  return rows[0] ? normalizeAgente(rows[0],true) : null;
 }
 
 export async function emailAgenteExists(email, excludeId = "") {
@@ -140,6 +143,7 @@ export async function getAgenteDraft(idAgente) {
 }
 
 export async function confirmAgenteDraft(idAgente, roleId) {
+  if(roleId==='comercial')roleId='base';
   const pool = getPgPool();
   const { rows } = await pool.query(
     `UPDATE agentes_db SET rol_agente = $2, estado_agente = 'activo', updated_at = NOW() WHERE id_agente = $1 AND estado_agente = 'borrador' RETURNING *`,

@@ -18,6 +18,8 @@ interface Agente {
   email_agente: string;
   rol_agente: string;
   estado_agente: string;
+  fecha_baja?:string;
+  motivo_baja?:string;
   is_empleado_account: boolean;
   accesos_personalizados: boolean;
   array_accesos_adicionales: string[];
@@ -32,7 +34,7 @@ interface Role {
 
 
 const ESTADOS = ["activo", "inactivo", "bloqueado"];
-const ROLE_ORDER = ["base", "comercial", "administracion", "operaciones", "direccion", "superadmin"];
+const ROLE_ORDER = ["base", "administracion", "contabilidad", "operaciones", "direccion", "superadmin"];
 
 function getNombreAgente(agente: Agente | null) {
   if (!agente) return "-";
@@ -100,8 +102,8 @@ export default function AgenteDetallePage() {
 
   const agente = useMemo(() => agentes.find((item) => item.id_agente === idAgente) || null, [agentes, idAgente]);
   const roleOptions = useMemo(() => {
-    const fromRoles = roles.map((role) => role.nombre_rol || role.id_rol).filter(Boolean);
-    const fromAgentes = agentes.map((item) => item.rol_agente).filter(Boolean);
+    const fromRoles = roles.map((role) => role.id_rol).filter(Boolean);
+    const fromAgentes = agentes.map((item) => item.rol_agente==='comercial'?'base':item.rol_agente).filter(Boolean);
     return Array.from(new Set([...fromRoles, ...fromAgentes])).sort((a, b) => {
       const aIndex = ROLE_ORDER.indexOf(a);
       const bIndex = ROLE_ORDER.indexOf(b);
@@ -193,6 +195,7 @@ export default function AgenteDetallePage() {
               </label>
             </div>
 
+            {agente.fecha_baja&&<div className="my-4 rounded border border-amber-200 bg-amber-50 p-3 text-sm"><p><strong>Fecha efectiva de baja:</strong> {agente.fecha_baja.split('-').reverse().join('/')}</p>{agente.motivo_baja&&<p className="mt-1">{agente.motivo_baja}</p>}</div>}
             <AgentCredentials id={idAgente}/>
             <label className="mt-4 flex cursor-pointer items-center gap-2 rounded border border-gray-200 p-3 transition hover:bg-blue-50">
               <input type="checkbox" checked={isEmpleado} onChange={event => setIsEmpleado(event.target.checked)} className="cursor-pointer" />
