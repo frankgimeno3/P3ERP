@@ -6,13 +6,15 @@ import TableFilters from '@/app/components/TableFilters';
 import {useEffect,useState} from 'react';
 import Link from 'next/link';
 import apiClient from '@/app/apiClient';
+import type {DashboardRows} from '@/app/lib/useDashboardRows';
 import TableColumnFilter from '@/app/components/TableColumnFilter';
 export const taskStates:Record<string,string>={pendiente:'Pendiente',en_curso:'En curso',completada:'Completada',cancelada:'Cancelada'};
-export default function TaskList({employee,pendingOnly=false,all=false,hideNavigation=false}:{employee?:string;pendingOnly?:boolean;groupedFilters?:boolean;all?:boolean;hideNavigation?:boolean}){
+export default function TaskList({employee,pendingOnly=false,all=false,hideNavigation=false,data}:{data?:DashboardRows;employee?:string;pendingOnly?:boolean;groupedFilters?:boolean;all?:boolean;hideNavigation?:boolean}){
  const [revision,setRevision]=useState(0);
- useEffect(()=>{const refresh=()=>setRevision(r=>r+1);window.addEventListener('focus',refresh);return()=>window.removeEventListener('focus',refresh);},[]);
- const [rows,setRows]=useState<any[]>([]),[tab,setTab]=useState('pendientes'),[error,setError]=useState(''),[loading,setLoading]=useState(true),[filters,setFilters]=useState<Record<string,string>>({});
- useEffect(()=>{let active=true;setLoading(true);apiClient.get('/api/v1/tareas'+(employee?'?agente='+encodeURIComponent(employee):'')).then(r=>{if(active){setRows(r.data);setError('');}}).catch(e=>{if(active)setError(e.response?.data?.message||'No se pudieron cargar las tareas.');}).finally(()=>{if(active)setLoading(false);});return()=>{active=false;};},[employee,revision]);
+ useEffect(()=>{if(data)return;const refresh=()=>setRevision(r=>r+1);window.addEventListener('focus',refresh);return()=>window.removeEventListener('focus',refresh);},[data]);
+ const [ownRows,setRows]=useState<any[]>([]),[tab,setTab]=useState('pendientes'),[ownError,setError]=useState(''),[ownLoading,setLoading]=useState(true),[filters,setFilters]=useState<Record<string,string>>({});
+ const {rows,error,loading}=data||{rows:ownRows,error:ownError,loading:ownLoading};
+ useEffect(()=>{if(data)return;let active=true;setLoading(true);apiClient.get('/api/v1/tareas'+(employee?'?agente='+encodeURIComponent(employee):'')).then(r=>{if(active){setRows(r.data);setError('');}}).catch(e=>{if(active)setError(e.response?.data?.message||'No se pudieron cargar las tareas.');}).finally(()=>{if(active)setLoading(false);});return()=>{active=false;};},[employee,revision,data]);
  const columns=[['nombre','Tarea'],['estado','Estado'],['nombre_cuenta','Cuenta'],['descripcion','Descripción']];
  const value=(row:any,key:string)=>key==='estado'?taskStates[row.estado]:row[key]||'';
  const visible=rows.filter(row=>(all || ((pendingOnly||tab==='pendientes')?['pendiente','en_curso'].includes(row.estado):['completada','cancelada'].includes(row.estado)))&&columns.every(([key])=>String(value(row,key)).toLocaleLowerCase('es').includes((filters[key]||'').trim().toLocaleLowerCase('es'))));

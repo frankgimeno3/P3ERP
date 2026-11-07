@@ -23,7 +23,7 @@ function load(file) {
   }, mod, mod.exports); cache.set(file, mod.exports); return mod.exports;
 }
 const root = createRoot(document.getElementById('root'));
-const click = async text => { const node = [...document.querySelectorAll('button')].find(n => n.textContent === text); assert(node, text); await React.act(async () => node.click()); };
+const click = async text => { const node = [...document.querySelectorAll('button')].find(n => n.textContent === text||n.textContent.startsWith(text+' (')); assert(node, text); await React.act(async () => node.click()); };
 (async () => {
   const { calendarToday, taskCalendarMonth, taskCalendarDay } = load('app/lib/myTaskCalendar.js');
   assert.equal(taskCalendarDay({ fecha_limite: '05/11/2026' }), '2026-11-05');
@@ -40,7 +40,7 @@ const click = async text => { const node = [...document.querySelectorAll('button
   assert.deepEqual(taskCalendarMonth(2026,10)[0],[null,null,null,null,null,null,1]);
   const Panel = load('app/components/tasks/MyTasksPanel.tsx').default;
   await React.act(async () => root.render(React.createElement(Panel)));
-  assert.deepEqual([...document.querySelectorAll('[role="tab"]')].map(n => n.textContent), ['Pendientes', 'Todas', 'Calendario']);
+  assert.deepEqual([...document.querySelectorAll('[role="tab"]')].map(n => n.textContent), ['Pendientes (3)', 'Todas (4)', 'Calendario (4)']);
   assert(!document.querySelector('tbody').textContent.includes('Terminada'));
   const preview = document.querySelector('tbody tr td:last-child p').textContent;
   assert.equal(preview.split(/\s+/).length, 55); assert(!preview.includes('palabra56'));
@@ -62,6 +62,7 @@ const click = async text => { const node = [...document.querySelectorAll('button
   await React.act(async () => card.dispatchEvent(new dom.window.MouseEvent('mouseover', { bubbles: true, relatedTarget: document.body })));
   assert(card.classList.contains('border-blue-600')); assert(label.classList.contains('border-blue-600'));
   await React.act(async () => document.querySelector('[aria-label="Mes anterior"]').click()); assert.notEqual(document.querySelector('h2').textContent, title);
+  assert(document.querySelector('[aria-label="Mis tareas"]').textContent.includes('Calendario (1)'));
   assert(!document.querySelector('[aria-current="date"]'));
   await click('Hoy');assert.equal(document.querySelector('h2').textContent,title);assert(document.querySelector('[aria-current="date"]'));
   await React.act(async () => document.querySelector('[aria-label="Mes anterior"]').click());

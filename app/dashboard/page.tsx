@@ -3,11 +3,14 @@ import SortableTable from '@/app/components/SortableTable';
 
 import TableFilters from '@/app/components/TableFilters';
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import MiddleNav from "@/app/general_components/componentes_recurrentes/MiddleNav";
 import { AgenteService } from "@/app/service/AgenteService";
 import { CuentaService } from "@/app/service/CuentaService";
+import { PropuestaService } from '@/app/service/PropuestaService';
+import apiClient from '@/app/apiClient';
+import {dashboardCounter,useDashboardRows} from '@/app/lib/useDashboardRows';
 import MisPendientes from "@/app/dashboard/comercial/propuestas/componentesPropuestas/tablaspropuestas/MisPendientes";
 import MyTasksPanel from '@/app/components/tasks/MyTasksPanel';
 import MyContentsPanel from '@/app/components/contents/MyContentsPanel';
@@ -19,6 +22,8 @@ const tabs = [
   { key: "clientes", label: "Mis cuentas" },
   { key: "propuestas", label: "Mis propuestas pendientes" },
 ];
+const loadTasks=async()=>(await apiClient.get('/api/v1/tareas')).data;
+const loadContents=async()=>(await apiClient.get('/api/v1/dashboard/mis-contenidos')).data;
 
 const moduleTutorials: Record<string, string> = {
   Comercial: "El modulo comercial concentra cuentas, contactos, propuestas y contratos. Sirve para gestionar el trabajo con clientes y potenciales clientes desde el primer contacto hasta la firma.",
@@ -35,9 +40,12 @@ export default function DashboardPage() {
   const [roles, setRoles] = useState<string[]>([]);
   const [agente, setAgente] = useState<any | null>(null);
   const [agentes, setAgentes] = useState<any[]>([]);
-  const [cuentas, setCuentas] = useState<any[]>([]);
-  const [cuentasLoading, setCuentasLoading] = useState(false);
-  const [cuentasError, setCuentasError] = useState("");
+  const [identityLoading,setIdentityLoading]=useState(true);
+  const taskData=useDashboardRows(loadTasks),contentData=useDashboardRows(loadContents);
+  const accountData=useDashboardRows(CuentaService.getCuentas,Boolean(agente?.id_agente));
+  const {rows:cuentas,loading:cuentasLoading,error:cuentasError}=accountData;
+  const loadProposals=useCallback(()=>PropuestaService.getPropuestas({agente:agente?.id_agente,estado:'Pendiente'}),[agente?.id_agente]);
+  const proposalData=useDashboardRows(loadProposals,Boolean(agente?.id_agente));
   const [clienteFilters, setClienteFilters] = useState<Record<string, string>>({});
   const [userIdentity, setUserIdentity] = useState<any>({});
   const [tutorialOpen, setTutorialOpen] = useState(false);
@@ -65,23 +73,8 @@ export default function DashboardPage() {
       .catch((error) => {
         console.error("Error fetching agente actual:", error);
         setAgente(null);
-      });
+      }).finally(()=>setIdentityLoading(false));
   }, []);
-
-  useEffect(() => {
-    if (activeTab !== "clientes" || !agente?.id_agente) return;
-
-    setCuentasLoading(true);
-    setCuentasError("");
-    CuentaService.getCuentas()
-      .then((data) => setCuentas(Array.isArray(data) ? data : []))
-      .catch((error) => {
-        console.error("Error fetching mis clientes:", error);
-        setCuentasError(error?.message || "No se han podido cargar tus clientes.");
-        setCuentas([]);
-      })
-      .finally(() => setCuentasLoading(false));
-  }, [activeTab, agente?.id_agente]);
 
 
   const agenteLabel = agente?.nombre_completo_agente || agente?.nombre_agente || email || "Agente";
@@ -139,6 +132,7 @@ export default function DashboardPage() {
       );
     });
   }, [clienteFilters, cuentasPropias]);
+  const counters:Record<string,string>={tareas:dashboardCounter(taskData,taskData.rows.length),contenidos:dashboardCounter(contentData,contentData.rows.length),clientes:!agente?(identityLoading?'…':'—'):dashboardCounter(accountData,cuentasPropias.length),propuestas:!agente?(identityLoading?'…':'—'):dashboardCounter(proposalData,proposalData.rows.length)};
 
   const setColumnFilter = (field: string, value: string) => {
     setClienteFilters((current) => ({ ...current, [field]: value }));
@@ -235,23 +229,25 @@ export default function DashboardPage() {
           )}
         </section>
 
-        <div className="mb-4 flex flex-row">
+        <div role="tablist" aria-label="Panel personal" className="mb-4 flex flex-row">
           {tabs.map((tab, index) => (
             <button
               key={tab.key}
               type="button"
+              role="tab"
+              aria-selected={activeTab===tab.key}
               onClick={() => setActiveTab(tab.key)}
               className={`w-48 cursor-pointer rounded-tr-lg p-3 text-center text-sm transition-all duration-300 ${
                 activeTab === tab.key ? "z-30 rounded-tl-lg bg-blue-950 text-white" : "z-10 bg-white text-gray-700 hover:bg-gray-200"
               }`}
               style={{ marginLeft: index === 0 ? "0px" : "-5px" }}
             >
-              {tab.label}
+              {tab.label} ({counters[tab.key]})
             </button>
           ))}
         </div>
 
-        {activeTab === 'tareas' && <div className="rounded bg-white p-6"><MyTasksPanel/></div>}
+        {activeTab === 'tareas' && <div className="rounded bg-white p-6"><MyTasksPanel data={taskData}/></div>}
         {activeTab !== "tareas" && activeTab !== "clientes" && activeTab !== "contenidos" && activeTab !== "propuestas" && (
           <div className="bg-white p-6 shadow-sm">
             <h2 className="text-lg font-semibold text-blue-950">{currentTab?.label}</h2>
@@ -274,7 +270,7 @@ export default function DashboardPage() {
                 Gestionar contenidos
               </button>
             </div>
-            <MyContentsPanel/>
+            <MyContentsPanel data={contentData}/>
           </div>
         )}
 
@@ -288,6 +284,7 @@ export default function DashboardPage() {
             </div>
             {agente?.id_agente && (
               <MisPendientes
+                data={proposalData}
                 clienteFiltro=""
                 codigoCRMFiltro=""
                 agenteActual={agente.id_agente}

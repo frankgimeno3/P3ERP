@@ -7,7 +7,9 @@ import React, { FC, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PropuestaService } from "@/app/service/PropuestaService";
 
+import type {DashboardRows} from '@/app/lib/useDashboardRows';
 interface MisPendientesProps {
+  data?:DashboardRows;
   columnFilters?: Record<string, string>;
   clienteFiltro: string;
   codigoCRMFiltro: string;
@@ -17,6 +19,7 @@ interface MisPendientesProps {
 }
 
 const MisPendientes: FC<MisPendientesProps> = ({
+  data,
   columnFilters: filters = {},
   clienteFiltro,
   codigoCRMFiltro,
@@ -25,10 +28,12 @@ const MisPendientes: FC<MisPendientesProps> = ({
   fechaFin,
 }) => {
   const router = useRouter();
-  const [propuestas, setPropuestas] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [ownPropuestas, setPropuestas] = useState<any[]>([]);
+  const [ownLoading, setLoading] = useState(true);
 
+  const propuestas=data?.rows||ownPropuestas,loading=data?.loading??ownLoading;
   useEffect(() => {
+    if(data)return;
     setLoading(true);
     PropuestaService.getPropuestas({
       cliente: clienteFiltro,
@@ -39,7 +44,7 @@ const MisPendientes: FC<MisPendientesProps> = ({
       .then((data) => setPropuestas(Array.isArray(data) ? data : []))
       .catch(() => setPropuestas([]))
       .finally(() => setLoading(false));
-  }, [clienteFiltro, codigoCRMFiltro, agenteActual]);
+  }, [clienteFiltro, codigoCRMFiltro, agenteActual,data]);
 
   const resultadosFiltrados = propuestas.filter((propuesta) => {
     const fecha = proposalDate(propuesta.fecha_envio_propuesta);
@@ -57,7 +62,7 @@ const MisPendientes: FC<MisPendientesProps> = ({
   });
 
   return (
-    <div className="h-full">
+    <div className="h-full">{data?.error&&<p role="alert" className="mb-4 text-red-700">{data.error}</p>}
       <div className="overflow-x-auto">
       <SortableTable className="min-w-full text-sm">
         <thead className="bg-blue-950 text-white">

@@ -6,21 +6,26 @@ import TableFilters from '@/app/components/TableFilters';
 import TableColumnFilter from '@/app/components/TableColumnFilter';
 import TaskDescription from './TaskDescription';
 import { taskStates } from './TaskList';
+import type {DashboardRows} from '@/app/lib/useDashboardRows';
 import { calendarToday, taskCalendarDay, taskCalendarMonth } from '@/app/lib/myTaskCalendar.js';
 
-export default function MyTaskCalendar() {
+export default function MyTaskCalendar({data,onCountChange}:{data?:DashboardRows;onCountChange?:(count:number|null)=>void}={}) {
   const [today,setToday]=useState(()=>calendarToday());
   const [month, setMonth] = useState(() => { const [year,month]=calendarToday().split('-').map(Number);return new Date(year,month-1,1); });
-  const [rows, setRows] = useState<any[]>([]), [error, setError] = useState(''), [loading, setLoading] = useState(true), [filters, setFilters] = useState<Record<string, string>>({}), [highlight, setHighlight] = useState('');
+  const [ownRows, setRows] = useState<any[]>([]), [ownError, setError] = useState(''), [ownLoading, setLoading] = useState(true), [filters, setFilters] = useState<Record<string, string>>({}), [highlight, setHighlight] = useState('');
   useEffect(()=>{const update=()=>setToday(calendarToday());const timer=window.setInterval(update,30000);window.addEventListener('focus',update);document.addEventListener('visibilitychange',update);return()=>{window.clearInterval(timer);window.removeEventListener('focus',update);document.removeEventListener('visibilitychange',update);};},[]);
+  const {rows,error,loading}=data||{rows:ownRows,error:ownError,loading:ownLoading};
   useEffect(() => {
+    if(data)return;
     const controller = new AbortController();
     apiClient.get('/api/v1/tareas', { signal: controller.signal }).then(r => setRows(r.data || [])).catch(e => { if (!controller.signal.aborted) setError(e.message); }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
-  }, []);
+  }, [data]);
   const year = month.getFullYear(), monthIndex = month.getMonth(), monthKey = `${year}-${String(monthIndex + 1).padStart(2, '0')}`;
   const matches = rows.filter(row => ['nombre', 'estado', 'nombre_cuenta', 'descripcion'].every(key => String(key === 'estado' ? taskStates[row.estado] : row[key] || '').toLocaleLowerCase('es').includes((filters[key] || '').trim().toLocaleLowerCase('es'))));
   const visible = matches.filter(row => !taskCalendarDay(row) || taskCalendarDay(row).startsWith(monthKey)).sort((a, b) => (taskCalendarDay(a) || '9999').localeCompare(taskCalendarDay(b) || '9999'));
+  const count=rows.filter(row=>!taskCalendarDay(row)||taskCalendarDay(row).startsWith(monthKey)).length;
+  useEffect(()=>{onCountChange?.(loading||error?null:count);},[count,loading,error,onCountChange]);
   const weeks = taskCalendarMonth(year, monthIndex);
   const title = month.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }).replace(' de ', ' - ');
   const taskLink = (row: any) => `/mis-tareas/${encodeURIComponent(row.id)}`;
