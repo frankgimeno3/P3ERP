@@ -5,13 +5,15 @@ export const productionStages = [
   {value:'redaccion',label:'Fase 2',title:'Pendiente redacción'},
   {value:'maquetacion',label:'Fase 3',title:'Pendiente maquetación'},
   {value:'correccion',label:'Fase 4',title:'Pendiente corrección'},
-  {value:'revision',label:'Fase 5',title:'Pendiente revisión'},
+  {value:'revision',label:'Fase 5',title:'Pendiente revisión cliente'},
+  {value:'publicacion',label:'Fase 6',title:'Material OK - pendiente de publicar'},
   {value:'todo',label:'Todo',title:'Todo'},
 ];
 export const versionLabel = number => `V${String(number).padStart(2,'0')}`;
 export function productionStage(row) {
   if (!contentPending(row)) return '';
   const state=clean(row.estado_contenido || row.estado);
+  if (/^material\s+ok\b/.test(state.trim())) return 'publicacion';
   if (/pendiente.*recibir|contratado pendiente|no pedido|pedido,/.test(state)) return 'recibir';
   if (/redaccion/.test(state)) return 'redaccion';
   if (/corregido|revision/.test(state)) return 'revision';

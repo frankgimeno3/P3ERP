@@ -36,6 +36,11 @@ const field=name=>[...document.querySelectorAll('label')].find(label=>label.text
   await change(field('Formato en revista'),'digital');
   await React.act(async()=>document.querySelector('form').dispatchEvent(new dom.window.Event('submit',{bubbles:true,cancelable:true})));
   assert.equal(calls[1].data.formato_revista,'digital');
+  for(const state of ['Pendiente revisión cliente','Material OK - pendiente de publicar']){
+    await change(field('Estado'),state);
+    await React.act(async()=>document.querySelector('form').dispatchEvent(new dom.window.Event('submit',{bubbles:true,cancelable:true})));
+    assert.equal(calls.at(-1).data.estado,state);
+  }
   assert.match(document.querySelector('[role="status"]').textContent,/guardados/);
   await React.act(async()=>root.unmount());console.log('PASS: editable controls, agent name, legacy status, date validation and save payload');
 })().catch(error=>{console.error(error);process.exitCode=1;});

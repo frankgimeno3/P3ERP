@@ -1,4 +1,4 @@
-export const productionStates = ['Contratado pendiente de recibir', 'Pendiente redacción', 'Pendiente maquetación', 'Pendiente corrección', 'Pendiente revisión', 'No pedido', 'No publicado', 'Pendiente Publicar', 'Publicado', 'Publicado GRATIS', 'ANULADO', 'NO SALE', 'NO SE PUBLICA', 'A ESCOGER'];
+export const productionStates = ['Contratado pendiente de recibir', 'Pendiente redacción', 'Pendiente maquetación', 'Pendiente corrección', 'Pendiente revisión cliente', 'Material OK - pendiente de publicar', 'No pedido', 'No publicado', 'Pendiente Publicar', 'Publicado', 'Publicado GRATIS', 'ANULADO', 'NO SALE', 'NO SE PUBLICA', 'A ESCOGER'];
 
 export function normalizeProductionDeadline(value) {
   const text = String(value ?? '').trim();

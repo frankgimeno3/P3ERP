@@ -15,6 +15,7 @@ const contents=[
  {id_contenido:'layout',nombre_contenido:'Anuncio maquetación',tipo:'anuncios',estado_contenido:'Pendiente maquetación',materiales:[],pagina_hoja:'12, 13',nombre_empresa:'Empresa',nombre_completo_agente:'Agente'},
  {id_contenido:'correction',nombre_contenido:'Anuncio corrección',tipo:'anuncios',estado_contenido:'Pendiente corrección',materiales:[]},
  {id_contenido:'review',nombre_contenido:'Artículo revisión',tipo:'articulos',estado_contenido:'Pendiente revisión',materiales:[]},
+ {id_contenido:'ready',nombre_contenido:'Anuncio aprobado',tipo:'anuncios',estado_contenido:'Material OK - pendiente de publicar',materiales:[]},
  {id_contenido:'published',nombre_contenido:'Ya publicado',tipo:'anuncios',estado_contenido:'Publicado GRATIS',materiales:[]},
  {id_contenido:'cancelled',nombre_contenido:'Cancelado',tipo:'articulos',estado_contenido:'ANULADO',materiales:[]},
 ];
@@ -39,6 +40,13 @@ const render=async(file)=>React.act(async()=>root.render(React.createElement(loa
 const click=async(label)=>{const n=[...document.querySelectorAll('button')].find(n=>n.textContent===label);assert(n,label);await React.act(async()=>n.click());};
 const rowNames=()=>document.querySelector('tbody').textContent;
 (async()=>{
+ const {productionStage}=load('app/lib/productionWorkflow.js');
+ assert.equal(productionStage({estado_contenido:'Pendiente revisión cliente'}),'revision');
+ assert.equal(productionStage({estado_contenido:'Pendiente revisión'}),'revision','Conserva la fase de los registros históricos');
+ assert.equal(productionStage({estado_contenido:'Material OK - pendiente de publicar'}),'publicacion');
+ assert.equal(productionStage({estado_contenido:'Publicado',materiales:[{es_version_acabada:true}]}),'');
+ assert.equal(productionStage({estado_contenido:'Pendiente Publicar',materiales:[{es_version_acabada:true}]}),'revision','Una versión acabada pendiente conserva la revisión cliente');
+ assert.equal(load('app/lib/myContents.js').matchesMyContentTab({estado_contenido:'Material OK - pendiente de publicar'},'proceso'),true);
  const {contentServiceGroup}=load('app/lib/contentServiceGroups.js');
  for(const [tipo_revista_servicio,expected] of [['NEWS 1','vidrioperfil_newsletter'],['BANNER VID.NEWS','vidrioperfil_newsletter'],['WEB LATAM','vidrioperfil_portal'],['BANER HOME','vidrioperfil_portal'],['Newsletter personalizado','newsletter_personalizado'],['Revista IMPRESA','revista'],['Suscripción','suscripcion'],['No Aplica','otros']])assert.equal(contentServiceGroup({tipo_revista_servicio}),expected);
  assert.equal(contentServiceGroup({id_medio:'otro_canal',tipo_revista_servicio:'NEWS 1'}),'otro_canal');
@@ -65,10 +73,10 @@ const rowNames=()=>document.querySelector('tbody').textContent;
  await React.act(async()=>document.querySelector('[role=dialog] form').dispatchEvent(new dom.window.Event('submit',{bubbles:true,cancelable:true})));
  assert.equal(writes.at(-1).data.id_contenido,'unassigned');assert.equal(writes.at(-1).data.expectedVersion,magazinePending.updated_at);assert(writes.at(-1).url.endsWith('/rev0'));
  await render('app/dashboard/produccion/gestion-contenidos/revista/[id_revista]/page.tsx');
- assert.deepEqual([...document.querySelector('[aria-label="Fase de producción"]').querySelectorAll('button')].map(n=>n.textContent),['Fase 1','Fase 2','Fase 3','Fase 4','Fase 5','Todo']);
- assert.equal(document.querySelectorAll('[aria-label="Fase de producción"] button svg').length,6);
+ assert.deepEqual([...document.querySelector('[aria-label="Fase de producción"]').querySelectorAll('button')].map(n=>n.textContent),['Fase 1','Fase 2','Fase 3','Fase 4','Fase 5','Fase 6','Todo']);
+ assert.equal(document.querySelectorAll('[aria-label="Fase de producción"] button svg').length,7);
  assert.equal(document.querySelector('[aria-label="Fase de producción"]').children.length,2);
- assert.equal(document.querySelector('[aria-label="Fase de producción"]').firstElementChild.querySelectorAll('button').length,5);
+ assert.equal(document.querySelector('[aria-label="Fase de producción"]').firstElementChild.querySelectorAll('button').length,6);
  assert.equal(document.querySelector('[aria-label="Fase de producción"]').lastElementChild.textContent,'Todo');
  assert(document.querySelector('h2').textContent==='Contratado pendiente de recibir');
  assert(rowNames().includes('Contratado sin material'));assert(document.querySelector('[aria-label="Tipo de contenido"]').textContent.includes('Anuncios (1)'));
@@ -76,8 +84,9 @@ const rowNames=()=>document.querySelector('tbody').textContent;
  await click('Fase 3');await click('Anuncios (1)');assert(rowNames().includes('12, 13'));assert(rowNames().includes('Empresa'));assert(rowNames().includes('Agente'));
  assert(![...document.querySelectorAll('th')].some(n=>n.textContent==='Materiales'));
  await click('Fase 4');assert(rowNames().includes('Anuncio corrección'));
- await click('Fase 5');await click('Artículos (1)');assert(rowNames().includes('Artículo revisión'));
- await click('Todo');assert(document.querySelector('[aria-label="Tipo de contenido"]').textContent.includes('Anuncios (3)'));assert(!rowNames().includes('Ya publicado'));assert(!rowNames().includes('Cancelado'));
+ await click('Fase 5');await click('Artículos (1)');assert(rowNames().includes('Artículo revisión'));assert.equal(document.querySelector('h2').textContent,'Pendiente revisión cliente');
+ await click('Fase 6');await click('Anuncios (1)');assert(rowNames().includes('Anuncio aprobado'));assert.equal(document.querySelector('h2').textContent,'Material OK - pendiente de publicar');
+ await click('Todo');assert(document.querySelector('[aria-label="Tipo de contenido"]').textContent.includes('Anuncios (4)'));assert(!rowNames().includes('Ya publicado'));assert(!rowNames().includes('Cancelado'));
  await render('app/dashboard/produccion/gestion-contenidos/otros/page.tsx');
  assert.equal(document.querySelectorAll('tbody tr').length,2);assert(![...document.querySelectorAll('th')].some(n=>n.textContent==='Materiales'));
  assert(!document.querySelector('tbody').textContent.includes('Revista sin destino'));assert(!document.querySelector('[aria-label="Grupo de servicios"]').textContent.includes('Revista'));
