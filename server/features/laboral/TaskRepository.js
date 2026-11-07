@@ -3,10 +3,19 @@ import {agentTasks,saveAgentTask} from './EmployeePayrollRepository.js';
 import {managesTasks,requireTaskIdentity} from './TaskAccess.js';
 import {accountTasks,readAccountTask} from '../cuenta/AccountTaskRepository.js';
 import {taskAgentIds} from '../../../app/config/taskAssignments.js';
+export async function ownTaskCollaborators(actor){
+ requireTaskIdentity(actor);
+ return (await getPgPool().query(`SELECT id_agente AS value,COALESCE(NULLIF(nombre_completo_agente,''),NULLIF(nombre_agente,''),id_agente) AS label
+  FROM agentes_db WHERE id_agente<>$1 AND COALESCE(is_empleado_account,true) AND estado_agente='activo' ORDER BY label,id_agente`,[actor.id])).rows;
+}
 export async function createOwnTask(actor,body){
   requireTaskIdentity(actor);
   if(!(await getPgPool().query('SELECT 1 FROM agentes_db WHERE id_agente=$1',[actor.id])).rowCount)throw Object.assign(new Error('Agente no encontrado.'),{status:403});
-  return saveAgentTask(null,{nombre:body.nombre,descripcion:body.descripcion,id_cuenta:body.id_cuenta,agente:actor.id,estado:'pendiente'});
+  const selected=body.agentes_asociados??[];
+  if(!Array.isArray(selected)||selected.length>100||selected.some(id=>typeof id!=='string'||!id.trim()))throw Object.assign(new Error('Selecciona agentes válidos.'),{status:400});
+  const additional=[...new Set(selected)].filter(id=>id!==actor.id);
+  if(additional.length&&(await getPgPool().query("SELECT 1 FROM agentes_db WHERE id_agente=ANY($1::text[]) AND COALESCE(is_empleado_account,true) AND estado_agente='activo'",[additional])).rowCount!==additional.length)throw Object.assign(new Error('Selecciona agentes empleados activos válidos.'),{status:400});
+  return saveAgentTask(null,{nombre:body.nombre,descripcion:body.descripcion,id_cuenta:body.id_cuenta,fecha_inicio:body.fecha_inicio,agente:actor.id,agentes_asociados:[actor.id,...additional],estado:'pendiente'});
 }
 export async function readTasks(actor,{id,employee}={}) {
   requireTaskIdentity(actor);

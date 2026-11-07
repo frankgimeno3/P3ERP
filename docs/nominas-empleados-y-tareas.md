@@ -47,9 +47,17 @@ Pruebas: `scripts/test-vtiger-tasks.mjs` (CSV y validaciones sin RDS) y
 al terminar: transacción, duplicados, asociaciones opcionales, permisos y versiones).
 
 Desde el dashboard cada agente puede agregar sus propias tareas mediante
-un modal. `POST /api/v1/tareas/propias` fija agente e inicio pendiente en el
-servidor usando la identidad autenticada; no acepta asignaciones del navegador.
-La creación para otros agentes y la edición siguen reservadas a Operaciones.
+un modal. `POST /api/v1/tareas/propias` fija el agente principal y el estado
+pendiente usando la identidad autenticada. Admite fecha opcional de calendario
+(`fecha_inicio`, validada como día real) y otros responsables en
+`agentes_asociados`: el creador sigue incluido y el servidor comprueba que los
+agentes adicionales sean empleados activos. El modal usa tres campos dd/mm/yyyy,
+casillas para compartir y una × en cada agente seleccionado para retirarlo antes
+de crear. Se guarda una única tarea y aparece en las listas y calendarios de todos
+los responsables. Sin fecha permanece en las tareas sin día asignado.
+`GET /api/v1/tareas/colaboradores` devuelve solo identificadores y nombres de los
+agentes disponibles; no expone sus tareas ni sus contadores. La gestión de tareas
+ajenas y la reasignación posterior siguen reservadas a los roles de gestión.
 
 Pruebas: `scripts/test-task-workflow.mjs` usa un esquema aislado de RDS para
 verificar propiedad, permisos, creación y cambios de estado;

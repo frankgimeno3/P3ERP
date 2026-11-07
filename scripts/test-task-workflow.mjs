@@ -2,14 +2,15 @@ import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
 import env from '@next/env';
 import {getPgPool} from '../server/database/pgClient.js';
-import {readTasks,writeTask,taskEmployees,createOwnTask} from '../server/features/laboral/TaskRepository.js';
+import {readTasks,writeTask,taskEmployees,createOwnTask,ownTaskCollaborators} from '../server/features/laboral/TaskRepository.js';
+import {taskCalendarDay} from '../app/lib/myTaskCalendar.js';
 env.loadEnvConfig(process.cwd());
 const pool=getPgPool(),db=await pool.connect(),schema='test_tasks_'+randomUUID().replaceAll('-',''),query=pool.query.bind(pool),connect=pool.connect;
 try{
  await db.query('CREATE SCHEMA '+schema);await db.query('SET search_path TO '+schema+',public');
  for(const table of ['agentes_db','laboral_tareas_empleado','comercial_cuentas','comercial_cuenta_tareas','comercial_cuenta_tarea_agentes'])await db.query('CREATE TABLE '+schema+'.'+table+' (LIKE public.'+table+' INCLUDING ALL)');
  pool.query=(...args)=>db.query(...args);pool.connect=async()=>({query:db.query.bind(db),release(){}});
- await db.query("INSERT INTO agentes_db(id_agente,nombre_completo_agente,is_empleado_account) VALUES('owner','Propietario',true),('other','Otro',true),('external','Externo',false)");
+ await db.query("INSERT INTO agentes_db(id_agente,nombre_completo_agente,is_empleado_account,estado_agente) VALUES('owner','Propietario',true,'activo'),('other','Otro',true,'activo'),('external','Externo',false,'activo'),('inactive','Inactivo',true,'inactivo')");
  const manager={id:'manager',role:'operaciones'},owner={id:'owner',role:'base'},other={id:'other',role:'administracion'};
  const task=await writeTask(manager,null,{agente:'owner',nombre:'Preparar material',descripcion:'Detalle',estado:'pendiente'});
  assert.equal((await readTasks(owner)).length,1);assert.equal((await readTasks(other)).length,0);
@@ -20,7 +21,7 @@ try{
  await assert.rejects(taskEmployees(owner),e=>e.status===403);
  await assert.rejects(writeTask(other,task.id,{...task,estado:'completada'}),e=>e.status===403);
  await assert.rejects(writeTask(manager,null,{agente:'external',nombre:'No',estado:'pendiente'}),e=>e.status===400);
- assert.equal((await taskEmployees(manager)).length,2);
+ assert.equal((await taskEmployees(manager)).length,3);
  assert.equal((await taskEmployees(manager)).find(a=>a.id_agente==='owner').pendientes,1);
  assert.equal((await readTasks(manager,{employee:'owner'})).length,1);
  const changed=await writeTask(owner,task.id,{...task,estado:'completada',descripcion:'Intento de cambiar encargo',agente:'other',comentarios_agente:'Finalizada'});assert.equal(changed.descripcion,'Detalle');assert.equal(changed.agente,'owner');assert.equal(changed.comentarios_agente,'Finalizada');await assert.rejects(writeTask(owner,task.id,{...task,estado:'pendiente'}),e=>e.status===409);
@@ -39,6 +40,14 @@ try{
  await assert.rejects(readTasks({id:'external',role:'base'},{id:shared.id}),e=>e.status===403);
  await writeTask(manager,shared.id,{...shared,agente:'owner',agentes_asociados:['owner']});
  await assert.rejects(readTasks(other,{id:shared.id}),e=>e.status===403);
+ const choices=await ownTaskCollaborators(owner);assert.deepEqual(choices,[{value:'other',label:'Otro'}]);
+ await assert.rejects(ownTaskCollaborators({id:'',role:'base'}),e=>e.status===401);
+ const planned=await createOwnTask(owner,{nombre:'Compartir desde dashboard',agentes_asociados:['other','other','owner'],agente:'other',estado:'completada',fecha_inicio:'29/02/2028'});
+ assert.equal(planned.agente,'owner');assert.equal(planned.estado,'pendiente');assert.deepEqual(planned.agentes_asociados,['owner','other']);
+ assert.equal(taskCalendarDay(await readTasks(owner,{id:planned.id})),'2028-02-29');assert.equal(taskCalendarDay(await readTasks(other,{id:planned.id})),'2028-02-29');
+ assert.equal(own.fecha_inicio,null);
+ for(const fecha_inicio of ['31/02/2026','12//2026','2026-13-01','2026-02-29','2026-11-06T00:00:00Z'])await assert.rejects(createOwnTask(owner,{nombre:'Fecha errónea',fecha_inicio}),e=>e.status===400);
+ for(const agentes_asociados of [['external'],['inactive'],['missing'],'other',[null]])await assert.rejects(createOwnTask(owner,{nombre:'Asignación errónea',agentes_asociados}),e=>e.status===400);
  console.log('PASS: self-created tasks always belong to the authenticated agent and start pending.');
  console.log('PASS: own tasks, cross-agent denial, manager create/edit, employee filtering and completed tasks in isolated RDS schema');
 }finally{pool.query=query;pool.connect=connect;await db.query('RESET search_path');await db.query('DROP SCHEMA IF EXISTS '+schema+' CASCADE');db.release();await pool.end();}
