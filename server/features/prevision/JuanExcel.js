@@ -1,4 +1,4 @@
-import XLSX from 'xlsx';
+import * as XLSX from 'xlsx/xlsx.mjs';
 
 export const JUAN_SOURCE = '260930 PREVISION DE BSAB Y BSANT P3 2026.xls';
 export const toCents = value => Math.round(Number(value) * 100);

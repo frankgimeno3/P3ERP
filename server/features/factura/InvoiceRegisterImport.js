@@ -1,6 +1,6 @@
 import {allocateAccountIdentifier,allocateOrderIdentifier,invoiceIdentifier} from '../identifiers/BusinessIdentifiers.js';
 import {createHash} from 'node:crypto';
-import XLSX from 'xlsx';
+import * as XLSX from 'xlsx/xlsx.mjs';
 import {getPgPool} from '../../database/pgClient.js';
 import {lockIncome,ensureOrderReceipt,syncInvoiceCollection} from '../prevision/IncomeReconciliation.js';
 import {addCuentaEvento} from '../registroEventos/RegistroEventosRepository.js';

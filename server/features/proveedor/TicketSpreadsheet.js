@@ -1,4 +1,4 @@
-import XLSX from 'xlsx';
+import * as XLSX from 'xlsx/xlsx.mjs';
 import {createHash} from 'node:crypto';
 export const normalizeTicketSupplier=value=>String(value||'').normalize('NFD').replace(/\p{M}/gu,'').toUpperCase().replace(/[^A-Z0-9]/g,'');
 export function parseTicketWorkbook(bytes){

@@ -1,6 +1,6 @@
 import {getPgPool} from '../../database/pgClient.js';
 import {assertObjectExistsInS3,createPresignedDownload,readDocumentObject} from '../mediateca/S3Service.js';
-import XLSX from 'xlsx';
+import * as XLSX from 'xlsx/xlsx.mjs';
 const fail=(message,status=400)=>{throw Object.assign(new Error(message),{status});};
 export async function productionMaterialAction(contentId,data,transactionDb=null,storage={verify:assertObjectExistsInS3,download:createPresignedDownload,read:readDocumentObject}){
  const db=transactionDb||await getPgPool().connect();
