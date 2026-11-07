@@ -8,6 +8,7 @@ export type TableSort = { column: number; direction: 'asc' | 'desc' };
 type Element = React.ReactElement<any>;
 type Props = React.TableHTMLAttributes<HTMLTableElement> & {
   sort?: TableSort | null;
+  initialSort?: TableSort | null;
   onSortChange?: (sort: TableSort) => void;
 };
 type Entry = { node: React.ReactNode; key: string; count: number; fixed: boolean };
@@ -47,9 +48,9 @@ function sameValues(a: Record<string,string[]>, b: Record<string,string[]>) {
 }
 
 /** Orders React row groups, preserving their keys, controls and event handlers. */
-export default function SortableTable({ children, sort: controlled, onSortChange, ...props }: Props) {
+export default function SortableTable({ children, sort: controlled, initialSort=null, onSortChange, ...props }: Props) {
   const table = useRef<HTMLTableElement>(null);
-  const [local, setLocal] = useState<TableSort | null>(null);
+  const [local, setLocal] = useState<TableSort | null>(initialSort);
   const [values, setValues] = useState<Record<string,string[]>>({});
   const sort = onSortChange ? controlled : local;
   const sections = useMemo(()=>nodes(children),[children]);

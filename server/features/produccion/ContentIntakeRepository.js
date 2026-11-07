@@ -16,13 +16,13 @@ const invalid = message => Object.assign(new Error(message), { status: 400 });
 export async function getContentIntakeOptions({ id_cuenta, id_contrato, tipo, id_contenido,ambito }) {
   const db = getPgPool();
   const contracts = id_cuenta ? (await db.query('SELECT id_contrato,nombre_contrato FROM comercial_contratos WHERE id_cuenta_contrato=$1 ORDER BY created_at DESC', [id_cuenta])).rows : [];
-  const contents = id_contrato && contracts.some(row => row.id_contrato === id_contrato) ? (await db.query(`SELECT c.*,${magazineContentExpression} AS es_revista,${editorialContentExpression} AS es_editorial FROM produccion_contenidos c
+  const contents = id_contrato && contracts.some(row => row.id_contrato === id_contrato) ? (await db.query(`SELECT c.*,s.id_medio,${magazineContentExpression} AS es_revista,${editorialContentExpression} AS es_editorial FROM produccion_contenidos c
     LEFT JOIN servicios_db s ON s.id_servicio=c.servicio
     JOIN comercial_contratos ct ON ct.id_contrato=$1
     WHERE (c.id_contrato=ct.id_contrato OR EXISTS(SELECT 1 FROM jsonb_array_elements(COALESCE(ct.array_contenidos,'[]'::jsonb)) item WHERE item->>'id_contenido'=c.id_contenido))
-    AND (c.id_cuenta IS NULL OR c.id_cuenta=$2) ORDER BY c.id_contenido`, [id_contrato, id_cuenta])).rows.filter(row => contentPending(row) && contentTypes(row).includes(tipo) && (!ambito||Boolean(row.es_revista)===(ambito==='revista'))) : [];
+    AND (c.id_cuenta IS NULL OR c.id_cuenta=$2) ORDER BY c.id_contenido`, [id_contrato, id_cuenta])).rows.filter(row => contentPending(row) && contentServiceGroup(row)!=='suscripcion' && contentTypes(row).includes(tipo) && (!ambito||Boolean(row.es_revista)===(ambito==='revista'))) : [];
   const magazines = id_contenido && contents.some(row => row.id_contenido === id_contenido) && tipo !== 'otro' ? await getContentMagazineOptions(id_contenido) : [];
-  const services=ambito==='otros'?(await db.query("SELECT id_servicio,nombre_servicio_es,id_medio FROM servicios_db WHERE COALESCE(id_medio,'')<>'revista' ORDER BY nombre_servicio_es")).rows.filter(row=>contentServiceGroup({...row,nombre_servicio:row.nombre_servicio_es})!=='revista'):[];
+  const services=ambito==='otros'?(await db.query("SELECT id_servicio,nombre_servicio_es,id_medio FROM servicios_db WHERE COALESCE(id_medio,'')<>'revista' ORDER BY nombre_servicio_es")).rows.filter(row=>!['revista','suscripcion'].includes(contentServiceGroup({...row,nombre_servicio:row.nombre_servicio_es}))):[];
   return { contracts, contents: contents.map(row => ({ id_contenido: row.id_contenido, nombre_contenido: row.nombre_contenido || row.especificaciones_contenido || row.id_contenido })), magazines,services };
 }
 
@@ -38,15 +38,16 @@ export async function validateContentSelection(data, db = getPgPool()) {
     if (!account) throw invalid('Selecciona la empresa del contrato.');
     const contract = (await db.query('SELECT id_contrato,id_cuenta_contrato,array_contenidos FROM comercial_contratos WHERE id_contrato=$1', [data.id_contrato])).rows[0];
     if (!contract || contract.id_cuenta_contrato !== account.id_cuenta) throw invalid('El contrato no pertenece a la empresa seleccionada.');
-    content = (await db.query(`SELECT c.*,${magazineContentExpression} AS es_revista,${editorialContentExpression} AS es_editorial FROM produccion_contenidos c LEFT JOIN servicios_db s ON s.id_servicio=c.servicio WHERE c.id_contenido=$1`, [data.id_contenido])).rows[0];
+    content = (await db.query(`SELECT c.*,s.id_medio,${magazineContentExpression} AS es_revista,${editorialContentExpression} AS es_editorial FROM produccion_contenidos c LEFT JOIN servicios_db s ON s.id_servicio=c.servicio WHERE c.id_contenido=$1`, [data.id_contenido])).rows[0];
     const inContract = contract.array_contenidos?.some(item => item.id_contenido === data.id_contenido);
     if (!content || (content.id_contrato !== contract.id_contrato && !inContract)) throw invalid('El contenido no pertenece al contrato seleccionado.');
     if (content.id_cuenta && content.id_cuenta !== account.id_cuenta) throw invalid('El contenido pertenece a otra cuenta.');
+    if(contentServiceGroup(content)==='suscripcion')throw invalid('Las suscripciones no son servicios asociables a contenidos.');
     if (!contentPending(content)) throw invalid('El contenido ya está publicado o cancelado.');
     if (!contentTypes(content).includes(data.tipo)) throw invalid('El contenido contratado no corresponde al tipo seleccionado.');
     if(data.ambito&&Boolean(content.es_revista)!==(data.ambito==='revista'))throw invalid('El contenido contratado no corresponde a esta página de producción.');
   }
-  if(!data.contratado&&data.id_servicio){const service=(await db.query('SELECT id_servicio,id_medio,nombre_servicio_es FROM servicios_db WHERE id_servicio=$1',[data.id_servicio])).rows[0];if(!service||contentServiceGroup({...service,nombre_servicio:service.nombre_servicio_es})==='revista'||data.ambito==='revista')throw invalid('Selecciona un servicio válido para otros contenidos.');}
+  if(!data.contratado&&data.id_servicio){const service=(await db.query('SELECT id_servicio,id_medio,nombre_servicio_es FROM servicios_db WHERE id_servicio=$1',[data.id_servicio])).rows[0];if(!service||['revista','suscripcion'].includes(contentServiceGroup({...service,nombre_servicio:service.nombre_servicio_es}))||data.ambito==='revista')throw invalid('Selecciona un servicio válido para otros contenidos.');}
   let magazine = null;
   if (data.id_revista) {
     magazine = await getRevistaById(data.id_revista);
@@ -112,7 +113,7 @@ export async function completeContentIntake(data, verifyObject = assertObjectExi
       id = await allocateContentIdentifier(db, '', esPrueba);
       await db.query(`INSERT INTO produccion_contenidos(id_contenido,nombre_contenido,descripcion_contenido,especificaciones_contenido,tipo_contenido,
         id_cuenta,cliente_hoja,destino_revista,id_publicacion,contenido_especifico_id,estado_contenido,estado_material_contenido,hoja_prod,es_prueba,formato_revista,servicio)
-        VALUES($1,$2,$3,$3,$4,$5,$6,$7,$8,$9,'Pendiente de publicar','no revisado produccion',true,$10,$11,$12)`,
+        VALUES($1,$2,$3,$3,$4,$5,$6,$7,$8,$9,'Contratado pendiente de recibir','no revisado produccion',true,$10,$11,$12)`,
       [id, String(data.nombre).trim(), String(data.descripcion || '').trim(), data.tipo, account?.id_cuenta || null, account?.nombre_empresa || '', Boolean(magazine), magazine?.id_publicacion || null, magazine?.id_publicacion || '', esPrueba,data.formato_revista||'impreso_digital',data.id_servicio||'']);
       if (magazine) await db.query('INSERT INTO produccion_revistas_contenidos(id_revista,id_contenido,tipo) VALUES($1,$2,$3) ON CONFLICT DO NOTHING', [magazine.id_revista, id, materialType(data.tipo)]);
     }

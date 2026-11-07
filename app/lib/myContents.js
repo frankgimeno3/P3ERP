@@ -6,7 +6,7 @@ const clean=value=>String(value||'').normalize('NFD').replace(/\p{M}/gu,'').toLo
 export function contentAttentionReason(row,today=calendarToday()) {
  if(!contentPending(row))return '';
  const state=clean([row.estado_contenido,row.estado_material_contenido].join(' '));
- if(/incidencia|requiere atencion|rechazad|bloquead/.test(state)||(row.materiales||[]).some(material=>/incidencia|rechazad/.test(clean(material.validacion_produccion))))return 'Incidencia pendiente de resolver';
+ if(/invalido|incidencia|requiere atencion|rechazad|bloquead/.test(state)||(row.materiales||[]).some(material=>material.material_valido===false||/incidencia|rechazad/.test(clean(material.validacion_produccion))))return 'Incidencia pendiente de resolver';
  try {const date=normalizeProductionDeadline(row.deadline_contenido);if(date&&date.split('/').reverse().join('-')<today)return 'Fecha límite vencida';} catch { /* Fechas históricas incompletas no se interpretan como vencimientos. */ }
  return '';
 }

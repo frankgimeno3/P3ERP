@@ -107,7 +107,7 @@ export async function middleware(request) {
     const productionPath = canonicalProductionPath(pathname);
     if (productionPath !== pathname) { const url = request.nextUrl.clone(); url.pathname = productionPath; return NextResponse.redirect(url, 308); }
     if (isApi && !canAccessApiPath(role, pathname, request.method)) return forbidden();
-    const personalTask = pathname.match(/^\/tareas\/([^/]+)\/?$/);
+    const personalTask = pathname.match(/^\/(?:mis-tareas|tareas)\/([^/]+)\/?$/);
     if(personalTask&&!managesTasks(role)){
       const taskId=decodeURIComponent(personalTask[1]);
       const task=taskId.startsWith('cta_')
@@ -198,5 +198,5 @@ export async function middleware(request) {
 
 export const config = {
   runtime: "nodejs",
-  matcher: ["/dashboard/:path*", "/tareas/:path*", "/api/v1/:path*", "/", "/admin"],
+  matcher: ["/dashboard/:path*", "/tareas/:path*", "/mis-tareas/:path*", "/api/v1/:path*", "/", "/admin"],
 };

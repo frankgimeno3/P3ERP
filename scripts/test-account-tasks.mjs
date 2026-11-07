@@ -12,6 +12,7 @@ try{
  await db.query('CREATE SCHEMA '+schema);await db.query('SET search_path TO '+schema+',public');
  for(const table of ['agentes_db','comercial_cuentas','laboral_tareas_empleado','general_eventos'])await db.query('CREATE TABLE '+schema+'.'+table+' (LIKE public.'+table+' INCLUDING ALL)');
  await db.query(await readFile(new URL('../database/migrations/20261006_0002_account_tasks.sql',import.meta.url),'utf8'));
+ await db.query("ALTER TABLE comercial_cuenta_tareas ADD COLUMN comentarios_agente text NOT NULL DEFAULT ''");
  pool.query=(...args)=>db.query(...args);pool.connect=async()=>({query:db.query.bind(db),release(){}});
  await db.query("INSERT INTO agentes_db(id_agente,nombre_completo_agente,is_empleado_account) VALUES('owner','Owner',true),('other','Other',true),('manager','Manager',true),('external','External',false)");
  await db.query("INSERT INTO comercial_cuentas(id_cuenta,nombre_empresa) VALUES('account','Account')");

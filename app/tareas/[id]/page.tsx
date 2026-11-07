@@ -1,3 +1,2 @@
-import TaskDetail from '@/app/components/tasks/TaskDetail';
-import {Suspense} from 'react';
-export default function Page(){return <Suspense fallback={<p className="p-8">Cargando tarea…</p>}><TaskDetail/></Suspense>;}
+import {redirect} from 'next/navigation';
+export default async function Page({params,searchParams}:{params:Promise<{id:string}>;searchParams:Promise<Record<string,string|string[]|undefined>>}){const query=new URLSearchParams();for(const [key,value] of Object.entries(await searchParams))if(value)for(const item of Array.isArray(value)?value:[value])query.append(key,item);redirect('/mis-tareas/'+encodeURIComponent((await params).id)+(query.size?'?'+query:''));}

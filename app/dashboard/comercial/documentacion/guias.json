@@ -147,40 +147,31 @@
     ]
   },
   "/dashboard/produccion/gestion-contenidos/revista": {
-    "summary": "Gestión de contenidos de revista pendientes de publicar, organizada por publicación.",
+    "summary": "Contenidos de revista pendientes de publicar, con o sin revista asignada.",
     "steps": [
-      "Arriba a la derecha hay dos acciones: Agregar contenidos sin contrato y Agregar contenido asociado a contrato. Cada una abre un asistente de cuatro pasos: tipo, datos, materiales y confirmación. La elección de contrato ya queda fijada por el botón pulsado.",
-      "Con contrato, selecciona empresa, contrato y contenido pendiente de ese tipo destinado a revista. Se reutiliza el contenido firmado y su modo prueba, conservando líneas, importes y formato. Si aún no existe en contrato, créalo desde Comercial o acepta su propuesta.",
-      "Sin contrato, elige artículo o anuncio, cuenta o Sin empresa, nombre, descripción opcional y revista obligatoria. El formato puede ser Impreso, Digital o Impreso + digital.",
-      "Puedes añadir varios archivos a la vez o sucesivamente, o un ZIP como material descargable. Cada archivo aparece en una tarjeta, con nombre obligatorio inicialmente igual al archivo de origen, descripción opcional y una × para retirarlo antes de continuar. Se rechazan carpetas; comprímelas en ZIP. Máximo 100 materiales y 200 MB por archivo.",
-      "La confirmación comprueba los datos antes de habilitar Subir. No se suben archivos antes de confirmar. El registro del contenido y sus materiales es transaccional y reintentar conserva la misma carga. Al terminar se abre la ficha en Almacenamiento.",
-      "Las siete pestañas en fila son VIDRIO ESPAÑA, VENTANAS ESPAÑA, VIDRIO LATAM, VENTANAS LATAM, QQ VIDRIO, QQ VENTANAS y HUECO. España corresponde a Iberia, LATAM a América Latina y QQ a Quién es Quién según su edición.",
-      "La tabla muestra solo números con contenidos pendientes. Cada número unifica impreso y digital. Las columnas son Número, Fecha publicación, Límite materiales, Anuncios pendientes, Artículos pendientes, Pendiente recibir y En proceso; todas tienen su filtro dentro de la tarjeta común. Las cantidades de trabajo cuentan por separado los anuncios y artículos. No se repiten Publicación ni Edición, ya identificadas por la pestaña. Pulsa la fila o usa Enter o espacio para abrir el número.",
-      "Los contenidos importados que incluían artículo y anuncio aparecen en ambas vistas con el mismo ID y contrato; no se duplican sus líneas de facturación.",
-      "Los contenidos cuyo canal o servicio es Revista se gestionan aquí aunque todavía no tengan destino. Pendientes de asignar revista muestra solo los que no tienen una publicación válida vinculada, incluida la planificación editorial histórica. Asignar revista exige elegir el número concreto; su formato se edita en la ficha del contenido. La asociación conserva el contenido, sus materiales y sus vínculos anteriores, con auditoría.",
-      "Las rutas antiguas de gestión llevan a esta página; las fichas concretas de contenidos y materiales se abren siempre en Almacenamiento.",
-      "La barra de navegación superior muestra el recorrido de esta página y permite volver a los listados y al dashboard; también aparece en las fichas de contenidos y materiales.",
-      "Todas las tablas de Gestión contenidos muestran pendientes de publicar y su fase de producción. Los publicados, anulados y cancelados permanecen en Almacenamiento."
+      "La primera pestaña es Pendientes de asignar revista y muestra su contador. Asignar revista vincula el contenido existente a un número sin duplicarlo ni modificar su contrato.",
+      "Contenidos revista pendientes publicar abre las siete familias de revistas. Cada número aparece una sola vez: el formato impreso, digital o impreso + digital pertenece a cada contenido.",
+      "Las tablas muestran número, fechas de publicación y límite de materiales, anuncios, artículos, pendientes de recibir y en proceso. Pulsa una fila para abrir las fases del número. Los filtros se agrupan en una tarjeta inicialmente cerrada.",
+      "Agregar contenidos sin contrato crea un contenido nuevo. Agregar contenido asociado a contrato permite aportar material a un compromiso contratado ya existente. Los asistentes mantienen separado el destino revista de los otros servicios. Las altas con contrato se originan en el contrato o en una propuesta aceptada; no se crean líneas financieras desde producción."
     ]
   },
   "/dashboard/produccion/gestion-contenidos/otros": {
-    "summary": "Contenidos pendientes que no son de revista.",
+    "summary": "Contenidos pendientes ajenos a revistas, separados por grupo de servicios.",
     "steps": [
-      "Muestra solo contenidos que no son de revista, con servicio, empresa, agente y fase de producción. Las pestañas utilizan los canales del catálogo de servicios excepto Revista, con contadores y una vista Todos. Los registros importados sin canal conservan sus datos: NEWS se agrupa en Vidrioperfil newsletter, WEB y BANNER en Vidrioperfil portal, y suscripciones o newsletters personalizados en su canal correspondiente. Los contenidos de revista, incluso sin número asignado, se gestionan exclusivamente en Contenido revista. Los publicados, anulados y cancelados se consultan en Almacenamiento.",
-      "Arriba a la derecha están Agregar contenidos sin contrato y Agregar contenido asociado a contrato. Ambos usan cuatro pasos. Sin contrato permite elegir cuenta o Sin empresa, tipo, nombre, descripción y servicio opcional del catálogo, excluyendo Revista. Con contrato exige un contenido pendiente ya contratado de otros servicios. No permite cambiar el destino a revista ni modificar sus líneas firmadas. Se respeta el modo prueba de la cuenta o contrato.",
-      "La tabla no tiene columna de materiales ni botones de carga. Pulsa la fila para abrir la ficha en Almacenamiento: Aportar material está en su apartado Materiales y Subir versión en Versión acabada. Cada versión recibe automáticamente el siguiente número y conserva los archivos anteriores.",
-      "Los filtros se reúnen en una única tarjeta inicialmente cerrada.",
-      "La barra de navegación superior muestra el recorrido de esta página y permite volver a los listados y al dashboard; también aparece en las fichas de contenidos y materiales."
+      "Las pestañas muestran un grupo de servicios cada una, incluido Banner news para Vidrioperfil newsletter. Todo reúne los grupos y Otros aparece a su derecha. Suscripción no es un servicio asociable a contenidos.",
+      "La tabla muestra contenido, servicio, empresa, agente y fase. Solo muestra pendientes de publicar; los contenidos de revista se asignan en Contenido revista. Los filtros se agrupan en una tarjeta inicialmente cerrada.",
+      "Las altas sin contrato y la aportación a contenido contratado tienen asistentes separados. No hay botones de materiales en la tabla: pulsa el contenido para gestionarlos en su ficha."
     ]
   },
   "/dashboard/produccion/gestion-contenidos/revista/[id_revista]": {
-    "summary": "Contenidos pendientes de una revista por fase de producción.",
+    "summary": "Fases y subfases de los contenidos pendientes de un número de revista.",
     "steps": [
-      "Las pestañas son Fase 1, Fase 2, Fase 3, Fase 4, Fase 5, Fase 6 y Todo, sin fase cero. Cada una lleva un icono a su derecha y, al seleccionarla, muestra debajo su título: Contratado pendiente de recibir, Pendiente redacción, Pendiente maquetación, Pendiente corrección, Pendiente revisión cliente o Material OK - pendiente de publicar. Sus iconos son reloj, lápiz, imagen, ojo, silueta de usuario y visto bueno. Todo utiliza un informe con una lista por puntos y no lleva número de fase. Todo reúne los contenidos pendientes de esa revista; publicados y cancelados se conservan en Almacenamiento.",
-      "Las fases 1–6 quedan agrupadas a la izquierda y Todo a la derecha. Cada fase tiene subpestañas Anuncios y Artículos con sus cantidades. La tabla muestra nombre del contenido, fase, formato, páginas asignadas, empresa y agente. Pulsa la fila o usa Enter o espacio para abrir la ficha.",
-      "La fase se toma del estado del contenido. Pendiente revisión se conserva como alias histórico de Pendiente revisión cliente. Material OK - pendiente de publicar identifica la fase 6. Para registros históricos sin fase explícita se consideran los materiales recibidos, el contrato y el tipo; una versión acabada pendiente pasa a revisión cliente. Elige el estado Material OK - pendiente de publicar desde Datos y detalles cuando el contenido esté aprobado para publicación. Los cambios de estado se guardan con auditoría.",
-      "Abre la ficha del contenido para Aportar material o Subir versión desde sus apartados correspondientes. Las versiones se guardan como materiales, con indicador de versión acabada y número correlativo desde V01, sin sobrescribir versiones anteriores.",
-      "Usa el midnav superior para volver a los listados y al dashboard. No se repite un enlace Volver dentro de la página."
+      "Las fases 1 a 6 quedan a la izquierda y Todo a la derecha. Cada pestaña y subpestaña indica su contador. El título explica la fase seleccionada.",
+      "Fase 1: contratado pendiente de recibir, incluidos los anuncios con material inválido, destacados en rojo. Fase 2: pendiente redacción. Fase 3: pendiente de gestionar Charly.",
+      "La fase 3 separa 3.1 Contenido no descargado y 3.2 Pendiente enviar corrección. Los archivos válidos y el texto del artículo deben estar recogidos por producción. Un archivo o una edición de texto posterior vuelve a quedar pendiente.",
+      "En fase 3 los tipos son Anuncios a revisar y descargar y Artículos a maquetar. La fase 4 separa Corrección GM (persona o equipo) y Corrección otros. La fase 5 es Pendiente revisión cliente. Las fases 4 y 5 muestran solo artículos; los anuncios se revisan en fase 3.",
+      "La fase 6 es Material OK - pendiente de publicar. Todo mezcla artículos y anuncios sin separar pestañas. Ambas vistas muestran Posición como primera columna y ordenan inicialmente por ella.",
+      "Páginas ocupadas es la extensión del contenido; Posición es su página inicial. Son datos distintos y editables en la ficha. Publicados y anulados se consultan en Almacenamiento. Pulsa una fila para abrir la ficha; los filtros se agrupan en una tarjeta cerrada."
     ]
   },
   "/dashboard/produccion/repositorio": {
@@ -189,7 +180,8 @@
       "Alterna Contenidos y Materiales. Todos los estados permanecen disponibles y se localizan mediante la tarjeta de filtros, inicialmente cerrada.",
       "Pulsa cualquier parte de una fila o usa Enter o espacio para abrir su ficha. Las URLs antiguas de fichas de contenido se redirigen aquí.",
       "Las tablas de Almacenamiento no ofrecen altas de contenidos ni de materiales. Los contenidos se crean desde Gestión contenidos; los materiales y versiones se aportan desde la ficha concreta del contenido.",
-      "La barra de navegación superior muestra el recorrido de esta página y permite volver a los listados y al dashboard; también aparece en las fichas de contenidos y materiales."
+      "La barra de navegación superior muestra el recorrido de esta página y permite volver a los listados y al dashboard; también aparece en las fichas de contenidos y materiales.",
+      "El filtro Estado es un selector con los estados existentes. Almacenamiento conserva contenidos publicados, anulados y pendientes; las colas de gestión muestran solamente pendientes."
     ]
   },
   "/dashboard/produccion/repositorio/materiales/[id]": {
@@ -197,19 +189,21 @@
     "steps": [
       "Muestra nombre, descripción, identificador y, si procede, versión acabada V01, V02 y siguientes. Abre el archivo con una descarga autorizada del ERP.",
       "El enlace al contenido abre su ficha en Almacenamiento. Puedes guardar la revisión y los comentarios del material; no crear nuevos materiales desde esta ficha.",
-      "Usa el midnav superior para volver a los listados y al dashboard. No se repite un enlace Volver dentro de la página."
+      "Usa el midnav superior para volver a los listados y al dashboard. No se repite un enlace Volver dentro de la página.",
+      "Abrir archivo registra la descarga por producción después de verificar el archivo en S3. Las casillas, validación y descarga conjunta se gestionan desde la ficha del contenido."
     ]
   },
   "/dashboard/produccion/repositorio/contenidos/[id]": {
-    "summary": "Detalle de un contenido de producción y sus materiales.",
+    "summary": "Ficha del contenido, sus materiales, gestiones de producción y versiones acabadas.",
     "steps": [
-      "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
-      "La ficha tiene tres apartados: Datos y detalles, Materiales y Versión acabada. Cada material ordinario se muestra en una tarjeta que abre su ficha en Almacenamiento.",
-      "Edita especificaciones, Publicación / Nº web, agente por nombre, fecha límite con día, mes y año separados, estado y formato en revista. Elige Impreso, Digital o Impreso + digital; los contenidos por contrato parten de Impreso + digital. Pulsa Guardar cambios. El formato también se muestra y edita desde el control de artículos.",
-      "La tabla de versiones acabadas aparece de más actual a más antigua, V02 antes de V01. Cada versión es un material con archivo propio en S3 y conserva las anteriores. Usa Aportar material dentro de Materiales o Subir versión dentro de Versión acabada; si el contenido admite varios tipos o revistas, elige el destino en el formulario. Los contenidos nuevos se crean desde Gestión contenidos.",
-      "Usa el midnav superior para volver a los listados y al dashboard. No se repite un enlace Volver dentro de la página.",
-      "Empresa y Contrato son enlaces a sus fichas comerciales cuando existe la relación. Aportar material permite seleccionar varios archivos, revisar sus tarjetas, editar el nombre obligatorio de cada uno y retirar archivos con × antes de subir. No se admiten carpetas; sí archivos ZIP. El lote se registra completo o se revierte, y reintentar no duplica los archivos ya subidos. Cada versión acabada utiliza un único archivo y conserva las versiones anteriores.",
-      "Al aportar materiales ordinarios a un contenido que estaba pendiente de recibir, pasa a redacción o maquetación según su tipo. Un contenido que tenga anuncio y artículo mantiene los materiales y fases de ambos tipos por separado, conservando su ID y su línea contratada."
+      "Datos y detalles permite editar especificaciones, agente, fechas mediante día/mes/año, formato en revista, páginas ocupadas y posición. Empresa y contrato enlazan sus fichas.",
+      "Materiales permite aportar varios archivos o un ZIP. Cada tarjeta de selección tiene nombre obligatorio, inicialmente el del archivo, descripción y una cruz para retirarla antes de subir. Las carpetas sin comprimir no se admiten.",
+      "Cada material muestra fecha de subida a P3ERP, agente de subida y fecha de descarga por producción. Los datos históricos desconocidos se indican sin inventar un autor. El material pendiente de descargar aparece en rojo.",
+      "Puedes marcar cada material o todos como descargados, descargar uno o descargar todos en ZIP. Una descarga iniciada correctamente registra la descarga; un fallo de almacenamiento no la marca. El ZIP conjunto admite hasta 200 MB; los lotes mayores se descargan individualmente.",
+      "Marcar no válido excluye ese material del seguimiento de descargas. Si es un anuncio, el contenido vuelve a fase 1 como Material inválido y se destaca en rojo.",
+      "El texto del artículo tiene título, entradilla y contenido. La barra permite insertar negrita y cursiva con formato Markdown y vista previa; el contador muestra palabras y caracteres. Guarda el texto antes de marcarlo como recogido. Si vuelve a editarse, queda pendiente de recoger.",
+      "Gestiones de producción contiene Estado del contenido y el destino de corrección GM u otros. Los estados antiguos se han unificado; Sin estado no tiene fase. Publicado y Anulado dejan de aparecer en las colas pendientes.",
+      "Versión acabada conserva todos los archivos como materiales, numerados V01, V02 y siguientes, de más actual a más antigua. Subir versión utiliza el mismo almacenamiento S3 de Mediateca; su bucket debe estar configurado en el servidor. Los modales se cierran con × o Escape."
     ]
   },
   "/dashboard/operaciones/revistas/[id_revista]/contenidos": {
@@ -837,13 +831,9 @@
     ]
   },
   "/tareas": {
-    "summary": "Consulta las tareas asignadas a tu agente.",
+    "summary": "Acceso antiguo a Mis tareas.",
     "steps": [
-      "Pendientes agrupa pendiente y en curso. Terminadas agrupa completada y cancelada.",
-      "Abre el nombre de una tarea para consultar su detalle. Las tareas de cuenta muestran su cuenta, tipo, referencia y fecha; los responsables pueden guardar cambios de estado. Las tareas personales conservan sus permisos de gestión habituales.",
-      "Puedes crearte tareas desde el dashboard. Operaciones crea tareas para empleados y administra su edición.",
-      "Las tareas de cuenta se comparten entre todos los agentes asignados y aparecen también en el panel de tareas propias. La columna Cuenta permite volver a la ficha.",
-      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
+      "Redirige a /mis-tareas. Las fichas antiguas conservan el identificador y los parámetros de navegación."
     ]
   },
   "/dashboard/operaciones/tareas": {
@@ -857,7 +847,8 @@
       "Crear tarea asigna una nueva tarea pendiente al empleado de la ficha. El modal se cierra con la cruz o Escape.",
       "Abre una tarea para editar nombre, descripción, estado y agentes asociados. Añadir agente permite elegir varios responsables; la cruz retira solo ese vínculo. Cada responsable puede consultar la tarea en su lista y el contador la incluye una sola vez. Guarda para actualizar RDS. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada, con una etiqueta fina encima de cada campo.",
       "Los contadores y listas incluyen las tareas de cuentas. Su estado se actualiza desde el detalle; los datos y responsables se editan en la pestaña Tareas de la cuenta.",
-      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición."
+      "Pulsa el SVG de una columna para ordenar sus filas de forma ascendente; vuelve a pulsarlo para invertir el orden. La flecha indica la columna y el sentido activos. Los importes y las fechas se ordenan por su valor; los totales y las filas de sección conservan su posición.",
+      "El detalle abre /mis-tareas/{id}. Los agentes asignados pueden actualizar estado y comentarios. La descripción previa, responsables y cuenta se protegen según su permiso; creación y finalización registran el autor autenticado."
     ]
   },
   "/dashboard": {
@@ -874,7 +865,8 @@
       "La pestaña del navegador y el historial distinguen cada página por su título y módulo, seguidos de P3ERP. Las fichas actualizan el título cuando cargan el nombre del registro.",
       "Todas las rutas del dashboard, incluidas fichas, formularios y la vista Juan de contabilidad, muestran un único midnav superior. Conserva los títulos propios de cada página y permite volver a las páginas del recorrido; las carpetas sin página se muestran como texto.",
       "Las tablas del proyecto comparten el estilo compacto de Extractos: celdas con espaciado uniforme, separadores horizontales gris claro, fondo blanco y sombra suave. Cada tabla conserva los colores de su cabecera, sus alineaciones, sus anchos y los colores que identifican estados.",
-      "Gestionar contenidos, desde Mis contenidos, abre Gestión contenidos. Las altas se realizan allí con sus botones con o sin contrato; la Hoja de producción sirve para consultar los compromisos."
+      "Gestionar contenidos, desde Mis contenidos, abre Gestión contenidos. Las altas se realizan allí con sus botones con o sin contrato; la Hoja de producción sirve para consultar los compromisos.",
+      "Agregar tarea permite asociar una cuenta. Los detalles de Mis tareas usan /mis-tareas y permiten al agente modificar su estado y comentarios. Operaciones > Tablas ya no contiene Artículos: se gestionan como contenidos en Producción."
     ]
   },
   "/dashboard/contabilidad/prevision-liquidez/vista-juan": {
@@ -961,27 +953,6 @@
       "Las pestañas Datos de la revista y Contenidos cambian la URL. Contenidos utiliza el sufijo /contenidos y conserva anuncios, artículos y planillo previo."
     ]
   },
-  "/dashboard/operaciones/revistas/[id_revista]/contenidos": {
-    "summary": "Revisa los materiales de la revista y organiza su planillo previo por bloques de contenido.",
-    "steps": [
-      "Datos de la revista permite editar las siete fechas de eventos, fecha de publicación y estado. Guardar datos conserva los cambios en el número de revista.",
-      "Las pestañas Datos de la revista y Contenidos cambian la URL. Contenidos utiliza el sufijo /contenidos y conserva anuncios, artículos y planillo previo.",
-      "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
-      "Alterna Anuncios y Artículos; cada pestaña separa no revisados, incidencias, OK producción y no recibidos.",
-      "Despliega un contenido para ver sus archivos, fecha de aportación, estado y comentarios de producción.",
-      "Abre el contenido para agregar materiales desde su carpeta de revista.",
-      "Planillo previo combina la hoja de producción y el control de redacción: orden por recepción de materiales; sin fecha real, usa el orden de la hoja e indica esa limitación. Las extensiones no conocidas son provisionales y se ajustan con Páginas.",
-      "La miniatura muestra pliegos de dos páginas, portada a la derecha y última página a la izquierda, con su pareja derecha invisible. No hay contraportada. La numeración en toda la vista es Portada, Interior portada, 1, 2, 3… Sumario e índice se reservan inicialmente en las páginas 3 y 5, pero pueden desplazarse al reorganizar contenidos.",
-      "Mover bloque usa la misma numeración de revista en el selector de destino, tabla y miniatura. No permite insertar en una parte intermedia. Los anuncios y artículos de dos páginas comienzan en una página par y terminan en la impar consecutiva; los destinos incompatibles están deshabilitados. Usa los huecos suficientes sin desplazar lo posterior; en otro caso inserta el bloque y desplaza lo posterior entero. El origen queda libre.",
-      "Quitar bloque confirma todas las páginas asociadas y permite dejar huecos rojos o adelantar lo posterior. El contenido original permanece disponible para volver a añadirlo.",
-      "Añadir página inserta un espacio libre sin partir contenidos. Si un desplazamiento altera la orientación de un anuncio o artículo de dos páginas, se intercala un hueco antes del contenido para conservar su pareja par/impar. Se mantiene un total par, añadiendo si hace falta una página libre al final. Solo la portada permanece fija al inicio.",
-      "Intercambiar por aparece en anuncios y artículos de una página: permite elegir otro contenido de una página de la misma revista y cambia solamente sus dos posiciones.",
-      "Asignar contenido está siempre activo en los huecos rojos. Permite traer un contenido ya colocado, si cabe entero, dejando su origen rojo o cubriendo ese origen en cascada. También permite cerrar el hueco sin asignar contenido.",
-      "La cascada adelanta contenidos completos de una página, saltando los bloques de varias páginas sin alterar sus posiciones. Retira huecos finales conservando un total par; un hueco sin contenido posterior elegible debe permanecer. El modal muestra todas las páginas afectadas antes de confirmar.",
-      "Cada operación muestra las posiciones afectadas y se guarda automáticamente, con control de ediciones simultáneas. El planillo previo no modifica el definitivo ni los contratos.",
-      "Publicar asignaciones definitivas abre una revision de paginas antes de confirmar. La version debe seguir vigente; la publicacion es atomica y repetirla no duplica las asignaciones. Los contratos y contenidos se conservan. Los filtros se agrupan en una tarjeta Filtros inicialmente cerrada. Al abrirla aparecen todos juntos, con una etiqueta fina encima de cada campo; cerrarla conserva los valores aplicados."
-    ]
-  },
   "/dashboard/administracion/liquidaciones/tarjetas": {
     "summary": "Gestiona tarjetas de empresa y personales, sus liquidaciones mensuales y sus gastos previstos.",
     "steps": [
@@ -1031,14 +1002,9 @@
     ]
   },
   "/dashboard/operaciones/articulos": {
-    "summary": "Seguimiento editorial de contenidos de tipo artículo, conservando sus datos históricos y números previstos.",
+    "summary": "Acceso retirado: artículos trasladados a contenidos.",
     "steps": [
-      "Accede desde Operaciones > Tablas. Esta carpeta agrupa Ferias, Artículos, Revistas, Documentación y Servicios.",
-      "Pendientes es la vista principal; Publicados conserva el archivo sin borrar los artículos. Una publicación parcial sigue pendiente hasta completar todos los números previstos.",
-      "Las altas se realizan desde Producción → Gestión producción → Agregar contenidos. No hay un alta independiente de artículos. Pulsa una fila para editar los datos editoriales del mismo contenido.",
-      "Puede vincularse opcionalmente como extra post-contrato a un contrato de su cuenta. Los extras se guardan separados de las líneas firmadas y no modifican importes ni generan cobros. Retirar o cambiar el vínculo mantiene sincronizada la ficha del contrato.",
-      "Los filtros están agrupados en una tarjeta inicialmente cerrada. No se borran registros al moverlos a Publicados.",
-      "Los contenidos nuevos de tipo artículo también aparecen aquí. Los que aún no tienen datos editoriales abren su ficha de producción; los históricos conservan su seguimiento editorial."
+      "Redirige a Almacenamiento filtrando artículos. Los 107 artículos históricos reutilizan sus contenidos existentes; los datos editoriales y destinos se conservan sin duplicar contratos ni contenidos. Las altas y ediciones se realizan en Gestión contenidos y sus fichas."
     ]
   },
   "/dashboard/direccion/eventos-de-usuarios": {
@@ -1051,6 +1017,16 @@
       "La IP es la dirección recibida por el servidor y se muestra su origen; no clasifica oficina ni otras ubicaciones. Credenciales protegidas y archivos identificados por tamaño y huella, sin copiar su contenido.",
       "Si aparece una tabla sin cobertura, la funcionalidad que la creó debe instalar sus triggers de auditoría antes de escribir datos.",
       "Cada fila tiene una casilla inicialmente vacía. Al seleccionar una o varias aparece Borrar seleccionados. El modal solicita confirmación; borrar eventos no borra los datos de negocio que describen. El borrado es definitivo y no genera otro evento, evitando bucles."
+    ]
+  },
+  "/mis-tareas": {
+    "summary": "Tareas del agente seleccionado o, por defecto, del agente autenticado.",
+    "steps": [
+      "Pendientes muestra pendientes y en curso; Terminadas muestra completadas y canceladas. Un gestor puede abrir la selección de otro agente desde Operaciones. El servidor comprueba esa autorización y no mezcla tareas ajenas.",
+      "Abre una tarea para consultar la descripción previa, cuenta, responsables y fechas. El agente asignado puede cambiar el estado y escribir sus comentarios, sin alterar el encargo ni reasignar sus responsables.",
+      "La fecha y agente de creación y de finalización se registran en el servidor. Completar registra al autor real; reabrir retira la finalización vigente, conservando su historial de auditoría. Los datos históricos desconocidos se muestran sin registrar.",
+      "El creador de una tarea propia o un gestor puede asociarla a una cuenta mediante el selector con búsqueda. Los gestores pueden editar el encargo y los responsables. Las tareas de cuentas conservan su asociación y se editan también desde la cuenta.",
+      "El midnav indica MIS TAREAS. Las rutas antiguas /tareas redirigen a /mis-tareas. Los filtros se agrupan en una tarjeta inicialmente cerrada."
     ]
   }
 }

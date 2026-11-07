@@ -13,7 +13,7 @@ export function flatplanSources(contents, editorials=[]) {
    const variant=variants.find(v=>v.tipo===tipo)||c;
    const materials=(variant.materiales||[]).filter(m=>m.fecha_aportado).map(m=>new Date(m.fecha_aportado).getTime()).filter(Number.isFinite);
    const raw=String((tipo==='articulos'?editorial?.paginas:'')||c.pagina_hoja||'');
-   const explicit=String(tipo==='articulos'?editorial?.paginas||'':'').match(/^\s*(\d+)\s*(?:p[aá]g(?:inas?)?\.?)?\s*$/i);
+   const explicit=String(c.paginas_ocupadas??(tipo==='articulos'?editorial?.paginas||'':'')).match(/^\s*(\d+(?:\.\d+)?)\s*(?:p[aá]g(?:inas?)?\.?)?\s*$/i);
    const numbered=raw.match(/\d+/g)||[];
    const specCount=spec.match(/(\d+)\s*PAG/);
    const cover=tipo==='anuncios'?/INT[.\s]*PORT|INTERIOR.*PORT/.test(spec)?'inside':/PORTADA/.test(spec)&&!/CONTRA/.test(spec)?'cover':null:null;
@@ -37,7 +37,7 @@ export function flatplanSources(contents, editorials=[]) {
 async function sourceData(id) {
  const data=await getMagazineManagement(id);if(!data)return null;
  const numberField=data.revista.region==='América'?'latam_previsto_numero':'espana_previsto_numero';
- const editorials=(await getPgPool().query(`SELECT * FROM produccion_control_redaccion WHERE id_contenido=ANY($1::text[]) OR (UPPER(revista)=UPPER($2) AND substring(${numberField} from '[0-9]+')=$3)`,[data.contenidos.map(c=>c.id_contenido),data.revista.sector,String(data.revista.numero_publicacion)])).rows;
+ const editorials=(await getPgPool().query(`SELECT * FROM produccion_articulos_contenidos WHERE id_contenido=ANY($1::text[]) OR (UPPER(revista)=UPPER($2) AND substring(${numberField} from '[0-9]+')=$3)`,[data.contenidos.map(c=>c.id_contenido),data.revista.sector,String(data.revista.numero_publicacion)])).rows;
  return {...data,sources:flatplanSources(data.contenidos,editorials)};
 }
 export async function getPreliminaryFlatplan(id, pool=getPgPool(), load=sourceData) {

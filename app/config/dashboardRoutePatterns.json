@@ -165,6 +165,8 @@
   "/gm/cuentas/[codigo]",
   "/gm/nuevo",
   "/logged",
+  "/mis-tareas",
+  "/mis-tareas/[id]",
   "/tareas",
   "/tareas/[id]",
   "/unlogged/[[...url]]"

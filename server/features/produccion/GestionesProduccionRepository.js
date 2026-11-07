@@ -77,7 +77,7 @@ export async function getContentMagazineOptions(idContenido) {
   const explicit = await getPgPool().query('SELECT DISTINCT id_revista FROM produccion_revistas_contenidos WHERE id_contenido=$1', [idContenido]);
   const linked = new Set(explicit.rows.map(row => row.id_revista));
   const article = (await getPgPool().query(`SELECT revista,espana_previsto_numero,latam_previsto_numero,especial_numero,hueco_previsto
-    FROM produccion_control_redaccion WHERE id_contenido=$1`, [idContenido])).rows[0];
+    FROM produccion_articulos_contenidos WHERE id_contenido=$1`, [idContenido])).rows[0];
   return magazines.filter(revista => (revista.ids_revistas||[revista.id_revista]).some(id=>linked.has(id))
     || (revista.ids_publicaciones||[revista.id_publicacion]).includes(content.id_publicacion)
     || (revista.ids_publicaciones||[revista.id_publicacion]).includes(content.contenido_especifico_id)
@@ -99,11 +99,11 @@ export async function getMagazineManagement(idRevista) {
     WHERE c.hoja_prod=true AND (c.id_publicacion=ANY($1::text[]) OR c.contenido_especifico_id=ANY($1::text[])
       OR EXISTS(SELECT 1 FROM produccion_revistas_contenidos rc WHERE rc.id_contenido=c.id_contenido AND rc.id_revista=ANY($2::text[]))
       OR c.publicacion_num_web ~ $3
-      OR EXISTS(SELECT 1 FROM produccion_control_redaccion e WHERE e.id_contenido=c.id_contenido))
+      OR EXISTS(SELECT 1 FROM produccion_articulos_contenidos e WHERE e.id_contenido=c.id_contenido))
     ORDER BY c.id_contenido`,[publicationIds,magazineIds,number?`(?:[^0-9]|^)${number}$`:'a^']);
   const links = await getPgPool().query('SELECT id_contenido,tipo FROM produccion_revistas_contenidos WHERE id_revista=ANY($1::text[])', [magazineIds]);
   const editorials = await getPgPool().query(`SELECT id_contenido,revista,espana_previsto_numero,latam_previsto_numero,especial_numero,hueco_previsto
-    FROM produccion_control_redaccion WHERE id_contenido IS NOT NULL`);
+    FROM produccion_articulos_contenidos WHERE id_contenido IS NOT NULL`);
   const editorialIds = new Set(editorials.rows.filter(article => matchesEditorial(article, revista)).map(article => article.id_contenido));
   const byContent = new Map();
   for (const link of links.rows) {
@@ -205,7 +205,7 @@ export async function addProductionMaterial(data, verifyObject = assertObjectExi
       [id,name,mediaId,'',destination.idContenido,destination.idRevista || null,destination.tipo,String(data.descripcion || ''),finished,version]);
     await db.query(`UPDATE produccion_contenidos SET array_ids_materiales = COALESCE(array_ids_materiales,'[]'::jsonb) || $1::jsonb,
       updated_at=now() WHERE id_contenido=$2`, [JSON.stringify([id]),destination.idContenido]);
-    if(productionStage({...destination.content,tipo:destination.tipo,materiales:[]})==='recibir')await db.query("UPDATE produccion_contenidos SET estado_contenido='Pendiente Publicar',estado_material_contenido='Recibido',updated_at=now() WHERE id_contenido=$1",[destination.idContenido]);
+    if(productionStage({...destination.content,tipo:destination.tipo,materiales:[]})==='recibir')await db.query("UPDATE produccion_contenidos SET estado_contenido=$2,estado_material_contenido='Recibido',updated_at=now() WHERE id_contenido=$1",[destination.idContenido,destination.tipo==='articulos'?'Pendiente redacción':'Pendiente de gestionar Charly']);
     if (destination.idRevista) await db.query(`INSERT INTO produccion_revistas_contenidos(id_revista,id_contenido,tipo)
       VALUES($1,$2,$3) ON CONFLICT DO NOTHING`, [destination.idRevista,destination.idContenido,destination.tipo]);
     if (!transactionDb) {

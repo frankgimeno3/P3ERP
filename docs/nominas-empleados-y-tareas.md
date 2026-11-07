@@ -9,8 +9,8 @@ El endpoint `laboral_nominas-empleados` expone fichas agregadas; `laboral_nomina
 `laboral_tareas_empleado` registra id, nombre, agente, estado y descripción. La API de tareas filtra por agente y valida el agente también al editar una tarea. Los estados son pendiente, en curso, completada y cancelada. Las tareas importadas de vtiger admiten agente y cuenta nulos; conservan todos los campos de origen en `vtiger_original`, inicio/fin sin conversión de zona horaria y una clave de importación única. Las tareas nuevas creadas manualmente siguen exigiendo agente.
 
 El panel abre en «Mis tareas pendientes», consultando la identidad autenticada
-del servidor. `/tareas` separa pendientes/en curso de completadas/canceladas;
-`/tareas/{id}` muestra el detalle. El middleware redirige a `/` si un agente
+del servidor. `/mis-tareas` separa pendientes/en curso de completadas/canceladas;
+`/mis-tareas/{id}` muestra el detalle. El middleware redirige a `/` si un agente
 sin rol Operaciones o superior intenta abrir una tarea ajena. La API
 `/api/v1/tareas` comprueba también propiedad y permisos, sin confiar en la
 identidad del navegador. La vista personal es de consulta.
@@ -65,10 +65,17 @@ La pestaña Tareas de la ficha comercial guarda una única tarea en
 Debe existir al menos un agente activo con cuenta de empleado; la API y un
 constraint trigger diferido impiden guardar tareas sin responsables.
 Comercial, Administración, Operaciones, Dirección y Superadmin gestionan estas
-tareas. Los agentes asignados pueden cambiar su estado desde `/tareas/{id}`.
+tareas. Los agentes asignados pueden cambiar su estado desde `/mis-tareas/{id}`.
 Las listas personales y los contadores de Operaciones consultan la misma tarea,
 sin copiarla por agente. Las tareas laborales existentes conservan sus permisos.
 Las actualizaciones usan `updated_at` como versión para detectar cambios concurrentes
 y registran el cambio en el historial de la cuenta. La migración es
 `20261006_0002_account_tasks.sql`; `scripts/test-account-tasks.mjs` verifica el
 flujo en un esquema aislado.
+# Ampliación de tareas de noviembre de 2026
+
+La ruta personal canónica es `/mis-tareas` y su midnav es MIS TAREAS. `/tareas` y sus fichas redirigen conservando los identificadores. La lista muestra solo las tareas asignadas al agente autenticado o al agente seleccionado por un gestor autorizado.
+
+El asignado puede cambiar el estado y escribir `comentarios_agente` sin alterar la descripción previa ni reasignar responsables. El creador de una tarea propia y gestión pueden vincular una cuenta mediante el selector con búsqueda. Las escrituras bloquean la fila y comprueban `updated_at`; una edición obsoleta devuelve 409. Las tareas de cuenta conservan sus permisos y asociación.
+
+Ambas tablas guardan el agente y nombre de creación y finalización. El trigger toma la identidad del contexto auditado, protege los metadatos de creación y registra la finalización al completar. Al reabrir limpia la finalización vigente; la auditoría conserva las transiciones anteriores. Los valores históricos desconocidos permanecen vacíos. No se confunden las fechas de planificación importadas con la finalización real.

@@ -6,6 +6,8 @@ import {allocateContentIdentifier} from '../identifiers/BusinessIdentifiers.js';
 import { normalizeProductionDeadline } from "../../../app/lib/productionContentFields.js";
 import { addCuentaEntityEvent, formatChangeDetail } from "../registroEventos/RegistroEventosRepository.js";
 import {editorialContentExpression} from '../produccion/ProductionContentScope.js';
+import {normalizeProductionState} from '../../../app/lib/productionWorkflow.js';
+import {productionStates} from '../../../app/lib/productionContentFields.js';
 
 function getYearFromDate(value) {
   if (!value) return "";
@@ -49,6 +51,10 @@ function normalizeHojaProd(row) {
 
 function normalizeContenido(row) {
   return {
+    paginas_ocupadas:row.paginas_ocupadas, posicion_revista:row.posicion_revista, correccion_destino:row.correccion_destino,
+    titulo_articulo:row.titulo_articulo,entradilla_articulo:row.entradilla_articulo,texto_articulo:row.texto_articulo,
+    texto_revision:row.texto_revision,texto_revision_descargada:row.texto_revision_descargada,texto_fecha_descarga:row.texto_fecha_descarga,
+    datos_editoriales:row.datos_editoriales,
     es_editorial:Boolean(row.es_editorial),
     nombre_contenido: row.nombre_contenido ?? "",
     descripcion_contenido: row.descripcion_contenido ?? "",
@@ -412,9 +418,11 @@ export async function updateContenidoProduccion(idContenido, data = {}) {
   const values = [];
   const sets = [];
 
-  for (const field of ["especificaciones_contenido", "publicacion_num_web", "id_agente", "deadline_contenido", "formato_revista"]) {
+  for (const field of ["especificaciones_contenido", "publicacion_num_web", "id_agente", "deadline_contenido", "formato_revista", "titulo_articulo", "entradilla_articulo", "texto_articulo", "correccion_destino"]) {
     if (!Object.prototype.hasOwnProperty.call(data, field)) continue;
     let value = String(data[field] ?? '');
+    if(field==='correccion_destino'&&!['gm','otros'].includes(value))throw Object.assign(new Error('Selecciona un destino de corrección válido.'),{statusCode:400});
+    if(value.length>(field==='texto_articulo'?500000:10000))throw Object.assign(new Error('El texto es demasiado largo.'),{statusCode:400});
     if(field==='formato_revista')value=validateContentMagazineFormat(value);
     if (field === 'deadline_contenido') {
       try { value = normalizeProductionDeadline(value); }
@@ -428,8 +436,17 @@ export async function updateContenidoProduccion(idContenido, data = {}) {
   }
 
   if (Object.prototype.hasOwnProperty.call(data, "estado")) {
-    values.push(data.estado || "");
+    const state=normalizeProductionState(data.estado);
+    if(state&&!productionStates.includes(state))throw Object.assign(new Error('Selecciona un estado de contenido válido.'),{statusCode:400});
+    values.push(state);
     sets.push(`estado_contenido = $${values.length}`);
+  }
+
+  for(const field of ['paginas_ocupadas','posicion_revista']){
+    if(!Object.hasOwn(data,field))continue;
+    const value=data[field]===''||data[field]===null?null:Number(data[field]);
+    if(value!==null&&(!Number.isFinite(value)||value<(field==='posicion_revista'?-1:0)||(field==='posicion_revista'&&!Number.isInteger(value))))throw Object.assign(new Error('Revisa las páginas ocupadas y la posición.'),{statusCode:400});
+    values.push(value);sets.push(`${field}=$${values.length}`);
   }
 
   if (Object.prototype.hasOwnProperty.call(data, "estado_material_contenido")) {

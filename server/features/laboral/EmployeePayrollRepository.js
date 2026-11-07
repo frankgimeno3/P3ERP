@@ -40,8 +40,9 @@ export async function saveAgentTask(id, body) {
   if (!nombre || nombre.length>250 || !body.agente || !['pendiente','en_curso','completada','cancelada'].includes(body.estado)) throw new LaboralError('Completa nombre, agente y estado válidos.');
   const db = getPgPool();
   const ids=body.agentes_asociados||[body.agente];
+  if(body.id_cuenta&&!(await db.query('SELECT 1 FROM comercial_cuentas WHERE id_cuenta=$1',[body.id_cuenta])).rowCount)throw new LaboralError('Selecciona una cuenta válida.');
   const result = id ? await db.query(`UPDATE laboral_tareas_empleado SET nombre=$2,estado=$3,descripcion=$4,agente=$5,agentes_asociados=$6::jsonb,updated_at=now() WHERE id=$1 RETURNING *`,[id,nombre,body.estado,descripcion,body.agente,JSON.stringify(ids)])
-    : await db.query(`INSERT INTO laboral_tareas_empleado(id,nombre,estado,descripcion,agente,agentes_asociados) VALUES($1,$2,$3,$4,$5,$6::jsonb) RETURNING *`,[`tarea_${randomUUID().replaceAll('-','')}`,nombre,body.estado,descripcion,body.agente,JSON.stringify(ids)]);
+    : await db.query(`INSERT INTO laboral_tareas_empleado(id,nombre,estado,descripcion,agente,agentes_asociados,id_cuenta) VALUES($1,$2,$3,$4,$5,$6::jsonb,$7) RETURNING *`,[`tarea_${randomUUID().replaceAll('-','')}`,nombre,body.estado,descripcion,body.agente,JSON.stringify(ids),body.id_cuenta||null]);
   if (!result.rowCount) throw new LaboralError('Tarea no encontrada para este agente.',404);
   return result.rows[0];
 }

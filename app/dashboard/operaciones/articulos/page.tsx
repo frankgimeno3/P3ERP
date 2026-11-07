@@ -1,1 +1,2 @@
-export {default} from '@/app/dashboard/produccion/articulos/page';
+import {redirect} from 'next/navigation';
+export default function Page(){redirect('/dashboard/produccion/repositorio?tipo=articulos');}

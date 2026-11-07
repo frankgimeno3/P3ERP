@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),ts=require('typescript');
 const {JSDOM}=require(process.env.P3_SELECTOR_TEST_MODULES ? path.join(process.env.P3_SELECTOR_TEST_MODULES,'jsdom') : 'jsdom');
 const dom=new JSDOM('<div id="root"></div>',{url:'http://localhost'});
@@ -22,7 +21,7 @@ const click=async text=>{const node=[...document.querySelectorAll('button')].fin
  const Tasks=load('app/components/tasks/TaskList.tsx').default;
  await React.act(async()=>root.render(React.createElement(Tasks)));
  assert(calls.includes('/api/v1/tareas'));assert(document.body.textContent.includes('Por hacer'));assert(document.body.textContent.includes('Trabajando'));assert(!document.querySelector('tbody').textContent.includes('Terminada'));
- assert.equal(document.querySelector('tbody a').getAttribute('href'),'/tareas/one');
+ assert.equal(document.querySelector('tbody a').getAttribute('href'),'/mis-tareas/one');
  assert([...document.querySelectorAll('details')].every(d=>!d.open));
  await click('Terminadas');assert(document.querySelector('tbody').textContent.includes('Terminada'));assert(!document.querySelector('tbody').textContent.includes('Por hacer'));
  await React.act(async()=>root.render(React.createElement(Tasks,{employee:'employee',key:'employee'})));

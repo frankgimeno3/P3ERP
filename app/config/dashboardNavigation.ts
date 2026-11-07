@@ -35,6 +35,7 @@ export function dashboardPathLabel(pathname: string) {
 }
 
 export function dashboardMidnavTitle(pathname: string) {
+  if(/^\/(mis-tareas|tareas)(?:\/|$)/.test(pathname))return 'MIS TAREAS';
   if (dashboardMenu.some(area => pathname === `/dashboard/${area.id}`)) return dashboardPathLabel(pathname);
   return getDashboardMenuLocation(pathname)?.page.label || dashboardPathLabel(pathname);
 }

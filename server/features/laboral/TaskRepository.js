@@ -6,12 +6,12 @@ import {taskAgentIds} from '../../../app/config/taskAssignments.js';
 export async function createOwnTask(actor,body){
   requireTaskIdentity(actor);
   if(!(await getPgPool().query('SELECT 1 FROM agentes_db WHERE id_agente=$1',[actor.id])).rowCount)throw Object.assign(new Error('Agente no encontrado.'),{status:403});
-  return saveAgentTask(null,{nombre:body.nombre,descripcion:body.descripcion,agente:actor.id,estado:'pendiente'});
+  return saveAgentTask(null,{nombre:body.nombre,descripcion:body.descripcion,id_cuenta:body.id_cuenta,agente:actor.id,estado:'pendiente'});
 }
 export async function readTasks(actor,{id,employee}={}) {
   requireTaskIdentity(actor);
   if(id?.startsWith('cta_'))return readAccountTask(actor,id,undefined,getPgPool(),true);
-  if(id){const task=await agentTasks(id);if(!taskAgentIds(task).includes(actor.id)&&!managesTasks(actor.role))throw Object.assign(new Error('No tienes acceso a esta tarea.'),{status:403});return task;}
+  if(id){const task=await agentTasks(id);if(!taskAgentIds(task).includes(actor.id)&&!managesTasks(actor.role))throw Object.assign(new Error('No tienes acceso a esta tarea.'),{status:403});return {...task,puede_editar:managesTasks(actor.role),puede_cambiar_estado:true,puede_asociar_cuenta:managesTasks(actor.role)||task.agente_creacion===actor.id};}
   if(employee&&employee!==actor.id)requireTaskIdentity(actor,true);
   return [...await agentTasks(null,employee||actor.id),...await accountTasks(actor,{employee:employee||actor.id})];
 }
@@ -35,19 +35,41 @@ export async function taskCalendar(actor) {
   }));
 }
 export async function writeTask(actor,id,body){
+ requireTaskIdentity(actor);
+ const fail=(message,status=400)=>{throw Object.assign(new Error(message),{status});};
+ if(!id){
   requireTaskIdentity(actor,true);
-  const ids=Object.hasOwn(body,'agentes_asociados')?body.agentes_asociados:body.agente?[body.agente]:null;
-  if(ids!==null){
-    if(!Array.isArray(ids)||ids.some(id=>typeof id!=='string'||!id))throw Object.assign(new Error('Selecciona agentes válidos.'),{status:400});
-    body={...body,agentes_asociados:[...new Set(ids)],agente:ids[0]||null};
-    const valid=(await getPgPool().query('SELECT id_agente FROM agentes_db WHERE id_agente=ANY($1::text[]) AND COALESCE(is_empleado_account,true)',[body.agentes_asociados])).rows;
-    if(valid.length!==body.agentes_asociados.length)throw Object.assign(new Error('Selecciona agentes empleados válidos.'),{status:400});
+  const ids=body.agentes_asociados||[body.agente];
+  if(!Array.isArray(ids)||!ids.length||ids.some(value=>typeof value!=='string'||!value))fail('Selecciona agentes válidos.');
+  const unique=[...new Set(ids)];
+  if((await getPgPool().query('SELECT 1 FROM agentes_db WHERE id_agente=ANY($1::text[]) AND COALESCE(is_empleado_account,true)',[unique])).rowCount!==unique.length)fail('Selecciona agentes empleados válidos.');
+  return saveAgentTask(null,{...body,agente:unique[0],agentes_asociados:unique});
+ }
+ const db=await getPgPool().connect();
+ try{
+  await db.query('BEGIN');
+  const old=(await db.query('SELECT * FROM laboral_tareas_empleado WHERE id=$1 FOR UPDATE',[id])).rows[0];
+  if(!old)fail('Tarea no encontrada.',404);
+  const manager=managesTasks(actor.role);
+  if(!manager&&!taskAgentIds(old).includes(actor.id))fail('No tienes acceso a esta tarea.',403);
+  if(!body.updated_at||new Date(body.updated_at).getTime()!==new Date(old.updated_at).getTime())fail('La tarea ha cambiado. Recarga antes de guardar.',409);
+  const state=body.estado??old.estado,comments=String(body.comentarios_agente??old.comentarios_agente);
+  if(!['pendiente','en_curso','completada','cancelada'].includes(state)||comments.length>50000)fail('Revisa el estado y los comentarios.');
+  let ids=taskAgentIds(old),name=old.nombre,description=old.descripcion;
+  if(manager){
+   ids=Object.hasOwn(body,'agentes_asociados')?body.agentes_asociados:body.agente?[body.agente]:ids;
+   if(!Array.isArray(ids)||ids.some(value=>typeof value!=='string'||!value))fail('Selecciona agentes válidos.');
+   ids=[...new Set(ids)];
+   if(!ids.length&&!id.startsWith('tarea_vtiger_'))fail('Asigna al menos un agente.');
+   const valid=(await db.query('SELECT id_agente FROM agentes_db WHERE id_agente=ANY($1::text[]) AND COALESCE(is_empleado_account,true)',[ids])).rowCount;
+   if(valid!==ids.length)fail('Selecciona agentes empleados válidos.');
+   name=String(body.nombre??name).trim();description=String(body.descripcion??description);
+   if(!name||name.length>250||description.length>50000)fail('Revisa nombre y descripción.');
   }
-  if(id?.startsWith('tarea_vtiger_')){
-    if(!body.updated_at)throw Object.assign(new Error('Recarga la tarea antes de guardar.'),{status:409});
-    if(!String(body.nombre||'').trim() || String(body.nombre).length>250 || !['pendiente','en_curso','completada','cancelada'].includes(body.estado))throw Object.assign(new Error('Revisa el nombre y el estado.'),{status:400});
-    return (await getPgPool().query("UPDATE laboral_tareas_empleado SET nombre=$2,descripcion=$3,estado=$4,agente=CASE WHEN $6::jsonb IS NULL THEN agente ELSE $6::jsonb->>0 END,agentes_asociados=COALESCE($6::jsonb,agentes_asociados),updated_at=GREATEST(clock_timestamp(),updated_at+interval '1 millisecond') WHERE id=$1 AND date_trunc('milliseconds',updated_at)=$5::timestamptz RETURNING *",[id,body.nombre.trim(),String(body.descripcion||''),body.estado,body.updated_at,ids===null?null:JSON.stringify(body.agentes_asociados)])).rows[0] || (()=>{throw Object.assign(new Error('La tarea ha cambiado. Recarga antes de guardar.'),{status:409});})();
-  }
-  if(!(await getPgPool().query('SELECT 1 FROM agentes_db WHERE id_agente=$1 AND COALESCE(is_empleado_account,true)',[body.agente])).rowCount)throw Object.assign(new Error('Selecciona un agente empleado.'),{status:400});
-  return saveAgentTask(id,body);
+  const account=manager||old.agente_creacion===actor.id?(body.id_cuenta??old.id_cuenta):old.id_cuenta;
+  if(account&&!(await db.query('SELECT 1 FROM comercial_cuentas WHERE id_cuenta=$1 FOR KEY SHARE',[account])).rowCount)fail('Cuenta no encontrada.');
+  const result=(await db.query(`UPDATE laboral_tareas_empleado SET nombre=$2,descripcion=$3,estado=$4,comentarios_agente=$5,agente=$6,agentes_asociados=$7::jsonb,id_cuenta=$8,
+   updated_at=GREATEST(clock_timestamp(),updated_at+interval '1 millisecond') WHERE id=$1 RETURNING *`,[id,name,description,state,comments,ids[0]||null,JSON.stringify(ids),account||null])).rows[0];
+  await db.query('COMMIT');return {...result,puede_editar:manager,puede_cambiar_estado:true,puede_asociar_cuenta:manager||old.agente_creacion===actor.id};
+ }catch(e){await db.query('ROLLBACK');throw e;}finally{db.release();}
 }

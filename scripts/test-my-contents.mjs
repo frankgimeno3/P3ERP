@@ -18,7 +18,7 @@ try {
   const before=(await db.query('SELECT count(*)::int n FROM eventos_de_usuarios WHERE id_solicitud=$1',[requestId])).rows[0].n;
   const rows=await getMyContents('own',db);
   assert.deepEqual(rows.map(r=>r.id_contenido).sort(),['fallback','incident','json','process','waiting']);
-  for(const id of ['waiting','fallback','json'])assert.equal(rows.find(r=>r.id_contenido===id).fase,'recibir');
+  assert.equal(rows.find(r=>r.id_contenido==='waiting').fase,'recibir');for(const id of ['fallback','json'])assert.equal(rows.find(r=>r.id_contenido===id).fase,'publicacion');
   assert.equal(rows.find(r=>r.id_contenido==='process').motivo_atencion,'Fecha límite vencida');
   assert.equal(rows.find(r=>r.id_contenido==='incident').motivo_atencion,'Incidencia pendiente de resolver');
   assert(rows.every(r=>r.id_contenido!=='published'&&r.id_contenido!=='other'&&r.id_contenido!=='explicit_other'));

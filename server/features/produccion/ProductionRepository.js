@@ -8,7 +8,7 @@ import {getMagazineList,matchesLegacy} from './GestionesProduccionRepository.js'
 import {articleMatchesMagazine} from '../../../app/config/editorialMagazine.js';
 
 export async function getContentServiceGroups() {
- return (await getPgPool().query('SELECT id_medio,nombre_medio FROM servicios_grupos_servicios ORDER BY nombre_medio,id_medio')).rows;
+ return (await getPgPool().query("SELECT id_medio,CASE WHEN id_medio='vidrioperfil_newsletter' THEN 'Banner news' ELSE nombre_medio END nombre_medio FROM servicios_grupos_servicios WHERE id_medio<>'suscripcion' ORDER BY nombre_medio,id_medio")).rows;
 }
 
 export async function getRepositoryContents() {
@@ -24,8 +24,8 @@ export async function getRepositoryContents() {
 export async function getPendingMagazineContents() {
  const [contents,magazines,links,editorials,materials]=await Promise.all([
   getRepositoryContents(),getMagazineList(),getPgPool().query('SELECT id_contenido,id_revista FROM produccion_revistas_contenidos'),
-  getPgPool().query('SELECT id_contenido,revista,espana_previsto_numero,latam_previsto_numero,especial_numero,hueco_previsto FROM produccion_control_redaccion WHERE id_contenido IS NOT NULL'),
-  getPgPool().query('SELECT id_material,id_contenido,tipo,es_version_acabada FROM produccion_materiales'),
+  getPgPool().query('SELECT id_contenido,revista,espana_previsto_numero,latam_previsto_numero,especial_numero,hueco_previsto FROM produccion_articulos_contenidos WHERE id_contenido IS NOT NULL'),
+  getPgPool().query('SELECT * FROM produccion_materiales'),
  ]);
  const editorialById=new Map(),linked=new Map();
  for(const row of editorials.rows){if(!editorialById.has(row.id_contenido))editorialById.set(row.id_contenido,[]);editorialById.get(row.id_contenido).push(row);}
@@ -43,8 +43,8 @@ function workflowRow(row,materials){
 }
 
 export async function getPendingOtherContents(){
- const [rows,materials]=await Promise.all([getRepositoryContents(),getPgPool().query('SELECT id_material,id_contenido,tipo,es_version_acabada FROM produccion_materiales')]);
- return rows.filter(row=>!row.es_revista&&contentPending(row)).map(row=>workflowRow(row,materials.rows));
+ const [rows,materials]=await Promise.all([getRepositoryContents(),getPgPool().query('SELECT * FROM produccion_materiales')]);
+ return rows.filter(row=>!row.es_revista&&row.grupo_servicio!=='suscripcion'&&contentPending(row)).map(row=>workflowRow(row,materials.rows));
 }
 
 export async function getPendingMagazineOverview(){
@@ -72,7 +72,7 @@ export async function assignContentMagazine(idRevista,data,transactionDb=null) {
   if(new Date(row.updated_at).getTime()!==new Date(data.expectedVersion).getTime())fail('El contenido ha cambiado. Recarga antes de asignarlo.',409);
   if(!contentPending(row))fail('El contenido ya está publicado o cancelado.',409);
   if(!(await db.query('SELECT 1 FROM servicios_revistas WHERE id_revista=$1 FOR SHARE',[idRevista])).rowCount)fail('Revista no encontrada.',404);
-  const editorial=(await db.query('SELECT 1 FROM produccion_control_redaccion WHERE id_contenido=$1',[row.id_contenido])).rowCount;
+  const editorial=(await db.query('SELECT 1 FROM produccion_articulos_contenidos WHERE id_contenido=$1',[row.id_contenido])).rowCount;
   const allowed=contentTypes(row).filter(type=>type!=='otro').map(type=>type==='articulo'?'articulos':'anuncios');
   if(editorial&&!allowed.includes('articulos'))allowed.push('articulos');
   if(!allowed.includes(data.tipo))fail('El tipo seleccionado no corresponde al contenido.');

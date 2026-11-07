@@ -21,33 +21,21 @@ const field=name=>[...document.querySelectorAll('label')].find(label=>label.text
   const Editor=load('app/dashboard/produccion/hoja_produccion/[id]/ContentFieldsEditor.tsx').default;
   await React.act(async()=>root.render(React.createElement(Editor,{content:{id_contenido:'content',id_agente:'agent',estado:'Estado histórico'},onSaved:()=>{}})));
   assert.equal(document.querySelector('[aria-label="Agente"]').value,'Nombre del agente');
-  assert.equal(field('Estado').value,'Estado histórico');
+  assert(!field('Estado'));await change(field('Páginas ocupadas'),'2');await change(field('Posición'),'17');
   assert.equal(document.querySelectorAll('input[type="date"]').length,0);
   await change(field('Especificaciones'),'Primera línea\nSegunda línea');
   await change(field('Publicación'),'WEB 123');
-  await change(field('Estado'),'Publicado');
+
   for(const [part,value] of [['dd','31'],['mm','02'],['yyyy','2026']])await change(document.querySelector(`[aria-label="Fecha límite: ${part}"]`),value);
   await React.act(async()=>document.querySelector('form').dispatchEvent(new dom.window.Event('submit',{bubbles:true,cancelable:true})));
   assert.equal(calls.length,0);assert.match(document.querySelector('[role="alert"]').textContent,/fecha/);
   await change(document.querySelector('[aria-label="Fecha límite: dd"]'),'28');
   await React.act(async()=>document.querySelector('form').dispatchEvent(new dom.window.Event('submit',{bubbles:true,cancelable:true})));
   assert.equal(calls.length,1);
-  assert.deepEqual(calls[0],{id:'content',data:{especificaciones_contenido:'Primera línea\nSegunda línea',publicacion_num_web:'WEB 123',id_agente:'agent',deadline_contenido:'28/02/2026',estado:'Publicado',formato_revista:'impreso_digital'}});
+  assert.deepEqual(calls[0],{id:'content',data:{especificaciones_contenido:'Primera línea\nSegunda línea',publicacion_num_web:'WEB 123',id_agente:'agent',deadline_contenido:'28/02/2026',paginas_ocupadas:'2',posicion_revista:'17',formato_revista:'impreso_digital'}});
   await change(field('Formato en revista'),'digital');
   await React.act(async()=>document.querySelector('form').dispatchEvent(new dom.window.Event('submit',{bubbles:true,cancelable:true})));
   assert.equal(calls[1].data.formato_revista,'digital');
-  for(const state of ['Pendiente revisión cliente','Material OK - pendiente de publicar']){
-    await change(field('Estado'),state);
-    await React.act(async()=>document.querySelector('form').dispatchEvent(new dom.window.Event('submit',{bubbles:true,cancelable:true})));
-    assert.equal(calls.at(-1).data.estado,state);
-  }
   assert.match(document.querySelector('[role="status"]').textContent,/guardados/);
-  const content={id_contenido:'sync',id_agente:'agent',estado:'No pedido'};
-  await React.act(async()=>root.render(React.createElement(Editor,{key:'sync',content,onSaved:()=>{}})));
-  await React.act(async()=>root.render(React.createElement(Editor,{key:'sync',content:{...content,estado:'Pendiente redacción'},onSaved:()=>{}})));
-  assert.equal(field('Estado').value,'Pendiente redacción','Refresca la fase después de recibir material');
-  await change(field('Estado'),'Pendiente revisión cliente');
-  await React.act(async()=>root.render(React.createElement(Editor,{key:'sync',content:{...content,estado:'Material OK - pendiente de publicar'},onSaved:()=>{}})));
-  assert.equal(field('Estado').value,'Pendiente revisión cliente','Conserva una elección del usuario aún no guardada');
-  await React.act(async()=>root.unmount());console.log('PASS: editable controls, agent name, legacy status, date validation and save payload');
+  await React.act(async()=>root.unmount());console.log('PASS: specifications, valid agent, occupied pages distinct from position, dates and format; workflow state is edited separately.');
 })().catch(error=>{console.error(error);process.exitCode=1;});

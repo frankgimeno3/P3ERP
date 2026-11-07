@@ -60,6 +60,8 @@ export async function saveAccountTask(actor, accountId, id, body, statusOnly = f
     if (statusOnly && !canManageAccountTasks(actor.role) && !assigned.includes(actor.id)) fail('No tienes acceso a esta tarea.', 403);
     if (!(await db.query('SELECT 1 FROM comercial_cuentas WHERE id_cuenta=$1 FOR KEY SHARE', [accountId])).rowCount) fail('Cuenta no encontrada.', 404);
     const data = validate(statusOnly ? { ...previous, agentes: assigned, estado: body.estado } : { ...body, estado: body.estado || 'pendiente' });
+    const comments=String(body.comentarios_agente??previous?.comentarios_agente??'');
+    if(comments.length>50000)fail('El comentario es demasiado largo.');
     if (!statusOnly) {
       const valid = (await db.query(`SELECT id_agente FROM agentes_db WHERE id_agente=ANY($1::text[])
         AND COALESCE(is_empleado_account,true) AND lower(COALESCE(estado_agente,'')) NOT IN ('inactivo','borrador') FOR KEY SHARE`, [data.agentes])).rows;
@@ -69,6 +71,7 @@ export async function saveAccountTask(actor, accountId, id, body, statusOnly = f
     if (previous) await db.query(`UPDATE comercial_cuenta_tareas SET nombre=$2,tipo=$3,descripcion=$4,referencia=$5,fecha_limite=$6,estado=$7,
       updated_at=GREATEST(clock_timestamp(),updated_at+interval '1 millisecond') WHERE id=$1`, [taskId,data.nombre,data.tipo,data.descripcion,data.referencia,data.fecha_limite,data.estado]);
     else await db.query('INSERT INTO comercial_cuenta_tareas(id,id_cuenta,nombre,tipo,descripcion,referencia,fecha_limite,estado) VALUES($1,$2,$3,$4,$5,$6,$7,$8)', [taskId,accountId,data.nombre,data.tipo,data.descripcion,data.referencia,data.fecha_limite,data.estado]);
+    if(comments!==(previous?.comentarios_agente||''))await db.query('UPDATE comercial_cuenta_tareas SET comentarios_agente=$2 WHERE id=$1',[taskId,comments]);
     if (!statusOnly) {
       await db.query('DELETE FROM comercial_cuenta_tarea_agentes WHERE id_tarea=$1', [taskId]);
       for (const agent of data.agentes) await db.query('INSERT INTO comercial_cuenta_tarea_agentes(id_tarea,id_agente) VALUES($1,$2)', [taskId,agent]);

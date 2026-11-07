@@ -1,19 +1,17 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import SearchableSelect from '@/app/components/SearchableSelect';
 import DatePartsInput from '@/app/components/DatePartsInput';
 import { AgenteService } from '@/app/service/AgenteService';
 import { ContenidoService } from '@/app/service/ContenidoService';
-import { normalizeProductionDeadline, productionStates } from '@/app/lib/productionContentFields';
+import { normalizeProductionDeadline } from '@/app/lib/productionContentFields';
 import {contentMagazineFormats} from '@/app/lib/contentMagazineFormat';
 
-type Content = { id_contenido:string; especificaciones_contenido?:string; publicacion_num_web?:string; id_agente?:string; deadline_contenido?:string; estado?:string;formato_revista?:string };
+type Content = { paginas_ocupadas?:number|null;posicion_revista?:number|null; id_contenido:string; especificaciones_contenido?:string; publicacion_num_web?:string; id_agente?:string; deadline_contenido?:string; estado?:string;formato_revista?:string };
 type Agent = { id_agente:string; nombre_completo_agente:string };
 export default function ContentFieldsEditor({content,onSaved}:{content:Content;onSaved:(content:any)=>void}) {
-  const [draft,setDraft]=useState({especificaciones_contenido:content.especificaciones_contenido||'',publicacion_num_web:content.publicacion_num_web||'',id_agente:content.id_agente||'',deadline_contenido:content.deadline_contenido||'',estado:content.estado||'',formato_revista:content.formato_revista||'impreso_digital'});
+  const [draft,setDraft]=useState({especificaciones_contenido:content.especificaciones_contenido||'',publicacion_num_web:content.publicacion_num_web||'',id_agente:content.id_agente||'',deadline_contenido:content.deadline_contenido||'',paginas_ocupadas:String(content.paginas_ocupadas??''),posicion_revista:String(content.posicion_revista??''),formato_revista:content.formato_revista||'impreso_digital'});
   const [agents,setAgents]=useState<Agent[]>([]),[loadingAgents,setLoadingAgents]=useState(true),[saving,setSaving]=useState(false),[error,setError]=useState(''),[saved,setSaved]=useState(false);
-  const previousState=useRef(content.estado||'');
-  useEffect(()=>{const before=previousState.current;setDraft(draft=>draft.estado===before?{...draft,estado:content.estado||''}:draft);previousState.current=content.estado||'';},[content.estado]);
   useEffect(()=>{let active=true;AgenteService.getAgentes().then((rows:Agent[])=>{if(active)setAgents(Array.from(new Map(rows.map(row=>[row.id_agente,row])).values()));}).catch(()=>{if(active)setError('No se pudieron cargar los agentes. Recarga la página para volver a intentarlo.');}).finally(()=>{if(active)setLoadingAgents(false);});return()=>{active=false;};},[]);
   const patch=(key:keyof typeof draft,value:string)=>{setDraft(previous=>({...previous,[key]:value}));setSaved(false);};
   const submit=async(event:React.FormEvent)=>{event.preventDefault();if(saving)return;setError('');setSaved(false);try{
@@ -29,7 +27,8 @@ export default function ContentFieldsEditor({content,onSaved}:{content:Content;o
       <div><p className="mb-1">Agente</p><SearchableSelect label="Agente" disabled={saving||loadingAgents} value={draft.id_agente} onChange={value=>patch('id_agente',value)} options={[{value:'',label:'Sin asignar'},...agents.map(agent=>({value:agent.id_agente,label:agent.nombre_completo_agente||'Agente sin nombre'}))]}/></div>
       <DatePartsInput label="Fecha límite" value={draft.deadline_contenido} onChange={value=>patch('deadline_contenido',value)} disabled={saving}/>
       <label>Formato en revista<select className={`${control} enabled:cursor-pointer enabled:hover:border-blue-950`} value={draft.formato_revista} onChange={event=>patch('formato_revista',event.target.value)}>{contentMagazineFormats.map(item=><option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
-      <label>Estado<select className={`${control} enabled:cursor-pointer enabled:hover:border-blue-950`} value={draft.estado} onChange={event=>patch('estado',event.target.value)}><option value="">Sin estado</option>{Array.from(new Set([...productionStates,...(content.estado?[content.estado]:[])])).map(state=><option key={state} value={state}>{state}</option>)}</select></label>
+      <label>Páginas ocupadas<input type="number" min="0" step="0.01" className={control} value={draft.paginas_ocupadas} onChange={e=>patch('paginas_ocupadas',e.target.value)}/></label>
+      <label>Posición en la revista<input type="number" min="-1" step="1" className={control} value={draft.posicion_revista} onChange={e=>patch('posicion_revista',e.target.value)}/><span className="text-xs text-slate-500">-1: portada; 0: interior de portada; resto: página inicial.</span></label>
     </fieldset>
     {error&&<p role="alert" className="mt-3 text-red-700">{error}</p>}
     {saved&&<p role="status" className="mt-3 text-green-800">Cambios guardados.</p>}

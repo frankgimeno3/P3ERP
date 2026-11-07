@@ -78,7 +78,6 @@ export const dashboardMenu: DashboardMenuModule[] = [
     children: [
       group("tablas", "Tablas", [
         page("Ferias", "/dashboard/operaciones/ferias"),
-        page("Artículos", "/dashboard/operaciones/articulos"),
         page("Revistas", "/dashboard/operaciones/revistas"),
         page("Documentación", "/dashboard/operaciones/documentacion"),
         page("Servicios", "/dashboard/operaciones/servicios"),

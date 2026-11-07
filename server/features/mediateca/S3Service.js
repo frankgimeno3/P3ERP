@@ -2,16 +2,18 @@ import crypto from "node:crypto";
 import { DeleteObjectCommand, GetObjectCommand, HeadObjectCommand, PutObjectCommand, ListObjectsV2Command, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
-const region =
-  process.env.IAM_REGION ||
-  process.env.AWS_REGION ||
-  process.env.NEXT_PUBLIC_COGNITO_REGION ||
-  "eu-south-2";
-const bucket = process.env.AWS_S3_BUCKET || process.env.S3_BUCKET || "";
-const cloudFrontUrl = process.env.NEXT_PUBLIC_CLOUDFRONT_URL || "";
+// Shared by Mediateca and every production upload. Resolve at request time as well as after environment loading.
+export function documentStorageSettings(){
+ const bucket=process.env.AWS_S3_BUCKET||process.env.S3_BUCKET||'mediateca-plynium-bucket';
+ return {bucket,
+  // Hosting providers can set AWS_REGION to their compute region, independently of S3.
+  region:process.env.AWS_S3_REGION||process.env.S3_REGION||process.env.IAM_REGION||(bucket==='mediateca-plynium-bucket'?'eu-south-2':process.env.AWS_REGION||process.env.NEXT_PUBLIC_COGNITO_REGION||'eu-south-2'),
+  cloudFrontUrl:process.env.NEXT_PUBLIC_CLOUDFRONT_URL||''
+ };
+}
 
 let client;
-export function isDocumentStorageConfigured(){return Boolean(bucket);}
+export function isDocumentStorageConfigured(){return Boolean(documentStorageSettings().bucket);}
 
 function getCredentials() {
   const accessKeyId = process.env.IAM_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID;
@@ -22,7 +24,7 @@ function getCredentials() {
 function getClient() {
   if (!client) {
     client = new S3Client({
-      region,
+      region:documentStorageSettings().region,
       ...(getCredentials() ? { credentials: getCredentials() } : {}),
       requestChecksumCalculation: "WHEN_REQUIRED",
       responseChecksumValidation: "WHEN_REQUIRED",
@@ -32,6 +34,7 @@ function getClient() {
 }
 
 export async function* backupObjects() {
+  const {bucket}=documentStorageSettings();
   if (!bucket) throw new Error('El almacenamiento documental no está configurado.');
   let ContinuationToken;
   do {
@@ -69,12 +72,14 @@ function cleanFilename(filename) {
 }
 
 function cdnUrlForKey(s3Key) {
+  const {cloudFrontUrl}=documentStorageSettings();
   const host = String(cloudFrontUrl || "").replace(/^https?:\/\//, "").replace(/\/+$/, "");
   return host ? `https://${host}/${s3Key}` : "";
 }
 
 export async function createPresignedUpload({ filename, contentType, prefix = "", mediaId:requestedId }) {
-  if (!bucket) throw new Error("S3 bucket is not configured. Set AWS_S3_BUCKET or S3_BUCKET in .env.");
+  const {bucket}=documentStorageSettings();
+  if (!bucket) throw new Error("Mediateca no tiene configurado el bucket S3. Configura AWS_S3_BUCKET en el servidor de P3ERP.");
   if(requestedId&&!/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(requestedId))throw new Error('Identificador de archivo inválido.');
   const mediaId = requestedId||crypto.randomUUID();
   const safeName = cleanFilename(filename);
@@ -90,19 +95,32 @@ export async function createPresignedUpload({ filename, contentType, prefix = ""
 }
 
 export async function deleteObjectFromS3(s3Key) {
-  if (!bucket) throw new Error("S3 bucket is not configured. Set AWS_S3_BUCKET or S3_BUCKET in .env.");
+  const {bucket}=documentStorageSettings();
+  if (!bucket) throw new Error("Mediateca no tiene configurado el bucket S3. Configura AWS_S3_BUCKET en el servidor de P3ERP.");
   const key = String(s3Key || "").trim();
   if (!key) throw new Error("s3Key is required");
   await getClient().send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
 }
 
 export async function assertObjectExistsInS3(s3Key, expected = null) {
+  const {bucket}=documentStorageSettings();
   if (!bucket) throw new Error('El bucket S3 no está configurado.');
   const object = await getClient().send(new HeadObjectCommand({ Bucket: bucket, Key: s3Key }));
   if (expected && (object.ContentLength !== expected.size || object.ContentType !== expected.contentType)) throw new Error('El archivo subido no coincide con el tamaño o tipo confirmado.');
 }
 
 export async function createPresignedDownload(s3Key) {
+  const {bucket}=documentStorageSettings();
   if (!bucket) throw new Error('El bucket S3 no está configurado.');
   return getSignedUrl(getClient(), new GetObjectCommand({ Bucket: bucket, Key: s3Key }), { expiresIn: 300 });
+}
+
+export async function readDocumentObject(s3Key,maxBytes=200*1024*1024){
+  const {bucket}=documentStorageSettings();
+  if(!bucket)throw new Error('El almacenamiento de Mediateca no tiene un bucket S3 configurado.');
+  const object=await getClient().send(new GetObjectCommand({Bucket:bucket,Key:s3Key}));
+  if(object.ContentLength>maxBytes){object.Body?.destroy();throw new Error('El lote supera 200 MB. Descarga estos materiales individualmente.');}
+  const chunks=[];let size=0;
+  for await(const chunk of object.Body){size+=chunk.length;if(size>maxBytes){object.Body.destroy();throw new Error('El lote supera 200 MB. Descarga estos materiales individualmente.');}chunks.push(chunk);}
+  return Buffer.concat(chunks);
 }
