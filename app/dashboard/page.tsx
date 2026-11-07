@@ -14,6 +14,7 @@ import {dashboardCounter,useDashboardRows} from '@/app/lib/useDashboardRows';
 import MisPendientes from "@/app/dashboard/comercial/propuestas/componentesPropuestas/tablaspropuestas/MisPendientes";
 import MyTasksPanel from '@/app/components/tasks/MyTasksPanel';
 import MyContentsPanel from '@/app/components/contents/MyContentsPanel';
+import { dashboardMenu } from "@/app/config/dashboardMenu";
 import { canViewModule, normalizeRole } from "@/app/config/roleAccess";
 
 const tabs = [
@@ -26,11 +27,12 @@ const loadTasks=async()=>(await apiClient.get('/api/v1/tareas')).data;
 const loadContents=async()=>(await apiClient.get('/api/v1/dashboard/mis-contenidos')).data;
 
 const moduleTutorials: Record<string, string> = {
-  Comercial: "El modulo comercial concentra cuentas, contactos, propuestas y contratos. Sirve para gestionar el trabajo con clientes y potenciales clientes desde el primer contacto hasta la firma.",
-  Produccion: "El modulo de produccion permite seguir los contenidos comprometidos, ver la hoja de produccion, consultar y mantener la hoja de producción.",
-  Administracion: "El modulo de administracion agrupa facturacion, cobros, suscripciones, proveedores, tickets y pagos. Conecta la venta y la produccion con la gestion economica y documental.",
-  Operaciones: "El modulo de operaciones reúne ferias, seguimiento editorial de artículos, revistas y documentación, además de tareas, servicios y operaciones internas.",
-  Direccion: "El modulo de direccion reune vistas de control, bancos y previsiones para revisar la situacion general y tomar decisiones con datos conectados.",
+  Comercial: "Gestiona cuentas y contactos, prepara propuestas y consulta los contratos resultantes. Permite seguir la relación con cada cliente y conectar los servicios contratados con sus contenidos y órdenes.",
+  Producción: "Consulta los compromisos en la Hoja de producción y gestiona los contenidos de revista y otros contenidos. Desde Gestión contenidos puedes dar de alta contenidos con o sin contrato, seguir sus fases y atender incidencias; Almacenamiento reúne los contenidos y materiales para consultar sus fichas.",
+  Administración: "Gestiona las órdenes desde Control administrativo, las facturas de clientes y proveedores, los importes pendientes de cobro y las suscripciones. Liquidaciones agrupa tarjetas, tickets y domiciliaciones para controlar los gastos y su documentación.",
+  Operaciones: "Mantén las tablas de ferias, revistas, documentación y servicios, y organiza las tareas de los agentes. El apartado BBDD reúne las importaciones y exportaciones y la gestión de eliminación de cuentas.",
+  Contabilidad: "Consulta los extractos bancarios, revisa y concilia sus movimientos con los registros del ERP y utiliza la Previsión de liquidez para seguir los ingresos, los cargos y el saldo previsto.",
+  Dirección: "Supervisa la gestión laboral de agentes, nóminas, calendario y contratación. Reúne también Horas Juan y Propiedades en Finanzas, y las herramientas del ERP: Mediateca, copias de seguridad, tablas RDS y eventos de usuarios.",
 };
 
 export default function DashboardPage() {
@@ -139,13 +141,7 @@ export default function DashboardPage() {
   };
 
   const normalizedRole = normalizeRole(rolLabel);
-  const visibleModules = [
-    { id: "comercial", label: "Comercial" },
-    { id: "produccion", label: "Producción" },
-    { id: "administracion", label: "Administración" },
-    { id: "operaciones", label: "Operaciones" },
-    { id: "direccion", label: "Dirección" },
-  ].filter((module) => canViewModule(normalizedRole, module.id)).map((module) => module.label);
+  const visibleModules = dashboardMenu.filter((module) => canViewModule(normalizedRole, module.id)).map((module) => module.label);
   const roleTutorial = normalizedRole.includes("produccion")
     ? "Como usuario de producción, puedes ver el área comercial y de producción. En producción encontrarás la hoja de producción con lo pendiente de publicar y su destino, fichas concretas de contenido, las maquetas de cada revista con su estado actual y gestiones de producción para el trabajo diario: validar materiales, subir artículos para revisión, mostrar correcciones y actualizar estados."
     : normalizedRole.includes("comercial")
@@ -196,9 +192,10 @@ export default function DashboardPage() {
                     </p>
                     <p>Desde esta página también puedes acceder rápidamente a información vinculada contigo:</p>
                     <ul className="list-disc space-y-1 pl-5">
-                      <li><strong>Mis contenidos:</strong> contenidos asignados a ti, organizados en Requiere atención, Pendiente de recibir y En proceso.</li>
+                      <li><strong>Mis tareas:</strong> tareas asignadas a ti, con vistas de pendientes, todas y calendario para organizar el trabajo y consultar su estado.</li>
+                      <li><strong>Mis contenidos:</strong> contenidos asignados a ti, organizados en Requiere atención, Pendiente y En proceso.</li>
                       <li><strong>Mis cuentas:</strong> las cuentas de clientes o potenciales clientes que tienes asignadas.</li>
-                      <li><strong>Mis propuestas pendientes:</strong> las propuestas que has creado y que todavía esperan la aceptación o el rechazo del cliente.</li>
+                      <li><strong>Mis propuestas pendientes:</strong> las propuestas pendientes asignadas a tu agente.</li>
                     </ul>
                   </div>
                 )}
