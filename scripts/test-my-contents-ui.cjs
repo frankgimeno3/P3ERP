@@ -6,6 +6,8 @@ const React=require('react'),{createRoot}=require('react-dom/client'),root=creat
 let pathname='/dashboard';
 const rows=[{id_contenido:'waiting',nombre_contenido:'Esperando material',estado_contenido:'Pendiente Publicar',fase:'recibir',fase_nombre:'Contratado pendiente de recibir'}, {id_contenido:'process',nombre_contenido:'En maquetación',estado_contenido:'Pendiente maquetación',fase:'maquetacion'}, {id_contenido:'incident',nombre_contenido:'Material con incidencia',estado_contenido:'Pendiente corrección',fase:'correccion',motivo_atencion:'Incidencia pendiente de resolver'}];
 function load(file){
+ file=path.resolve(file);
+ if(file.endsWith('.json'))return JSON.parse(fs.readFileSync(file,'utf8'));
  if(cache.has(file))return cache.get(file);const m={exports:{}};
  const code=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{jsx:ts.JsxEmit.ReactJSX,module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true}}).outputText;
  new Function('require','module','exports',code)(id=>{

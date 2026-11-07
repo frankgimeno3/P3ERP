@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),ts=require('typescript');
 const {JSDOM}=require(process.env.P3_SELECTOR_TEST_MODULES?path.join(process.env.P3_SELECTOR_TEST_MODULES,'jsdom'):'jsdom');
 const dom=new JSDOM('<html><body><div id="root"></div></body></html>',{url:'http://localhost'});
@@ -52,7 +51,13 @@ React.act(()=>root3.unmount());
 let pathname='/dashboard/comercial/cuentas';
 const layoutCode=ts.transpileModule(fs.readFileSync('app/dashboard/layout.tsx','utf8'),{compilerOptions:{jsx:ts.JsxEmit.ReactJSX,module:ts.ModuleKind.CommonJS,esModuleInterop:true}}).outputText;
 const layoutModule={exports:{}};
-new Function('require','exports','module',layoutCode)(name=>name==='next/navigation'?{usePathname:()=>pathname}:name==='next/link'?{__esModule:true,default:({children,...props})=>h('a',props,children)}:name.includes('loggedNav')||name.includes('loggedLeftMenu')?{__esModule:true,default:()=>null}:require(name),layoutModule.exports,layoutModule);
+new Function('require','exports','module',layoutCode)(name=>{
+ if(name==='next/navigation')return {usePathname:()=>pathname};
+ if(name==='next/link')return {__esModule:true,default:({children,...props})=>h('a',props,children)};
+ if(name.includes('DashboardNavigation'))return {__esModule:true,default:({children})=>children};
+ if(name.includes('loggedNav')||name.includes('loggedLeftMenu')||name.includes('DashboardPageTitle'))return {__esModule:true,default:()=>null};
+ return require(name);
+},layoutModule.exports,layoutModule);
 const {renderToStaticMarkup}=require('react-dom/server');
 for(const route of ['/dashboard/comercial/cuentas','/dashboard/contabilidad','/dashboard/operaciones/tareas','/dashboard/administracion','/dashboard/administracion/pendiente-cobro','/dashboard/administracion-falsa']){
  pathname=route;const html=renderToStaticMarkup(h(layoutModule.exports.default,{},'Contenido'));

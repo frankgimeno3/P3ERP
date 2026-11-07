@@ -6,6 +6,7 @@ import LoggedLeftMenu from "../general_components/componentes_recurrentes/logged
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import DashboardPageTitle from '@/app/components/DashboardPageTitle';
+import DashboardNavigation from '@/app/components/DashboardNavigation';
 
 export default function RegistroLayout({
   children,
@@ -13,7 +14,7 @@ export default function RegistroLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  if (pathname === '/dashboard/contabilidad/prevision-liquidez/vista-juan') return <><DashboardPageTitle />{children}</>;
+  if (pathname === '/dashboard/contabilidad/prevision-liquidez/vista-juan') return <><DashboardPageTitle /><DashboardNavigation>{children}</DashboardNavigation></>;
   return (
     <>
       <LoggedNav />
@@ -21,7 +22,7 @@ export default function RegistroLayout({
       <div className="flex w-full min-w-0 flex-row overflow-x-hidden bg-gray-100 text-gray-900">
         <LoggedLeftMenu />
         <div data-dashboard-content className={`relative flex min-h-[calc(100vh-4rem)] min-w-0 flex-1 flex-col ${pathname === '/dashboard/administracion' || pathname.startsWith('/dashboard/administracion/') ? 'pb-12' : ''}`}>
-          {children}
+          <DashboardNavigation>{children}</DashboardNavigation>
           {(pathname === '/dashboard/administracion' || pathname.startsWith('/dashboard/administracion/')) && <Link href="/ayuda/informacion-legal" className="absolute bottom-3 left-1/2 -translate-x-1/2 cursor-pointer text-center text-xs text-blue-800 underline-offset-4 transition hover:text-blue-950 hover:underline">Información legal verifactu</Link>}
         </div>
       </div>

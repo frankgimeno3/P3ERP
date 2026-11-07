@@ -1,16 +1,18 @@
 'use client';
 
-import React, { FC } from 'react';
+import React, { FC, useContext, useId, useLayoutEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { Home } from 'lucide-react'; 
+import {DashboardMidnavContext} from '@/app/components/DashboardMidnavContext';
+import {dashboardPathExists, dashboardPathLabel} from '@/app/config/dashboardNavigation';
 
 interface MiddleNavProps {
   tituloprincipal: string;
   currentLabel?: string;
 }
 
-const MiddleNav: FC<MiddleNavProps> = ({ tituloprincipal, currentLabel }) => {
+export const MiddleNavBar: FC<MiddleNavProps> = ({ tituloprincipal, currentLabel }) => {
   const pathname = usePathname();
 
   const pathSegments = pathname.split('/').filter(Boolean);
@@ -18,55 +20,21 @@ const MiddleNav: FC<MiddleNavProps> = ({ tituloprincipal, currentLabel }) => {
   const buildPath = (index: number) =>
     '/' + pathSegments.slice(0, index + 1).join('/');
 
-  const problematicSegments = [
-    '/dashboard/comercial',
-    '/dashboard/produccion',
-    '/dashboard/administracion',
-    '/dashboard/operaciones',
-    '/dashboard/produccion/gestion-contenidos',
-    '/dashboard/produccion/repositorio/contenidos',
-    '/dashboard/produccion/repositorio/materiales',
-    '/dashboard/operaciones/data/importar',
-    '/dashboard/operaciones/data/exportar'
-    ];
-
-  const getHref = (index: number) => {
-    const fullPath = buildPath(index);
-    if (problematicSegments.includes(fullPath)) {
-      return '/dashboard';
-    } else {
-      return fullPath;
-    }
-  };
-
-   const renderSegmentLabel = (segment: string, fullPath: string) => {
-    const labels:Record<string,string>={
-      '/dashboard/produccion/gestion-contenidos':'Gestión contenidos',
-      '/dashboard/produccion/gestion-contenidos/revista':'Contenido revista',
-      '/dashboard/produccion/gestion-contenidos/otros':'Otro contenido',
-      '/dashboard/produccion/repositorio':'Almacenamiento',
-      '/dashboard/produccion/repositorio/contenidos':'Contenidos',
-      '/dashboard/produccion/repositorio/materiales':'Materiales',
-      '/dashboard/operaciones/data':'Import-export',
-      '/dashboard/operaciones/gestion_cuentas':'Eliminación cuentas',
-    };
+   const renderSegmentLabel = (fullPath: string) => {
     if (fullPath === '/' || fullPath === '/dashboard') {
       return <Home className="h-4 w-4 text-white" />;  
     }
     if (currentLabel && fullPath === buildPath(pathSegments.length - 1)) return currentLabel;
-    if(labels[fullPath])return labels[fullPath];
-    let label = segment;
-    try { label = decodeURIComponent(segment); } catch { /* Preserve malformed legacy segments. */ }
-    return label.charAt(0).toUpperCase() + label.slice(1);
+    return dashboardPathLabel(fullPath);
   };
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2 bg-gradient-to-r from-zinc-700 to-gray-800 px-4 py-2.5 text-white md:px-6">
+    <div data-dashboard-midnav className="flex flex-wrap items-center justify-between gap-2 bg-gradient-to-r from-zinc-700 to-gray-800 px-4 py-2.5 text-white md:px-6">
       <h2 data-page-title className="min-w-0 max-w-full break-all text-xs font-semibold uppercase text-zinc-100 md:max-w-[38%] md:text-sm">{tituloprincipal}</h2>
       <div className="flex min-w-0 flex-row flex-wrap items-center gap-1 pr-2 text-xs md:max-w-[60%] md:pr-4">
         {pathSegments.map((segment, index) => {
           const fullPath = buildPath(index);
-          const isProblematic = problematicSegments.includes(fullPath);
+          const isProblematic = !dashboardPathExists(fullPath);
 
           return (
             <div className="flex items-center" key={index}>
@@ -74,14 +42,14 @@ const MiddleNav: FC<MiddleNavProps> = ({ tituloprincipal, currentLabel }) => {
                 <p
                   className="flex min-h-[30px] max-w-full items-center gap-1 break-all rounded-md bg-gray-900/70 px-2 py-1 text-xs font-medium uppercase text-slate-200"
                 >
-                  {renderSegmentLabel(segment, fullPath)}
+                  {renderSegmentLabel(fullPath)}
                 </p>
               ) : (
                 <Link
-                  href={getHref(index)}
+                  href={fullPath}
                   className="flex min-h-[30px] max-w-full cursor-pointer items-center gap-1 break-all rounded-md bg-gray-900/70 px-2 py-1 text-xs font-medium uppercase text-white transition-colors hover:bg-gray-900/90"
                 >
-                  {renderSegmentLabel(segment, fullPath)}
+                  {renderSegmentLabel(fullPath)}
                 </Link>
               )}
               {index < pathSegments.length - 1 && (
@@ -106,6 +74,17 @@ const MiddleNav: FC<MiddleNavProps> = ({ tituloprincipal, currentLabel }) => {
       </div>
     </div>
   );
+};
+
+const MiddleNav: FC<MiddleNavProps> = ({tituloprincipal, currentLabel}) => {
+  const register = useContext(DashboardMidnavContext), id = useId(), pathname = usePathname();
+  const placeholder = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    if (!register || placeholder.current?.closest('.embedded-forecast, [role="dialog"], [aria-modal="true"]')) return;
+    return register(id, pathname, {tituloprincipal, currentLabel});
+  }, [register, id, pathname, tituloprincipal, currentLabel]);
+  // Conserva el orden de los hijos en páginas incrustadas que ocultan su primera barra.
+  return register ? <div ref={placeholder} hidden data-midnav-placeholder/> : <MiddleNavBar tituloprincipal={tituloprincipal} currentLabel={currentLabel}/>;
 };
 
 export default MiddleNav;

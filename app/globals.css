@@ -47,6 +47,52 @@ table {
   border-collapse: collapse;
 }
 
+/* Densidad y separadores compartidos con Extractos. Cada cabecera conserva sus colores. */
+@layer base {
+  table :is(tbody, tfoot) > tr { background-color: #fff; }
+}
+
+:root table {
+  border: 0;
+  border-radius: .25rem;
+  box-shadow: 0 1px 2px rgb(0 0 0 / .05);
+  font-size: .875rem;
+  line-height: 1.25rem;
+}
+
+:root table :is(th, td) {
+  border: 0;
+  padding: .5rem .75rem;
+  vertical-align: middle;
+}
+
+:root table thead th {
+  font-size: .75rem;
+  font-weight: 500;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+}
+
+:root table :is(tbody, tfoot) > tr {
+  border: 0;
+  border-top: 1px solid #e5e7eb;
+  transition: background-color 150ms ease;
+}
+
+:root table tbody > tr:hover {
+  background-color: var(--surface-hover);
+}
+
+:root :is(div, section):has(> table:only-child) {
+  border: 0;
+  border-radius: .25rem;
+  box-shadow: 0 1px 2px rgb(0 0 0 / .05);
+}
+
+:root :is(div, section):has(> table:only-child) > table {
+  box-shadow: none;
+}
+
 .embedded-forecast > div > :first-child {
   display: none;
 }

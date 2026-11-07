@@ -30,11 +30,12 @@ function entryContainsPath(entry: DashboardMenuEntry, pathname: string): boolean
 
 export default function LoggedLeftMenu() {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const { user, error } = useCurrentUser();
   const role = user?.role || (error ? 'base' : null);
   const location = getDashboardMenuLocation(pathname);
+  const activeModuleId = location?.module.id || dashboardMenu.find(area => pathname === `/dashboard/${area.id}` || pathname.startsWith(`/dashboard/${area.id}/`))?.id;
 
   useEffect(() => {
     const active: Record<string, boolean> = {};
@@ -63,7 +64,7 @@ export default function LoggedLeftMenu() {
         </div>
       )}
       {role !== null && dashboardMenu.map(module=>({...module,children:visibleEntries(module.children,role)})).filter((module) => canViewModule(role, module.id)&&module.children.length).map((module) => {
-        const Icon = moduleIcons[module.icon], active = location?.module.id === module.id;
+        const Icon = moduleIcons[module.icon], active = activeModuleId === module.id;
         return <div key={module.id} data-module={module.id} className={collapsed ? 'mb-2 px-1' : 'mb-2 mr-2 ml-3'}>
           <button type="button" aria-label={module.label} title={collapsed ? module.label : undefined} aria-current={active ? 'location' : undefined} aria-expanded={!collapsed && Boolean(open[module.id])} onClick={() => {if(collapsed){setCollapsed(false);setOpen(current=>({...current,[module.id]:true}));}else toggle(module.id);}} className={`flex w-full cursor-pointer items-center rounded-r-lg border-l-2 py-2 text-xs font-medium uppercase tracking-wide transition-colors hover:bg-gray-800 hover:text-gray-100 ${collapsed ? 'justify-center px-2' : 'justify-between gap-2 pl-3 pr-2'} ${active ? 'border-blue-400 bg-blue-950/50 text-blue-300' : 'border-gray-700 text-gray-300'}`}>
             <span className="flex min-w-0 items-center gap-2">{collapsed ? <Icon aria-hidden="true" className="h-5 w-5 shrink-0" strokeWidth={1.7}/> : <span>{module.label}</span>}</span>

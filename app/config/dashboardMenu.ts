@@ -83,7 +83,7 @@ export const dashboardMenu: DashboardMenuModule[] = [
         page("Documentación", "/dashboard/operaciones/documentacion"),
         page("Servicios", "/dashboard/operaciones/servicios"),
       ]),
-      page("Tareas", "/dashboard/operaciones/tareas"),
+      page("Tareas agentes", "/dashboard/operaciones/tareas"),
       group("bbdd", "BBDD", [
         page("Import-export", "/dashboard/operaciones/data"),
         page("Eliminación cuentas", "/dashboard/operaciones/gestion_cuentas"),
