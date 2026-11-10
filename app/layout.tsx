@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist_Mono, Ubuntu } from "next/font/google";
 import "./globals.css";
 import ModalDismissManager from "./general_components/componentes_recurrentes/ModalDismissManager";
+import LandscapeViewport from "./components/LandscapeViewport";
 const ubuntu = Ubuntu({
   variable: "--font-ubuntu",
   weight: ["300", "400", "500", "700"],
@@ -29,7 +30,8 @@ export default function RootLayout({
         className={`${ubuntu.variable} ${geistMono.variable} antialiased pb-8`}
       >
         <ModalDismissManager />
-        {children}
+        <LandscapeViewport />
+        <div id="p3-page-scroll">{children}</div>
       </body>
     </html>
   );

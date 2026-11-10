@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useLayoutEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { getCanvasRect, getAppliedLandscapeViewport } from '@/app/lib/landscapeViewport';
 
 export type SearchOption = { value: string; label: string; searchText?: string; disabled?: boolean };
 type Props = { id?:string; inputClassName?:string; options: SearchOption[]; value: string; onChange: (value: string) => void; label: string; placeholder?: string; required?: boolean; disabled?: boolean; name?: string; className?: string; onSearchChange?: (query: string) => void };
@@ -11,7 +12,7 @@ export default function SearchableSelect({ id:providedId,inputClassName,options,
   const [position,setPosition] = useState({left:0,top:0,width:0,maxHeight:256});
   useLayoutEffect(()=>{
     if(!open)return;
-    const update=()=>{const rect=input.current?.getBoundingClientRect();if(!rect)return;const below=window.innerHeight-rect.bottom-12;const height=Math.min(256,Math.max(below,rect.top-12));setPosition({left:rect.left,top:below>=Math.min(180,height)?rect.bottom+4:Math.max(4,rect.top-height-4),width:rect.width,maxHeight:height});};
+    const update=()=>{const screenRect=input.current?.getBoundingClientRect();if(!screenRect)return;const viewport=getAppliedLandscapeViewport();const rect=getCanvasRect(screenRect,viewport);const below=(viewport?.height??window.innerHeight)-rect.bottom-12;const height=Math.min(256,Math.max(below,rect.top-12));setPosition({left:rect.left,top:below>=Math.min(180,height)?rect.bottom+4:Math.max(4,rect.top-height-4),width:rect.width,maxHeight:height});};
     update();window.addEventListener('resize',update);window.addEventListener('scroll',update,true);return()=>{window.removeEventListener('resize',update);window.removeEventListener('scroll',update,true);};
   },[open]);
   const selected = options.find(option => option.value === value);

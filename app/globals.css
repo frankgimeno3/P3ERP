@@ -1,5 +1,32 @@
 @import "tailwindcss";
 
+#p3-page-scroll { display: contents; }
+
+@media screen {
+  html[data-landscape-viewport] { overflow: hidden; }
+  html[data-landscape-viewport] body {
+    position: fixed;
+    inset: 0 auto auto 0;
+    width: var(--p3-viewport-width);
+    height: var(--p3-viewport-height);
+    padding-bottom: 0;
+    overflow: hidden;
+    transform-origin: 0 0;
+    transform: var(--p3-viewport-transform);
+  }
+  html[data-landscape-viewport] #p3-page-scroll {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    padding-bottom: 2rem;
+    overscroll-behavior: contain;
+  }
+  html[data-landscape-viewport] .min-h-screen { min-height: var(--p3-viewport-height); }
+  html[data-landscape-viewport] .h-screen { height: var(--p3-viewport-height); }
+  html[data-landscape-viewport] [data-dashboard-content] { min-height: calc(var(--p3-viewport-height) - 4rem); }
+}
+
 :root {
   /* ERP pages use light surfaces; the OS theme must not invert inherited text. */
   color-scheme: light;
