@@ -6,6 +6,13 @@ export {normalizeRole,roleRank,canViewModule,canAccessDashboardPath} from "./mod
 export function canAccessApiPath(role: unknown, pathname: string, method: string) {
   const normalized = normalizeRole(role) as AppRole;
   pathname=canonicalAccountingPath(pathname);
+  if(normalized==='operaciones'){
+    // These legacy endpoints supply the permitted Operations/Commercial screens.
+    const fairCatalog=/^\/api\/v1\/admin\/ferias(?:\/|$)/.test(pathname);
+    const sharedCatalog=method==='GET'&&/^\/api\/v1\/admin\/(agentes|proveedores)(?:\/[^/]+)?\/?$/.test(pathname);
+    if(/^\/api\/v1\/admin(?:\/|$)/.test(pathname)&&!fairCatalog&&!sharedCatalog)return false;
+    if(/^\/api\/v1\/direccion(?:\/|$)/.test(pathname))return false;
+  }
   if (/^\/api\/v1\/mediateca(?:\/|$)/.test(pathname)) return ['direccion','superadmin'].includes(normalized);
   if(/^\/api\/v1\/contabilidad(?:\/|$)/.test(pathname))return accountingRoles.includes(normalized);
   if(normalized==='contabilidad' && /^\/api\/v1\/(produccion|operaciones)(?:\/|$)/.test(pathname))return false;

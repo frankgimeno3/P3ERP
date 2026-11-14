@@ -9,6 +9,7 @@ export function normalizeRole(role) {
 }
 export function canViewModule(role,moduleId) {
   const normalized=normalizeRole(role);
+  if(normalized==='operaciones')return ['comercial','produccion','operaciones'].includes(moduleId);
   if(moduleId==='contabilidad')return accountingRoles.includes(normalized);
   if(normalized==='contabilidad')return !['operaciones','produccion','direccion'].includes(moduleId);
   if(moduleId==='direccion')return ['superadmin','direccion'].includes(normalized);

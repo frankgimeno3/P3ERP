@@ -240,7 +240,8 @@
   "/dashboard/operaciones/ferias": {
     "summary": "Separa el catálogo de ferias de sus ediciones concretas.",
     "steps": [
-      "Accede desde Operaciones > Tablas. Esta carpeta agrupa Ferias, Artículos, Revistas, Documentación y Servicios.",
+      "El rol Operaciones tiene acceso a Comercial, Producción y Operaciones. No puede abrir Administración, Contabilidad ni Dirección, tampoco mediante enlaces directos.",
+      "Accede desde Operaciones > Tablas. Esta carpeta agrupa Ferias, Revistas, Documentación y Servicios.",
       "Las fechas se introducen en una fila de tres campos dd / mm / yyyy, con las dos barras fijas. Los filtros de fecha permiten indicar solo el día, el mes o el año.",
       "Al crear una edición, elige Intercambio en un selector Sí/No de la primera fila y escribe inicio y finalización en tres campos: día, mes y año.",
       "En ediciones, el filtro Pa?s usa el pa?s de la feria del cat?logo; Intercambio se elige con S?/No y las fechas se introducen por d?a, mes y a?o.",

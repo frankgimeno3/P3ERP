@@ -30,7 +30,7 @@ const flatten=entries=>entries.flatMap(entry=>entry.type==='page'?[entry.href]:f
 const operations=dashboardMenu.find(module=>module.id==='operaciones');
 const tables=operations.children.find(entry=>entry.id==='tablas');
 const database=operations.children.find(entry=>entry.id==='bbdd');
-assert.deepEqual(tables.children.map(entry=>entry.label),['Ferias','Artículos','Revistas','Documentación','Servicios']);
+assert.deepEqual(tables.children.map(entry=>entry.label),['Ferias','Revistas','Documentaci\u00f3n','Servicios']);
 assert.deepEqual(database.children.map(entry=>entry.label),['Import-export','Eliminación cuentas']);
 assert(operations.children.some(entry=>entry.type==='page'&&entry.href==='/dashboard/operaciones/tareas'));
 assert.equal(new Set(flatten(operations.children)).size,flatten(operations.children).length);
@@ -50,3 +50,17 @@ console.log('PASS: menú recursivo coherente con rutas para todos los roles; gru
 
 assert(dashboardMenu.findIndex(area=>area.id==='operaciones')<dashboardMenu.findIndex(area=>area.id==='contabilidad'));
 assert(dashboardMenu.findIndex(area=>area.id==='contabilidad')<dashboardMenu.findIndex(area=>area.id==='direccion'));
+
+assert.deepEqual(dashboardMenu.filter(area=>canViewModule('operaciones',area.id)).map(area=>area.id).sort(),['comercial','operaciones','produccion']);
+for(const path of ['/dashboard/administracion','/dashboard/administracion/control-administrativo','/dashboard/administracion/facturas-clientes','/dashboard/contabilidad','/dashboard/direccion'])assert.equal(canAccessDashboardPath('operaciones',path),false,path);
+for(const method of ['GET','POST','PUT','PATCH','DELETE']){
+ for(const resource of ['control-administrativo/ordenes','facturas-clientes','facturas-proveedores','tickets','tarjetas','liquidaciones','suscripciones','proveedores/id/benchmark','proveedores/id/cargos-recurrentes','roles','user','agentes/id/credenciales'])assert.equal(canAccessApiPath('operaciones','/api/v1/admin/'+resource,method),false,method+' '+resource);
+ assert.equal(canAccessApiPath('operaciones','/api/v1/direccion/laboral/tareas-agentes',method),false);
+ assert.equal(canAccessApiPath('operaciones','/api/v1/admin/ferias',method),true);
+}
+assert.equal(canAccessApiPath('operaciones','/api/v1/admin/agentes','GET'),true);
+assert.equal(canAccessApiPath('operaciones','/api/v1/admin/proveedores','GET'),true);
+assert.equal(canAccessApiPath('operaciones','/api/v1/admin/proveedores','POST'),false);
+assert.equal(canAccessApiPath('administracion','/api/v1/admin/facturas-clientes','POST'),true);
+assert.equal(canAccessApiPath('superadmin','/api/v1/admin/agentes/id/credenciales','PUT'),true);
+console.log('PASS: Operaciones solo accede a Comercial, Producci?n y Operaciones; Administraci?n bloqueada en p?ginas y API, cat?logos compartidos conservados.');
