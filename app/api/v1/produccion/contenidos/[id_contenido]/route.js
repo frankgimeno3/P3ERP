@@ -55,9 +55,10 @@ export async function PATCH(request, context) {
     return NextResponse.json(contenido);
   } catch (error) {
     console.error("Error in PATCH /api/v1/produccion/contenidos/[id_contenido]:", error);
+    const status=[400,409].includes(error.statusCode)?error.statusCode:error.code==='23514'?400:500;
     return NextResponse.json(
-      { message: error.statusCode === 400 ? error.message : "Error al actualizar el contenido", detail: process.env.NODE_ENV === "development" ? error.message : undefined },
-      { status: error.statusCode === 400 ? 400 : 500 },
+      { message: status<500 ? error.message : "Error al actualizar el contenido", detail: process.env.NODE_ENV === "development" ? error.message : undefined },
+      { status },
     );
   }
 }

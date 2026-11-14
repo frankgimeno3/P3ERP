@@ -7,3 +7,4 @@ export const magazineContentExpression = `(COALESCE(c.destino_revista,false) OR 
  OR EXISTS(SELECT 1 FROM servicios_publicaciones p WHERE p.revista_id IS NOT NULL AND p.revista_id<>'' AND p.id_publicacion IN (c.id_publicacion,c.contenido_especifico_id))
  OR COALESCE(c.publicacion_num_web,'') ~* '(VIDRIO|VENTANAS|VPCS|QQ|QUI.N ES QUI.N|HUECO).*(ESPA.A|IBERIA|LATAM|AM.RICA|N[ºO°]|[0-9]$)'
  OR COALESCE(c.tipo_revista_servicio,'') ~* '(revista|hueco arquitectura|qui.n es qui.n)')`;
+export async function isMagazineProduction(db,id) {return (await db.query(`SELECT 1 FROM produccion_contenidos c LEFT JOIN servicios_db s ON s.id_servicio=c.servicio WHERE c.id_contenido=$1 AND ${magazineContentExpression}`,[id])).rowCount>0;}

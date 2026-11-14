@@ -24,12 +24,12 @@ try{await withUserEventContext({enabled:true,actorId:'test-produccion-tipos',act
  await reviewProductionMaterial(replacement.id_material,{validacion_produccion:'ok produccion'},db);assert.equal(productionStage(await get('anuncios')),'publicacion');
  await upload('articulos');assert.equal(productionStage(await get('articulos')),'redaccion');assert.equal(productionStage(await get('anuncios')),'publicacion');
  let row=await get('articulos');
- await assert.rejects(updateContenidoProduccion(id,{url_indesign_recurso7:'javascript:alert(1)'}),/URL/);
- await assert.rejects(updateContenidoProduccion(id,{estados_produccion:{anuncios:'Pendiente redacción'},expectedVersion:row.updated_at}),/fases 1, 3.1 y 6/);
- const updated=await updateContenidoProduccion(id,{estados_produccion:{articulos:'Pendiente de gestionar Charly',anuncios:'Publicado'},url_indesign_recurso7:'https://recurso7.example/indesign',expectedVersion:row.updated_at});
+ await assert.rejects(updateContenidoProduccion(id,{url_indesign_recurso7:'javascript:alert(1)'},db),/URL/);
+ await assert.rejects(updateContenidoProduccion(id,{estados_produccion:{anuncios:'Pendiente redacción'},expectedVersion:row.updated_at},db),/fases 1, 3.1 y 6/);
+ const updated=await updateContenidoProduccion(id,{estados_produccion:{articulos:'Pendiente de gestionar Charly',anuncios:'Publicado'},url_indesign_recurso7:'https://recurso7.example/indesign',expectedVersion:row.updated_at},db);
  assert.equal(updated.url_indesign_recurso7,'https://recurso7.example/indesign');assert.equal(productionStage(await get('articulos')),'maquetacion');assert(!contentPending(await get('anuncios')));assert(contentPending(await get('articulos')));
  row=await get('articulos');await db.query("UPDATE produccion_contenidos SET updated_at=updated_at+interval '1 millisecond' WHERE id_contenido=$1",[id]);
- await assert.rejects(updateContenidoProduccion(id,{estados_produccion:{articulos:'Publicado'},expectedVersion:row.updated_at}),e=>e.statusCode===409);
+ await assert.rejects(updateContenidoProduccion(id,{estados_produccion:{articulos:'Publicado'},expectedVersion:row.updated_at},db),e=>e.statusCode===409);
  const events=(await db.query('SELECT datos_nuevos FROM eventos_de_usuarios WHERE id_solicitud=$1',[requestId])).rows;assert(events.some(e=>e.datos_nuevos?.url_indesign_recurso7==='https://recurso7.example/indesign'));assert(events.some(e=>e.datos_nuevos?.estados_produccion?.anuncios==='Publicado'));
  await db.query('ROLLBACK');
  });

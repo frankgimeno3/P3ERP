@@ -30,8 +30,8 @@ try {
   await assignContentMagazine(alias,{id_contenido:content,tipo:'anuncios',expectedVersion:row.updated_at},db);
   assert.equal((await db.query('SELECT id_revista FROM produccion_revistas_contenidos WHERE id_contenido=$1',[content])).rows[0].id_revista,id);
   const detail=await getMagazineManagement(alias);assert.equal(detail.contenidos.filter(r=>r.id_contenido===content).length,1);
-  for(const format of ['digital','impreso','impreso_digital'])assert.equal((await updateContenidoProduccion(content,{formato_revista:format})).formato_revista,format);
-  await assert.rejects(updateContenidoProduccion(content,{formato_revista:'inventado'}),/Selecciona/);
+  for(const format of ['digital','impreso','impreso_digital'])assert.equal((await updateContenidoProduccion(content,{formato_revista:format},db)).formato_revista,format);
+  await assert.rejects(updateContenidoProduccion(content,{formato_revista:'inventado'},db),/Selecciona/);
   const events=(await db.query("SELECT datos_anteriores,datos_nuevos FROM eventos_de_usuarios WHERE id_solicitud=$1 AND tabla='produccion_contenidos' AND tipo='editar'",[requestId])).rows;
   assert(events.some(e=>e.datos_anteriores.formato_revista==='impreso_digital'&&e.datos_nuevos.formato_revista==='digital'));
   assert(events.some(e=>e.datos_anteriores.formato_revista==='digital'&&e.datos_nuevos.formato_revista==='impreso'));

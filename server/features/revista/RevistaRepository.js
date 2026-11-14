@@ -90,8 +90,7 @@ async function hasContenidosRevistasTable(pool = getPgPool()) {
   return contenidosRevistasTableCache;
 }
 
-export async function getRevistas() {
-  const pool = getPgPool();
+export async function getRevistas(pool=getPgPool()) {
   const { rows } = await pool.query(`
     SELECT
       r.*,
@@ -129,11 +128,11 @@ export async function getRevistas() {
   return groupMagazineIssues(rows.map(normalizeRevista)).sort((a,b)=>publicationTime(a.fecha_publicacion)-publicationTime(b.fecha_publicacion));
 }
 
-export async function getRevistaById(idRevista) {
-  const issue=(await getRevistas()).find(row=>row.id_revista===idRevista||row.ids_revistas.includes(idRevista)||row.ids_publicaciones.includes(idRevista));
+export async function getRevistaById(idRevista,pool=getPgPool()) {
+  const issue=(await getRevistas(pool)).find(row=>row.id_revista===idRevista||row.ids_revistas.includes(idRevista)||row.ids_publicaciones.includes(idRevista));
   if(!issue)return null;
-  if(!await hasContenidosRevistasTable())return {...issue,contenidos:[]};
-  const contents=(await getPgPool().query(`SELECT cr.*,COALESCE(cu.nombre_empresa,c.id_cuenta,'') cuenta,
+  if(!await hasContenidosRevistasTable(pool))return {...issue,contenidos:[]};
+  const contents=(await pool.query(`SELECT cr.*,COALESCE(cu.nombre_empresa,c.id_cuenta,'') cuenta,
     COALESCE(s.nombre_servicio_es,c.servicio,'') servicio,COALESCE(c.especificaciones_contenido,'') contenido,
     c.estado_contenido estado,c.deadline_contenido,c.formato_revista
     FROM contenidos_revistas_db cr LEFT JOIN produccion_contenidos c ON c.id_contenido=cr.contenido_id

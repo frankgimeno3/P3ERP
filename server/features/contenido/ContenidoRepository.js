@@ -5,9 +5,10 @@ import { getPgPool } from "../../database/pgClient.js";
 import {allocateContentIdentifier} from '../identifiers/BusinessIdentifiers.js';
 import { normalizeProductionDeadline } from "../../../app/lib/productionContentFields.js";
 import { addCuentaEntityEvent, formatChangeDetail } from "../registroEventos/RegistroEventosRepository.js";
-import {editorialContentExpression} from '../produccion/ProductionContentScope.js';
+import {editorialContentExpression,magazineContentExpression,isMagazineProduction} from '../produccion/ProductionContentScope.js';
 import {normalizeProductionState,productionStatesByType,aggregateProductionState} from '../../../app/lib/productionWorkflow.js';
 import {productionStates} from '../../../app/lib/productionContentFields.js';
+import {verifyFinalContentPdf} from '../produccion/FinalContentPdf.js';
 
 function getYearFromDate(value) {
   if (!value) return "";
@@ -25,6 +26,7 @@ function normalizeHojaProd(row) {
   const paginaMatch = String(row.especificaciones_contenido ?? "").match(/p[áa]gina\s*([0-9]+)/i);
 
   return {
+    maquetacion_produccion:row.maquetacion_produccion||{},
     es_revista: row.tipo_publicacion==='revista'||Boolean(row.destino_revista)||/revista|vidrio plano|ventanas|hueco|quién es quién/i.test(String(row.tipo_revista_servicio||'')+' '+String(row.nombre_publicacion||'')),
     material: row.estado_material_contenido||[row.anuncio_hoja,row.articulo_hoja].filter(v=>v&&!/no procede/i.test(v)).join(' · '),
     formato_revista: row.formato_revista || 'impreso_digital',
@@ -53,6 +55,8 @@ function normalizeHojaProd(row) {
 
 function normalizeContenido(row) {
   return {
+    es_revista:Boolean(row.es_revista||row.destino_revista||row.revistas?.length),
+    maquetacion_produccion:row.maquetacion_produccion||{},
     estados_produccion:row.estados_produccion||{},url_indesign_recurso7:row.url_indesign_recurso7||'',
     paginas_ocupadas:row.paginas_ocupadas, posicion_revista:row.posicion_revista, correccion_destino:row.correccion_destino,
     titulo_articulo:row.titulo_articulo,entradilla_articulo:row.entradilla_articulo,texto_articulo:row.texto_articulo,
@@ -129,11 +133,16 @@ async function hasContenidosRevistasTable(pool) {
   return hasContenidosRevistasCache;
 }
 
+let materialesSchemaReady=false;
 async function ensureContenidoMateriales(pool) {
+  if(materialesSchemaReady)return;
+  const existing=await pool.query("SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='produccion_contenidos' AND column_name='array_ids_materiales'");
+  if(existing.rowCount){materialesSchemaReady=true;return;}
   await pool.query(`
     ALTER TABLE produccion_contenidos
       ADD COLUMN IF NOT EXISTS array_ids_materiales JSONB NOT NULL DEFAULT '[]'::jsonb
   `);
+  materialesSchemaReady=true;
 }
 
 export async function getHojaProduccionContenidos(filters = {}) {
@@ -343,9 +352,8 @@ export async function getContenidosProduccion(filters = {}) {
   return rows.map(normalizeContenido);
 }
 
-export async function getContenidoProduccionById(idContenido) {
-  const pool = getPgPool();
-  await ensureContenidoMateriales(pool);
+export async function getContenidoProduccionById(idContenido, pool=getPgPool(), ensure=true) {
+  if(ensure)await ensureContenidoMateriales(pool);
   const columns = await getContenidosColumns(pool);
   const hasRevistasTable = await hasContenidosRevistasTable(pool);
   const contenidoEspecificoExpr = columns.has("contenido_especifico_id") ? "c.contenido_especifico_id" : columns.has("publicacion") ? "c.publicacion" : "c.id_publicacion";
@@ -356,6 +364,7 @@ export async function getContenidoProduccionById(idContenido) {
         c.*,
         COALESCE(NULLIF(c.id_contrato,''),(SELECT ct.id_contrato FROM comercial_contratos ct WHERE ct.array_contenidos @> jsonb_build_array(jsonb_build_object('id_contenido',c.id_contenido)) ORDER BY ct.id_contrato LIMIT 1)) AS id_contrato,
         ${editorialContentExpression} AS es_editorial,
+        ${magazineContentExpression} AS es_revista,
         ${contenidoEspecificoExpr} AS contenido_especifico_id,
         ${servicioExpr} AS servicio,
         cu.nombre_empresa,
@@ -384,7 +393,7 @@ export async function getContenidoProduccionById(idContenido) {
       LEFT JOIN servicios_db s ON s.id_servicio = ${servicioExpr}
       ${hasRevistasTable ? "LEFT JOIN contenidos_revistas_db cr ON cr.contenido_id = c.id_contenido LEFT JOIN servicios_revistas r ON r.id_revista = cr.revista_id" : ""}
       WHERE c.id_contenido = $1
-      GROUP BY c.id_contenido, cu.nombre_empresa, s.nombre_servicio_es
+      GROUP BY c.id_contenido, cu.nombre_empresa, s.nombre_servicio_es, s.id_medio
       LIMIT 1
     `,
     [idContenido],
@@ -414,12 +423,30 @@ export async function deleteContenidoProduccion(idContenido) {
   return rowCount > 0;
 }
 
-export async function updateContenidoProduccion(idContenido, data = {}) {
-  const pool = getPgPool();
-  await ensureContenidoMateriales(pool);
-  const before = await getContenidoProduccionById(idContenido);
+export async function updateContenidoProduccion(idContenido, data = {}, transactionDb=null) {
+  const sharedPool = getPgPool();
+  await ensureContenidoMateriales(transactionDb||sharedPool);
+  const pool=transactionDb||await sharedPool.connect();let committed=false;
+  try {
+  await pool.query(transactionDb?'SAVEPOINT content_update':'BEGIN');
+  await pool.query('SELECT id_contenido FROM produccion_contenidos WHERE id_contenido=$1 FOR UPDATE',[idContenido]);
+  const before = await getContenidoProduccionById(idContenido,pool,false);
+  if(!before){await pool.query(transactionDb?'RELEASE SAVEPOINT content_update':'COMMIT');committed=true;return null;}
   const values = [];
   const sets = [];
+  let nextStates=productionStatesByType(before||{});
+  let layout=before?.maquetacion_produccion||{};
+  if(Object.hasOwn(data,'maquetacion_produccion')) {
+    if(!data.expectedVersion||!Number.isFinite(new Date(data.expectedVersion).getTime()))throw Object.assign(new Error('Recarga el contenido antes de guardar su maquetación.'),{statusCode:409});
+    const input=data.maquetacion_produccion;
+    if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).some(key=>!['articulos','anuncios'].includes(key)||!Object.hasOwn(nextStates,key))) throw Object.assign(new Error('Revisa los tipos de la maquetación.'),{statusCode:400});
+    layout={...layout};
+    for(const [type,value] of Object.entries(input)) {
+      if(!value||typeof value!=='object'||Array.isArray(value))throw Object.assign(new Error('Revisa los datos de maquetación.'),{statusCode:400});
+      layout[type]={paginas:value.paginas??'',posicion:value.posicion??'',seccion:String(value.seccion||'').trim(),id_material:String(value.id_material||'').trim()};
+      if(layout[type].seccion.length>120||layout[type].id_material.length>200)throw Object.assign(new Error('Revisa la sección y el PDF final.'),{statusCode:400});
+    }
+  }
 
   for (const field of ["especificaciones_contenido", "publicacion_num_web", "id_agente", "deadline_contenido", "formato_revista", "titulo_articulo", "entradilla_articulo", "texto_articulo", "correccion_destino", "url_indesign_recurso7"]) {
     if (!Object.prototype.hasOwnProperty.call(data, field)) continue;
@@ -456,6 +483,18 @@ export async function updateContenidoProduccion(idContenido, data = {}) {
     values.push(JSON.stringify(states));sets.push(`estados_produccion=$${values.length}::jsonb`);
     values.push(aggregateProductionState(states));
     sets.push(`estado_contenido = $${values.length}`);
+    nextStates=states;
+  }
+
+  const magazine=await isMagazineProduction(pool,idContenido);
+  for(const [type,state] of Object.entries(nextStates)) {
+    if(!magazine||!['articulos','anuncios'].includes(type)||state!=='Material OK - pendiente de publicar')continue;
+    if(productionStatesByType(before||{})[type]===state&&!Object.hasOwn(data.maquetacion_produccion||{},type))continue;
+    const checked=await verifyFinalContentPdf(pool,idContenido,{...layout[type],id_contenido:idContenido,tipo:type});
+    layout={...layout,[type]:{paginas:checked.paginas,posicion:checked.posicion,seccion:checked.seccion,id_material:checked.id_material}};
+  }
+  if(Object.hasOwn(data,'maquetacion_produccion')||JSON.stringify(layout)!==JSON.stringify(before?.maquetacion_produccion||{})) {
+    values.push(JSON.stringify(layout));sets.push(`maquetacion_produccion=$${values.length}::jsonb`);
   }
 
   for(const field of ['paginas_ocupadas','posicion_revista']){
@@ -475,25 +514,26 @@ export async function updateContenidoProduccion(idContenido, data = {}) {
     sets.push(`array_ids_materiales = $${values.length}::jsonb`);
   }
 
-  if (!sets.length) return getContenidoProduccionById(idContenido);
+  if (!sets.length) {await pool.query(transactionDb?'RELEASE SAVEPOINT content_update':'COMMIT');committed=true;return before;}
 
   values.push(idContenido);
   const idIndex=values.length;
   let versionWhere='';
-  if(Object.hasOwn(data,'estados_produccion')){values.push(data.expectedVersion);versionWhere=` AND date_trunc('milliseconds',updated_at)=date_trunc('milliseconds',$${values.length}::timestamptz)`;}
+  if(Object.hasOwn(data,'estados_produccion')||Object.hasOwn(data,'maquetacion_produccion')){values.push(data.expectedVersion);versionWhere=` AND date_trunc('milliseconds',updated_at)=date_trunc('milliseconds',$${values.length}::timestamptz)`;}
   const { rows } = await pool.query(
     `
       UPDATE produccion_contenidos
-      SET ${sets.join(", ")}, updated_at = now()
+      SET ${sets.join(", ")}, updated_at = GREATEST(clock_timestamp(),updated_at+interval '1 millisecond')
       WHERE id_contenido = $${idIndex}${versionWhere}
       RETURNING id_contenido
     `,
     values,
   );
 
-  if(!rows.length&&Object.hasOwn(data,'estados_produccion'))throw Object.assign(new Error('El contenido ha cambiado. Recarga antes de guardar.'),{statusCode:409});
+  if(!rows.length&&(Object.hasOwn(data,'estados_produccion')||Object.hasOwn(data,'maquetacion_produccion')))throw Object.assign(new Error('El contenido ha cambiado. Recarga antes de guardar.'),{statusCode:409});
 
-  const updated = rows[0] ? await getContenidoProduccionById(rows[0].id_contenido) : null;
+  const updated = rows[0] ? await getContenidoProduccionById(rows[0].id_contenido,pool,false) : null;
+  await pool.query(transactionDb?'RELEASE SAVEPOINT content_update':'COMMIT');committed=true;
   if (before && updated?.id_cuenta) {
     const idAgente = data.id_agente || updated.id_agente || before.id_agente || "";
     for (const field of ["estado", "estado_material_contenido", "array_ids_materiales", "especificaciones_contenido", "publicacion_num_web", "id_agente", "deadline_contenido"]) {
@@ -515,6 +555,7 @@ export async function updateContenidoProduccion(idContenido, data = {}) {
   }
 
   return updated;
+  } catch(error){if(!committed){await pool.query(transactionDb?'ROLLBACK TO SAVEPOINT content_update':'ROLLBACK');if(transactionDb)await pool.query('RELEASE SAVEPOINT content_update');}throw error;}finally{if(!transactionDb)pool.release();}
 }
 
 export async function createContenidoProduccion(data = {}) {

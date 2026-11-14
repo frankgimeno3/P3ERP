@@ -43,5 +43,11 @@ const field=name=>[...document.querySelectorAll('label')].find(label=>label.text
   await change(field('URL InDesign (Recurso 7)'),'https://recurso7.example/archivo');await change(articles,'Pendiente corrección');assert(field('Destino de corrección'));
   await React.act(async()=>document.querySelector('form').dispatchEvent(new dom.window.Event('submit',{bubbles:true,cancelable:true})));
   assert.equal(calls.at(-1).data.url_indesign_recurso7,'https://recurso7.example/archivo');assert.equal(calls.at(-1).data.estados_produccion.articulos,'Pendiente corrección');assert.equal(calls.at(-1).data.estados_produccion.anuncios,'Material OK - pendiente de publicar');assert.equal(calls.at(-1).data.expectedVersion,'2026-11-07T10:00:00.000Z');
-  await React.act(async()=>root.unmount());console.log('PASS: datos, fechas y formato; estados independientes de artículo/anuncio, fases válidas, URL InDesign y control de versión.');
+  await React.act(async()=>root.render(React.createElement(Management,{content:{id_contenido:'magazine-article',es_revista:true,tipo_contenido:'articulo',estado:'Pendiente revisión cliente',estados_produccion:{articulos:'Pendiente revisión cliente'},updated_at:'2026-11-14T10:00:00.000Z'},materials:[{id_material:'final-pdf',tipo:'articulos',es_version_acabada:true,numero_version:1,nombre_material:'Final.pdf',pdf_paginas:2}],onSaved:()=>{}})));
+  await change(field('Estado del contenido'),'Material OK - pendiente de publicar');
+  const pdfPicker=document.querySelector('[aria-label="PDF final del artículo"]');assert(pdfPicker.required);await React.act(async()=>pdfPicker.click());await React.act(async()=>[...document.querySelectorAll('[role="option"]')].find(node=>node.textContent.includes('Final.pdf')).click());
+  assert.equal(field('Páginas del PDF').value,'2');await change(field('Sección'),'Noticias');await change(field('Posición inicial'),'1');
+  await React.act(async()=>document.querySelector('form').dispatchEvent(new dom.window.Event('submit',{bubbles:true,cancelable:true})));
+  assert.deepEqual(calls.at(-1).data.maquetacion_produccion,{articulos:{paginas:'2',posicion:'1',seccion:'Noticias',id_material:'final-pdf'}});
+  await React.act(async()=>root.unmount());console.log('PASS: datos, fechas y formato; estados independientes, URL InDesign, versión y preparación de fase 6 con PDF, extensión, sección y posición.');
 })().catch(error=>{console.error(error);process.exitCode=1;});

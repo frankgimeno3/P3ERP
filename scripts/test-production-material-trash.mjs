@@ -7,6 +7,8 @@ import {addProductionMaterials} from '../server/features/produccion/GestionesPro
 import {changeProductionMaterial} from '../server/features/produccion/ProductionMaterialTrash.js';
 import {productionMaterialAction} from '../server/features/produccion/ProductionMaterialActions.js';
 import {getRepositoryMaterials} from '../server/features/produccion/ProductionRepository.js';
+import {PDFDocument} from 'pdf-lib';
+const fixturePdf=await PDFDocument.create();fixturePdf.addPage();const fixtureBytes=await fixturePdf.save();
 env.loadEnvConfig(process.cwd());
 const pool=getPgPool(),db=await pool.connect(),id='PRUEBA-papelera-'+randomUUID(),requestId=randomUUID();
 const file=()=>{const mediaId=randomUUID();return {filename:'material.pdf',size:4,contentType:'application/pdf',nombre_material:'Material original',mediaId,s3Key:`mediateca/documentos_produccion/material_articulos/${mediaId}/material.pdf`};};
@@ -31,7 +33,7 @@ try{await withUserEventContext({enabled:true,actorId:'test-papelera',actorName:'
  await assert.rejects(addProductionMaterials({...destination,materiales:[originalFile]},async()=>{},db),/papelera/);
  await assert.rejects(change(deleted,'editar',{nombre_material:'Otro'}),/Restaura/);
  const restored=await change(deleted,'restaurar');assert.equal(restored.eliminado_at,null);assert.equal(restored.descargado_produccion,false);assert.equal((await getRepositoryMaterials(id,false,db)).length,1);
- const addVersion=async()=>addProductionMaterials({...destination,es_version_acabada:true,materiales:[file()]},async()=>{},db);
+ const addVersion=async()=>addProductionMaterials({...destination,es_version_acabada:true,materiales:[file()]},async()=>{},db,async()=>fixtureBytes);
  const [v1]=await addVersion(),[v2]=await addVersion();assert.equal(v1.numero_version,1);assert.equal(v2.numero_version,2);
  deleted=await change(v2,'eliminar',{confirmado:true});const [v3]=await addVersion();assert.equal(v3.numero_version,3);
  await change(deleted,'restaurar');assert.deepEqual((await getRepositoryMaterials(id,false,db)).filter(m=>m.es_version_acabada).map(m=>m.numero_version),[3,2,1]);

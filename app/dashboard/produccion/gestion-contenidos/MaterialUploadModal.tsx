@@ -14,6 +14,7 @@ export default function MaterialUploadModal({contentId,magazineId='',type,types=
   const descriptors=uploadDescriptors(files),errors=validateIntakeFiles(descriptors,'archivos');
   if(errors.length){setError(errors.join(' '));return;}
   if(finished&&files.length!==1){setError('Cada versión acabada debe contener un único archivo.');return;}
+  if(finished&&selectedType!=='otros'&&descriptors.some(file=>file.contentType!=='application/pdf')){setError('Sube el PDF final del contenido. No se admiten otros formatos como versión final.');return;}
   setBusy(true);setStarted(true);
   try {
    const destination={id_contenido:contentId,id_revista:selectedType==='otros'?'':selectedMagazine,tipo:selectedType,es_version_acabada:finished};
@@ -34,7 +35,7 @@ export default function MaterialUploadModal({contentId,magazineId='',type,types=
  return <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"><section role="dialog" aria-modal="true" aria-labelledby="upload-material-title" className="relative max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-xl bg-white p-6 text-slate-900">
   <button type="button" aria-label="Cerrar" onClick={onClose} className="absolute right-3 top-2 cursor-pointer rounded px-2 text-2xl hover:bg-blue-50">×</button>
   <h2 id="upload-material-title" className="mb-4 pr-8 text-xl font-semibold">{finished?'Subir versión acabada':'Aportar material'}</h2>
-  {finished&&<p className="mb-4 text-sm text-slate-600">Se asignará la siguiente versión (V01, V02…). Se conservan las anteriores.</p>}
+  {finished&&<p className="mb-4 text-sm text-slate-600">Sube el PDF final, sin contraseña. Es obligatorio para pasar a fase 6. Se comprobará su número de páginas y se conservarán las versiones anteriores (V01, V02…).</p>}
   <form onSubmit={submit} className="space-y-4"><fieldset disabled={busy||started} className="space-y-4">
    {types.length>1&&<label className="block">Tipo<select value={selectedType} onChange={event=>setSelectedType(event.target.value)} className={`${field} enabled:cursor-pointer enabled:hover:border-blue-900`}>{types.map(item=><option key={item.value} value={item.value}>{item.label}</option>)}</select></label>}
    {selectedType!=='otros'&&magazines.length>0&&<label className="block">Revista<select value={selectedMagazine} onChange={event=>setSelectedMagazine(event.target.value)} className={`${field} enabled:cursor-pointer enabled:hover:border-blue-900`}><option value="">Todas las revistas del contenido</option>{magazines.map(row=><option key={row.id_revista} value={row.id_revista}>{row.revista} · {row.edicion} · {magazineNumberLabel(row)}</option>)}</select></label>}

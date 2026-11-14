@@ -1,5 +1,6 @@
 import {contentPending,contentTypes} from '../../../app/lib/productionManagement.js';
 import {productionStatesByType,aggregateProductionState} from '../../../app/lib/productionWorkflow.js';
+import {isMagazineProduction} from './ProductionContentScope.js';
 export async function setProductionTypeState(db,content,type,state){
  const typedContent={...content,es_editorial:Boolean(content.es_editorial||content.articulo_origen_id)},states={...productionStatesByType(typedContent),[type]:state};
  const overall=aggregateProductionState(states);
@@ -11,5 +12,8 @@ export async function resolveInvalidMaterialState(db,content,invalidRestored=fal
  if(invalidRestored){await setProductionTypeState(db,content,'anuncios','Material inválido');return;}
  const rows=(await db.query(`SELECT material_valido,validacion_produccion FROM produccion_materiales WHERE id_contenido=$1 AND tipo='anuncios' AND NOT es_version_acabada AND eliminado_at IS NULL`,[content.id_contenido])).rows;
  const current=rows.filter(row=>row.material_valido!==false);
- await setProductionTypeState(db,content,'anuncios',current.length?(current.every(row=>row.validacion_produccion==='ok produccion')?'Material OK - pendiente de publicar':'Pendiente de gestionar Charly'):(rows.length?'Material inválido':'Contratado pendiente de recibir'));
+  // A magazine's source-material review does not replace its final PDF and placement.
+  const reviewed=current.length&&current.every(row=>row.validacion_produccion==='ok produccion');
+  const ready=reviewed&&(!await isMagazineProduction(db,content.id_contenido)||productionStatesByType(content).anuncios==='Material OK - pendiente de publicar');
+  await setProductionTypeState(db,content,'anuncios',current.length?(ready?'Material OK - pendiente de publicar':'Pendiente de gestionar Charly'):(rows.length?'Material inválido':'Contratado pendiente de recibir'));
 }

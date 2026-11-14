@@ -16,6 +16,7 @@ export async function changeProductionMaterial(contentId,data,transactionDb=null
   if(data.accion==='eliminar'){
    if(data.confirmado!==true)fail('Confirma que quieres eliminar el material.');
    if(material.eliminado_at)fail('El material ya está en la papelera.',409);
+   if(material.es_version_acabada&&(await db.query('SELECT 1 FROM produccion_maqueta_contenidos WHERE id_material=$1 LIMIT 1',[material.id_material])).rowCount)fail('Este PDF se utiliza en una maqueta. Sustitúyelo allí antes de enviarlo a la papelera.',409);
    if((material.id_contenido&&material.id_contenido!==contentId)||(await db.query("SELECT 1 FROM produccion_contenidos WHERE id_contenido<>$1 AND array_ids_materiales ? $2 LIMIT 1",[contentId,material.id_material])).rowCount)fail('El material está compartido con otro contenido; no se puede eliminar desde esta ficha.',409);
    await db.query("UPDATE produccion_materiales SET id_contenido=coalesce(id_contenido,$2),eliminado_at=clock_timestamp(),updated_at=GREATEST(clock_timestamp(),updated_at+interval '1 millisecond') WHERE id_material=$1",[material.id_material,contentId]);
    await db.query("UPDATE produccion_contenidos SET array_ids_materiales=coalesce(array_ids_materiales,'[]'::jsonb)-$2,updated_at=clock_timestamp() WHERE id_contenido=$1",[contentId,material.id_material]);

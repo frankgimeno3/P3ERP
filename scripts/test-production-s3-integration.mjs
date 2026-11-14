@@ -9,9 +9,11 @@ import {addProductionMaterials} from '../server/features/produccion/GestionesPro
 import {changeProductionMaterial} from '../server/features/produccion/ProductionMaterialTrash.js';
 import {productionMaterialAction} from '../server/features/produccion/ProductionMaterialActions.js';
 import {getRepositoryMaterials} from '../server/features/produccion/ProductionRepository.js';
+import {PDFDocument} from 'pdf-lib';
 if(!process.argv.includes('--live-s3'))throw Error('Esta prueba requiere --live-s3; crea y elimina únicamente sus objetos temporales.');
 env.loadEnvConfig(process.cwd());
-const pool=getPgPool(),db=await pool.connect(),id='PRUEBA-S3-'+randomUUID(),objects=[],body=Buffer.from('%PDF-1.4\n% PRUEBA TEMPORAL P3ERP\n'),requestId=randomUUID();
+const pdf=await PDFDocument.create();pdf.addPage();
+const pool=getPgPool(),db=await pool.connect(),id='PRUEBA-S3-'+randomUUID(),objects=[],body=Buffer.from(await pdf.save()),requestId=randomUUID();
 try{await withUserEventContext({enabled:true,actorId:'test-produccion-s3',actorName:'Prueba de materiales S3',requestId,method:'POST',route:'maintenance/test-production-s3',ip:null,ipSource:'prueba'},async()=>{
  try{
   await db.query('BEGIN');

@@ -233,6 +233,16 @@ Constraints:
 Indexes:
 - contactos_db_id_cuenta_idx: CREATE INDEX contactos_db_id_cuenta_idx ON public.comercial_contactos USING btree (id_cuenta)
 
+### Maquetas de fase 6
+
+Migración `20261114_0001_magazine_layouts.sql`: `produccion_maquetas` identifica cada soporte (`impresa`, `digital`) por `(id_revista,soporte)`, con estado `pendiente/publicada`, total par de páginas físicas y versión optimista. `produccion_maqueta_contenidos` guarda por contenido/tipo y soporte la sección, posición inicial, páginas y material PDF final elegido. Ambas tablas tienen auditoría antes de su primera escritura; sus FK conservan los cambios de identificador. No sustituyen el planillo previo ni sus asignaciones históricas.
+
+El despliegue prepara primero el esquema con `scripts/migrate-magazine-layouts.mjs` y activa el guardado estricto con `--activate-pdf-gate` tras publicar la nueva interfaz/API (`20261114_0002_magazine_pdf_gate.sql`), para no bloquear temporalmente a los clientes anteriores.
+
+`produccion_contenidos.maquetacion_produccion` conserva la preparación por entrega (artículo/anuncio): `paginas`, `posicion`, `seccion`, `id_material`. `produccion_materiales.pdf_paginas` es el número comprobado al leer el PDF final. El nuevo paso a fase 6 exige esa preparación completa y la misma extensión que el PDF; un trigger impide omitirla desde otras rutas. Las fases históricas existentes no se reescriben. Un material utilizado en una maqueta se sustituye allí antes de enviarlo a la papelera.
+
+La posición −1 es portada, 0 interior y los positivos son páginas numeradas. La página física es posición + 2: la página numerada 1 ocupa la tercera posición física. La portada queda sola a la derecha y la última página sola a la izquierda. Las descargas devuelven un manifiesto autorizado y versionado para unir los PDF originales en el navegador, sin rasterizarlos ni enviar el PDF conjunto a través de la función del servidor. Los huecos reales producen páginas en blanco; la celda visual anterior a portada no es una página. Las maquetas publicadas fijan sus asignaciones y deben volver a pendiente para editarse.
+
 ### produccion_planillos_previos
 
 Planillo previo editable por revista, migración `20261005_0001_preliminary_flatplans.sql`. `id_revista text` es clave primaria y referencia `servicios_revistas`. `plan jsonb` contiene posiciones físicas, bloques indivisibles, sus datos de origen y contenidos retirados. `version integer` protege frente a ediciones simultáneas; `updated_at timestamptz` registra el guardado. La posición 0 es portada, la 1 interior portada y la 2 corresponde a página impresa 1; la numeración visible es Portada, Interior portada, 1, 2, 3... No existe contraportada y solo la portada permanece fija al inicio, el total es par y los bloques son consecutivos. No altera el planillo definitivo ni los registros originales de producción o redacción.

@@ -1,7 +1,7 @@
 'use client';
 import {validateIntakeFiles} from '@/app/lib/productionManagement';
 export type ProductionUpload = {id:string;file:File;nombre_material:string;descripcion:string};
-export const uploadDescriptors=(files:ProductionUpload[])=>files.map(row=>({filename:row.file.name,size:row.file.size,contentType:row.file.type||(/\.zip$/i.test(row.file.name)?'application/zip':'application/octet-stream'),nombre_material:row.nombre_material.trim(),descripcion:row.descripcion.trim(),webkitRelativePath:row.file.webkitRelativePath||''}));
+export const uploadDescriptors=(files:ProductionUpload[])=>files.map(row=>({filename:row.file.name,size:row.file.size,contentType:row.file.type||(/\.zip$/i.test(row.file.name)?'application/zip':/\.pdf$/i.test(row.file.name)?'application/pdf':'application/octet-stream'),nombre_material:row.nombre_material.trim(),descripcion:row.descripcion.trim(),webkitRelativePath:row.file.webkitRelativePath||''}));
 export default function ProductionFilePicker({files,onChange,onError,disabled=false,single=false,zipOnly=false}:{files:ProductionUpload[];onChange:(files:ProductionUpload[])=>void;onError:(message:string)=>void;disabled?:boolean;single?:boolean;zipOnly?:boolean}) {
  const add=(selected:File[],directory=false)=>{
   if(disabled)return;

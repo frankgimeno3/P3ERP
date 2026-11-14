@@ -25,7 +25,7 @@ const api={get:async(url,config)=>({data:url.includes('/para-contenido/')?magazi
 global.fetch=async()=>({ok:true});
 function load(file){
  if(cache.has(file))return cache.get(file);const m={exports:{}};
- const code=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{jsx:ts.JsxEmit.ReactJSX,module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true}}).outputText;
+ const code=ts.transpileModule(fs.readFileSync(file,'utf8').replaceAll('import.meta.url',JSON.stringify('https://test.invalid/module.js')),{compilerOptions:{jsx:ts.JsxEmit.ReactJSX,module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true}}).outputText;
  new Function('require','module','exports',code)(id=>{
   if(id==='next/navigation')return {useRouter:()=>({push:url=>navigation.push(url)}),useParams:()=>({id:'layout',id_revista:'rev0'})};
   if(id==='next/link')return {__esModule:true,default:({children,...props})=>React.createElement('a',props,children)};
@@ -59,7 +59,7 @@ const rowNames=()=>document.querySelector('tbody').textContent;
  assert.equal(canonicalProductionPath('/dashboard/produccion/gestion/revistas/rev0/contenidos'),'/dashboard/produccion/gestion-contenidos/revista/rev0');
  assert.equal(canonicalProductionPath('/dashboard/mediateca'),'/dashboard/direccion/mediateca');
  await render('app/dashboard/produccion/gestion-contenidos/revista/page.tsx');
- assert(!document.querySelector('[aria-label="Contenidos de revista sin asignar"]'));assert.equal(document.querySelector('[aria-label="Asignación de revista"] button').textContent,'Contenidos revista pendientes publicar');assert.equal(document.querySelector('[aria-label="Asignación de revista"] button').getAttribute('aria-selected'),'true');assert.equal(document.querySelectorAll('[role=tab]').length,9);assert.deepEqual([...document.querySelectorAll('header button')].map(n=>n.textContent),['Agregar contenidos sin contrato','Agregar contenido asociado a contrato']);assert(!document.querySelector('header a'));
+ assert(!document.querySelector('[aria-label="Contenidos de revista sin asignar"]'));assert.equal(document.querySelector('[aria-label="Asignación de revista"] button').textContent,'Contenidos para revista pendientes publicar');assert.equal(document.querySelector('[aria-label="Asignación de revista"] button').getAttribute('aria-selected'),'true');assert.equal(document.querySelectorAll('[role=tab]').length,9);assert.deepEqual([...document.querySelectorAll('header button')].map(n=>n.textContent),['Agregar contenidos sin contrato','Agregar contenido asociado a contrato']);assert(!document.querySelector('header a'));
  const headerButtons=()=>[...document.querySelectorAll('header button')];assert.equal(headerButtons()[0].className,headerButtons()[1].className);assert(headerButtons().every(b=>b.classList.contains('bg-blue-950')&&b.classList.contains('text-white')&&b.classList.contains('hover:bg-blue-800')));
  assert(![...document.querySelectorAll('th')].some(n=>n.textContent==='Publicación'||n.textContent==='Edición'));assert([...document.querySelectorAll('th')].some(n=>n.textContent.startsWith('Anuncios pendientes')));
  const countFilter=document.querySelector('[aria-label="Filtrar Anuncios pendientes"]');assert(countFilter);
@@ -70,7 +70,7 @@ const rowNames=()=>document.querySelector('tbody').textContent;
  }
  await React.act(async()=>document.querySelector('tbody tr').dispatchEvent(new dom.window.KeyboardEvent('keydown',{key:'Enter',bubbles:true})));
  assert.equal(navigation.at(-1),'/dashboard/produccion/gestion-contenidos/revista/rev6');
- await click('Pendientes de asignar revista');
+ await click('Contenido para artículos pendiente de asignar a revista');
  const unassigned=document.querySelector('[aria-label="Contenidos de revista sin asignar"]');assert(unassigned.textContent.includes('Revista sin destino'));
  await click('Asignar revista');assert(document.querySelector('[role=dialog]'));
  const destination=document.querySelector('[aria-label="Publicación de destino"]');
