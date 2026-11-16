@@ -16,6 +16,7 @@ export function validateLayoutEntry(entry) {
   if (!String(entry.seccion || '').trim() || String(entry.seccion).trim().length > 120) throw Error('Indica una sección de hasta 120 caracteres.');
   if (!String(entry.id_material || '').trim()) throw Error('Selecciona el PDF final del contenido.');
   if (Number(entry.posicion)+Number(entry.paginas)>999) throw Error('La maqueta admite como máximo 1000 páginas físicas.');
+  if ([4,6].some(page=>page>=Number(entry.posicion)&&page<Number(entry.posicion)+Number(entry.paginas))) throw Error('Las páginas 4 y 6 están reservadas para Índice y Sumario.');
   return {...entry, posicion:Number(entry.posicion), paginas:Number(entry.paginas), seccion:String(entry.seccion).trim(), id_material:String(entry.id_material).trim()};
 }
 export function buildMagazineLayout(contents, entries, support, requestedTotal = 0, published = false) {
@@ -48,7 +49,7 @@ export function buildMagazineLayout(contents, entries, support, requestedTotal =
   for (let index=1;index<pages.length;index+=2) spreads.push([pages[index], pages[index+1] || null]);
   const sections = [];
   for (let index=0;index<pages.length;index++) {
-    const name=pages[index].item?.seccion || 'Sin contenido'; const last=sections.at(-1);
+    const name=pages[index].posicion===4?'Índice':pages[index].posicion===6?'Sumario':pages[index].item?.seccion || 'Sin contenido'; const last=sections.at(-1);
     if (last?.name===name) last.end=index+1; else sections.push({name,start:index,end:index+1});
   }
   const sectionOffset = index => index===0?0:index===total?total+2:index+1;

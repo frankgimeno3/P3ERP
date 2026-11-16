@@ -179,7 +179,8 @@
       "A la izquierda de Maqueta, las bandas de sección indican sus páginas inicial y final junto a las miniaturas enfrentadas. La portada ocupa la primera celda derecha; la celda izquierda es solo un espacio visual. La última fila termina en una página izquierda. −1 es portada, 0 interior de portada y 1 la primera página numerada, que es la tercera página física. El total de páginas físicas es par.",
       "A la derecha aparecen tarjetas ordenadas por página, con nombre, empresa, tipo, sección y Parte X/Y. Los filtros están juntos en una tarjeta inicialmente cerrada. Configurar contenido o Editar posición / PDF ajusta su PDF, extensión, sección y posición para esta revista y soporte. No se permiten nuevas posiciones coincidentes; los contenidos históricos incompletos se muestran para poder completarlos.",
       "Descargar PDF del contenido conserva el archivo original. Descargar todos (PDF) genera un único PDF con las páginas originales en el orden de la miniatura y mantiene los huecos reales como páginas en blanco; no incluye la celda visual anterior a la portada. Si falta un PDF, hay posiciones coincidentes, cambia la maqueta o falla una descarga, no genera un archivo parcial. El lote conjunto admite hasta 200 MB.",
-      "Páginas ocupadas es la extensión del contenido; Posición es su página inicial. Son datos distintos y editables en la ficha. Publicados y anulados se consultan en Almacenamiento. Pulsa una fila para abrir la ficha; los filtros se agrupan en una tarjeta cerrada."
+      "Páginas ocupadas es la extensión del contenido; Posición es su página inicial. Son datos distintos y editables en la ficha. Publicados y anulados se consultan en Almacenamiento. Pulsa una fila para abrir la ficha; los filtros se agrupan en una tarjeta cerrada.",
+      "Charly comparte las asignaciones de sección, página y extensión con la ficha de producción y los valores iniciales de la maqueta final."
     ]
   },
   "/dashboard/produccion/repositorio": {
@@ -1041,6 +1042,36 @@
       "La fecha y agente de creación y de finalización se registran en el servidor. Completar registra al autor real; reabrir retira la finalización vigente, conservando su historial de auditoría. Los datos históricos desconocidos se muestran sin registrar.",
       "El creador de una tarea propia o un gestor puede asociarla a una cuenta mediante el selector con búsqueda. Los gestores pueden editar el encargo y los responsables. Las tareas de cuentas conservan su asociación y se editan también desde la cuenta.",
       "El midnav indica MIS TAREAS. Las rutas antiguas /tareas redirigen a /mis-tareas. Los filtros se agrupan en una tarjeta inicialmente cerrada."
+    ]
+  },
+  "/dashboard/produccion/charly": {
+    "summary": "Gestión Charly por carpetas de revista, edición y soporte.",
+    "steps": [
+      "Filtra por revista y abre una carpeta de número pendiente. VIDRIO LATAM, VENTANAS LATAM y HUECO abren Digital directamente; las demás permiten Impresa o Digital.",
+      "Anuncios y Artículos muestran tarjetas de fase 3. Los anuncios pendientes de revisión se destacan en ámbar. Primero se ordenan por página asignada y, sin preferencia, por empresa alfabéticamente.",
+      "La planificación propone página y sección cuando faltan; son provisionales hasta guardar la asignación. Las páginas 4 (Índice) y 6 (Sumario) no están disponibles.",
+      "Los cambios de sección, página y extensión se guardan en la maquetación compartida del contenido, con control de versión y auditoría. Materiales y gestión abre su ficha habitual. Actualizar y volver a enfocar recargan los datos.",
+      "Maqueta muestra la planificación y la maqueta final compartida con fase 6, limitada al soporte elegido. Las asignaciones finales de revista y soporte tienen prioridad sobre las propuestas."
+    ]
+  },
+  "/dashboard/produccion/charly/[edicion]": {
+    "summary": "Gestión Charly por carpetas de revista, edición y soporte.",
+    "steps": [
+      "Filtra por revista y abre una carpeta de número pendiente. VIDRIO LATAM, VENTANAS LATAM y HUECO abren Digital directamente; las demás permiten Impresa o Digital.",
+      "Anuncios y Artículos muestran tarjetas de fase 3. Los anuncios pendientes de revisión se destacan en ámbar. Primero se ordenan por página asignada y, sin preferencia, por empresa alfabéticamente.",
+      "La planificación propone página y sección cuando faltan; son provisionales hasta guardar la asignación. Las páginas 4 (Índice) y 6 (Sumario) no están disponibles.",
+      "Los cambios de sección, página y extensión se guardan en la maquetación compartida del contenido, con control de versión y auditoría. Materiales y gestión abre su ficha habitual. Actualizar y volver a enfocar recargan los datos.",
+      "Maqueta muestra la planificación y la maqueta final compartida con fase 6, limitada al soporte elegido. Las asignaciones finales de revista y soporte tienen prioridad sobre las propuestas."
+    ]
+  },
+  "/dashboard/produccion/charly/[edicion]/[soporte]": {
+    "summary": "Gestión Charly por carpetas de revista, edición y soporte.",
+    "steps": [
+      "Filtra por revista y abre una carpeta de número pendiente. VIDRIO LATAM, VENTANAS LATAM y HUECO abren Digital directamente; las demás permiten Impresa o Digital.",
+      "Anuncios y Artículos muestran tarjetas de fase 3. Los anuncios pendientes de revisión se destacan en ámbar. Primero se ordenan por página asignada y, sin preferencia, por empresa alfabéticamente.",
+      "La planificación propone página y sección cuando faltan; son provisionales hasta guardar la asignación. Las páginas 4 (Índice) y 6 (Sumario) no están disponibles.",
+      "Los cambios de sección, página y extensión se guardan en la maquetación compartida del contenido, con control de versión y auditoría. Materiales y gestión abre su ficha habitual. Actualizar y volver a enfocar recargan los datos.",
+      "Maqueta muestra la planificación y la maqueta final compartida con fase 6, limitada al soporte elegido. Las asignaciones finales de revista y soporte tienen prioridad sobre las propuestas."
     ]
   }
 }

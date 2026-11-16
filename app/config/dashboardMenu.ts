@@ -42,6 +42,7 @@ export const dashboardMenu: DashboardMenuModule[] = [
     icon: "pencil",
     children: [
       page("Hoja de producción", "/dashboard/produccion/hoja_produccion"),
+      page("Charly", "/dashboard/produccion/charly"),
       group("gestion-contenidos", "Gestión contenidos", [
         page("Contenido revista", "/dashboard/produccion/gestion-contenidos/revista"),
         page("Otro contenido", "/dashboard/produccion/gestion-contenidos/otros"),

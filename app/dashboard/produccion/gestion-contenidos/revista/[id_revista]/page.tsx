@@ -26,7 +26,7 @@ export default function MagazineWorkflowPage(){
  const rows=subdivided.filter((row:any)=>stage==='todo'||row.tipo===selectedType).map((row:any)=>({...row,
   nombre_contenido:contentDisplayName(row),fase_nombre:productionPhaseName(row),formato:contentMagazineFormatLabel(row),
   tipo_nombre:row.tipo==='articulos'?'Artículo':'Anuncio',paginas_ocupadas:row.paginas_ocupadas??'Sin indicar',
-  posicion:row.posicion_revista??(row.paginas_definitivas?.length?Math.min(...row.paginas_definitivas):null),
+  posicion:row.maquetacion_produccion?.[row.tipo]?.posicion??row.posicion_revista??(row.paginas_definitivas?.length?Math.min(...row.paginas_definitivas):null),
   nombre_cuenta:row.nombre_empresa||row.cliente_hoja,nombre_agente:row.nombre_completo_agente||row.id_agente}));
  const changeStage=(value:string)=>{setStage(value);setSub(value==='correccion'?'gm':'3.1');setPublicationTab('contenidos');};
  const subs=stage==='maquetacion'?[{value:'3.1',label:'3.1 · Contenido no descargado'},{value:'3.2',label:'3.2 · Pendiente enviar corrección'}]:[{value:'gm',label:'Corrección GM'},{value:'otros',label:'Corrección otros'}];

@@ -444,6 +444,10 @@ export async function updateContenidoProduccion(idContenido, data = {}, transact
     for(const [type,value] of Object.entries(input)) {
       if(!value||typeof value!=='object'||Array.isArray(value))throw Object.assign(new Error('Revisa los datos de maquetación.'),{statusCode:400});
       layout[type]={paginas:value.paginas??'',posicion:value.posicion??'',seccion:String(value.seccion||'').trim(),id_material:String(value.id_material||'').trim()};
+      const draft=layout[type];
+      if(draft.posicion!==''&&(!Number.isInteger(Number(draft.posicion))||Number(draft.posicion)<-1||Number(draft.posicion)>998))throw Object.assign(new Error('Indica una posición válida entre -1 y 998.'),{statusCode:400});
+      if(draft.paginas!==''&&(!Number.isInteger(Number(draft.paginas))||Number(draft.paginas)<1||Number(draft.paginas)>1000))throw Object.assign(new Error('Indica una extensión válida entre 1 y 1000 páginas.'),{statusCode:400});
+      if(draft.posicion!==''&&draft.paginas!==''&&[4,6].some(page=>page>=Number(draft.posicion)&&page<Number(draft.posicion)+Number(draft.paginas)))throw Object.assign(new Error('Las páginas 4 y 6 están reservadas para Índice y Sumario.'),{statusCode:400});
       if(layout[type].seccion.length>120||layout[type].id_material.length>200)throw Object.assign(new Error('Revisa la sección y el PDF final.'),{statusCode:400});
     }
   }

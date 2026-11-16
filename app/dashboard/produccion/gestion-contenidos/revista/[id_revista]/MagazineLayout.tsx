@@ -12,9 +12,9 @@ import PdfLayoutThumbnail from './PdfLayoutThumbnail';
 const button='rounded border border-blue-950 px-3 py-2 text-sm text-blue-950 enabled:cursor-pointer enabled:hover:bg-blue-50 disabled:cursor-default disabled:opacity-40';
 const rowHeight=232;
 function saveFile(blob:Blob,name:string) {const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=name.replace(/[\\/\x00-\x1f]/g,'_');document.body.appendChild(link);link.click();link.remove();window.setTimeout(()=>URL.revokeObjectURL(url),1000);}
-export default function MagazineLayout({magazineId}:{magazineId:string}) {
+export default function MagazineLayout({magazineId,fixedSupport}:{magazineId:string;fixedSupport?:string}) {
   const base=`/api/v1/produccion/gestiones-produccion/${encodeURIComponent(magazineId)}/maqueta`;
-  const [support,setSupport]=useState('impresa'),[states,setStates]=useState<Record<string,string>>({impresa:'pendiente',digital:'pendiente'});
+  const [support,setSupport]=useState(fixedSupport||'impresa'),[states,setStates]=useState<Record<string,string>>({impresa:'pendiente',digital:'pendiente'});
   const [data,setData]=useState<any>(null),[error,setError]=useState(''),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[downloading,setDownloading]=useState(false),[progress,setProgress]=useState(''),[total,setTotal]=useState('8');
   const [modal,setModal]=useState<string|null>(null),[selected,setSelected]=useState<number|null>(null),[query,setQuery]=useState(''),[type,setType]=useState(''),[section,setSection]=useState('');
   const pdfs=useRef(new Map<string,Promise<any>>());
@@ -34,7 +34,7 @@ export default function MagazineLayout({magazineId}:{magazineId:string}) {
   const disabled=busy||downloading,editable=data?.estado!=='publicada';
   const cards=model?.pages.filter((page:any)=>{const item=page.item;if(!item)return false;return (!type||item.tipo===type)&&(!section||item.seccion===section)&&`${item.nombre} ${item.empresa}`.toLocaleLowerCase('es').includes(query.trim().toLocaleLowerCase('es'));})||[];
   return <div className="pt-4">
-    <ModuleTabs sub label="Soporte de la maqueta" value={support} disabled={disabled} onChange={setSupport} items={layoutSupports.map(value=>({value,label:`${value==='impresa'?'Impresa':'Digital'} - ${states[value]}`}))}/>
+    {!fixedSupport&&<ModuleTabs sub label="Soporte de la maqueta" value={support} disabled={disabled} onChange={setSupport} items={layoutSupports.map(value=>({value,label:`${value==='impresa'?'Impresa':'Digital'} - ${states[value]}`}))}/>}
     {error&&<p role="alert" className="my-4 rounded border border-red-200 bg-red-50 p-3 text-red-800">{error}</p>}
     {loading?<p role="status" className="py-6">Cargando maqueta…</p>:data&&model&&<>
       <div className="my-5 flex flex-wrap items-end justify-between gap-4"><div className="flex flex-wrap items-end gap-3">
@@ -51,7 +51,7 @@ export default function MagazineLayout({magazineId}:{magazineId:string}) {
           <div className="grid grid-cols-[minmax(90px,1fr)_minmax(0,340px)] items-start gap-3">
             <div aria-label="Secciones de la revista" className="relative" style={{height:model.spreads.length*rowHeight}}>{model.sections.map((run:any,index:number)=><div key={index} title={`${run.name}: ${run.from} — ${run.to}`} className={`absolute inset-x-0 flex flex-col justify-center overflow-hidden rounded border p-2 text-xs ${run.name==='Sin contenido'?'border-dashed border-slate-200 bg-slate-50 text-slate-500':'border-blue-200 bg-blue-50 text-blue-950'}`} style={{top:run.top*rowHeight,height:Math.max(0,run.height*rowHeight-6)}}><strong className="break-words">{run.name}</strong><span className="mt-1 text-[10px]">{run.from}{run.from!==run.to?` — ${run.to}`:''}</span></div>)}</div>
             <div>{model.spreads.map((spread:any[],index:number)=><div key={index} className="grid grid-cols-2 gap-2 pb-2" style={{height:rowHeight}}>{spread.map((page:any,column:number)=>page?<button type="button" key={page.posicion} id={`maqueta-${support}-${page.posicion}`} aria-label={`${page.label}, página física ${page.fisica}${page.item?`, ${page.item.nombre}, parte ${page.parte}/${page.item.paginas}`:', sin contenido'}`} onClick={()=>setSelected(page.posicion)} className={`min-w-0 cursor-pointer overflow-hidden rounded border p-1 text-left transition hover:border-blue-800 hover:bg-blue-50 ${selected===page.posicion?'border-blue-900 ring-2 ring-blue-300':page.item?'border-slate-300 bg-white':'border-dashed border-slate-300 bg-slate-50'}`}>
-              {page.item?<PdfLayoutThumbnail material={page.item.id_material} page={page.parte} loadPdf={loadPdf}/>:<span className="flex h-[178px] items-center justify-center text-xs text-slate-400">Sin contenido</span>}
+              {page.item?<PdfLayoutThumbnail material={page.item.id_material} page={page.parte} loadPdf={loadPdf}/>:<span className="flex h-[178px] items-center justify-center text-xs text-slate-400">{page.posicion===4?'Índice · No disponible':page.posicion===6?'Sumario · No disponible':'Sin contenido'}</span>}
               <span className="mt-1 block truncate text-[10px] font-medium">{page.label}</span>{page.item&&<span className="block truncate text-[10px] text-slate-500">{page.parte}/{page.item.paginas} · {page.item.nombre}</span>}
             </button>:<div key={`blank-${column}`} aria-hidden="true"/>)}</div>)}</div>
           </div>
