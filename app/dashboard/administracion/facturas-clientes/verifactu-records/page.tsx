@@ -6,7 +6,6 @@ import TableFilterInput from "@/app/components/TableFilterInput";
 import TableFilters from '@/app/components/TableFilters';
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import MiddleNav from "@/app/general_components/componentes_recurrentes/MiddleNav";
 import { FacturaService } from "@/app/service/FacturaService";
 
@@ -31,7 +30,7 @@ export default function VerifactuRecordsPage() {
           {complete ? "Pasar a vista simplificada" : "Ampliar a datos completos"}
         </button>
       </div>
-      <div className="mb-4 flex justify-end"><Link href="/dashboard/administracion/facturas-clientes" className="cursor-pointer rounded border border-blue-950 px-4 py-2 text-sm text-blue-950 transition hover:bg-blue-50">Volver a facturas</Link></div>
+      <div className="mb-4 flex justify-end"></div>
       {error && <p className="mb-4 rounded bg-red-50 p-3 text-red-700">{error}</p>}
       <div className="overflow-x-auto rounded-xl bg-white shadow"><TableFilters>{visibleColumns.map(column => <label key={column} className="block text-xs font-extralight text-gray-600"><span className="mb-1 block">{column}</span><TableFilterInput label={column} field={column} value={filters[column] || ""} className="w-full min-w-40 rounded border border-blue-200 px-2 py-1.5 outline-none transition focus:border-blue-950" placeholder={`Filtrar ${column}`} onChange={nextValue => setFilters(current => ({...current, [column]: nextValue}))} /></label>)}</TableFilters><SortableTable className="min-w-full text-xs">
         <thead className="bg-blue-950 text-white"><tr>{visibleColumns.map(column => <th key={column} className="p-3 text-left font-medium">{column}</th>)}</tr>

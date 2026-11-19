@@ -35,7 +35,7 @@ export default function ImportacionMasivaPage() {
   };
   const resetPreview=()=>{setPreview(null);setChoices({});setError('');};
   return <div className="min-h-screen bg-gray-100 text-gray-700"><MiddleNav tituloprincipal="Importación masiva"/><main className="mx-auto max-w-6xl space-y-5 p-6">
-    <Link href="/dashboard/administracion/control-administrativo" className="inline-block cursor-pointer text-blue-900 hover:underline">Volver a Órdenes</Link>
+
     <ol className="grid grid-cols-2 gap-2 md:grid-cols-6">{phases.map((name,index)=><li key={name} aria-current={phase===index?'step':undefined} className={`rounded p-3 text-sm ${phase===index?'bg-blue-950 text-white':'bg-white'}`}>{index+1}. {name}</li>)}</ol>
     {error&&<p role="alert" className="rounded bg-red-50 p-3 text-red-700">{error}</p>}
     {result?<section className="rounded bg-green-50 p-6"><h2 className="text-xl font-semibold">Importación completada</h2><p>{result.summary.create} creados · {result.summary.update} actualizados · {result.summary.unchanged} sin cambios · {result.summary.skip} omitidos.</p><ul className="mt-4 space-y-2">{result.ids.slice(0,30).map((id:string)=><li key={id}><Link className="cursor-pointer text-blue-900 hover:underline" href={type==='contratos'?`/dashboard/comercial/contratos/${encodeURIComponent(id)}`:type==='facturas'?`/dashboard/administracion/facturas-clientes/${encodeURIComponent(id)}`:`/dashboard/administracion/control-administrativo/${encodeURIComponent(id)}`}>{id}</Link></li>)}</ul><button className={`${button} mt-4`} onClick={()=>{setResult(null);setPhase(0);setFile(null);resetPreview();}}>Nueva importación</button></section>:<section className="space-y-5 rounded bg-white p-6">

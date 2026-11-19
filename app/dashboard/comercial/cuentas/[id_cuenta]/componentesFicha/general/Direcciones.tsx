@@ -21,10 +21,6 @@ interface Direccion {
 
 interface DireccionesProps {
   direcciones: Direccion[];
-  receptorRevista: boolean;
-  suscriptorRevista: boolean;
-  onReceptorRevistaChange: (value: boolean) => void;
-  onSuscriptorRevistaChange: (value: boolean) => void;
   onChange: (updatedDirecciones: Direccion[]) => void;
 }
 
@@ -39,12 +35,14 @@ const columns: { key: keyof Direccion; label: string }[] = [
   { key: 'descripcion_direccion', label: 'Descripción' },
 ];
 
-function YesNoToggle({ value, onChange }: { value: boolean; onChange: (value: boolean) => void }) {
+export function YesNoToggle({ value, onChange }: { value: boolean; onChange: (value: boolean) => void }) {
   return (
     <button
       type="button"
+      role="switch"
+      aria-checked={value}
       onClick={() => onChange(!value)}
-      className={`flex w-32 items-center rounded-full border p-1 text-xs font-medium transition ${
+      className={`flex w-32 cursor-pointer items-center rounded-full border p-1 text-xs font-medium transition hover:ring-2 hover:ring-blue-200 ${
         value ? 'border-blue-950 bg-blue-950 text-white' : 'border-gray-300 bg-gray-100 text-gray-600'
       }`}
     >
@@ -56,10 +54,6 @@ function YesNoToggle({ value, onChange }: { value: boolean; onChange: (value: bo
 
 const Direcciones: FC<DireccionesProps> = ({
   direcciones: initialDirecciones,
-  receptorRevista,
-  suscriptorRevista,
-  onReceptorRevistaChange,
-  onSuscriptorRevistaChange,
   onChange,
 }) => {
   const [direcciones, setDirecciones] = useState(initialDirecciones);
@@ -108,17 +102,6 @@ const Direcciones: FC<DireccionesProps> = ({
         >
           +
         </button>
-      </div>
-
-      <div className="grid gap-4 rounded bg-gray-50 p-4 text-sm md:grid-cols-2">
-        <div className="flex items-center justify-between gap-4">
-          <span className="font-medium">Receptor Revista</span>
-          <YesNoToggle value={receptorRevista} onChange={onReceptorRevistaChange} />
-        </div>
-        <div className="flex items-center justify-between gap-4">
-          <span className="font-medium">Suscriptor revista?</span>
-          <YesNoToggle value={suscriptorRevista} onChange={onSuscriptorRevistaChange} />
-        </div>
       </div>
 
       {direcciones.length === 0 && (

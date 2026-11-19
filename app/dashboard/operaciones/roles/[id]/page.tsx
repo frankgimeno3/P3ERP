@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { RoleService } from "@/app/service/RoleService";
 import { AgenteService } from "@/app/service/AgenteService";
 
@@ -83,7 +83,7 @@ function canModifyRole(currentRole: string, targetRole: string) {
 
 export default function RoleAccessPage() {
   const params = useParams<{ id: string }>();
-  const router = useRouter();
+
   const [role, setRole] = useState<any | null>(null);
   const [permissions, setPermissions] = useState<string[]>([]);
   const [currentRole, setCurrentRole] = useState("");
@@ -189,9 +189,7 @@ export default function RoleAccessPage() {
 
   return (
     <div className="min-h-screen bg-gray-100 p-6 px-12 text-gray-800">
-      <button type="button" onClick={() => router.push('/dashboard/operaciones/agentes/roles')} className="mb-4 rounded bg-white px-4 py-2 text-sm text-blue-950 shadow-sm hover:bg-gray-50">
-        Volver a roles
-      </button>
+
 
       <div className="mb-5 flex items-center justify-between">
         <div>

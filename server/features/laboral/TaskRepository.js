@@ -15,7 +15,7 @@ export async function createOwnTask(actor,body){
   if(!Array.isArray(selected)||selected.length>100||selected.some(id=>typeof id!=='string'||!id.trim()))throw Object.assign(new Error('Selecciona agentes válidos.'),{status:400});
   const additional=[...new Set(selected)].filter(id=>id!==actor.id);
   if(additional.length&&(await getPgPool().query("SELECT 1 FROM agentes_db WHERE id_agente=ANY($1::text[]) AND COALESCE(is_empleado_account,true) AND estado_agente='activo'",[additional])).rowCount!==additional.length)throw Object.assign(new Error('Selecciona agentes empleados activos válidos.'),{status:400});
-  return saveAgentTask(null,{nombre:body.nombre,descripcion:body.descripcion,id_cuenta:body.id_cuenta,fecha_inicio:body.fecha_inicio,agente:actor.id,agentes_asociados:[actor.id,...additional],estado:'pendiente'});
+  return saveAgentTask(null,{nombre:body.nombre,descripcion:body.descripcion,id_cuenta:body.id_cuenta,id_campana:body.id_campana,fecha_inicio:body.fecha_inicio,agente:actor.id,agentes_asociados:[actor.id,...additional],estado:'pendiente'});
 }
 export async function readTasks(actor,{id,employee}={}) {
   requireTaskIdentity(actor);
@@ -77,8 +77,11 @@ export async function writeTask(actor,id,body){
   }
   const account=manager||old.agente_creacion===actor.id?(body.id_cuenta??old.id_cuenta):old.id_cuenta;
   if(account&&!(await db.query('SELECT 1 FROM comercial_cuentas WHERE id_cuenta=$1 FOR KEY SHARE',[account])).rowCount)fail('Cuenta no encontrada.');
-  const result=(await db.query(`UPDATE laboral_tareas_empleado SET nombre=$2,descripcion=$3,estado=$4,comentarios_agente=$5,agente=$6,agentes_asociados=$7::jsonb,id_cuenta=$8,
-   updated_at=GREATEST(clock_timestamp(),updated_at+interval '1 millisecond') WHERE id=$1 RETURNING *`,[id,name,description,state,comments,ids[0]||null,JSON.stringify(ids),account||null])).rows[0];
+  const canAssociateCampaign = manager || old.agente_creacion === actor.id;
+  const campaign = canAssociateCampaign && Object.hasOwn(body, 'id_campana') ? body.id_campana : old.id_campana;
+  if(campaign&&!(await db.query('SELECT 1 FROM comercial_campanas WHERE id=$1 FOR KEY SHARE',[campaign])).rowCount)fail('Selecciona una campaña comercial válida.');
+  const result=(await db.query(`UPDATE laboral_tareas_empleado SET nombre=$2,descripcion=$3,estado=$4,comentarios_agente=$5,agente=$6,agentes_asociados=$7::jsonb,id_cuenta=$8,id_campana=$9,
+   updated_at=GREATEST(clock_timestamp(),updated_at+interval '1 millisecond') WHERE id=$1 RETURNING *`,[id,name,description,state,comments,ids[0]||null,JSON.stringify(ids),account||null,campaign||null])).rows[0];
   await db.query('COMMIT');return {...result,puede_editar:manager,puede_cambiar_estado:true,puede_asociar_cuenta:manager||old.agente_creacion===actor.id};
  }catch(e){await db.query('ROLLBACK');throw e;}finally{db.release();}
 }

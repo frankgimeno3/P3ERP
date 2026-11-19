@@ -1,6 +1,5 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 type Linea = {
   id_linea_banco: string;
   banco: string;
@@ -9,8 +8,7 @@ type Linea = {
   importe: number;
 };
 export default function DuplicadosPage() {
-  const router = useRouter(),
-    [groups, setGroups] = useState<Linea[][]>([]),
+  const [groups, setGroups] = useState<Linea[][]>([]),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   const load = useCallback(
@@ -62,15 +60,7 @@ export default function DuplicadosPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() =>
-              router.push("/dashboard/contabilidad/extractos/conciliacion")
-            }
-            className="cursor-pointer rounded border bg-white px-4 py-2 transition hover:bg-gray-50"
-          >
-            ← Volver
-          </button>
+
           <button
             type="button"
             disabled={!groups.length || busy}

@@ -2,7 +2,7 @@
 import SearchableSelect from "@/app/components/SearchableSelect";
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { BancoService } from '@/app/service/BancoService';
 import { ProveedorService } from '@/app/service/ProveedorService';
 import PayrollBankReview from '../PayrollBankReview';
@@ -19,7 +19,7 @@ const money = (value: number) => new Intl.NumberFormat('es-ES', { style: 'curren
 
 export default function LineaBancoDetallePage() {
   const { id_linea_banco } = useParams<{ id_linea_banco: string }>();
-  const router = useRouter();
+
   const [linea, setLinea] = useState<LineaBanco | null>(null), [proveedores, setProveedores] = useState<Proveedor[]>([]);
   const [entityType,setEntityType] = useState('proveedor');
   const [entities,setEntities] = useState<Array<{id:string;name:string}>>([]);
@@ -54,7 +54,7 @@ export default function LineaBancoDetallePage() {
 
   return <div className="min-h-screen bg-gray-100 px-12 py-8 text-gray-800">
     <div className="mx-auto max-w-5xl">
-      <div className="mb-6 flex items-center justify-between"><div><h1 className="text-2xl font-semibold">Detalle del movimiento</h1><p className="mt-1 text-sm text-gray-600">{linea.concepto}</p></div><button type="button" onClick={() => router.push('/dashboard/contabilidad')} className="cursor-pointer rounded border border-gray-300 bg-white px-4 py-2 text-sm transition hover:bg-gray-50 hover:shadow-sm">← Volver a tesorería</button></div>
+      <div className="mb-6 flex items-center justify-between"><div><h1 className="text-2xl font-semibold">Detalle del movimiento</h1><p className="mt-1 text-sm text-gray-600">{linea.concepto}</p></div></div>
       {error && <p className="mb-4 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</p>}{message && <p className="mb-4 rounded border border-green-200 bg-green-50 p-3 text-sm text-green-700">{message}</p>}
       <div className={`rounded-lg border p-6 shadow-sm ${linea.estado_revision ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-white'}`}>
         <dl className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2 lg:grid-cols-3">

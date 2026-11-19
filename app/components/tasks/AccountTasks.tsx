@@ -1,4 +1,5 @@
 'use client';
+import TaskCampaignSelect from "./TaskCampaignSelect";
 import SortableTable from '@/app/components/SortableTable';
 
 import { useCallback, useEffect, useState } from 'react';
@@ -13,8 +14,8 @@ import TableColumnFilter from '@/app/components/TableColumnFilter';
 import { matchesTableFilter } from '@/app/lib/dateFilters';
 import { taskStates } from './TaskList';
 
-type Task = { id: string; nombre: string; tipo: string; descripcion: string; referencia: string; fecha_limite: string; estado: string; agentes: string[]; nombre_agente: string; updated_at: string; es_renovacion_anual?: boolean };
-const empty = () => ({ nombre: '', tipo: 'pedir_material_contratado', descripcion: '', referencia: '', fecha_limite: '', estado: 'pendiente', agentes: [] as string[] });
+type Task = { id: string; id_campana?: string; nombre: string; tipo: string; descripcion: string; referencia: string; fecha_limite: string; estado: string; agentes: string[]; nombre_agente: string; updated_at: string; es_renovacion_anual?: boolean };
+const empty = () => ({ id_campana: '', nombre: '', tipo: 'pedir_material_contratado', descripcion: '', referencia: '', fecha_limite: '', estado: 'pendiente', agentes: [] as string[] });
 const control = 'mt-1 block w-full rounded border bg-white p-2 text-sm outline-none focus:border-blue-950 disabled:bg-gray-100';
 const button = 'rounded border px-3 py-2 text-sm enabled:cursor-pointer enabled:hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50';
 const columns = [['nombre','Tarea'],['tipo','Tipo'],['estado','Estado'],['nombre_agente','Agentes'],['fecha_limite','Fecha límite'],['referencia','Campaña / contrato']] as const;
@@ -51,7 +52,7 @@ export default function AccountTasks({ accountId }: { accountId: string }) {
     return () => window.removeEventListener('keydown', close);
   }, [open]);
   const begin = (task?: Task) => {
-    setEditing(task || null); setForm(task ? { nombre: task.nombre, tipo: task.tipo, descripcion: task.descripcion, referencia: task.referencia, fecha_limite: task.fecha_limite || '', estado: task.estado, agentes: task.agentes } : empty());
+    setEditing(task || null); setForm(task ? { id_campana: task.id_campana || '', nombre: task.nombre, tipo: task.tipo, descripcion: task.descripcion, referencia: task.referencia, fecha_limite: task.fecha_limite || '', estado: task.estado, agentes: task.agentes } : empty());
     setSelection(''); setFormError(''); setOpen(true);
   };
   const save = async (event: React.FormEvent) => {
@@ -81,6 +82,7 @@ export default function AccountTasks({ accountId }: { accountId: string }) {
         <label className="block text-sm">Detalle de la acción<textarea maxLength={10000} value={form.descripcion} onChange={event => setForm({ ...form, descripcion: event.target.value })} className={`${control} min-h-28`} /></label>
         <DatePartsInput label="Fecha límite (opcional)" value={form.fecha_limite} onChange={value => setForm({ ...form, fecha_limite: value })} disabled={saving} />
         <div className="space-y-2"><p className="text-sm font-medium">{annual ? 'Agente de seguimiento · opcional' : 'Agentes responsables · al menos uno'}</p><SearchableSelect label="Añadir agente responsable" value={selection} onChange={id => { setSelection(''); if (id && !form.agentes.includes(id)) setForm({ ...form, agentes: annual ? [id] : [...form.agentes,id] }); }} disabled={saving} options={agents.filter(agent => !form.agentes.includes(agent.id_agente)).map(agent => ({ value: agent.id_agente, label: agent.nombre_completo_agente || agent.nombre_agente || agent.id_agente }))} /><div className="flex flex-wrap gap-2">{form.agentes.map(id => <span key={id} className="inline-flex items-center gap-2 rounded border bg-blue-50 px-3 py-1 text-sm">{agents.find(agent => agent.id_agente === id)?.nombre_completo_agente || editing?.nombre_agente && editing.agentes.length === 1 && editing.nombre_agente || id}<button type="button" aria-label={`Quitar agente ${id}`} disabled={saving} onClick={() => setForm({ ...form, agentes: form.agentes.filter(agent => agent !== id) })} className="rounded px-1 text-lg enabled:cursor-pointer enabled:hover:bg-blue-100 disabled:cursor-not-allowed">×</button></span>)}</div>{!form.agentes.length && <p className="text-xs text-gray-500">{annual ? 'Sin agente asignado' : 'Selecciona una opción del desplegable para añadir el agente.'}</p>}</div>
+        <TaskCampaignSelect value={form.id_campana} onChange={id_campana => setForm({ ...form, id_campana })} disabled={saving} />
         <label className="block text-sm">Estado<select value={form.estado} onChange={event => setForm({ ...form, estado: event.target.value })} className={`${control} enabled:cursor-pointer enabled:hover:border-blue-950`}>{Object.entries(taskStates).map(([key,label]) => <option key={key} value={key}>{label}</option>)}</select></label>
       </fieldset>{formError && <p role="alert" className="text-red-700">{formError}</p>}<div className="flex justify-end"><button disabled={saving || !form.nombre.trim() || (!annual && !form.agentes.length)} className={`${button} bg-blue-950 text-white enabled:hover:bg-blue-900`}>{saving ? 'Guardando…' : 'Guardar tarea'}</button></div></form>
     </section></div>}

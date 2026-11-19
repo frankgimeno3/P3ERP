@@ -42,8 +42,9 @@ export async function saveAgentTask(id, body) {
   const db = getPgPool();
   const ids=body.agentes_asociados||[body.agente];
   if(body.id_cuenta&&!(await db.query('SELECT 1 FROM comercial_cuentas WHERE id_cuenta=$1',[body.id_cuenta])).rowCount)throw new LaboralError('Selecciona una cuenta válida.');
+  if(body.id_campana&&!(await db.query('SELECT 1 FROM comercial_campanas WHERE id=$1',[body.id_campana])).rowCount)throw new LaboralError('Selecciona una campaña comercial válida.');
   const result = id ? await db.query(`UPDATE laboral_tareas_empleado SET nombre=$2,estado=$3,descripcion=$4,agente=$5,agentes_asociados=$6::jsonb,updated_at=now() WHERE id=$1 RETURNING *`,[id,nombre,body.estado,descripcion,body.agente,JSON.stringify(ids)])
-    : await db.query(`INSERT INTO laboral_tareas_empleado(id,nombre,estado,descripcion,agente,agentes_asociados,id_cuenta,fecha_inicio) VALUES($1,$2,$3,$4,$5,$6::jsonb,$7,$8::timestamp) RETURNING *`,[`tarea_${randomUUID().replaceAll('-','')}`,nombre,body.estado,descripcion,body.agente,JSON.stringify(ids),body.id_cuenta||null,taskPlanningDate(body.fecha_inicio)]);
+    : await db.query(`INSERT INTO laboral_tareas_empleado(id,nombre,estado,descripcion,agente,agentes_asociados,id_cuenta,fecha_inicio,id_campana) VALUES($1,$2,$3,$4,$5,$6::jsonb,$7,$8::timestamp,$9) RETURNING *`,[`tarea_${randomUUID().replaceAll('-','')}`,nombre,body.estado,descripcion,body.agente,JSON.stringify(ids),body.id_cuenta||null,taskPlanningDate(body.fecha_inicio),body.id_campana||null]);
   if (!result.rowCount) throw new LaboralError('Tarea no encontrada para este agente.',404);
   return result.rows[0];
 }

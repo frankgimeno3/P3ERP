@@ -89,9 +89,7 @@ export default function FacturaProveedorDetallePage() {
     <div className="flex min-h-screen w-full flex-col bg-gray-200 text-gray-700">
       <MiddleNav tituloprincipal="Factura proveedor" />
       <div className="min-h-screen w-full bg-gray-100 px-12 py-10">
-        <button type="button" onClick={() => router.push("/dashboard/administracion/facturas-proveedores")} className="mb-5 rounded bg-white px-4 py-2 text-sm text-blue-950 shadow-sm hover:bg-gray-50">
-          Volver
-        </button>
+
         {loading && <div className="bg-white p-6 text-sm text-gray-500">Cargando factura...</div>}
         {error && <div className="mb-4 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
         {!loading && factura && (

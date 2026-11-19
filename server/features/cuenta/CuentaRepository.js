@@ -25,6 +25,7 @@ const writableColumns = [
   "campanas",
   "estado_leads_frios",
   "stands_ferias",
+  "stands_ferias_ediciones",
   "tipo_cuenta",
   "descripcion_cuenta",
   "actividades_cuenta",
@@ -58,6 +59,7 @@ const writableColumns = [
 ];
 
 const jsonColumns = new Set([
+  "stands_ferias_ediciones",
   "datos_comerciales",
   "ferias",
   "array_cuentas_distribuidoras",
@@ -86,6 +88,7 @@ function normalizeCuenta(row) {
     campanas: row.campanas ?? "",
     estado_leads_frios: row.estado_leads_frios ?? "",
     stands_ferias: row.stands_ferias ?? "",
+    stands_ferias_ediciones: Array.isArray(row.stands_ferias_ediciones) ? row.stands_ferias_ediciones : [],
     tipo_cuenta: row.tipo_cuenta ?? "",
     descripcion_cuenta: row.descripcion_cuenta ?? "",
     actividades_cuenta: row.actividades_cuenta ?? "",
@@ -122,6 +125,15 @@ function normalizeCuenta(row) {
 }
 
 function normalizeValue(column, value) {
+  if (column === "stands_ferias_ediciones") {
+    const seen = new Set();
+    if (!Array.isArray(value) || value.some(row => {
+      if (!row || typeof row.id_feria !== "string" || !row.id_feria.trim() || seen.has(row.id_feria) ||
+        [row.hall, row.stand, row.fecha].some(part => typeof part !== "string" || part.length > 120)) return true;
+      seen.add(row.id_feria);
+      return false;
+    })) throw Object.assign(new Error("Revisa las ediciones y los datos de los stands."), { status: 400 });
+  }
   if (jsonColumns.has(column)) {
     if (value === undefined || value === null) return JSON.stringify(column === "datos_comerciales" ? {} : []);
     if (column === "datos_comerciales") return JSON.stringify(value && typeof value === "object" ? value : {});

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import MiddleNav from "@/app/general_components/componentes_recurrentes/MiddleNav";
 import { FeriaService } from "@/app/service/FeriaService";
 
@@ -12,7 +12,7 @@ function formatBool(value: boolean) {
 }
 
 export default function FeriaDetallePage() {
-  const router = useRouter();
+
   const params = useParams<{ id_feria: string }>();
   const [feria, setFeria] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
@@ -76,9 +76,7 @@ export default function FeriaDetallePage() {
     <div className="flex min-h-screen w-full flex-col bg-gray-200 text-gray-600">
       <MiddleNav tituloprincipal="Ficha feria" />
       <div className="min-h-screen w-full bg-gray-100 px-12 py-10 text-gray-600">
-        <button type="button" onClick={() => router.push("/dashboard/operaciones/ferias")} className="mb-4 rounded bg-white px-4 py-2 text-sm text-blue-950 shadow-sm hover:bg-gray-50">
-          Volver a ferias
-        </button>
+
 
         {loading && <div className="bg-white p-6 text-gray-500">Cargando feria...</div>}
         {error && <div className="rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}

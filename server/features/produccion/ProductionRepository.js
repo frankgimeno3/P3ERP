@@ -82,11 +82,13 @@ export async function assignContentMagazine(idRevista,data,transactionDb=null) {
  } catch(error){if(!transactionDb)await db.query('ROLLBACK');throw error;} finally{if(!transactionDb)db.release();}
 }
 export async function getRepositoryMaterials(contentId='',includeDeleted=false,db=getPgPool()) {
- return (await db.query(`SELECT m.*,COALESCE(m.id_contenido,c.id_contenido) AS id_contenido,c.nombre_contenido,c.estado_contenido,cu.nombre_empresa AS nombre_cuenta
+ return (await db.query(`SELECT m.*,COALESCE(m.id_contenido,c.id_contenido) AS id_contenido,c.nombre_contenido,c.estado_contenido,cu.nombre_empresa AS nombre_cuenta,
+  substring(lower(a.mediateca_s3_key) from '[.]([a-z0-9]+)$') AS extension_archivo
   FROM produccion_materiales m LEFT JOIN LATERAL (SELECT c.* FROM produccion_contenidos c
    WHERE c.id_contenido=m.id_contenido OR (m.id_contenido IS NULL AND c.array_ids_materiales @> jsonb_build_array(m.id_material))
    ORDER BY c.id_contenido LIMIT 1) c ON true
   LEFT JOIN comercial_cuentas cu ON cu.id_cuenta=c.id_cuenta
+  LEFT JOIN mediateca_archivos a ON a.mediateca_content_id::text=m.mediateca_id
   WHERE ($2::boolean OR m.eliminado_at IS NULL) AND ($1='' OR m.id_contenido=$1 OR EXISTS(SELECT 1 FROM produccion_contenidos linked WHERE linked.id_contenido=$1 AND linked.array_ids_materiales @> jsonb_build_array(m.id_material)))
   ORDER BY m.es_version_acabada DESC,m.numero_version DESC NULLS LAST,m.created_at DESC,m.id_material`,[contentId,Boolean(contentId&&includeDeleted)])).rows;
 }

@@ -43,6 +43,7 @@
   "/dashboard/comercial/contratos/[id]",
   "/dashboard/comercial/contratos/crear",
   "/dashboard/comercial/cuentas",
+  "/dashboard/comercial/campanas/[[...id]]",
   "/dashboard/comercial/cuentas/[id_cuenta]",
   "/dashboard/comercial/cuentas/crear",
   "/dashboard/comercial/documentacion",

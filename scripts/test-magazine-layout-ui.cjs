@@ -44,6 +44,15 @@ const change=async(node,value)=>{assert(node);await React.act(async()=>{Object.g
  await click(button('Descargar todos (PDF)'));assert.equal(merged,1);assert.deepEqual(downloads,['revista-digital.pdf']);assert(calls.some(call=>call[1].endsWith('/descarga')&&call[2].params.soporte==='digital'));
  await click([...document.querySelectorAll('button')].filter(node=>node.textContent==='Editar posición / PDF').at(-1));assert(document.querySelector('[role="dialog"]'));
  await React.act(async()=>window.dispatchEvent(new dom.window.KeyboardEvent('keydown',{key:'Escape'})));assert.equal(document.querySelector('[role="dialog"]'),null);
+ await React.act(async()=>root.render(React.createElement(View,{key:'charly',magazineId:'issue',fixedSupport:'digital',planning:[
+  {id_contenido:'pending',nombre_contenido:'Anuncio provisional',tipo:'anuncios',planning:{posicion:11,paginas:1,seccion:'Publicidad'},provisional:true},
+ ]})));
+ const planned=document.getElementById('maqueta-digital-11');
+ assert(planned?.textContent.includes('Anuncio provisional'));
+ await click(planned);
+ assert(document.querySelector('[role="dialog"]')?.textContent.includes('Publicidad'));
+ await React.act(async()=>window.dispatchEvent(new dom.window.KeyboardEvent('keydown',{key:'Escape'})));
+ assert.equal(document.querySelector('[role="dialog"]'),null);
  const Workflow=load('app/dashboard/produccion/gestion-contenidos/revista/[id_revista]/page.tsx').default;
  await React.act(async()=>root.render(React.createElement(Workflow)));
  await click([...document.querySelectorAll('button')].find(node=>node.textContent.startsWith('Fase 6')));

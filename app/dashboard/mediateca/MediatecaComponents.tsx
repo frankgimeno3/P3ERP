@@ -7,7 +7,6 @@ import SortableTable from '@/app/components/SortableTable';
 import TableFilters from '@/app/components/TableFilters';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import { MediatecaService } from "@/app/service/MediatecaService";
 import apiClient from '@/app/apiClient';
 
@@ -557,7 +556,7 @@ export function MediatecaBrowser({
         </div>
       )}
 
-      {!picker && <div className="pt-2"><Link href="/dashboard" className="text-sm text-blue-800 hover:underline">Volver al dashboard</Link></div>}
+      {!picker && <div className="pt-2"></div>}
       {trashOpen&&<ModalFrame title="Papelera recuperable" onClose={()=>setTrashOpen(false)}><div className="max-h-96 space-y-3 overflow-auto">{trashLoading?<p role="status">Cargando papelera…</p>:trashRows.length?trashRows.map(row=><div key={row.id} className="rounded border p-3"><p>{new Date(row.deleted_at).toLocaleString('es-ES')} · {row.media_count} archivos · {row.folders_count} carpetas</p><button type="button" disabled={Boolean(restoring)||(!canManageFolders&&row.folders_count>0)} onClick={()=>void restoreTrash(row.id)} className="mt-2 rounded border px-3 py-1 enabled:cursor-pointer enabled:hover:bg-blue-100 disabled:cursor-default disabled:opacity-50">{restoring===row.id?'Restaurando…':'Restaurar'}</button>{!canManageFolders&&row.folders_count>0&&<p className="text-sm">La restauración de carpetas requiere permiso de operaciones.</p>}</div>):<p>No hay eliminaciones pendientes.</p>}</div></ModalFrame>}
       {createOpen && <CreateFolderModal parentPath={currentPath} onClose={() => setCreateOpen(false)} onDone={() => { setCreateOpen(false); void load(); }} />}
       {addOpen && <AddFileModal folderPath={currentPath} onClose={() => setAddOpen(false)} onDone={() => { setAddOpen(false); void load(); }} />}

@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import React, { FC, useEffect, useState } from 'react';
 import { PropuestaService } from '@/app/service/PropuestaService';
 
-type EstadoPropuesta = 'Pendiente' | 'Aprobada' | 'Rechazada';
+type EstadoPropuesta = 'Pendiente' | 'Aprobada' | 'Rechazada' | 'Otras';
 
 interface Propuesta {
   id_propuesta: string;
@@ -29,7 +29,18 @@ const tabs: { key: EstadoPropuesta; label: string }[] = [
   { key: 'Pendiente', label: 'Pendientes' },
   { key: 'Aprobada', label: 'Aprobadas' },
   { key: 'Rechazada', label: 'Rechazadas' },
+  { key: 'Otras', label: 'Otras' },
 ];
+
+function grupoPropuesta(estado: string): EstadoPropuesta {
+  switch (estado.trim().toLowerCase()) {
+    case 'pendiente': return 'Pendiente';
+    case 'aceptada':
+    case 'aprobada': return 'Aprobada';
+    case 'rechazada': return 'Rechazada';
+    default: return 'Otras';
+  }
+}
 
 const ContenidoPropuestasCuenta: FC<ContenidoPropuestasCuentaProps> = ({ id_cuenta }) => {
   const router = useRouter();
@@ -39,17 +50,21 @@ const ContenidoPropuestasCuenta: FC<ContenidoPropuestasCuentaProps> = ({ id_cuen
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let active = true;
     setLoading(true);
+    setPropuestas([]);
     setError(null);
 
-    PropuestaService.getPropuestas({ id_cuenta, estado })
-      .then((data) => setPropuestas(Array.isArray(data) ? data : []))
+    PropuestaService.getPropuestas({ id_cuenta })
+      .then((data) => { if (active) setPropuestas(Array.isArray(data) ? data : []); })
       .catch((error) => {
-        setError(error?.message || 'No se pudieron cargar las propuestas.');
-        setPropuestas([]);
+        if (active) setError(error?.message || 'No se pudieron cargar las propuestas.');
       })
-      .finally(() => setLoading(false));
-  }, [id_cuenta, estado]);
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [id_cuenta]);
+
+  const visibles = propuestas.filter(propuesta => grupoPropuesta(propuesta.estado_propuesta) === estado);
 
   const handleRowClick = (e: React.MouseEvent<HTMLTableRowElement>, href: string) => {
     if (e.ctrlKey || e.metaKey) {
@@ -106,7 +121,7 @@ const ContenidoPropuestasCuenta: FC<ContenidoPropuestasCuentaProps> = ({ id_cuen
             </tr>
           </thead>
           <tbody>
-            {propuestas.map((propuesta) => (
+              {visibles.map((propuesta) => (
               <tr
                 key={propuesta.id_propuesta}
                 onClick={(e) => handleRowClick(e, `/dashboard/comercial/propuestas/${propuesta.id_propuesta}`)}
@@ -125,9 +140,9 @@ const ContenidoPropuestasCuenta: FC<ContenidoPropuestasCuentaProps> = ({ id_cuen
 
         {loading && <p className="mt-4 text-center text-gray-600">Cargando propuestas...</p>}
         {!loading && error && <p className="mt-4 text-center text-red-700">{error}</p>}
-        {!loading && !error && propuestas.length === 0 && (
+        {!loading && !error && visibles.length === 0 && (
           <p className="mt-4 text-center text-gray-600">
-            No hay propuestas {tabs.find((tab) => tab.key === estado)?.label.toLowerCase()} para esta cuenta.
+            {estado === 'Otras' ? 'No hay otras propuestas para esta cuenta.' : `No hay propuestas ${tabs.find(tab => tab.key === estado)?.label.toLowerCase()} para esta cuenta.`}
           </p>
         )}
       </div>

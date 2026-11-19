@@ -24,6 +24,7 @@ interface FiltrosPropuestasProps {
   fechaFin: string;
   setFechaFin: (value: string) => void;
   estadoFiltro: string;
+  ocultarEstado?: boolean;
   setEstadoFiltro: (value: string) => void;
   pestana: 'miasenproceso' | 'todasporcliente';
   agenteActual: string;
@@ -48,6 +49,7 @@ const FiltrosPropuestas: FC<FiltrosPropuestasProps> = ({
   fechaFin,
   setFechaFin,
   estadoFiltro,
+  ocultarEstado = false,
   setEstadoFiltro,
   pestana,
   agenteActual,
@@ -108,7 +110,7 @@ const FiltrosPropuestas: FC<FiltrosPropuestasProps> = ({
         <div className="contents">
           <DatePartsInput label="Desde" value={fechaInicio} onChange={setFechaInicio} disabled={bloqueaFechas} />
           <DatePartsInput label="Hasta" value={fechaFin} onChange={setFechaFin} disabled={bloqueaFechas} />
-          <div className="flex flex-col">
+          {!ocultarEstado && <div className="flex flex-col">
             <label className="mb-1 block text-xs font-extralight text-gray-600">Estado</label>
             <select
               value={bloqueaEstado ? 'Pendiente' : estadoFiltro}
@@ -125,7 +127,7 @@ const FiltrosPropuestas: FC<FiltrosPropuestasProps> = ({
                 </>
               )}
             </select>
-          </div>
+          </div>}
         </div>
       </div>
     {children}</TableFilters></div>

@@ -149,9 +149,7 @@ export default function AgenteDetallePage() {
 
   return (
     <div className="min-h-screen bg-gray-100 p-6 px-12 text-gray-800">
-      <button type="button" onClick={() => router.push("/dashboard/operaciones/agentes")} className="mb-4 cursor-pointer rounded bg-white px-4 py-2 text-sm text-blue-950 shadow-sm transition hover:bg-gray-50 hover:shadow-md">
-        Volver a agentes
-      </button>
+
 
       {error && <div className="mb-4 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
       {loading && <div className="bg-white p-5 text-sm text-gray-500 shadow-sm">Cargando agente...</div>}

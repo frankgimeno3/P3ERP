@@ -51,6 +51,7 @@ function mapCuenta(cuentaData: any): InterfazCuenta {
     campanas: cuentaData.campanas || '',
     estado_leads_frios: cuentaData.estado_leads_frios || '',
     stands_ferias: cuentaData.stands_ferias || '',
+    stands_ferias_ediciones: Array.isArray(cuentaData.stands_ferias_ediciones) ? cuentaData.stands_ferias_ediciones : [],
     tipo_cuenta: cuentaData.tipo_cuenta || '',
     descripcion_cuenta: cuentaData.descripcion_cuenta || '',
     actividades_cuenta: cuentaData.actividades_cuenta || '',
@@ -275,7 +276,7 @@ const FichaCliente = () => {
     );
   }
 
-  const seccion = pestana === 'tareas' ? 'tareas' : ['general','comentarios','contactos','propuestas','ferias'].includes(pestana) ? 'comercial' : 'gestion';
+  const seccion = pestana === 'tareas' ? 'tareas' : ['general','datos_administrativos','comentarios','contactos','propuestas','ferias'].includes(pestana) ? 'comercial' : 'gestion';
 
   return (
     <div className="flex flex-col h-full min-h-screen text-gray-600">
@@ -305,9 +306,10 @@ const FichaCliente = () => {
             </button>
           ))}
         </div>
-        {seccion !== 'tareas' && <div role="tablist" aria-label={seccion === 'comercial' ? 'Datos Comerciales' : 'Datos de gestión'} className="flex flex-wrap gap-2 border-b border-gray-200 bg-white p-3">
+        {seccion !== 'tareas' && <div role="tablist" aria-label={seccion === 'comercial' ? 'Datos Comerciales' : 'Datos de gestión'} className="flex flex-wrap items-end gap-1 border-b border-blue-200 bg-slate-100 px-3 pt-3">
           {(seccion === 'comercial' ? [
             { key: 'general', label: 'Datos generales' },
+            { key: 'datos_administrativos', label: 'Datos administrativos' },
             { key: 'comentarios', label: 'Comentarios' },
             { key: 'contactos', label: 'Contactos' },
             { key: 'propuestas', label: 'Propuestas' },
@@ -315,12 +317,11 @@ const FichaCliente = () => {
           ] : [
             { key: 'contratos', label: 'Contratos' },
             { key: 'contenidos', label: 'Contenidos' },
-            { key: 'datos_administrativos', label: 'Datos administrativos' },
             { key: 'general_eventos', label: 'Registro de eventos' },
           ]).map(({ key, label }) => (
             <button key={key} type="button" role="tab" aria-selected={pestana === key}
               onClick={() => setPestana(key as PestanaCuenta)}
-              className={`cursor-pointer rounded px-4 py-2 text-sm transition-colors duration-200 ${pestana === key ? 'bg-blue-50 font-medium text-blue-950 hover:bg-blue-100' : 'text-gray-600 hover:bg-gray-100'}`}>
+              className={`relative -mb-px cursor-pointer rounded-t-lg border px-4 py-2.5 text-sm transition-colors ${pestana === key ? 'z-10 border-blue-200 border-b-white bg-white font-bold text-blue-950 shadow-[0_-3px_0_#172554] hover:bg-blue-50' : 'border-transparent bg-slate-200 text-gray-600 hover:bg-slate-50'}`}>
               {label}
             </button>
           ))}
@@ -333,13 +334,14 @@ const FichaCliente = () => {
               key={cuentaEditable.id_cuenta}
               idCuenta={cuentaEditable.id_cuenta}
               seleccionadas={cuentaEditable.ferias || []}
-              stands={cuentaEditable.stands_ferias || ''}
+              stands={cuentaEditable.stands_ferias_ediciones || []}
+              legacyStands={cuentaEditable.stands_ferias || ''}
               onFeriasChange={ferias => {
                 setCuentaEditable(prev => prev && { ...prev, ferias });
                 setIsContenidoEdited(true);
               }}
-              onStandsChange={stands_ferias => {
-                setCuentaEditable(prev => prev && { ...prev, stands_ferias });
+              onStandsChange={stands_ferias_ediciones => {
+                setCuentaEditable(prev => prev && { ...prev, stands_ferias_ediciones });
                 setIsContenidoEdited(true);
               }}
             />

@@ -6,6 +6,8 @@ import { AgenteService } from "@/app/service/AgenteService";
 import { CuentaService } from "@/app/service/CuentaService";
 import type { SocialProfile } from "@/app/lib/accountSocialProfiles";
 import RedesSociales from "./RedesSociales";
+import { AccountCampaigns } from "@/app/components/CommercialCampaigns";
+import { YesNoToggle } from "./Direcciones";
 import IdentidadCuenta from "./IdentidadCuenta";
 import EnvioPropuestasAnuales from "./EnvioPropuestasAnuales";
 
@@ -15,12 +17,11 @@ interface DatosCRMProps {
   id_edisoft: string;
   pais_cuenta: string;
   receptor_revista: boolean;
+  suscriptor_revista: boolean;
   potencial_actual_relacion: string;
   potencial_futuro_encaje: string;
   revisado_ricardo: boolean;
-  campanas: string;
   estado_leads_frios: string;
-  tipo_cuenta: string;
   presente_en_qq: boolean;
   qq: boolean;
   actividades: string;
@@ -31,7 +32,6 @@ interface DatosCRMProps {
   catalogos: string;
   array_cuentas_distribuidoras: any[];
   array_cuentas_distribuidas: any[];
-  cuenta_agencia: string;
   fuente_novedades: string;
   onChange: (field: string, value: string | boolean | any[]) => void;
 }
@@ -147,12 +147,11 @@ const DatosCRM: FC<DatosCRMProps> = ({
   id_edisoft,
   pais_cuenta,
   receptor_revista,
+  suscriptor_revista,
   potencial_actual_relacion,
   potencial_futuro_encaje,
   revisado_ricardo,
-  campanas,
   estado_leads_frios,
-  tipo_cuenta,
   presente_en_qq,
   qq,
   actividades,
@@ -163,21 +162,15 @@ const DatosCRM: FC<DatosCRMProps> = ({
   catalogos,
   array_cuentas_distribuidoras,
   array_cuentas_distribuidas,
-  cuenta_agencia,
   fuente_novedades,
   onChange,
 }) => {
   const [agentes, setAgentes] = useState<Agente[]>([]);
-  const [tiposCuenta, setTiposCuenta] = useState<string[]>([]);
-  const [errorTiposCuenta, setErrorTiposCuenta] = useState(false);
   const [modalCuenta, setModalCuenta] = useState<"distribuidoras" | "distribuidas" | null>(null);
   useEffect(() => {
     AgenteService.getAgentes()
       .then((data) => setAgentes(Array.isArray(data) ? data : []))
       .catch(() => setAgentes([]));
-    CuentaService.getCuentas({ typesOnly: true })
-      .then(setTiposCuenta)
-      .catch(() => setErrorTiposCuenta(true));
   }, []);
 
   const handleTextChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -217,10 +210,7 @@ const DatosCRM: FC<DatosCRMProps> = ({
               <option value="true">Sí</option>
             </select>
           </label>
-          <label className="space-y-1">
-            <span className="font-medium">Campañas</span>
-            <input name="campanas" value={campanas} onChange={handleTextChange} className={fieldClass} />
-          </label>
+          <AccountCampaigns key={id_cuenta} accountId={id_cuenta} />
           <label className="space-y-1">
             <span className="font-medium">Estado leads fríos</span>
             <input name="estado_leads_frios" value={estado_leads_frios} onChange={handleTextChange} className={fieldClass} />
@@ -232,23 +222,6 @@ const DatosCRM: FC<DatosCRMProps> = ({
       <section className="space-y-4">
         <h2 className="text-xl font-bold">Actividades Información Producción</h2>
         <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-3">
-          <label className="space-y-1">
-            <span className="font-medium">Tipo cuenta</span>
-            <select name="tipo_cuenta" value={tipo_cuenta} onChange={handleTextChange} className={`${fieldClass} cursor-pointer hover:border-blue-500`}>
-              <option value="">Sin definir</option>
-              {tipo_cuenta && !tiposCuenta.includes(tipo_cuenta) && <option value={tipo_cuenta}>{tipo_cuenta}</option>}
-              {tiposCuenta.map(tipo => <option key={tipo} value={tipo}>{tipo}</option>)}
-            </select>
-            {errorTiposCuenta && <span className="text-xs text-red-700">No se pudieron cargar los tipos de cuenta.</span>}
-          </label>
-          <label className="space-y-1">
-            <span className="font-medium">Cuenta agencia</span>
-            <select name="cuenta_agencia" value={cuenta_agencia || "No"} onChange={handleTextChange} className={`${fieldClass} cursor-pointer hover:border-blue-500`}>
-              <option value="No">No</option>
-              <option value="Sí">Sí</option>
-              {cuenta_agencia && !["No", "Sí"].includes(cuenta_agencia) && <option value={cuenta_agencia}>{cuenta_agencia}</option>}
-            </select>
-          </label>
           <RedesSociales key={id_cuenta} idCuenta={id_cuenta} profiles={redesSociales} onSaved={onRedesSocialesSaved} />
           <label className="space-y-1">
             <span className="font-medium">Correo principal</span>
@@ -279,6 +252,8 @@ const DatosCRM: FC<DatosCRMProps> = ({
             <textarea name="descripcion_actividad" value={descripcion_actividad} onChange={handleTextChange} className={`${fieldClass} min-h-24`} />
           </label>
 
+          <div className="grid gap-4 md:col-span-3 md:grid-cols-2">
+            <div className="space-y-3">
           <ToggleDistribucion
             label="Tiene distribuidor?"
             items={array_cuentas_distribuidoras}
@@ -289,6 +264,19 @@ const DatosCRM: FC<DatosCRMProps> = ({
             items={array_cuentas_distribuidas}
             onOpen={() => setModalCuenta("distribuidas")}
           />
+            </div>
+      <div className="space-y-3 rounded bg-gray-50 p-3">
+        <div className="flex items-center justify-between gap-4">
+          <span className="font-medium">Receptor Revista</span>
+          <YesNoToggle value={receptor_revista} onChange={value => onChange("receptor_revista", value)} />
+        </div>
+        <div className="flex items-center justify-between gap-4">
+          <span className="font-medium">Suscriptor revista?</span>
+          <YesNoToggle value={suscriptor_revista} onChange={value => onChange("suscriptor_revista", value)} />
+        </div>
+      </div>
+
+          </div>
         </div>
       </section>
 

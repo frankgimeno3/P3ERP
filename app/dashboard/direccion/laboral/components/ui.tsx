@@ -1,7 +1,6 @@
 'use client';
 
 import DateInputRow from "@/app/components/DateInputRow";
-import Link from 'next/link';
 import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 'react';
 
 export const root = '/dashboard/direccion/laboral';
@@ -35,8 +34,8 @@ export function useResource<T>(path: string) {
 export function Notice({ error, children }: { error?: string; children?: ReactNode }) {
   return error ? <p role="alert" className="my-3 rounded border border-red-200 bg-red-50 p-3 text-red-800">{error}</p> : children ? <p role="status" className="my-3 rounded bg-green-50 p-3 text-green-800">{children}</p> : null;
 }
-export function Header({ title, back, children,area='Dirección / Laboral' }: { title: string; back?: string; children?: ReactNode;area?:string }) {
-  return <header className="mb-5 flex flex-wrap items-center justify-between gap-3"><div>{back && <Link href={back} className="mb-2 inline-block rounded px-2 py-1 text-blue-900 hover:bg-blue-100">← Volver</Link>}<p className="text-xs uppercase text-slate-600">{area}</p><h1 className="text-2xl font-semibold text-blue-950">{title}</h1></div>{children}</header>;
+export function Header({ title, children,area='Dirección / Laboral' }: { title: string; back?: string; children?: ReactNode;area?:string }) {
+  return <header className="mb-5 flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs uppercase text-slate-600">{area}</p><h1 className="text-2xl font-semibold text-blue-950">{title}</h1></div>{children}</header>;
 }
 export function Field({ label, children }: { label: string; children: ReactNode }) {
   return <label className="block space-y-1"><span className="block font-medium text-slate-600">{label}</span>{children}</label>;

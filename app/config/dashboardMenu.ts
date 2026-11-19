@@ -31,6 +31,7 @@ export const dashboardMenu: DashboardMenuModule[] = [
     icon: "briefcase",
     children: [
       page("Cuentas", "/dashboard/comercial/cuentas"),
+      page("Campañas comerciales", "/dashboard/comercial/campanas"),
       page("Contactos", "/dashboard/comercial/contactos"),
       page("Propuestas", "/dashboard/comercial/propuestas"),
       page("Contratos", "/dashboard/comercial/contratos"),

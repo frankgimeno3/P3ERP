@@ -452,7 +452,7 @@ export async function updateContenidoProduccion(idContenido, data = {}, transact
     }
   }
 
-  for (const field of ["especificaciones_contenido", "publicacion_num_web", "id_agente", "deadline_contenido", "formato_revista", "titulo_articulo", "entradilla_articulo", "texto_articulo", "correccion_destino", "url_indesign_recurso7"]) {
+  for (const field of ["descripcion_contenido", "especificaciones_contenido", "publicacion_num_web", "id_agente", "deadline_contenido", "formato_revista", "titulo_articulo", "entradilla_articulo", "texto_articulo", "correccion_destino", "url_indesign_recurso7"]) {
     if (!Object.prototype.hasOwnProperty.call(data, field)) continue;
     let value = String(data[field] ?? '');
     if(field==='url_indesign_recurso7'){

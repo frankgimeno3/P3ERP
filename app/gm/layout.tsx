@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import Link from "next/link";
 import GmAccessAndPointer from "./GmAccessAndPointer";
 
 const inter = Inter({
@@ -43,14 +42,7 @@ export default function RootLayout({
         }
       `}</style>
       <GmAccessAndPointer>
-        <Link
-          href="/dashboard"
-          className="fixed left-4 top-4 z-50 inline-flex cursor-pointer items-center gap-2 rounded-md border border-slate-300 bg-white/95 px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm backdrop-blur transition hover:border-slate-400 hover:bg-slate-100 hover:text-slate-950 hover:shadow-md"
-          aria-label="Volver al dashboard"
-        >
-          <span aria-hidden="true">&larr;</span>
-          Volver al dashboard
-        </Link>
+
         <div className="fixed right-4 top-4 z-50 rounded-full border border-slate-200 bg-white/95 px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm backdrop-blur">AGENTE: GIMENO</div>
         {children}
       </GmAccessAndPointer>

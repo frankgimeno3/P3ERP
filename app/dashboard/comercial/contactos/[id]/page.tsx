@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import ContenidoGeneralContacto from "../componentesFichaContacto/ContenidoGeneralContacto";
 import ContenidoComentariosContacto from "../componentesFichaContacto/ContenidoComentariosContacto";
 import RegistroEventosContacto from "../componentesFichaContacto/RegistroEventosContacto";
+import OtherAccountContacts from "../componentesFichaContacto/OtherAccountContacts";
 import BotonFlotante from "@/app/general_components/componentes_recurrentes/BotonFlotante";
 import MiddleNav from "@/app/general_components/componentes_recurrentes/MiddleNav";
 import { InterfazContacto } from '@/app/interfaces/interfaces';
@@ -101,7 +102,7 @@ const FichaContacto: FC = () => {
     setComentarios(comentariosFormateados);
   }, [contactoId]);
 
-  const [pestana, setPestana] = useState<'general' | 'comentarios' | 'general_eventos'>('general');
+  const [pestana, setPestana] = useState<'general' | 'comentarios' | 'general_eventos' | 'otros_contactos'>('general');
 
   if (!contactoEditable) {
     return (
@@ -143,6 +144,7 @@ const FichaContacto: FC = () => {
             { key: 'general', label: 'Datos Generales' },
             { key: 'comentarios', label: 'Comentarios' },
             { key: 'general_eventos', label: 'Registro de eventos' },
+            { key: 'otros_contactos', label: 'Otros contactos de esta cuenta' },
           ].map(({ key, label }, index) => (
             <div
               key={key}
@@ -160,6 +162,7 @@ const FichaContacto: FC = () => {
         </div>
 
         <div className="bg-white p-12 shadow-xl rounded-b-lg">
+          {pestana === 'otros_contactos' && <OtherAccountContacts key={contactoEditable.id_contacto} accountId={contactoEditable.id_cuenta} contactId={contactoEditable.id_contacto} />}
           {pestana === 'general' && (
             <ContenidoGeneralContacto 
               contacto={contactoEditable}

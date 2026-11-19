@@ -56,12 +56,11 @@ const ContenidoGeneral: FC<ContenidoGeneralProps> = ({
         id_edisoft={cuentaEditable.id_edisoft || ""}
         pais_cuenta={cuentaEditable.pais_cuenta}
         receptor_revista={Boolean(cuentaEditable.receptor_revista)}
+        suscriptor_revista={Boolean(cuentaEditable.suscriptor_revista)}
         potencial_actual_relacion={cuentaEditable.potencial_actual_relacion || ""}
         potencial_futuro_encaje={cuentaEditable.potencial_futuro_encaje || ""}
         revisado_ricardo={Boolean(cuentaEditable.revisado_ricardo)}
-        campanas={cuentaEditable.campanas || ""}
         estado_leads_frios={cuentaEditable.estado_leads_frios || ""}
-        tipo_cuenta={cuentaEditable.tipo_cuenta || ""}
         presente_en_qq={cuentaEditable.presente_en_qq}
         qq={Boolean(cuentaEditable.qq)}
         actividades={cuentaEditable.actividades_cuenta}
@@ -72,7 +71,6 @@ const ContenidoGeneral: FC<ContenidoGeneralProps> = ({
         catalogos={cuentaEditable.catalogos || ""}
         array_cuentas_distribuidoras={cuentaEditable.array_cuentas_distribuidoras || []}
         array_cuentas_distribuidas={cuentaEditable.array_cuentas_distribuidas || []}
-        cuenta_agencia={cuentaEditable.cuenta_agencia || ""}
         fuente_novedades={cuentaEditable.fuente_novedades_cuenta}
         onChange={handleCRMChange}
         commercialDetails={
@@ -80,6 +78,10 @@ const ContenidoGeneral: FC<ContenidoGeneralProps> = ({
             key={cuentaEditable.id_cuenta}
             datos_comerciales={cuentaEditable.datos_comerciales}
             idCuenta={cuentaEditable.id_cuenta}
+            pais={cuentaEditable.pais_cuenta}
+            tipo_cuenta={cuentaEditable.tipo_cuenta || ""}
+            cuenta_agencia={cuentaEditable.cuenta_agencia || ""}
+            onAccountChange={handleCRMChange}
             onOpenContactos={onOpenContactos}
             onChange={handleDatosComercialesChange}
           />
@@ -88,10 +90,6 @@ const ContenidoGeneral: FC<ContenidoGeneralProps> = ({
 
       <Direcciones
         direcciones={cuentaEditable.array_direcciones_cuenta}
-        receptorRevista={Boolean(cuentaEditable.receptor_revista)}
-        suscriptorRevista={Boolean(cuentaEditable.suscriptor_revista)}
-        onReceptorRevistaChange={(value) => handleCRMChange("receptor_revista", value)}
-        onSuscriptorRevistaChange={(value) => handleCRMChange("suscriptor_revista", value)}
         onChange={(updatedDirecciones) => {
           setCuentaEditable(prev =>
             prev ? { ...prev, array_direcciones_cuenta: updatedDirecciones } : prev

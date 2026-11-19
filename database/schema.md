@@ -1333,6 +1333,8 @@ La migración `20261119_0002_account_annual_renewal.sql` añade `comercial_cuent
 
 La migración `20261119_0003_account_social_profiles.sql` añade `comercial_cuentas.redes_sociales` (`jsonb`, array de objetos con `nombre`, `tiene_cuenta`, `url` y `favorita`). La ficha conserva las URLs reconocibles que estaban registradas en el campo anterior `red_social_prioritaria`. Las acciones sobre los perfiles se guardan individualmente y el registro admite una sola red prioritaria.
 
+La migración `20261120_0001_commercial_campaigns_and_fair_stands.sql` añade `comercial_campanas` con nombre, descripción, estado, fecha de finalización y creador. `comercial_campana_agentes` y `comercial_campana_cuentas` son relaciones auditadas de varios a varios. Las tareas de cuenta y de empleado admiten un `id_campana` opcional. La ficha conserva las notas originales de stands y almacena las nuevas asociaciones en `comercial_cuentas.stands_ferias_ediciones`, un array JSONB con `id_feria`, `fecha`, `hall` y `stand`.
+
 ### Propiedades de Dirección
 
 La migración `20261103_0001_properties.sql` crea `direccion_propiedades`

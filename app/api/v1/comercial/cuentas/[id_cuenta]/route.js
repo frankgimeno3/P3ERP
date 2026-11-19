@@ -52,8 +52,8 @@ export async function PUT(request, context) {
   } catch (error) {
     console.error("Error in PUT /api/v1/comercial/cuentas/[id_cuenta]:", error);
     return NextResponse.json(
-      { message: "Error al actualizar la cuenta", detail: process.env.NODE_ENV === "development" ? error.message : undefined },
-      { status: 500 },
+      { message: error.status ? error.message : "Error al actualizar la cuenta", detail: process.env.NODE_ENV === "development" ? error.message : undefined },
+      { status: error.status || 500 },
     );
   }
 }

@@ -9,6 +9,9 @@ import { AgenteService } from '@/app/service/AgenteService';
 import { useCurrentUser } from '@/app/lib/currentUser';
 import TableColumnFilter from '@/app/components/TableColumnFilter';
 import DatePartsInput from '@/app/components/DatePartsInput';
+import { PropuestaService } from '@/app/service/PropuestaService';
+
+const proposalTabs = [['Pendiente', 'Pendientes'], ['Aceptada', 'Aceptadas'], ['Rechazada', 'Rechazadas'], ['', 'Todas']] as const;
 
 const Propuestas: FC = () => {
   const [pestana, setPestana] = useState<'miasenproceso' | 'todasporcliente'>('todasporcliente');
@@ -17,7 +20,8 @@ const Propuestas: FC = () => {
   const [fechaInicio, setFechaInicio] = useState('');
   const [fechaFin, setFechaFin] = useState('');
   const [agenteFiltro, setAgenteFiltro] = useState('');
-  const [estadoFiltro, setEstadoFiltro] = useState('');
+  const [estadoFiltro, setEstadoFiltro] = useState('Pendiente');
+  const [pendingCount, setPendingCount] = useState<number>();
   const [columnFilters, setColumnFilters] = useState<Record<string, string>>({});
   const { user, error: sessionError } = useCurrentUser();
   const agenteActual = user?.id_agente || '';
@@ -40,9 +44,18 @@ const Propuestas: FC = () => {
       setAgenteFiltro('');
       setFechaInicio('');
       setFechaFin('');
-      setEstadoFiltro('');
+      setEstadoFiltro('Pendiente');
     }
   }, [pestana, agenteActual]);
+
+  useEffect(() => {
+    if (!agenteActual) return;
+    let active = true;
+    PropuestaService.getPropuestas({ agente: agenteActual, estado: 'Pendiente' })
+      .then(data => { if (active && Array.isArray(data)) setPendingCount(data.length); })
+      .catch(() => { if (active) setPendingCount(undefined); });
+    return () => { active = false; };
+  }, [agenteActual]);
 
   return (
     <div className="flex h-full min-h-screen flex-col bg-white text-gray-700">
@@ -84,9 +97,13 @@ const Propuestas: FC = () => {
               }`}
               onClick={() => setPestana('miasenproceso')}
             >
-              Mis propuestas pendientes
+              <span className="mr-2 rounded-full bg-blue-100 px-2 py-0.5 tabular-nums text-blue-950">{pendingCount ?? '—'}</span>Mis propuestas pendientes
             </div>
           </div>
+          {pestana === 'todasporcliente' && <div role="tablist" aria-label="Estado de las propuestas" className="mb-4 flex flex-wrap gap-1 border-b border-blue-200">
+            {proposalTabs.map(([value, label]) => <button key={label} type="button" role="tab" aria-selected={estadoFiltro === value} onClick={() => setEstadoFiltro(value)}
+              className={`relative -mb-px cursor-pointer rounded-t-lg border px-4 py-2 hover:bg-blue-50 ${estadoFiltro === value ? 'border-blue-200 border-b-white bg-white font-semibold text-blue-950' : 'border-transparent bg-gray-100'}`}>{label}</button>)}
+          </div>}
 
           <div className="mb-6">
             <FiltrosPropuestas
@@ -102,6 +119,7 @@ const Propuestas: FC = () => {
               setFechaFin={setFechaFin}
               estadoFiltro={estadoFiltro}
               setEstadoFiltro={setEstadoFiltro}
+              ocultarEstado
               pestana={pestana}
               agenteActual={agenteActual}
               agentes={agentes}

@@ -28,5 +28,5 @@ export default function AgentTasks({agent}:{agent:string}) {
 }
 export function AgentTaskDetail({agent,id}:{agent:string;id:string}) {
   const {data,loading,error,reload}=useResource<any>(`tareas-agentes/${id}?empleado=${encodeURIComponent(agent)}`);
-  return <main className="laboral p-6"><Link className="cursor-pointer hover:underline" href={`/dashboard/operaciones/agentes/${agent}?tab=tareas`}>Volver al agente</Link><Notice error={error}/>{loading?<p>Cargando…</p>:data&&!error&&<section className="laboral-card mt-4"><h1 className="text-xl font-semibold">{data.nombre}</h1><p className="mb-4">{data.id} · {data.nombre_agente}</p><TaskForm key={data.updated_at} agent={agent} initial={data} onSaved={reload}/></section>}</main>;
+  return <main className="laboral p-6"><Notice error={error}/>{loading?<p>Cargando…</p>:data&&!error&&<section className="laboral-card mt-4"><h1 className="text-xl font-semibold">{data.nombre}</h1><p className="mb-4">{data.id} · {data.nombre_agente}</p><TaskForm key={data.updated_at} agent={agent} initial={data} onSaved={reload}/></section>}</main>;
 }

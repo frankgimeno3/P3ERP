@@ -81,6 +81,10 @@ async function writeAccountTask(db, actor, accountId, id, body, statusOnly, crea
   const input = statusOnly ? { ...previous, agentes: assigned, estado: body.estado } : { ...body, estado: body.estado || 'pendiente' };
   if (annual) input.tipo = renewalTask.tipo;
   const data = validate(input, annual);
+  const campaign = statusOnly || body.id_campana === undefined ? previous?.id_campana ?? null : body.id_campana || null;
+  if (campaign && campaign !== previous?.id_campana && !(await db.query('SELECT 1 FROM comercial_campanas WHERE id=$1 FOR KEY SHARE', [campaign])).rowCount) {
+    fail('Selecciona una campaña comercial válida.');
+  }
   const comments=String(body.comentarios_agente??previous?.comentarios_agente??'');
   if(comments.length>50000)fail('El comentario es demasiado largo.');
   const changeAssignments = !statusOnly && (!annual || data.agentes[0] !== assigned[0]);
@@ -90,9 +94,9 @@ async function writeAccountTask(db, actor, accountId, id, body, statusOnly, crea
     if (valid.length !== data.agentes.length) fail('Selecciona agentes activos con cuenta de empleado.');
   }
   const taskId = id || `cta_${randomUUID()}`;
-  if (previous) await db.query(`UPDATE comercial_cuenta_tareas SET nombre=$2,tipo=$3,descripcion=$4,referencia=$5,fecha_limite=$6,estado=$7,
-    updated_at=GREATEST(clock_timestamp(),updated_at+interval '1 millisecond') WHERE id=$1`, [taskId,data.nombre,data.tipo,data.descripcion,data.referencia,data.fecha_limite,data.estado]);
-  else await db.query('INSERT INTO comercial_cuenta_tareas(id,id_cuenta,nombre,tipo,descripcion,referencia,fecha_limite,estado,es_renovacion_anual) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)', [taskId,accountId,data.nombre,data.tipo,data.descripcion,data.referencia,data.fecha_limite,data.estado,annual]);
+  if (previous) await db.query(`UPDATE comercial_cuenta_tareas SET nombre=$2,tipo=$3,descripcion=$4,referencia=$5,fecha_limite=$6,estado=$7,id_campana=$8,
+    updated_at=GREATEST(clock_timestamp(),updated_at+interval '1 millisecond') WHERE id=$1`, [taskId,data.nombre,data.tipo,data.descripcion,data.referencia,data.fecha_limite,data.estado,campaign]);
+  else await db.query('INSERT INTO comercial_cuenta_tareas(id,id_cuenta,nombre,tipo,descripcion,referencia,fecha_limite,estado,es_renovacion_anual,id_campana) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)', [taskId,accountId,data.nombre,data.tipo,data.descripcion,data.referencia,data.fecha_limite,data.estado,annual,campaign]);
   if(comments!==(previous?.comentarios_agente||''))await db.query('UPDATE comercial_cuenta_tareas SET comentarios_agente=$2 WHERE id=$1',[taskId,comments]);
   if (changeAssignments) {
     await db.query('DELETE FROM comercial_cuenta_tarea_agentes WHERE id_tarea=$1', [taskId]);

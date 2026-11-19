@@ -46,7 +46,7 @@ export default function JuanPage(){
   const totalRow=(label:string,values:(number|null)[],className='total',annual=true)=><tr className={className}><th colSpan={2}>{label}</th>{values.map((value,i)=><td key={i} className={(value??0)<0?'negative':''}>{money(value)}</td>)}<td className="spacer"/><td>{annual?money(sum(values)):''}</td></tr>;
   return <main className="juan-page">
     <div className="juan-toolbar">
-      <Link href="/dashboard/contabilidad/prevision-liquidez">← Previsión liquidez</Link>
+
       <strong>Vista Juan</strong>
       <button onClick={()=>setReview(!review)}>{review?'Ocultar revisión':'Revisar importación y diferencias'}</button>
       <span role="status">{busy?'Guardando…':saved}</span>

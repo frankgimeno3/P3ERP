@@ -47,6 +47,7 @@ export interface InterfazCuenta {
   campanas?: string;
   estado_leads_frios?: string;
   stands_ferias?: string;
+  stands_ferias_ediciones?: { id_feria: string; fecha: string; hall: string; stand: string }[];
   tipo_cuenta?: string;
   descripcion_cuenta: string;
   actividades_cuenta: string;
