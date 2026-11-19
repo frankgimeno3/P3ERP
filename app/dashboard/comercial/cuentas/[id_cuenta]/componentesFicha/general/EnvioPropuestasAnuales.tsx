@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import apiClient from "@/app/apiClient";
 import DatePartsInput from "@/app/components/DatePartsInput";
 import SearchableSelect from "@/app/components/SearchableSelect";
@@ -40,6 +40,11 @@ const control = "mt-1 block w-full rounded border border-gray-300 bg-white px-3 
 const button = "rounded border border-gray-300 px-3 py-2 enabled:cursor-pointer enabled:hover:bg-blue-50 disabled:opacity-50";
 const primaryButton = "rounded bg-blue-950 px-3 py-2 text-white enabled:cursor-pointer enabled:hover:bg-blue-800 disabled:opacity-50";
 
+const months = Array.from({ length: 12 }, (_, index) => ({
+  value: String(index + 1).padStart(2, "0"),
+  name: new Intl.DateTimeFormat("es", { month: "long", timeZone: "UTC" }).format(new Date(Date.UTC(2000, index, 1))),
+}));
+
 function FechaAnual({ label, value, onChange, disabled }: {
   label: string;
   value: string;
@@ -48,29 +53,20 @@ function FechaAnual({ label, value, onChange, disabled }: {
 }) {
   const [day = "", month = ""] = value.split("/");
   return (
-    <fieldset disabled={disabled}>
-      <legend className="mb-1">{label}</legend>
-      <div className="flex items-center gap-1.5">
-        {[[day, "dd"], [month, "mm"]].map(([part, placeholder], index) => (
-          <Fragment key={placeholder}>
-            {index === 1 && <span aria-hidden="true">/</span>}
-            <input
-              aria-label={`${label} ${placeholder}`}
-              aria-invalid={Boolean(value && !normalizeAnnualDayMonth(value))}
-              className="w-16 rounded border border-gray-300 px-2 py-1 text-center"
-              inputMode="numeric"
-              maxLength={2}
-              placeholder={placeholder}
-              value={part}
-              onChange={event => {
-                const digits = event.target.value.replace(/\D/g, "").slice(0, 2);
-                const parts = index === 0 ? [digits, month] : [day, digits];
-                onChange(parts.some(Boolean) ? parts.join("/") : "");
-              }}
-            />
-          </Fragment>
-        ))}
-      </div>
+    <fieldset disabled={disabled} className="flex flex-wrap items-center gap-2">
+      <span className="min-w-9">{label}</span>
+      <input aria-label={`${label}, número`} aria-invalid={Boolean(value && !normalizeAnnualDayMonth(value))}
+        className="w-16 rounded border border-gray-300 px-2 py-1 text-center" inputMode="numeric" maxLength={2}
+        placeholder="dd" value={day}
+        onBlur={() => { if (day.length === 1) onChange(`${day.padStart(2, "0")}/${month}`); }}
+        onChange={event => onChange(`${event.target.value.replace(/\D/g, "").slice(0, 2)}/${month}`)} />
+      <span>del mes de</span>
+      <select aria-label={`${label}, mes`} value={month ? month.padStart(2, "0") : ""}
+        onChange={event => onChange(`${day}/${event.target.value}`)}
+        className="rounded border border-gray-300 bg-white px-2 py-1 enabled:cursor-pointer enabled:hover:border-blue-700 disabled:opacity-60">
+        <option value="">Mes</option>
+        {months.map(({ value, name }) => <option key={value} value={value}>{name}</option>)}
+      </select>
     </fieldset>
   );
 }
@@ -216,18 +212,23 @@ export default function EnvioPropuestasAnuales({ idCuenta, agents }: { idCuenta:
           <>
             <div>
               <h3 className="mb-2 font-medium">Fecha de envío de las próximas propuestas anuales</h3>
-              <div className="flex flex-wrap gap-4">
-                <FechaAnual label="Entre" value={rango.entre} disabled={!canEdit} onChange={entre => setRango({ ...rango, entre })} />
-                <FechaAnual label="Hasta" value={rango.hasta} disabled={!canEdit} onChange={hasta => setRango({ ...rango, hasta })} />
+              <p className="mb-3 text-gray-600">La próxima propuesta de renovación debe enviarse aproximadamente entre:</p>
+              <div className="space-y-2">
+                <FechaAnual label="El día" value={rango.entre} disabled={!canEdit} onChange={entre => setRango(prev => ({ ...prev, entre }))} />
+                <FechaAnual label="y el día" value={rango.hasta} disabled={!canEdit} onChange={hasta => setRango(prev => ({ ...prev, hasta }))} />
               </div>
             </div>
-            <article className="space-y-2 rounded-lg border border-gray-200 bg-gray-50 p-3">
-              <h3 className="font-medium">Tarea de renovación</h3>
-              <p>{task?.nombre ?? taskName}</p>
-              <p className="text-gray-600">{task?.nombre_agente || "Sin agente asignado"}</p>
-              {task && <p className="text-gray-600">{taskStates[task.estado]}{task.fecha_limite && ` · ${task.fecha_limite}`}</p>}
-              {data.puede_editar && <button type="button" disabled={!canEdit} onClick={() => setEditing(true)} className={button}>Editar tarea</button>}
-            </article>
+            <div>
+              <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                <h3 className="font-medium">Recordatorio de envío de propuestas para el agente</h3>
+                <span className="text-gray-600">{task?.nombre_agente || "Sin agente asignado"}</span>
+              </div>
+              <article className="space-y-2 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                <p>{task?.nombre ?? taskName}</p>
+                {task && <p className="text-gray-600">{taskStates[task.estado]}{task.fecha_limite && ` · ${task.fecha_limite}`}</p>}
+                {data.puede_editar && <button type="button" disabled={!canEdit} onClick={() => setEditing(true)} className={button}>Editar tarea</button>}
+              </article>
+            </div>
           </>
         )}
       </div>

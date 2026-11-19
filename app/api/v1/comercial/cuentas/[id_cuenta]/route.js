@@ -1,6 +1,6 @@
 import {resolveIdentifier} from '@/server/features/identifiers/IdentifierAliases.js';
 import { NextResponse } from "next/server";
-import { deleteCuenta, getCuentaById, updateCuenta } from "../../../../../../server/features/cuenta/CuentaRepository.js";
+import { changeAccountSocialProfile, deleteCuenta, getCuentaById, updateCuenta } from "../../../../../../server/features/cuenta/CuentaRepository.js";
 
 export const runtime = "nodejs";
 
@@ -79,6 +79,21 @@ export async function DELETE(request, context) {
     return NextResponse.json(
       { message: "Error al eliminar la cuenta", detail: process.env.NODE_ENV === "development" ? error.message : undefined },
       { status: 500 },
+    );
+  }
+}
+
+export async function PATCH(request, context) {
+  try {
+    const idCuenta = await getIdCuenta(context);
+    if (!idCuenta) return NextResponse.json({ message: "Indica la cuenta." }, { status: 400 });
+    const change = await request.json().catch(() => null);
+    return NextResponse.json({ redes_sociales: await changeAccountSocialProfile(idCuenta, change) });
+  } catch (error) {
+    if (!error.status) console.error("Error al guardar el perfil social de la cuenta:", error);
+    return NextResponse.json(
+      { message: error.status ? error.message : "No se pudo guardar la red social." },
+      { status: error.status || 500 },
     );
   }
 }

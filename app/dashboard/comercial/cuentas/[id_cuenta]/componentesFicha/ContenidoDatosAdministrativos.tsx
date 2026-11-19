@@ -60,7 +60,7 @@ const ContenidoDatosAdministrativos: FC<ContenidoDatosAdministrativosProps> = ({
           </label>
           <label className="space-y-1">
             <span className="font-medium">País facturación</span>
-            <CountrySelect value={cuentaEditable.pais_facturacion || ""} onChange={(value) => handleChange("pais_facturacion", value)} className={fieldClass} />
+            <CountrySelect flags="all" value={cuentaEditable.pais_facturacion || ""} onChange={(value) => handleChange("pais_facturacion", value)} className={fieldClass} />
           </label>
           <label className="space-y-1">
             <span className="font-medium">Mail contabilidad</span>

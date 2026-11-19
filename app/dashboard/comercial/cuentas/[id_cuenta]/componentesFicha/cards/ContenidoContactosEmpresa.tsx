@@ -18,13 +18,11 @@ interface Contacto {
 
 interface ContenidoContactosEmpresaProps {
   id_cuenta: string;
+  onPrincipalChange: (id: string) => void;
 }
 
-const ContenidoContactosEmpresa: FC<ContenidoContactosEmpresaProps> = ({ id_cuenta }) => {
+const ContenidoContactosEmpresa: FC<ContenidoContactosEmpresaProps> = ({ id_cuenta, onPrincipalChange }) => {
   const router = useRouter();
-  const [principal,setPrincipal]=useState<Contacto|null>(null);
-  useEffect(()=>{if(!principal)return;const close=(e:KeyboardEvent)=>{if(e.key==='Escape')setPrincipal(null);};window.addEventListener('keydown',close);return()=>window.removeEventListener('keydown',close);},[principal]);
-  const confirmarPrincipal=async()=>{if(!principal)return;setProcesando(true);setError(null);try{await apiClient.put('/api/v1/comercial/cuentas/'+encodeURIComponent(id_cuenta)+'/contacto-principal',{id_contacto:principal.id_contacto});setContactosFiltrados(rows=>rows.map(row=>({...row,es_principal:row.id_contacto===principal.id_contacto})));setPrincipal(null);}catch(e:any){setError(e.message);}finally{setProcesando(false);}};
   const [contactosFiltrados, setContactosFiltrados] = useState<Contacto[]>([]);
   const [contactoSeleccionado, setContactoSeleccionado] = useState<Contacto | null>(null);
   const [desvincularCuenta, setDesvincularCuenta] = useState(false);
@@ -33,8 +31,34 @@ const ContenidoContactosEmpresa: FC<ContenidoContactosEmpresaProps> = ({ id_cuen
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let active=true;ContactoService.getContactos({id_cuenta}).then(data=>{if(active)setContactosFiltrados(Array.isArray(data)?data:[]);}).catch(()=>{if(active)setError('No se pudieron cargar los contactos.');});return()=>{active=false;};
-  },[id_cuenta]);
+    const controller = new AbortController();
+    ContactoService.getContactos({ id_cuenta }, { signal: controller.signal }).then(data => {
+      if (controller.signal.aborted) return;
+      const rows: Contacto[] = Array.isArray(data) ? data : [];
+      setContactosFiltrados(rows);
+      onPrincipalChange(rows.find(row => row.es_principal)?.id_contacto || '');
+    }).catch(() => {
+      if (!controller.signal.aborted) setError('No se pudieron cargar los contactos.');
+    });
+    return () => controller.abort();
+  }, [id_cuenta, onPrincipalChange]);
+
+  const elegirPrincipal = async (contacto: Contacto) => {
+    if (procesando || contacto.es_principal) return;
+    setProcesando(true);
+    setError(null);
+    try {
+      await apiClient.put('/api/v1/comercial/cuentas/' + encodeURIComponent(id_cuenta) + '/contacto-principal', {
+        id_contacto: contacto.id_contacto,
+      });
+      setContactosFiltrados(rows => rows.map(row => ({ ...row, es_principal: row.id_contacto === contacto.id_contacto })));
+      onPrincipalChange(contacto.id_contacto);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'No se pudo cambiar el contacto principal.');
+    } finally {
+      setProcesando(false);
+    }
+  };
 
   useEffect(() => {
     if (!contactoSeleccionado) return;
@@ -84,6 +108,7 @@ const ContenidoContactosEmpresa: FC<ContenidoContactosEmpresaProps> = ({ id_cuen
         await ContactoService.unlinkContactoFromCuenta(contactoSeleccionado.id_contacto, id_cuenta);
       }
 
+      if (contactoSeleccionado.es_principal) onPrincipalChange('');
       setContactosFiltrados((prev) =>
         prev.filter((contacto) => contacto.id_contacto !== contactoSeleccionado.id_contacto),
       );
@@ -110,6 +135,7 @@ const ContenidoContactosEmpresa: FC<ContenidoContactosEmpresaProps> = ({ id_cuen
         </Link>
       </div>
 
+      {error && !contactoSeleccionado && <p role="alert" className="mb-3 text-red-700">{error}</p>}
       {contactosFiltrados.length === 0 ? (
         <p className="text-gray-600">No hay contactos disponibles para esta cuenta.</p>
       ) : (
@@ -120,7 +146,7 @@ const ContenidoContactosEmpresa: FC<ContenidoContactosEmpresaProps> = ({ id_cuen
               <th className="text-left p-2 font-light">Nombre y apellidos</th>
               <th className="text-left p-2 font-light">Cargo</th>
               <th className="text-left p-2 font-light">Email principal</th>
-              <th className="text-left p-2 font-light">Contacto principal</th><th className="text-left p-2 font-light">Acciones</th>
+              <th className="text-left p-2 font-light">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -130,11 +156,20 @@ const ContenidoContactosEmpresa: FC<ContenidoContactosEmpresaProps> = ({ id_cuen
                 onClick={(e) => handleRowClick(e, `/dashboard/comercial/contactos/${contacto.id_contacto}`)}
                 className="border-t border-gray-200 hover:bg-gray-100/30 cursor-pointer"
               >
+                <td className="p-2 border-b border-gray-200" onClick={event => event.stopPropagation()}>
+                  <button type="button" aria-label={`Contacto principal: ${contacto.nombre_completo_contacto}`}
+                    aria-pressed={Boolean(contacto.es_principal)} disabled={procesando || contacto.es_principal}
+                    onClick={() => void elegirPrincipal(contacto)}
+                    className={`rounded p-1 transition-colors enabled:cursor-pointer enabled:hover:text-orange-300 ${contacto.es_principal ? "text-yellow-500" : "text-gray-400"}`}>
+                    <svg aria-hidden="true" className="h-6 w-6" viewBox="0 0 24 24" fill={contacto.es_principal ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.25" strokeLinejoin="round">
+                      <path d="m2 6 5 4 5-7 5 7 5-4-2.5 12h-15L2 6ZM5 21h14" />
+                    </svg>
+                  </button>
+                </td>
                 <td className="p-2 border-b border-gray-200">{contacto.id_contacto}</td>
                 <td className="p-2 border-b border-gray-200">{contacto.nombre_completo_contacto}</td>
                 <td className="p-2 border-b border-gray-200">{contacto.cargo_contacto || '-'}</td>
                 <td className="p-2 border-b border-gray-200">{contacto.email_contacto || '-'}</td>
-                <td className="p-2 border-b border-gray-200" onClick={e=>e.stopPropagation()}><span title="Contrato princial">{contacto.es_principal ? <svg aria-label="Contacto principal" className="h-6 w-6 text-yellow-500" viewBox="0 0 24 24" fill="currentColor"><path d="M2 5l5 4 5-7 5 7 5-4-3 14H5L2 5zm3 16h14v2H5z"/></svg> : <input type="checkbox" aria-label={`Marcar como principal a ${contacto.nombre_completo_contacto}`} checked={false} onChange={()=>{setError(null);setPrincipal(contacto);}} className="h-4 w-4 cursor-pointer hover:ring-2 hover:ring-yellow-300"/>}</span></td>
                 <td className="p-2 border-b border-gray-200">
                   <button
                     type="button"
@@ -153,7 +188,6 @@ const ContenidoContactosEmpresa: FC<ContenidoContactosEmpresaProps> = ({ id_cuen
         </SortableTable>
       )}
 
-      {principal&&<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"><section role="dialog" aria-modal="true" aria-label="Cambiar contacto principal" className="relative w-full max-w-lg rounded bg-white p-6 shadow-xl"><button aria-label="Cerrar" onClick={()=>setPrincipal(null)} className="absolute right-3 top-2 cursor-pointer rounded px-2 text-2xl hover:bg-gray-100">×</button><h2 className="pr-8 text-lg font-semibold">Cambiar contacto principal</h2><p className="my-4">¿Quieres establecer a {principal.nombre_completo_contacto} como contacto principal de esta cuenta?</p>{error&&<p role="alert" className="text-red-700">{error}</p>}<div className="mt-4 flex justify-end gap-3"><button onClick={()=>setPrincipal(null)} className="cursor-pointer rounded border px-4 py-2 hover:bg-gray-100">Cancelar</button><button disabled={procesando} onClick={confirmarPrincipal} className="rounded bg-blue-950 px-4 py-2 text-white enabled:cursor-pointer enabled:hover:bg-blue-900 disabled:opacity-50">Confirmar cambio</button></div></section></div>}
       {contactoSeleccionado && (
         <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
           <div className="bg-white rounded-xl shadow-2xl w-[520px] p-6 relative">

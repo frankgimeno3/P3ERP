@@ -1,15 +1,16 @@
 'use client';
-import { isCommercialAgent } from "@/app/config/commercialAgents";
 import SearchableSelect from "@/app/components/SearchableSelect";
 
-import React, { FC, ChangeEvent, useEffect, useMemo, useState } from "react";
+import React, { FC, ChangeEvent, useEffect, useState } from "react";
 import { AgenteService } from "@/app/service/AgenteService";
 import { CuentaService } from "@/app/service/CuentaService";
-import { FeriaService } from "@/app/service/FeriaService";
-import countries from "@/app/dashboard/comercial/contactos/crear/fases/fasescomponents/countries.json";
+import type { SocialProfile } from "@/app/lib/accountSocialProfiles";
+import RedesSociales from "./RedesSociales";
+import IdentidadCuenta from "./IdentidadCuenta";
 import EnvioPropuestasAnuales from "./EnvioPropuestasAnuales";
 
 interface DatosCRMProps {
+  commercialDetails: React.ReactNode;
   id_cuenta: string;
   nombre_empresa: string;
   id_agente: string;
@@ -22,15 +23,14 @@ interface DatosCRMProps {
   revisado_ricardo: boolean;
   campanas: string;
   estado_leads_frios: string;
-  stands_ferias: string;
   tipo_cuenta: string;
   presente_en_qq: boolean;
   qq: boolean;
   actividades: string;
   descripcion_actividad: string;
   correo_principal: string;
-  ferias: string[];
-  red_social_prioritaria: string;
+  redesSociales: SocialProfile[];
+  onRedesSocialesSaved: (profiles: SocialProfile[]) => void;
   catalogos: string;
   array_cuentas_distribuidoras: any[];
   array_cuentas_distribuidas: any[];
@@ -48,26 +48,6 @@ interface Agente {
   estado_agente?: string;
   is_empleado_account?: boolean;
 }
-
-const potencialActualOptions = [
-  "Cliente",
-  "Altas Posibilidades - buena relación con el responsable",
-  "Propuesta desestimada o silencio",
-  "Neutral - Intentando contactar con responsable",
-  "Neutral - buscando persona de contacto",
-  "Bajas posibilidades - responsable actualmente no interesado",
-  "No contactar - Responsable adverso",
-  "Relacionado - se lleva por agencia",
-];
-
-const potencialFuturoOptions = [
-  "Máximo - Cliente nuestro y-o anunciante competencia",
-  "Alto - Encaja por sector y por mercado",
-  "Neutral - no es anunciante habitual",
-  "Neutral - no determinado",
-  "Bajo - Encaja por producto pero no por mercado",
-  "Nulo - Es y será otro sector y mercado",
-];
 
 const fieldClass = "w-full border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring focus:ring-blue-400";
 
@@ -165,6 +145,7 @@ function CuentaSearchModal({
 }
 
 const DatosCRM: FC<DatosCRMProps> = ({
+  commercialDetails,
   id_cuenta,
   nombre_empresa,
   id_agente,
@@ -177,15 +158,14 @@ const DatosCRM: FC<DatosCRMProps> = ({
   revisado_ricardo,
   campanas,
   estado_leads_frios,
-  stands_ferias,
   tipo_cuenta,
   presente_en_qq,
   qq,
   actividades,
   descripcion_actividad,
   correo_principal,
-  ferias,
-  red_social_prioritaria,
+  redesSociales,
+  onRedesSocialesSaved,
   catalogos,
   array_cuentas_distribuidoras,
   array_cuentas_distribuidas,
@@ -194,35 +174,17 @@ const DatosCRM: FC<DatosCRMProps> = ({
   onChange,
 }) => {
   const [agentes, setAgentes] = useState<Agente[]>([]);
-  const [feriasDisponibles, setFeriasDisponibles] = useState<any[]>([]);
   const [tiposCuenta, setTiposCuenta] = useState<string[]>([]);
   const [errorTiposCuenta, setErrorTiposCuenta] = useState(false);
   const [modalCuenta, setModalCuenta] = useState<"distribuidoras" | "distribuidas" | null>(null);
-  const [paisQuery, setPaisQuery] = useState(pais_cuenta);
-  const [paisOpen, setPaisOpen] = useState(false);
-  const feriasSeleccionadas = useMemo(() => new Set(Array.isArray(ferias) ? ferias : []), [ferias]);
-  const paisesFiltrados = useMemo(() => {
-    const term = paisQuery.trim().toLowerCase();
-    return (countries as { name: string; code: string }[])
-      .filter((country) => !term || country.name.toLowerCase().includes(term))
-      .slice(0, 12);
-  }, [paisQuery]);
-
   useEffect(() => {
     AgenteService.getAgentes()
       .then((data) => setAgentes(Array.isArray(data) ? data : []))
       .catch(() => setAgentes([]));
-    FeriaService.getFerias()
-      .then((data) => setFeriasDisponibles(Array.isArray(data) ? data : []))
-      .catch(() => setFeriasDisponibles([]));
     CuentaService.getCuentas({ typesOnly: true })
       .then(setTiposCuenta)
       .catch(() => setErrorTiposCuenta(true));
   }, []);
-
-  useEffect(() => {
-    setPaisQuery(pais_cuenta);
-  }, [pais_cuenta]);
 
   const handleTextChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     onChange(e.target.name, e.target.value);
@@ -230,13 +192,6 @@ const DatosCRM: FC<DatosCRMProps> = ({
 
   const handleBooleanChange = (e: ChangeEvent<HTMLSelectElement>) => {
     onChange(e.target.name, e.target.value === "true");
-  };
-
-  const toggleFeria = (idFeria: string) => {
-    const next = new Set(feriasSeleccionadas);
-    if (next.has(idFeria)) next.delete(idFeria);
-    else next.add(idFeria);
-    onChange("ferias", Array.from(next));
   };
 
   const addCuentaRelacionada = (field: "array_cuentas_distribuidoras" | "array_cuentas_distribuidas", cuenta: any) => {
@@ -251,93 +206,12 @@ const DatosCRM: FC<DatosCRMProps> = ({
 
   return (
     <div className="space-y-8 p-4">
-      <section className="space-y-4">
-        <h2 className="text-xl font-bold">Detalles de la cuenta</h2>
-        <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-3">
-          <label className="space-y-1">
-            <span className="font-medium">Código Tiger</span>
-            <input type="text" value={id_cuenta} disabled className={`${fieldClass} bg-gray-100`} />
-          </label>
-          <label className="space-y-1">
-            <span className="font-medium">Código Edisoft</span>
-            <input name="id_edisoft" value={id_edisoft} onChange={handleTextChange} className={fieldClass} />
-          </label>
-          <label className="space-y-1">
-            <span className="font-medium">Nombre Empresa</span>
-            <input name="nombre_empresa" value={nombre_empresa} onChange={handleTextChange} className={fieldClass} />
-          </label>
-          <label className="space-y-1">
-            <span className="font-medium">Agente</span>
-            <select name="id_agente" value={id_agente} onChange={handleTextChange} className={fieldClass}>
-              <option value="">Sin asignar</option>
-              {agentes.filter(isCommercialAgent).map((agente) => (
-                <option key={agente.id_agente} value={agente.id_agente}>
-                  {agente.nombre_completo_agente || `${agente.nombre_agente || ""} ${agente.apellidos_agente || ""}`.trim() || agente.id_agente}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="space-y-1">
-            <span className="font-medium">Asignado a</span>
-            <select name="asignado_a" value={asignado_a} onChange={handleTextChange} className={fieldClass}>
-              <option value="">Sin asignar</option>
-              {agentes.filter(isCommercialAgent).filter((agente) => agente.email_agente).map((agente) => (
-                <option key={agente.id_agente} value={agente.email_agente}>
-                  {agente.email_agente}
-                </option>
-              ))}
-            </select>
-          </label>
-          <div id="pais-cuenta-detalles" className="relative space-y-1">
-            <span className="font-medium">País</span>
-            <input
-              value={paisQuery}
-              onFocus={() => setPaisOpen(true)}
-              onChange={(event) => {
-                setPaisQuery(event.target.value);
-                onChange("pais_cuenta", "");
-                setPaisOpen(true);
-              }}
-              className={fieldClass}
-              placeholder="Escribe y selecciona un país"
-            />
-            {paisOpen && (
-              <div className="absolute z-40 mt-1 max-h-56 w-full overflow-y-auto rounded border border-gray-200 bg-white shadow-xl">
-                {paisesFiltrados.map((country) => (
-                  <button
-                    key={country.code}
-                    type="button"
-                    onMouseDown={(event) => event.preventDefault()}
-                    onClick={() => {
-                      setPaisQuery(country.name);
-                      onChange("pais_cuenta", country.name);
-                      setPaisOpen(false);
-                    }}
-                    className="block w-full px-3 py-2 text-left text-sm hover:bg-blue-50"
-                  >
-                    {country.name}
-                  </button>
-                ))}
-                {paisesFiltrados.length === 0 && <div className="px-3 py-2 text-sm text-gray-500">Sin resultados</div>}
-              </div>
-            )}
-          </div>
-          <label className="space-y-1 md:col-span-3 lg:col-span-1">
-            <span className="font-medium">Potencial actual - Relación</span>
-            <select name="potencial_actual_relacion" value={potencial_actual_relacion} onChange={handleTextChange} className={fieldClass}>
-              <option value="">Sin definir</option>
-              {potencialActualOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-            </select>
-          </label>
-          <label className="space-y-1 md:col-span-3 lg:col-span-2">
-            <span className="font-medium">Potencial futuro - Encaje con nuestros medios</span>
-            <select name="potencial_futuro_encaje" value={potencial_futuro_encaje} onChange={handleTextChange} className={fieldClass}>
-              <option value="">Sin definir</option>
-              {potencialFuturoOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-            </select>
-          </label>
-        </div>
-      </section>
+      <IdentidadCuenta
+        data={{ id_cuenta, id_edisoft, nombre_empresa, id_agente, asignado_a, pais_cuenta, potencial_actual_relacion, potencial_futuro_encaje }}
+        agents={agentes}
+        onChange={onChange}
+      />
+      {commercialDetails}
 
       <section className="space-y-4">
         <h2 className="text-xl font-bold">Estado de tareas</h2>
@@ -356,10 +230,6 @@ const DatosCRM: FC<DatosCRMProps> = ({
           <label className="space-y-1">
             <span className="font-medium">Estado leads fríos</span>
             <input name="estado_leads_frios" value={estado_leads_frios} onChange={handleTextChange} className={fieldClass} />
-          </label>
-          <label className="space-y-1 md:col-span-3">
-            <span className="font-medium">Stands en próximas ferias</span>
-            <textarea name="stands_ferias" value={stands_ferias} onChange={handleTextChange} className={`${fieldClass} min-h-24`} />
           </label>
           <EnvioPropuestasAnuales key={id_cuenta} idCuenta={id_cuenta} agents={agentes} />
         </div>
@@ -385,10 +255,7 @@ const DatosCRM: FC<DatosCRMProps> = ({
               {cuenta_agencia && !["No", "Sí"].includes(cuenta_agencia) && <option value={cuenta_agencia}>{cuenta_agencia}</option>}
             </select>
           </label>
-          <label className="space-y-1">
-            <span className="font-medium">Red social prioritaria</span>
-            <input name="red_social_prioritaria" value={red_social_prioritaria} onChange={handleTextChange} className={fieldClass} />
-          </label>
+          <RedesSociales key={id_cuenta} idCuenta={id_cuenta} profiles={redesSociales} onSaved={onRedesSocialesSaved} />
           <label className="space-y-1">
             <span className="font-medium">Correo principal</span>
             <input name="correo_principal" value={correo_principal} onChange={handleTextChange} className={fieldClass} />
@@ -401,23 +268,6 @@ const DatosCRM: FC<DatosCRMProps> = ({
             </select>
           </label>
 
-          <details className="rounded-lg border border-gray-200 md:col-span-3">
-            <summary className="cursor-pointer rounded-lg px-4 py-3 font-medium hover:bg-gray-50">Ferias</summary>
-            <div className="grid grid-cols-1 gap-2 border-t border-gray-200 p-4 md:grid-cols-2 lg:grid-cols-3">
-              {feriasDisponibles.map((feria) => (
-                <label key={feria.id_feria} className="flex cursor-pointer items-center gap-2 rounded p-1 text-xs hover:bg-blue-50">
-                  <input
-                    type="checkbox"
-                    className="cursor-pointer"
-                    checked={feriasSeleccionadas.has(feria.id_feria)}
-                    onChange={() => toggleFeria(feria.id_feria)}
-                  />
-                  <span>{feria.nombre_feria || feria.titulo_especifico_edicion || feria.id_feria}</span>
-                </label>
-              ))}
-              {feriasDisponibles.length === 0 && <p className="text-xs text-gray-600">No hay ferias disponibles.</p>}
-            </div>
-          </details>
           <label className="space-y-1">
             <span className="font-medium">Catálogos</span>
             <input name="catalogos" value={catalogos} onChange={handleTextChange} className={fieldClass} />

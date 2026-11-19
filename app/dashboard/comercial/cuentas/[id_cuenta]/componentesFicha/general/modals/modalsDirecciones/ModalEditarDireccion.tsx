@@ -103,7 +103,7 @@ const ModalEditarDireccion: FC<ModalEditarDireccionProps> = ({
             <div key={key} className="flex flex-col">
               <label className="text-sm capitalize">{key.replace('_', ' ')}</label>
               {key === 'pais_direccion' ? (
-                <CountrySelect value={form.pais_direccion} onChange={(value) => setForm({ ...form, pais_direccion: value })} className="border p-1 rounded" required />
+                <CountrySelect flags="all" value={form.pais_direccion} onChange={(value) => setForm({ ...form, pais_direccion: value })} className="border p-1 rounded" required />
               ) : key === 'descripcion_direccion' ? (
                 <textarea
                   name={key}

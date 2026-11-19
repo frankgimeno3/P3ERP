@@ -1,4 +1,5 @@
 'use client';
+import CountryFlag from "@/app/components/CountryFlag";
 import SortableTable from '@/app/components/SortableTable';
 
 
@@ -137,7 +138,14 @@ const Direcciones: FC<DireccionesProps> = ({
           <tbody>
             <tr className="hover:bg-gray-100/30">
               {columns.map((column) => (
-                <td key={column.key} className="border-b p-2">{direccion[column.key] || '-'}</td>
+                <td key={column.key} className="border-b p-2">
+                  {column.key === "pais_direccion" ? (
+                    <span className="inline-flex items-center gap-2">
+                      <CountryFlag country={direccion.pais_direccion || ""} />
+                      {direccion.pais_direccion || '-'}
+                    </span>
+                  ) : direccion[column.key] || '-'}
+                </td>
               ))}
               <td className="flex flex-row justify-end gap-3 p-2">
                 <button

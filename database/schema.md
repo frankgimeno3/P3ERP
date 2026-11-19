@@ -1331,6 +1331,8 @@ La migración `20261119_0001_proposal_sent_at.sql` añade `comercial_propuestas_
 
 La migración `20261119_0002_account_annual_renewal.sql` añade `comercial_cuentas.renovacion_anual` (`jsonb` con `activo` y un rango manual opcional). Conserva como valor inicial los rangos anteriores de `datos_comerciales.envio_propuestas_anuales`. La marca `comercial_cuenta_tareas.es_renovacion_anual` identifica una única tarea de renovación por cuenta y admite cero o un agente. Las demás tareas siguen requiriendo un responsable.
 
+La migración `20261119_0003_account_social_profiles.sql` añade `comercial_cuentas.redes_sociales` (`jsonb`, array de objetos con `nombre`, `tiene_cuenta`, `url` y `favorita`). La ficha conserva las URLs reconocibles que estaban registradas en el campo anterior `red_social_prioritaria`. Las acciones sobre los perfiles se guardan individualmente y el registro admite una sola red prioritaria.
+
 ### Propiedades de Dirección
 
 La migración `20261103_0001_properties.sql` crea `direccion_propiedades`

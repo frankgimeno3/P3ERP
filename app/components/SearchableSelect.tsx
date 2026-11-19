@@ -1,11 +1,11 @@
 'use client';
-import { useEffect, useLayoutEffect, useId, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 
-export type SearchOption = { value: string; label: string; searchText?: string; disabled?: boolean };
-type Props = { id?:string; inputClassName?:string; options: SearchOption[]; value: string; onChange: (value: string) => void; label: string; placeholder?: string; required?: boolean; disabled?: boolean; name?: string; className?: string; onSearchChange?: (query: string) => void };
+export type SearchOption = { value: string; label: string; searchText?: string; disabled?: boolean; icon?: ReactNode };
+type Props = { id?:string; inputClassName?:string; options: SearchOption[]; value: string; onChange: (value: string) => void; label: string; placeholder?: string; required?: boolean; disabled?: boolean; name?: string; className?: string; onSearchChange?: (query: string) => void; showSelectedIcon?: boolean };
 const normalize = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es');
-export default function SearchableSelect({ id:providedId,inputClassName,options, value, onChange, label, placeholder = 'Escribe y selecciona una opción', required = false, disabled = false, name, className = '', onSearchChange }: Props) {
+export default function SearchableSelect({ id:providedId,inputClassName,options, value, onChange, label, placeholder = 'Escribe y selecciona una opción', required = false, disabled = false, name, className = '', onSearchChange, showSelectedIcon = false }: Props) {
   const generatedId = useId(), id=providedId||generatedId, root = useRef<HTMLDivElement>(null), input = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false), [query, setQuery] = useState(''), [active, setActive] = useState(0);
   const [position,setPosition] = useState({left:0,top:0,width:0,maxHeight:256});
@@ -26,6 +26,7 @@ export default function SearchableSelect({ id:providedId,inputClassName,options,
     update();window.addEventListener('resize',update);window.addEventListener('scroll',update,true);return()=>{window.removeEventListener('resize',update);window.removeEventListener('scroll',update,true);};
   },[open]);
   const selected = options.find(option => option.value === value);
+  const selectedIcon = showSelectedIcon ? selected?.icon : null;
   useEffect(() => { input.current?.setCustomValidity(required && !selected?.value ? 'Selecciona una opción del desplegable.' : ''); }, [required, selected]);
   const shown = options.filter(option => normalize(`${option.label} ${option.value} ${option.searchText || ''}`).includes(normalize(query)));
   const choose = (option: SearchOption) => { if (option.disabled) return; onChange(option.value); setOpen(false); setQuery(''); input.current?.focus(); };
@@ -37,8 +38,9 @@ export default function SearchableSelect({ id:providedId,inputClassName,options,
   };
   return <div ref={root} className={`relative ${className}`} onBlur={event => { if (!root.current?.contains(event.relatedTarget as Node)) { setOpen(false); setQuery(''); } }}>
     {name && <input type="hidden" name={name} value={selected?.value || ''} />}
+    {selectedIcon && <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-2 flex items-center">{selectedIcon}</span>}
     <input id={id} ref={input} role="combobox" aria-label={label} aria-expanded={open && !disabled} aria-controls={`${id}-options`} aria-autocomplete="list" aria-activedescendant={open && shown[active] ? `${id}-${active}` : undefined} autoComplete="off" disabled={disabled} required={required} placeholder={placeholder} value={open ? query || selected?.label || '' : selected?.label || ''}
-      className={`${inputClassName||"w-full rounded border border-gray-300 bg-white px-3 py-2 text-slate-900 outline-none"} enabled:cursor-pointer enabled:hover:border-blue-950 focus:border-blue-950 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500`}
+      className={`${inputClassName||"w-full rounded border border-gray-300 bg-white px-3 py-2 text-slate-900 outline-none"} ${selectedIcon ? "pl-8!" : ""} enabled:cursor-pointer enabled:hover:border-blue-950 focus:border-blue-950 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500`}
       onFocus={begin} onClick={() => { if (!open) begin(); }}
       onChange={event => { setQuery(event.target.value); setOpen(true); setActive(0); if (value) onChange(''); onSearchChange?.(event.target.value); }}
       onKeyDown={event => {
@@ -47,7 +49,7 @@ export default function SearchableSelect({ id:providedId,inputClassName,options,
         if (event.key === 'Enter' && open) { event.preventDefault(); if (shown[active]) choose(shown[active]); }
       }} />
     {open && !disabled && createPortal(<div id={`${id}-options`} role="listbox" aria-label={label} style={position} className="fixed z-[1000] overflow-auto rounded border border-gray-300 bg-white p-1 text-slate-900 shadow-xl">
-      {shown.map((option, i) => <button id={`${id}-${i}`} key={option.value} tabIndex={-1} type="button" role="option" aria-selected={option.value === value} disabled={option.disabled} onMouseDown={event => event.preventDefault()} onClick={() => choose(option)} className={`block w-full rounded px-3 py-2 text-left enabled:cursor-pointer enabled:hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50 ${i === active ? 'bg-blue-50' : ''}`}>{option.label}</button>)}
+      {shown.map((option, i) => <button id={`${id}-${i}`} key={option.value} tabIndex={-1} type="button" role="option" aria-selected={option.value === value} disabled={option.disabled} onMouseDown={event => event.preventDefault()} onClick={() => choose(option)} className={`flex w-full items-center gap-2 rounded px-3 py-2 text-left enabled:cursor-pointer enabled:hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50 ${i === active ? 'bg-blue-50' : ''}`}>{option.icon}{option.label}</button>)}
       {!shown.length && <p className="p-3 text-sm text-gray-500">No hay opciones coincidentes.</p>}
     </div>,document.body)}
   </div>;

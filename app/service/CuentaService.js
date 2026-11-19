@@ -23,6 +23,11 @@ export class CuentaService {
         return response.data;
     }
 
+    static async changeSocialProfile(idCuenta, change) {
+        const response = await apiClient.patch(`/api/v1/comercial/cuentas/${encodeURIComponent(idCuenta)}`, change);
+        return response.data.redes_sociales;
+    }
+
     static async deleteCuenta(idCuenta, params = {}) {
         const response = await apiClient.delete(`/api/v1/comercial/cuentas/${idCuenta}`, { params });
         return response.data;

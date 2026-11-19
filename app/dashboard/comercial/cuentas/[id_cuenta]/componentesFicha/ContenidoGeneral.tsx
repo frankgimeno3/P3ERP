@@ -11,12 +11,14 @@ interface ContenidoGeneralProps {
   cuentaEditable: InterfazCuenta;
   setCuentaEditable: React.Dispatch<React.SetStateAction<InterfazCuenta | undefined>>;
   setIsContenidoEdited: (val: boolean) => void;
+  onOpenContactos: () => void;
 }
 
 const ContenidoGeneral: FC<ContenidoGeneralProps> = ({ 
   cuentaEditable, 
   setCuentaEditable,
-  setIsContenidoEdited 
+  setIsContenidoEdited,
+  onOpenContactos,
 }) => {
   if (!cuentaEditable) {
     return <p className="text-red-700">Cuenta no encontrada</p>;
@@ -86,27 +88,30 @@ const ContenidoGeneral: FC<ContenidoGeneralProps> = ({
         revisado_ricardo={Boolean(cuentaEditable.revisado_ricardo)}
         campanas={cuentaEditable.campanas || ""}
         estado_leads_frios={cuentaEditable.estado_leads_frios || ""}
-        stands_ferias={cuentaEditable.stands_ferias || ""}
         tipo_cuenta={cuentaEditable.tipo_cuenta || ""}
         presente_en_qq={cuentaEditable.presente_en_qq}
         qq={Boolean(cuentaEditable.qq)}
         actividades={cuentaEditable.actividades_cuenta}
         descripcion_actividad={cuentaEditable.descripcion_actividad || ""}
         correo_principal={cuentaEditable.correo_principal || ""}
-        ferias={cuentaEditable.ferias || []}
-        red_social_prioritaria={cuentaEditable.red_social_prioritaria || ""}
+        redesSociales={cuentaEditable.redes_sociales || []}
+        onRedesSocialesSaved={redes_sociales => setCuentaEditable(prev => prev && { ...prev, redes_sociales })}
         catalogos={cuentaEditable.catalogos || ""}
         array_cuentas_distribuidoras={cuentaEditable.array_cuentas_distribuidoras || []}
         array_cuentas_distribuidas={cuentaEditable.array_cuentas_distribuidas || []}
         cuenta_agencia={cuentaEditable.cuenta_agencia || ""}
         fuente_novedades={cuentaEditable.fuente_novedades_cuenta}
         onChange={handleCRMChange}
-      />
-
-      <DatosComerciales
-        datos_comerciales={cuentaEditable.datos_comerciales}
-        pais_cuenta={cuentaEditable.pais_cuenta}
-        onChange={handleDatosComercialesChange}
+        commercialDetails={
+          <DatosComerciales
+            key={cuentaEditable.id_cuenta}
+            datos_comerciales={cuentaEditable.datos_comerciales}
+            pais_cuenta={cuentaEditable.pais_cuenta}
+            idCuenta={cuentaEditable.id_cuenta}
+            onOpenContactos={onOpenContactos}
+            onChange={handleDatosComercialesChange}
+          />
+        }
       />
 
       <Direcciones

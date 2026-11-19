@@ -1,4 +1,4 @@
-
+import type { SocialProfile } from "@/app/lib/accountSocialProfiles";
 
 
 export interface InterfazContacto {
@@ -56,6 +56,7 @@ export interface InterfazCuenta {
   presente_en_qq: boolean;
   ferias?: string[];
   red_social_prioritaria?: string;
+  redes_sociales?: SocialProfile[];
   catalogos?: string;
   array_cuentas_distribuidoras?: { id_cuenta?: string; nombre_empresa?: string }[];
   array_cuentas_distribuidas?: { id_cuenta?: string; nombre_empresa?: string }[];

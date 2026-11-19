@@ -1,8 +1,9 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import ContenidoGeneral from './componentesFicha/ContenidoGeneral';
+import ContenidoFeriasCuenta from './componentesFicha/ContenidoFeriasCuenta';
 import ContenidoComentarios from './componentesFicha/ContenidoComentarios';
 import ContenidoContactosEmpresa from './componentesFicha/cards/ContenidoContactosEmpresa';
 import ContenidoDatosAdministrativos from './componentesFicha/ContenidoDatosAdministrativos';
@@ -23,7 +24,7 @@ interface Comentario {
   contenido: string;
 }
 
-type PestanaCuenta = 'general' | 'comentarios' | 'contactos' | 'propuestas' | 'contratos' | 'contenidos' | 'tareas' | 'datos_administrativos' | 'general_eventos';
+type PestanaCuenta = 'general' | 'comentarios' | 'contactos' | 'propuestas' | 'ferias' | 'contratos' | 'contenidos' | 'tareas' | 'datos_administrativos' | 'general_eventos';
 
 const datosComercialesDefault = {
   ciudad_principal_cuenta: '',
@@ -57,7 +58,7 @@ function mapCuenta(cuentaData: any): InterfazCuenta {
     qq: Boolean(cuentaData.qq),
     presente_en_qq: Boolean(cuentaData.presente_en_qq),
     ferias: Array.isArray(cuentaData.ferias) ? cuentaData.ferias : [],
-    red_social_prioritaria: cuentaData.red_social_prioritaria || '',
+    redes_sociales: Array.isArray(cuentaData.redes_sociales) ? cuentaData.redes_sociales : [],
     catalogos: cuentaData.catalogos || '',
     array_cuentas_distribuidoras: cuentaData.array_cuentas_distribuidoras || [],
     array_cuentas_distribuidas: cuentaData.array_cuentas_distribuidas || [],
@@ -178,7 +179,7 @@ const FichaCliente = () => {
       setSaving(true);
       setErrorGuardado(null);
       
-      await CuentaService.updateCuenta(id_cuenta, cuentaEditable);
+      await CuentaService.updateCuenta(id_cuenta, { ...cuentaEditable, preservar_contacto_principal: true });
       
       setIsContenidoEdited(false);
       // Opcional: mostrar mensaje de éxito o recargar datos
@@ -195,6 +196,13 @@ const FichaCliente = () => {
       setSaving(false);
     }
   };
+
+  const syncPrincipal = useCallback((contacto_principal: string) => {
+    setCuentaEditable(prev => prev && ({
+      ...prev,
+      datos_comerciales: { ...prev.datos_comerciales, contacto_principal },
+    }));
+  }, []);
 
   if (!id_cuenta) {
     return (
@@ -234,12 +242,12 @@ const FichaCliente = () => {
     );
   }
 
-  const seccion = pestana === 'tareas' ? 'tareas' : ['general','comentarios','contactos','propuestas'].includes(pestana) ? 'comercial' : 'gestion';
+  const seccion = pestana === 'tareas' ? 'tareas' : ['general','comentarios','contactos','propuestas','ferias'].includes(pestana) ? 'comercial' : 'gestion';
   const tituloCuenta = cuentaEditable.nombre_empresa?.trim() || id_cuenta;
 
   return (
     <div className="flex flex-col h-full min-h-screen text-gray-600">
-      <MiddleNav tituloprincipal={`Ficha de la cuenta ${tituloCuenta}`} />
+      <MiddleNav tituloprincipal={pestana === 'general' ? 'Ficha de la cuenta' : `Ficha de la cuenta ${tituloCuenta}`} />
 
       <div className="bg-gray-200 min-h-screen p-12 text-gray-600">
         {errorGuardado && <p role="alert" className="mb-4 rounded-lg border border-red-300 bg-red-100 p-4 text-red-700">{errorGuardado}</p>}
@@ -262,6 +270,7 @@ const FichaCliente = () => {
             { key: 'comentarios', label: 'Comentarios' },
             { key: 'contactos', label: 'Contactos' },
             { key: 'propuestas', label: 'Propuestas' },
+            { key: 'ferias', label: 'Ferias' },
           ] : [
             { key: 'contratos', label: 'Contratos' },
             { key: 'contenidos', label: 'Contenidos' },
@@ -278,11 +287,28 @@ const FichaCliente = () => {
 
         <div className="bg-white p-12 shadow-xl rounded-b-lg">
           {pestana === 'tareas' && <AccountTasks accountId={id_cuenta} />}
+          {pestana === 'ferias' && (
+            <ContenidoFeriasCuenta
+              key={cuentaEditable.id_cuenta}
+              idCuenta={cuentaEditable.id_cuenta}
+              seleccionadas={cuentaEditable.ferias || []}
+              stands={cuentaEditable.stands_ferias || ''}
+              onFeriasChange={ferias => {
+                setCuentaEditable(prev => prev && { ...prev, ferias });
+                setIsContenidoEdited(true);
+              }}
+              onStandsChange={stands_ferias => {
+                setCuentaEditable(prev => prev && { ...prev, stands_ferias });
+                setIsContenidoEdited(true);
+              }}
+            />
+          )}
           {pestana === 'general' && cuentaEditable && (
             <ContenidoGeneral
               cuentaEditable={cuentaEditable}
               setCuentaEditable={setCuentaEditable}
               setIsContenidoEdited={setIsContenidoEdited}
+              onOpenContactos={() => setPestana('contactos')}
             />
           )}
 
@@ -301,7 +327,7 @@ const FichaCliente = () => {
           )}
 
           {pestana === 'contactos' && (
-            <ContenidoContactosEmpresa id_cuenta={id_cuenta} />
+            <ContenidoContactosEmpresa key={cuentaEditable.id_cuenta} id_cuenta={cuentaEditable.id_cuenta} onPrincipalChange={syncPrincipal} />
           )}
 
           {pestana === 'propuestas' && (

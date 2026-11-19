@@ -5,6 +5,7 @@ import { cuentaOrderBy } from './CuentaSorting.js';
 import {allocateAccountIdentifier} from '../identifiers/BusinessIdentifiers.js';
 import { getPgPool } from "../../database/pgClient.js";
 import { addCuentaEvento, formatChangeDetail } from "../registroEventos/RegistroEventosRepository.js";
+import { applySocialProfileChange, normalizeSocialProfiles } from "../../../app/lib/accountSocialProfiles.js";
 
 const tableName = "comercial_cuentas";
 
@@ -208,7 +209,36 @@ export async function getCuentaById(idCuenta) {
     [idCuenta],
   );
 
-  return rows[0] ? normalizeCuenta(rows[0]) : null;
+  const row = rows[0];
+  return row ? {
+    ...normalizeCuenta(row),
+    redes_sociales: normalizeSocialProfiles(row.redes_sociales, row.red_social_prioritaria),
+  } : null;
+}
+
+export async function changeAccountSocialProfile(idCuenta, change, pool = getPgPool()) {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const { rows: [account] } = await client.query(
+      "SELECT redes_sociales, red_social_prioritaria FROM comercial_cuentas WHERE id_cuenta = $1 FOR UPDATE",
+      [idCuenta],
+    );
+    if (!account) throw Object.assign(new Error("Cuenta no encontrada."), { status: 404 });
+    const perfiles = applySocialProfileChange(account.redes_sociales, account.red_social_prioritaria, change);
+    if (!perfiles) throw Object.assign(new Error("Selecciona una red y una URL de perfil válidas."), { status: 400 });
+    await client.query(
+      "UPDATE comercial_cuentas SET redes_sociales = $2::jsonb, updated_at = NOW() WHERE id_cuenta = $1 AND redes_sociales IS DISTINCT FROM $2::jsonb",
+      [idCuenta, JSON.stringify(perfiles)],
+    );
+    await client.query("COMMIT");
+    return perfiles;
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 export async function createCuenta(cuentaData) {
@@ -271,6 +301,13 @@ export async function updateCuenta(idCuenta, cuentaData) {
   values.push(idCuenta);
   const assignments = columns.map((column, index) => {
     const placeholder = `$${index + 1}`;
+    if (column === "datos_comerciales" && cuentaData.preservar_contacto_principal === true) {
+      return `datos_comerciales = CASE
+        WHEN datos_comerciales ? 'contacto_principal'
+          THEN jsonb_set(${placeholder}::jsonb, '{contacto_principal}', datos_comerciales->'contacto_principal')
+        ELSE ${placeholder}::jsonb - 'contacto_principal'
+      END`;
+    }
     return jsonColumns.has(column) ? `${column} = ${placeholder}::jsonb` : `${column} = ${placeholder}`;
   });
 
