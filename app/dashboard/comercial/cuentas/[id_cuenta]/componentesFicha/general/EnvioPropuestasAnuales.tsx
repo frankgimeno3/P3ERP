@@ -159,7 +159,6 @@ function errorMessage(reason: unknown, fallback: string) {
 
 export default function EnvioPropuestasAnuales({ idCuenta, agents }: { idCuenta: string; agents: Agent[] }) {
   const [data, setData] = useState<Renewal>();
-  const [activo, setActivo] = useState(true);
   const [rango, setRango] = useState<RangoAnual>({ entre: "", hasta: "" });
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -171,7 +170,6 @@ export default function EnvioPropuestasAnuales({ idCuenta, agents }: { idCuenta:
     apiClient.get<Renewal>(url, { signal: request.signal }).then(({ data }) => {
       if (request.signal.aborted) return;
       setData(data);
-      setActivo(data.activo);
       setRango(data.rango ?? data.predeterminado);
     }).catch(reason => {
       if (!request.signal.aborted) setError(errorMessage(reason, "No se pudo cargar el seguimiento."));
@@ -181,20 +179,20 @@ export default function EnvioPropuestasAnuales({ idCuenta, agents }: { idCuenta:
 
   if (!data) return <p className="md:col-span-3" role={error ? "alert" : "status"}>{error || "Cargando seguimiento de renovación…"}</p>;
 
-  const task = data.tarea;
+  const { activo, tarea: task } = data;
   const currentRange = data.rango ?? data.predeterminado;
-  const settingsChanged = activo !== data.activo || (activo && (rango.entre !== currentRange.entre || rango.hasta !== currentRange.hasta));
+  const settingsChanged = rango.entre !== currentRange.entre || rango.hasta !== currentRange.hasta;
   const normalized = normalizeAnnualRange(rango);
   const canEdit = data.puede_editar && !saving;
 
-  const saveSettings = async () => {
+  const saveSettings = async (nextActive: boolean, nextRange: RangoAnual | null) => {
+    if (!canEdit) return;
     setSaving(true);
     setError("");
-    const automatic = !data.rango_manual && normalized?.entre === data.predeterminado.entre && normalized?.hasta === data.predeterminado.hasta;
+    const automatic = !data.rango_manual && nextRange?.entre === data.predeterminado.entre && nextRange?.hasta === data.predeterminado.hasta;
     try {
-      const response = await apiClient.put<Renewal>(url, { activo, rango: activo && !automatic ? normalized : null });
+      const response = await apiClient.put<Renewal>(url, { activo: nextActive, rango: nextActive && !automatic ? nextRange : null });
       setData(response.data);
-      setActivo(response.data.activo);
       setRango(response.data.rango ?? response.data.predeterminado);
     } catch (reason) {
       setError(errorMessage(reason, "No se pudo guardar el seguimiento."));
@@ -208,7 +206,7 @@ export default function EnvioPropuestasAnuales({ idCuenta, agents }: { idCuenta:
       <div className="grid items-start gap-4 xl:grid-cols-[auto_minmax(0,1fr)_minmax(0,1fr)]">
         <div>
           <h3 className="mb-2 font-medium" id="renewal-followup-label">¿En seguimiento para futura renovación?</h3>
-          <button type="button" role="switch" aria-checked={activo} aria-labelledby="renewal-followup-label" onClick={() => setActivo(!activo)} disabled={!canEdit}
+          <button type="button" role="switch" aria-checked={activo} aria-busy={saving} aria-labelledby="renewal-followup-label" onClick={() => void saveSettings(!activo, null)} disabled={!canEdit}
             className="inline-flex rounded-full border border-gray-300 bg-gray-100 p-1 enabled:cursor-pointer enabled:hover:ring-2 enabled:hover:ring-blue-200 disabled:opacity-60">
             <span className={`rounded-full px-4 py-1 ${!activo ? "bg-blue-950 text-white" : ""}`}>No</span>
             <span className={`rounded-full px-4 py-1 ${activo ? "bg-blue-950 text-white" : ""}`}>Sí</span>
@@ -228,15 +226,14 @@ export default function EnvioPropuestasAnuales({ idCuenta, agents }: { idCuenta:
               <p>{task?.nombre ?? taskName}</p>
               <p className="text-gray-600">{task?.nombre_agente || "Sin agente asignado"}</p>
               {task && <p className="text-gray-600">{taskStates[task.estado]}{task.fecha_limite && ` · ${task.fecha_limite}`}</p>}
-              {data.puede_editar && <button type="button" disabled={!canEdit || !data.activo} onClick={() => setEditing(true)} className={button}>Editar tarea</button>}
+              {data.puede_editar && <button type="button" disabled={!canEdit} onClick={() => setEditing(true)} className={button}>Editar tarea</button>}
             </article>
           </>
         )}
       </div>
       {error && <p role="alert" className="text-red-700">{error}</p>}
-      {!activo && data.tarea && <p>Al guardar se eliminará la tarea de renovación asociada.</p>}
-      {data.puede_editar && (settingsChanged || (activo && !task)) && (
-        <button type="button" className={primaryButton} disabled={!canEdit || (activo && !normalized)} onClick={() => void saveSettings()}>
+      {data.puede_editar && activo && (settingsChanged || !task) && (
+        <button type="button" className={primaryButton} disabled={!canEdit || !normalized} onClick={() => void saveSettings(true, normalized)}>
           {saving ? "Guardando…" : "Guardar seguimiento"}
         </button>
       )}

@@ -63,6 +63,7 @@ const LoggedNav = () => {
       <div className="flex flex-row items-center gap-2 text-sm uppercase md:gap-3 md:text-base">
         <Link
           href="/gm"
+          prefetch={false}
           className="cursor-pointer rounded-lg bg-white/10 px-3 py-2 font-normal text-gray-200 transition-colors hover:bg-white/20 hover:text-white md:px-4"
         >
           Modo GM

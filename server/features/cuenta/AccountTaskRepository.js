@@ -103,6 +103,11 @@ async function writeAccountTask(db, actor, accountId, id, body, statusOnly, crea
 }
 
 export async function readAnnualRenewal(actor, accountId, db = getPgPool()) {
+  const { tarea, ...state } = await loadAnnualRenewal(actor, accountId, db);
+  return { ...state, tarea: state.activo ? tarea : null };
+}
+
+async function loadAnnualRenewal(actor, accountId, db) {
   requireTaskIdentity(actor);
   const account = (await db.query(`SELECT c.renovacion_anual,
     c.datos_comerciales->'envio_propuestas_anuales' AS rango_anterior,
@@ -115,7 +120,7 @@ export async function readAnnualRenewal(actor, accountId, db = getPgPool()) {
   const activo = account.renovacion_anual?.activo !== false;
   const predeterminado = defaultAnnualRange(account.firmas);
   const rangoManual = normalizeAnnualRange(account.renovacion_anual ? account.renovacion_anual.rango : account.rango_anterior);
-  const task = activo && (await db.query(`${select} WHERE t.id_cuenta=$1 AND t.es_renovacion_anual`, [accountId])).rows[0];
+  const task = (await db.query(`${select} WHERE t.id_cuenta=$1 AND t.es_renovacion_anual`, [accountId])).rows[0];
   return {
     activo, predeterminado, rango: activo ? rangoManual || predeterminado : null,
     rango_manual: Boolean(rangoManual), tarea: task ? decorate(task, actor) : null,
@@ -131,7 +136,7 @@ export async function saveAnnualRenewal(actor, accountId, body, pool = getPgPool
   try {
     await db.query('BEGIN');
     await lockAccount(db, accountId);
-    const current = await readAnnualRenewal(actor, accountId, db);
+    const current = await loadAnnualRenewal(actor, accountId, db);
     if (body.tarea) {
       if (!current.activo) fail('Activa el seguimiento antes de editar la tarea.', 409);
       if ((body.tarea.id || null) !== (current.tarea?.id || null)) fail('La tarea ha cambiado. Recarga antes de guardar.', 409);
