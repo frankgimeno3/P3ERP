@@ -1,14 +1,19 @@
 import { requestActor } from "../../../../../server/features/comentario/AccountActivity.js";
 import { NextResponse } from "next/server";
-import { createPropuesta, getPropuestas } from "../../../../../server/features/propuesta/PropuestaRepository.js";
+import { createPropuesta, getPropuestas, getProposalSendDates } from "../../../../../server/features/propuesta/PropuestaRepository.js";
 
 export const runtime = "nodejs";
 
 export async function GET(request) {
   try {
     const params = new URL(request.url).searchParams;
+    const idCuenta = params.get("id_cuenta")?.trim() || "";
+    if (params.get("sendDatesOnly") === "true") {
+      if (!idCuenta) return NextResponse.json({ message: "Indica la cuenta." }, { status: 400 });
+      return NextResponse.json(await getProposalSendDates(idCuenta));
+    }
     const propuestas = await getPropuestas({
-      idCuenta: params.get("id_cuenta")?.trim() || "",
+      idCuenta,
       estado: params.get("estado")?.trim() || "",
       agente: params.get("agente")?.trim() || "",
       cliente: params.get("cliente")?.trim() || "",

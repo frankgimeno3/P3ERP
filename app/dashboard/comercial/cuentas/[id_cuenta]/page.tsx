@@ -3,6 +3,7 @@
 import { useParams } from 'next/navigation';
 import React, { useState, useEffect } from 'react';
 import ContenidoGeneral from './componentesFicha/ContenidoGeneral';
+import { rangoAnualValido } from './componentesFicha/general/EnvioPropuestasAnuales';
 import ContenidoComentarios from './componentesFicha/ContenidoComentarios';
 import ContenidoContactosEmpresa from './componentesFicha/cards/ContenidoContactosEmpresa';
 import ContenidoDatosAdministrativos from './componentesFicha/ContenidoDatosAdministrativos';
@@ -88,6 +89,7 @@ const FichaCliente = () => {
   const [isContenidoEdited, setIsContenidoEdited] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [errorGuardado, setErrorGuardado] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [agentes, setAgentes] = useState<any[]>([]);
   
@@ -172,10 +174,14 @@ const FichaCliente = () => {
 
   const handleSaveChanges = async () => {
     if (!cuentaEditable || !id_cuenta) return;
+    if (!rangoAnualValido(cuentaEditable.datos_comerciales.envio_propuestas_anuales)) {
+      setErrorGuardado('Introduce un día y un mes válidos en Entre y Hasta, o deja ambas fechas vacías.');
+      return;
+    }
 
     try {
       setSaving(true);
-      setError(null);
+      setErrorGuardado(null);
       
       await CuentaService.updateCuenta(id_cuenta, cuentaEditable);
       
@@ -189,7 +195,7 @@ const FichaCliente = () => {
       }
     } catch (err: any) {
       console.error('Error saving cuenta:', err);
-      setError(err?.message || 'Error al guardar los cambios');
+      setErrorGuardado(err?.message || 'Error al guardar los cambios');
     } finally {
       setSaving(false);
     }
@@ -241,6 +247,7 @@ const FichaCliente = () => {
       <MiddleNav tituloprincipal={`Ficha de la cuenta ${tituloCuenta}`} />
 
       <div className="bg-gray-200 min-h-screen p-12 text-gray-600">
+        {errorGuardado && <p role="alert" className="mb-4 rounded-lg border border-red-300 bg-red-100 p-4 text-red-700">{errorGuardado}</p>}
         <div role="tablist" aria-label="Secciones de la cuenta" className="flex flex-wrap gap-2">
           {[
             { key: 'comercial', label: 'Datos Comerciales', first: 'general' },

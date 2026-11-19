@@ -75,6 +75,7 @@ export interface InterfazCuenta {
     importe?: number | string;
   }[];
   datos_comerciales: {
+    envio_propuestas_anuales?: { entre: string; hasta: string };
     ciudad_principal_cuenta: string;
     telefono_principal_cuenta: string;
     categoria_principal_cuenta: string;

@@ -192,6 +192,14 @@ export async function getCuentaCountries() {
   return rows.map(row => row.pais_cuenta);
 }
 
+export async function getCuentaTypes() {
+  const { rows } = await getPgPool().query(
+    `SELECT DISTINCT btrim(tipo_cuenta) AS tipo FROM ${tableName}
+     WHERE btrim(tipo_cuenta) <> '' ORDER BY tipo`,
+  );
+  return rows.map(row => row.tipo);
+}
+
 export async function getCuentaById(idCuenta) {
   idCuenta=await resolveIdentifier('cuenta',idCuenta);
   const pool = getPgPool();

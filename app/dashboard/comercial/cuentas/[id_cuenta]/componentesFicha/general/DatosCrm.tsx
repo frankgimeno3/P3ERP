@@ -7,6 +7,7 @@ import { AgenteService } from "@/app/service/AgenteService";
 import { CuentaService } from "@/app/service/CuentaService";
 import { FeriaService } from "@/app/service/FeriaService";
 import countries from "@/app/dashboard/comercial/contactos/crear/fases/fasescomponents/countries.json";
+import EnvioPropuestasAnuales, { type RangoAnual } from "./EnvioPropuestasAnuales";
 
 interface DatosCRMProps {
   id_cuenta: string;
@@ -35,6 +36,8 @@ interface DatosCRMProps {
   array_cuentas_distribuidas: any[];
   cuenta_agencia: string;
   fuente_novedades: string;
+  envioAnual?: RangoAnual;
+  onEnvioAnualChange: (extremo: keyof RangoAnual, value: string) => void;
   onChange: (field: string, value: string | boolean | any[]) => void;
 }
 
@@ -80,12 +83,14 @@ function ToggleDistribucion({
   const activo = Array.isArray(items) && items.length > 0;
   return (
     <div className="space-y-2 md:col-span-3">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <span className="font-medium">{label}</span>
         <button
           type="button"
           onClick={onOpen}
-          className={`flex w-28 items-center rounded-full border p-1 text-xs font-medium transition ${
+          aria-label={label}
+          aria-haspopup="dialog"
+          className={`flex w-28 cursor-pointer items-center rounded-full border p-1 text-xs font-medium transition hover:ring-2 hover:ring-blue-300 ${
             activo ? "border-blue-950 bg-blue-950 text-white" : "border-gray-300 bg-gray-100 text-gray-600"
           }`}
         >
@@ -120,6 +125,14 @@ function CuentaSearchModal({
   const [selected, setSelected] = useState<any | null>(null);
 
   useEffect(() => {
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !event.defaultPrevented) onClose();
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [onClose]);
+
+  useEffect(() => {
     CuentaService.getCuentas({ clienteFiltro: query })
       .then((data) => setCuentas(Array.isArray(data) ? data.slice(0, 20) : []))
       .catch(() => setCuentas([]));
@@ -127,21 +140,21 @@ function CuentaSearchModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="w-full max-w-2xl rounded bg-white p-6 shadow-2xl">
+      <div role="dialog" aria-modal="true" aria-label={title} className="w-full max-w-2xl rounded bg-white p-6 shadow-2xl">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-lg font-semibold text-blue-950">{title}</h3>
-          <button type="button" onClick={onClose} className="rounded px-2 py-1 text-gray-600 hover:bg-gray-100">x</button>
+          <button type="button" aria-label="Cerrar" onClick={onClose} className="cursor-pointer rounded px-2 py-1 text-gray-600 hover:bg-gray-100">×</button>
         </div>
         <SearchableSelect label="Cuenta" required value={selected?.id_cuenta||''} onChange={id=>setSelected(cuentas.find(c=>c.id_cuenta===id)||null)} onSearchChange={setQuery} options={cuentas.map(c=>({value:c.id_cuenta,label:c.nombre_empresa+' · '+c.id_cuenta}))} />
         <div className="mt-5 flex justify-end gap-3">
-          <button type="button" onClick={onClose} className="rounded border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50">
+          <button type="button" onClick={onClose} className="cursor-pointer rounded border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50">
             Cancelar
           </button>
           <button
             type="button"
             disabled={!selected}
             onClick={() => selected && onConfirm(selected)}
-            className="rounded bg-blue-950 px-4 py-2 text-sm font-medium text-white hover:bg-blue-900 disabled:bg-gray-400"
+            className="rounded bg-blue-950 px-4 py-2 text-sm font-medium text-white enabled:cursor-pointer enabled:hover:bg-blue-900 disabled:bg-gray-400"
           >
             Confirmar
           </button>
@@ -178,10 +191,14 @@ const DatosCRM: FC<DatosCRMProps> = ({
   array_cuentas_distribuidas,
   cuenta_agencia,
   fuente_novedades,
+  envioAnual,
+  onEnvioAnualChange,
   onChange,
 }) => {
   const [agentes, setAgentes] = useState<Agente[]>([]);
   const [feriasDisponibles, setFeriasDisponibles] = useState<any[]>([]);
+  const [tiposCuenta, setTiposCuenta] = useState<string[]>([]);
+  const [errorTiposCuenta, setErrorTiposCuenta] = useState(false);
   const [modalCuenta, setModalCuenta] = useState<"distribuidoras" | "distribuidas" | null>(null);
   const [paisQuery, setPaisQuery] = useState(pais_cuenta);
   const [paisOpen, setPaisOpen] = useState(false);
@@ -200,6 +217,9 @@ const DatosCRM: FC<DatosCRMProps> = ({
     FeriaService.getFerias()
       .then((data) => setFeriasDisponibles(Array.isArray(data) ? data : []))
       .catch(() => setFeriasDisponibles([]));
+    CuentaService.getCuentas({ typesOnly: true })
+      .then(setTiposCuenta)
+      .catch(() => setErrorTiposCuenta(true));
   }, []);
 
   useEffect(() => {
@@ -343,6 +363,7 @@ const DatosCRM: FC<DatosCRMProps> = ({
             <span className="font-medium">Stands en próximas ferias</span>
             <textarea name="stands_ferias" value={stands_ferias} onChange={handleTextChange} className={`${fieldClass} min-h-24`} />
           </label>
+          <EnvioPropuestasAnuales key={id_cuenta} idCuenta={id_cuenta} rango={envioAnual} onChange={onEnvioAnualChange} />
         </div>
       </section>
 
@@ -351,7 +372,24 @@ const DatosCRM: FC<DatosCRMProps> = ({
         <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-3">
           <label className="space-y-1">
             <span className="font-medium">Tipo cuenta</span>
-            <input name="tipo_cuenta" value={tipo_cuenta} onChange={handleTextChange} className={fieldClass} />
+            <select name="tipo_cuenta" value={tipo_cuenta} onChange={handleTextChange} className={`${fieldClass} cursor-pointer hover:border-blue-500`}>
+              <option value="">Sin definir</option>
+              {tipo_cuenta && !tiposCuenta.includes(tipo_cuenta) && <option value={tipo_cuenta}>{tipo_cuenta}</option>}
+              {tiposCuenta.map(tipo => <option key={tipo} value={tipo}>{tipo}</option>)}
+            </select>
+            {errorTiposCuenta && <span className="text-xs text-red-700">No se pudieron cargar los tipos de cuenta.</span>}
+          </label>
+          <label className="space-y-1">
+            <span className="font-medium">Cuenta agencia</span>
+            <select name="cuenta_agencia" value={cuenta_agencia || "No"} onChange={handleTextChange} className={`${fieldClass} cursor-pointer hover:border-blue-500`}>
+              <option value="No">No</option>
+              <option value="Sí">Sí</option>
+              {cuenta_agencia && !["No", "Sí"].includes(cuenta_agencia) && <option value={cuenta_agencia}>{cuenta_agencia}</option>}
+            </select>
+          </label>
+          <label className="space-y-1">
+            <span className="font-medium">Red social prioritaria</span>
+            <input name="red_social_prioritaria" value={red_social_prioritaria} onChange={handleTextChange} className={fieldClass} />
           </label>
           <label className="space-y-1">
             <span className="font-medium">Correo principal</span>
@@ -365,13 +403,14 @@ const DatosCRM: FC<DatosCRMProps> = ({
             </select>
           </label>
 
-          <div className="space-y-2 md:col-span-3">
-            <span className="font-medium">Ferias</span>
-            <div className="grid grid-cols-1 gap-2 rounded border border-gray-200 p-3 md:grid-cols-2 lg:grid-cols-3">
+          <details className="rounded-lg border border-gray-200 md:col-span-3">
+            <summary className="cursor-pointer rounded-lg px-4 py-3 font-medium hover:bg-gray-50">Ferias</summary>
+            <div className="grid grid-cols-1 gap-2 border-t border-gray-200 p-4 md:grid-cols-2 lg:grid-cols-3">
               {feriasDisponibles.map((feria) => (
-                <label key={feria.id_feria} className="flex items-center gap-2 text-xs">
+                <label key={feria.id_feria} className="flex cursor-pointer items-center gap-2 rounded p-1 text-xs hover:bg-blue-50">
                   <input
                     type="checkbox"
+                    className="cursor-pointer"
                     checked={feriasSeleccionadas.has(feria.id_feria)}
                     onChange={() => toggleFeria(feria.id_feria)}
                   />
@@ -380,26 +419,14 @@ const DatosCRM: FC<DatosCRMProps> = ({
               ))}
               {feriasDisponibles.length === 0 && <p className="text-xs text-gray-600">No hay ferias disponibles.</p>}
             </div>
-          </div>
-
-          <label className="space-y-1">
-            <span className="font-medium">Red social prioritaria</span>
-            <input name="red_social_prioritaria" value={red_social_prioritaria} onChange={handleTextChange} className={fieldClass} />
-          </label>
+          </details>
           <label className="space-y-1">
             <span className="font-medium">Catálogos</span>
             <input name="catalogos" value={catalogos} onChange={handleTextChange} className={fieldClass} />
           </label>
-          <label className="space-y-1">
-            <span className="font-medium">Cuenta agencia</span>
-            <select name="cuenta_agencia" value={cuenta_agencia || "No"} onChange={handleTextChange} className={fieldClass}>
-              <option value="No">No</option>
-              <option value="Sí">Sí</option>
-            </select>
-          </label>
-          <label className="space-y-1">
+          <label className="space-y-1 md:col-span-3">
             <span className="font-medium">Fuentes novedades</span>
-            <input name="fuente_novedades" value={fuente_novedades} onChange={handleTextChange} className={fieldClass} />
+            <textarea name="fuente_novedades" value={fuente_novedades} onChange={handleTextChange} className={`${fieldClass} min-h-24`} />
           </label>
           <label className="space-y-1 md:col-span-3">
             <span className="font-medium">Actividades cuenta</span>

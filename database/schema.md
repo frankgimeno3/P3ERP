@@ -1327,6 +1327,8 @@ Control de redacción comparten registros. Las altas reciben identificadores
 
 Modo prueba: comercial_cuentas, comercial_contactos, comercial_propuestas_db, comercial_contratos, produccion_contenidos, tesoreria_ordenes y administracion_facturas_clientes tienen es_prueba (booleano); PRUEBA- identifica sus datos y sus derivados. comercial_propuestas_db.enviada solo registra envíos expresamente marcados, una vez completada la propuesta. La migración 20261013_0005 instala herencia y permite el borrado confirmado de eventos mediante su API, conservando el bloqueo de UPDATE/TRUNCATE.
 
+La migración `20261119_0001_proposal_sent_at.sql` añade `comercial_propuestas_db.enviada_at` (`timestamptz`, nullable). El trigger fija la fecha al marcar la propuesta como enviada y la limpia al desmarcarla. Para envíos anteriores recupera la fecha cuando consta en la auditoría. El rango anual de la cuenta se guarda en `datos_comerciales.envio_propuestas_anuales`, con `entre` y `hasta` en formato día/mes.
+
 ### Propiedades de Dirección
 
 La migración `20261103_0001_properties.sql` crea `direccion_propiedades`

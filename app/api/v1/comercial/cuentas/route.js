@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createCuenta, getCuentas, getCuentasTotal, getCuentaCountries } from "../../../../../server/features/cuenta/CuentaRepository.js";
+import { createCuenta, getCuentas, getCuentasTotal, getCuentaCountries, getCuentaTypes } from "../../../../../server/features/cuenta/CuentaRepository.js";
 
 export const runtime = "nodejs";
 
@@ -23,8 +23,10 @@ function getFilters(request) {
 
 export async function GET(request) {
   try {
-    if (new URL(request.url).searchParams.get('countriesOnly') === 'true') return NextResponse.json(await getCuentaCountries());
-    if (new URL(request.url).searchParams.get('countOnly') === 'true') return NextResponse.json({ total: await getCuentasTotal() });
+    const params = new URL(request.url).searchParams;
+    if (params.get('countriesOnly') === 'true') return NextResponse.json(await getCuentaCountries());
+    if (params.get('typesOnly') === 'true') return NextResponse.json(await getCuentaTypes());
+    if (params.get('countOnly') === 'true') return NextResponse.json({ total: await getCuentasTotal() });
     const cuentas = await getCuentas(getFilters(request));
     return NextResponse.json(cuentas);
   } catch (error) {

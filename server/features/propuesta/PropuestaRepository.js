@@ -450,6 +450,17 @@ async function loadProposalExtras(client, proposalIds) {
   return { lineasById, cobrosById };
 }
 
+export async function getProposalSendDates(idCuenta) {
+  const { rows } = await getPgPool().query(
+    `SELECT to_char(p.enviada_at AT TIME ZONE 'Europe/Madrid', 'YYYY-MM-DD') AS fecha
+     FROM comercial_propuestas_db p
+     JOIN comercial_cuentas c ON c.id_cuenta = p.id_cuenta_propuesta
+     WHERE c.id_cuenta = $1 AND p.enviada AND p.es_prueba = c.es_prueba`,
+    [idCuenta],
+  );
+  return rows.map(row => row.fecha);
+}
+
 export async function getPropuestas(filters = {}) {
   const pool = getPgPool();
 
