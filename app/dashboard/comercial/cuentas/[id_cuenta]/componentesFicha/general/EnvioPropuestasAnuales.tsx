@@ -1,7 +1,6 @@
 'use client';
 
-import { useEffect, useState } from "react";
-import DateInputRow from "@/app/components/DateInputRow";
+import { Fragment, useEffect, useState } from "react";
 import { PropuestaService } from "@/app/service/PropuestaService";
 
 export type RangoAnual = { entre: string; hasta: string };
@@ -35,25 +34,27 @@ function FechaAnual({ label, value, onChange }: {
   return (
     <fieldset>
       <legend className="mb-1">{label}</legend>
-      <DateInputRow>
+      <div className="flex items-center gap-1.5">
         {[[day, "dd"], [month, "mm"]].map(([part, placeholder], index) => (
-          <input
-            key={placeholder}
-            aria-label={`${label} ${placeholder}`}
-            aria-invalid={Boolean(value && !diaMes(value))}
-            className="max-w-14 rounded border border-gray-300 px-2 py-1"
-            inputMode="numeric"
-            maxLength={2}
-            placeholder={placeholder}
-            value={part}
-            onChange={event => {
-              const digits = event.target.value.replace(/\D/g, "").slice(0, 2);
-              const parts = index === 0 ? [digits, month] : [day, digits];
-              onChange(parts.some(Boolean) ? parts.join("/") : "");
-            }}
-          />
+          <Fragment key={placeholder}>
+            {index === 1 && <span aria-hidden="true">/</span>}
+            <input
+              aria-label={`${label} ${placeholder}`}
+              aria-invalid={Boolean(value && !diaMes(value))}
+              className="w-16 rounded border border-gray-300 px-2 py-1 text-center"
+              inputMode="numeric"
+              maxLength={2}
+              placeholder={placeholder}
+              value={part}
+              onChange={event => {
+                const digits = event.target.value.replace(/\D/g, "").slice(0, 2);
+                const parts = index === 0 ? [digits, month] : [day, digits];
+                onChange(parts.some(Boolean) ? parts.join("/") : "");
+              }}
+            />
+          </Fragment>
         ))}
-      </DateInputRow>
+      </div>
     </fieldset>
   );
 }
