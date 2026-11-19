@@ -12,10 +12,7 @@ import EnvioPropuestasAnuales from "./EnvioPropuestasAnuales";
 interface DatosCRMProps {
   commercialDetails: React.ReactNode;
   id_cuenta: string;
-  nombre_empresa: string;
-  id_agente: string;
   id_edisoft: string;
-  asignado_a: string;
   pais_cuenta: string;
   receptor_revista: boolean;
   potencial_actual_relacion: string;
@@ -147,10 +144,7 @@ function CuentaSearchModal({
 const DatosCRM: FC<DatosCRMProps> = ({
   commercialDetails,
   id_cuenta,
-  nombre_empresa,
-  id_agente,
   id_edisoft,
-  asignado_a,
   pais_cuenta,
   receptor_revista,
   potencial_actual_relacion,
@@ -207,11 +201,11 @@ const DatosCRM: FC<DatosCRMProps> = ({
   return (
     <div className="space-y-8 p-4">
       <IdentidadCuenta
-        data={{ id_cuenta, id_edisoft, nombre_empresa, id_agente, asignado_a, pais_cuenta, potencial_actual_relacion, potencial_futuro_encaje }}
-        agents={agentes}
+        data={{ id_cuenta, id_edisoft, pais_cuenta, potencial_actual_relacion, potencial_futuro_encaje }}
         onChange={onChange}
-      />
-      {commercialDetails}
+      >
+        {commercialDetails}
+      </IdentidadCuenta>
 
       <section className="space-y-4">
         <h2 className="text-xl font-bold">Estado de tareas</h2>

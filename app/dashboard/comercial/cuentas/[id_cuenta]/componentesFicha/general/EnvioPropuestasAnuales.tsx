@@ -173,6 +173,18 @@ export default function EnvioPropuestasAnuales({ idCuenta, agents }: { idCuenta:
     return () => request.abort();
   }, [url]);
 
+  useEffect(() => {
+    if (!data?.activo || saving || editing) return;
+    const cancelRange = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !event.defaultPrevented && !document.querySelector('dialog[open], [aria-modal="true"]')) {
+        setRango(data.rango ?? data.predeterminado);
+        setError("");
+      }
+    };
+    window.addEventListener("keydown", cancelRange, true);
+    return () => window.removeEventListener("keydown", cancelRange, true);
+  }, [data, saving, editing]);
+
   if (!data) return <p className="md:col-span-3" role={error ? "alert" : "status"}>{error || "Cargando seguimiento de renovación…"}</p>;
 
   const { activo, tarea: task } = data;

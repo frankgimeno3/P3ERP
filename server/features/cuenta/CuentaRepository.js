@@ -201,6 +201,16 @@ export async function getCuentaTypes() {
   return rows.map(row => row.tipo);
 }
 
+export async function getCuentaCategories() {
+  const { rows } = await getPgPool().query(`
+    SELECT btrim(datos_comerciales->>'categoria_principal_cuenta') AS categoria
+    FROM comercial_cuentas
+    WHERE btrim(datos_comerciales->>'categoria_principal_cuenta') <> ''
+    GROUP BY 1 ORDER BY count(*) DESC, categoria
+  `);
+  return rows.map(row => row.categoria);
+}
+
 export async function getCuentaById(idCuenta) {
   idCuenta=await resolveIdentifier('cuenta',idCuenta);
   const pool = getPgPool();

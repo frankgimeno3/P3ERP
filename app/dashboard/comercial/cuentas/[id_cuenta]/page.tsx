@@ -1,8 +1,9 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import ContenidoGeneral from './componentesFicha/ContenidoGeneral';
+import { CuentaHeader } from './componentesFicha/general/IdentidadCuenta';
 import ContenidoFeriasCuenta from './componentesFicha/ContenidoFeriasCuenta';
 import ContenidoComentarios from './componentesFicha/ContenidoComentarios';
 import ContenidoContactosEmpresa from './componentesFicha/cards/ContenidoContactosEmpresa';
@@ -95,6 +96,7 @@ const FichaCliente = () => {
   
   // Estados de cuenta (desde ContenidoGeneral)
   const [cuentaEditable, setCuentaEditable] = useState<InterfazCuenta | undefined>(undefined);
+  const savedAccount = useRef<InterfazCuenta>(undefined);
 
   // Estados de comentarios (desde ContenidoComentarios)
   const [comentarios, setComentarios] = useState<Comentario[]>([]);
@@ -107,13 +109,23 @@ const FichaCliente = () => {
 
   // Cargar cuenta desde API
   useEffect(() => {
+    const request = new AbortController();
+    savedAccount.current = undefined;
+    setIsContenidoEdited(false);
+    setErrorGuardado(null);
     const fetchCuenta = async () => {
       if (!id_cuenta) return;
       
       try {
         setLoading(true);
         setError(null);
-        const cuentaData = await CuentaService.getCuentaById(id_cuenta);
+        const [cuentaData, agentData] = await Promise.all([
+          CuentaService.getCuentaById(id_cuenta, { signal: request.signal }),
+          AgenteService.getAgentes().catch(() => []),
+        ]);
+        if (request.signal.aborted) return;
+        const agentes = Array.isArray(agentData) ? agentData : [];
+        setAgentes(agentes);
         
         if (!cuentaData) {
           setError('Cuenta no encontrada');
@@ -121,7 +133,9 @@ const FichaCliente = () => {
           return;
         }
 
-        setCuentaEditable(mapCuenta(cuentaData));
+        const account = mapCuenta(cuentaData);
+        savedAccount.current = account;
+        setCuentaEditable(account);
 
         // Cargar comentarios desde los datos de la cuenta
         if (cuentaData.array_comentarios_cuenta && Array.isArray(cuentaData.array_comentarios_cuenta)) {
@@ -153,24 +167,30 @@ const FichaCliente = () => {
           setComentarios([]);
         }
       } catch (err: any) {
+        if (request.signal.aborted) return;
         console.error('Error fetching cuenta:', err);
         setError(err?.message || 'Error al cargar la cuenta');
       } finally {
-        setLoading(false);
+        if (!request.signal.aborted) setLoading(false);
       }
     };
 
     fetchCuenta();
-  }, [id_cuenta, agentes]);
+    return () => request.abort();
+  }, [id_cuenta]);
 
   useEffect(() => {
-    AgenteService.getAgentes()
-      .then((data) => setAgentes(Array.isArray(data) ? data : []))
-      .catch((error) => {
-        console.error('Error fetching agentes:', error);
-        setAgentes([]);
-      });
-  }, []);
+    if (!isContenidoEdited || saving) return;
+    const cancelEdits = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape' || event.defaultPrevented || !savedAccount.current) return;
+      if (document.querySelector('dialog[open], [aria-modal="true"]')) return;
+      setCuentaEditable(savedAccount.current);
+      setIsContenidoEdited(false);
+      setErrorGuardado(null);
+    };
+    window.addEventListener('keydown', cancelEdits, true);
+    return () => window.removeEventListener('keydown', cancelEdits, true);
+  }, [isContenidoEdited, saving]);
 
   const handleSaveChanges = async () => {
     if (!cuentaEditable || !id_cuenta) return;
@@ -179,15 +199,20 @@ const FichaCliente = () => {
       setSaving(true);
       setErrorGuardado(null);
       
-      await CuentaService.updateCuenta(id_cuenta, { ...cuentaEditable, preservar_contacto_principal: true });
+      const persisted = await CuentaService.updateCuenta(id_cuenta, { ...cuentaEditable, preservar_contacto_principal: true });
       
       setIsContenidoEdited(false);
       // Opcional: mostrar mensaje de éxito o recargar datos
       // Puedes recargar los datos si quieres asegurarte de tener la versión más reciente
-      const cuentaData = await CuentaService.getCuentaById(id_cuenta);
+      const cuentaData = await CuentaService.getCuentaById(id_cuenta).catch(() => ({
+        ...persisted,
+        redes_sociales: savedAccount.current?.redes_sociales,
+      }));
       
       if (cuentaData) {
-        setCuentaEditable(mapCuenta(cuentaData));
+        const account = mapCuenta(cuentaData);
+        savedAccount.current = account;
+        setCuentaEditable(account);
       }
     } catch (err: any) {
       console.error('Error saving cuenta:', err);
@@ -198,10 +223,18 @@ const FichaCliente = () => {
   };
 
   const syncPrincipal = useCallback((contacto_principal: string) => {
-    setCuentaEditable(prev => prev && ({
+    const withPrincipal = (prev?: InterfazCuenta) => prev && ({
       ...prev,
       datos_comerciales: { ...prev.datos_comerciales, contacto_principal },
-    }));
+    });
+    savedAccount.current = withPrincipal(savedAccount.current);
+    setCuentaEditable(withPrincipal);
+  }, []);
+
+  const syncSocialProfiles = useCallback((redes_sociales: NonNullable<InterfazCuenta['redes_sociales']>) => {
+    const withProfiles = (prev?: InterfazCuenta) => prev && { ...prev, redes_sociales };
+    savedAccount.current = withProfiles(savedAccount.current);
+    setCuentaEditable(withProfiles);
   }, []);
 
   if (!id_cuenta) {
@@ -243,14 +276,22 @@ const FichaCliente = () => {
   }
 
   const seccion = pestana === 'tareas' ? 'tareas' : ['general','comentarios','contactos','propuestas','ferias'].includes(pestana) ? 'comercial' : 'gestion';
-  const tituloCuenta = cuentaEditable.nombre_empresa?.trim() || id_cuenta;
 
   return (
     <div className="flex flex-col h-full min-h-screen text-gray-600">
-      <MiddleNav tituloprincipal={pestana === 'general' ? 'Ficha de la cuenta' : `Ficha de la cuenta ${tituloCuenta}`} />
+      <MiddleNav tituloprincipal="Ficha de la cuenta" />
 
       <div className="bg-gray-200 min-h-screen p-12 text-gray-600">
         {errorGuardado && <p role="alert" className="mb-4 rounded-lg border border-red-300 bg-red-100 p-4 text-red-700">{errorGuardado}</p>}
+        <div className="mb-4 rounded-xl bg-white p-5 shadow-sm">
+          <CuentaHeader key={cuentaEditable.id_cuenta} agents={agentes}
+            data={{ ...cuentaEditable, asignado_a: cuentaEditable.asignado_a || '' }}
+            onChange={(field, value) => {
+              setCuentaEditable(prev => prev && { ...prev, [field]: value });
+              setIsContenidoEdited(true);
+            }}
+          />
+        </div>
         <div role="tablist" aria-label="Secciones de la cuenta" className="flex flex-wrap gap-2">
           {[
             { key: 'comercial', label: 'Datos Comerciales', first: 'general' },
@@ -309,6 +350,7 @@ const FichaCliente = () => {
               setCuentaEditable={setCuentaEditable}
               setIsContenidoEdited={setIsContenidoEdited}
               onOpenContactos={() => setPestana('contactos')}
+              onRedesSocialesSaved={syncSocialProfiles}
             />
           )}
 

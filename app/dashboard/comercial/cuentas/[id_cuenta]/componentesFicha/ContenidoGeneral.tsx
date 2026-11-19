@@ -12,6 +12,7 @@ interface ContenidoGeneralProps {
   setCuentaEditable: React.Dispatch<React.SetStateAction<InterfazCuenta | undefined>>;
   setIsContenidoEdited: (val: boolean) => void;
   onOpenContactos: () => void;
+  onRedesSocialesSaved: (profiles: NonNullable<InterfazCuenta['redes_sociales']>) => void;
 }
 
 const ContenidoGeneral: FC<ContenidoGeneralProps> = ({ 
@@ -19,6 +20,7 @@ const ContenidoGeneral: FC<ContenidoGeneralProps> = ({
   setCuentaEditable,
   setIsContenidoEdited,
   onOpenContactos,
+  onRedesSocialesSaved,
 }) => {
   if (!cuentaEditable) {
     return <p className="text-red-700">Cuenta no encontrada</p>;
@@ -40,36 +42,10 @@ const ContenidoGeneral: FC<ContenidoGeneralProps> = ({
   };
 
   const handleDatosComercialesChange = (field: string, value: string) => {
-    if (field in cuentaEditable.datos_comerciales) {
-      setCuentaEditable(prev =>
-        prev
-          ? {
-              ...prev,
-              datos_comerciales: {
-                ...prev.datos_comerciales,
-                [field]: value,
-              },
-            }
-          : prev
-      );
-    } else if (field === "pais_cuenta") {
-      setCuentaEditable(prev =>
-        prev ? { ...prev, pais_cuenta: value } : prev
-      );
-    } else if (field === "contacto_principal") {
-      setCuentaEditable(prev =>
-        prev
-          ? {
-              ...prev,
-              datos_comerciales: {
-                ...prev.datos_comerciales,
-                contacto_principal: value,
-              },
-            }
-          : prev
-      );
-    }
-
+    setCuentaEditable(prev => prev && {
+      ...prev,
+      datos_comerciales: { ...prev.datos_comerciales, [field]: value },
+    });
     setIsContenidoEdited(true);
   };
 
@@ -77,10 +53,7 @@ const ContenidoGeneral: FC<ContenidoGeneralProps> = ({
     <div className="flex flex-col">
       <DatosCRM
         id_cuenta={cuentaEditable.id_cuenta}
-        nombre_empresa={cuentaEditable.nombre_empresa}
-        id_agente={cuentaEditable.id_agente}
         id_edisoft={cuentaEditable.id_edisoft || ""}
-        asignado_a={cuentaEditable.asignado_a || ""}
         pais_cuenta={cuentaEditable.pais_cuenta}
         receptor_revista={Boolean(cuentaEditable.receptor_revista)}
         potencial_actual_relacion={cuentaEditable.potencial_actual_relacion || ""}
@@ -95,7 +68,7 @@ const ContenidoGeneral: FC<ContenidoGeneralProps> = ({
         descripcion_actividad={cuentaEditable.descripcion_actividad || ""}
         correo_principal={cuentaEditable.correo_principal || ""}
         redesSociales={cuentaEditable.redes_sociales || []}
-        onRedesSocialesSaved={redes_sociales => setCuentaEditable(prev => prev && { ...prev, redes_sociales })}
+        onRedesSocialesSaved={onRedesSocialesSaved}
         catalogos={cuentaEditable.catalogos || ""}
         array_cuentas_distribuidoras={cuentaEditable.array_cuentas_distribuidoras || []}
         array_cuentas_distribuidas={cuentaEditable.array_cuentas_distribuidas || []}
@@ -106,7 +79,6 @@ const ContenidoGeneral: FC<ContenidoGeneralProps> = ({
           <DatosComerciales
             key={cuentaEditable.id_cuenta}
             datos_comerciales={cuentaEditable.datos_comerciales}
-            pais_cuenta={cuentaEditable.pais_cuenta}
             idCuenta={cuentaEditable.id_cuenta}
             onOpenContactos={onOpenContactos}
             onChange={handleDatosComercialesChange}

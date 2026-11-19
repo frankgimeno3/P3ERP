@@ -1,9 +1,9 @@
 'use client';
-import CountryFlag from "@/app/components/CountryFlag";
 
 import React, { ChangeEvent, FC, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ContactoService } from '@/app/service/ContactoService';
+import { CuentaService } from '@/app/service/CuentaService';
 
 interface DatosComercialesProps {
   datos_comerciales: {
@@ -13,7 +13,6 @@ interface DatosComercialesProps {
     contacto_principal: string;
     resumen_actividad_cuenta: string;
   };
-  pais_cuenta: string;
   idCuenta: string;
   onOpenContactos: () => void;
   onChange: (field: string, value: string) => void;
@@ -34,10 +33,23 @@ function ContactIcon() {
 
 const inputClass = 'w-full rounded border border-gray-300 px-2 py-1 focus:outline-none focus:ring focus:ring-blue-400';
 
-const DatosComerciales: FC<DatosComercialesProps> = ({ datos_comerciales, pais_cuenta, idCuenta, onOpenContactos, onChange }) => {
+const DatosComerciales: FC<DatosComercialesProps> = ({ datos_comerciales, idCuenta, onOpenContactos, onChange }) => {
   const [principal, setPrincipal] = useState<{ id_contacto: string; nombre_completo_contacto: string }>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [categoryStatus, setCategoryStatus] = useState<"loading" | "ready" | "error">("loading");
+  const category = datos_comerciales.categoria_principal_cuenta || "";
+
+  useEffect(() => {
+    const controller = new AbortController();
+    CuentaService.getCuentas({ categoriesOnly: true }, { signal: controller.signal }).then(data => {
+      if (controller.signal.aborted) return;
+      setCategories(data);
+      setCategoryStatus("ready");
+    }).catch(() => { if (!controller.signal.aborted) setCategoryStatus("error"); });
+    return () => controller.abort();
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -55,34 +67,13 @@ const DatosComerciales: FC<DatosComercialesProps> = ({ datos_comerciales, pais_c
     return () => controller.abort();
   }, [idCuenta]);
 
-  const handleInputChange = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = event.target;
     onChange(name, value);
   };
 
-  const scrollToPais = () => {
-    document.getElementById('pais-cuenta-detalles')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  };
-
   return (
-    <div className="w-full space-y-4">
-      <h2 className="text-xl font-bold">Datos Comerciales</h2>
-
-      <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-2 lg:grid-cols-3">
-        <div className="space-y-1">
-          <span className="font-medium">País</span>
-          <div className="flex items-center gap-2 rounded border border-gray-300 bg-gray-100 px-2 py-1 text-gray-700">
-            <CountryFlag country={pais_cuenta} />
-            {pais_cuenta || '-'}
-          </div>
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-xs text-gray-600">Heredado desde Detalles de la cuenta</span>
-            <button type="button" onClick={scrollToPais} className="cursor-pointer rounded border border-gray-300 px-2 py-1 text-xs hover:bg-gray-50">
-              Editar arriba
-            </button>
-          </div>
-        </div>
-
+    <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-2 lg:grid-cols-3">
         <label className="space-y-1">
           <span className="font-medium">Ciudad</span>
           <input name="ciudad_principal_cuenta" value={datos_comerciales.ciudad_principal_cuenta} onChange={handleInputChange} className={inputClass} />
@@ -96,7 +87,13 @@ const DatosComerciales: FC<DatosComercialesProps> = ({ datos_comerciales, pais_c
 
         <label className="space-y-1">
           <span className="font-medium">Categoría</span>
-          <input name="categoria_principal_cuenta" value={datos_comerciales.categoria_principal_cuenta} onChange={handleInputChange} className={inputClass} />
+          <select name="categoria_principal_cuenta" value={category} onChange={handleInputChange}
+            disabled={categoryStatus !== "ready"} className={`${inputClass} enabled:cursor-pointer enabled:hover:border-blue-700 disabled:bg-gray-100`}>
+            <option value="">Sin categor?a</option>
+            {category && !categories.includes(category) && <option value={category}>{category}</option>}
+            {categories.map(option => <option key={option} value={option}>{option}</option>)}
+          </select>
+          {categoryStatus === "error" && <span className="text-xs text-red-700">No se pudieron cargar las categor?as.</span>}
         </label>
 
         <div className="space-y-1">
@@ -124,8 +121,6 @@ const DatosComerciales: FC<DatosComercialesProps> = ({ datos_comerciales, pais_c
             className={`${inputClass} min-h-28 resize-y`}
           />
         </label>
-      </div>
-
     </div>
   );
 };
