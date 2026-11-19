@@ -7,7 +7,7 @@ import { AgenteService } from "@/app/service/AgenteService";
 import { CuentaService } from "@/app/service/CuentaService";
 import { FeriaService } from "@/app/service/FeriaService";
 import countries from "@/app/dashboard/comercial/contactos/crear/fases/fasescomponents/countries.json";
-import EnvioPropuestasAnuales, { type RangoAnual } from "./EnvioPropuestasAnuales";
+import EnvioPropuestasAnuales from "./EnvioPropuestasAnuales";
 
 interface DatosCRMProps {
   id_cuenta: string;
@@ -36,8 +36,6 @@ interface DatosCRMProps {
   array_cuentas_distribuidas: any[];
   cuenta_agencia: string;
   fuente_novedades: string;
-  envioAnual?: RangoAnual;
-  onEnvioAnualChange: (extremo: keyof RangoAnual, value: string) => void;
   onChange: (field: string, value: string | boolean | any[]) => void;
 }
 
@@ -47,6 +45,8 @@ interface Agente {
   email_agente?: string;
   nombre_agente?: string;
   apellidos_agente?: string;
+  estado_agente?: string;
+  is_empleado_account?: boolean;
 }
 
 const potencialActualOptions = [
@@ -191,8 +191,6 @@ const DatosCRM: FC<DatosCRMProps> = ({
   array_cuentas_distribuidas,
   cuenta_agencia,
   fuente_novedades,
-  envioAnual,
-  onEnvioAnualChange,
   onChange,
 }) => {
   const [agentes, setAgentes] = useState<Agente[]>([]);
@@ -363,7 +361,7 @@ const DatosCRM: FC<DatosCRMProps> = ({
             <span className="font-medium">Stands en próximas ferias</span>
             <textarea name="stands_ferias" value={stands_ferias} onChange={handleTextChange} className={`${fieldClass} min-h-24`} />
           </label>
-          <EnvioPropuestasAnuales key={id_cuenta} idCuenta={id_cuenta} rango={envioAnual} onChange={onEnvioAnualChange} />
+          <EnvioPropuestasAnuales key={id_cuenta} idCuenta={id_cuenta} agents={agentes} />
         </div>
       </section>
 

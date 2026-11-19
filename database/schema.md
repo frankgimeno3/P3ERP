@@ -1329,6 +1329,8 @@ Modo prueba: comercial_cuentas, comercial_contactos, comercial_propuestas_db, co
 
 La migración `20261119_0001_proposal_sent_at.sql` añade `comercial_propuestas_db.enviada_at` (`timestamptz`, nullable). El trigger fija la fecha al marcar la propuesta como enviada y la limpia al desmarcarla. Para envíos anteriores recupera la fecha cuando consta en la auditoría. El rango anual de la cuenta se guarda en `datos_comerciales.envio_propuestas_anuales`, con `entre` y `hasta` en formato día/mes.
 
+La migración `20261119_0002_account_annual_renewal.sql` añade `comercial_cuentas.renovacion_anual` (`jsonb` con `activo` y un rango manual opcional). Conserva como valor inicial los rangos anteriores de `datos_comerciales.envio_propuestas_anuales`. La marca `comercial_cuenta_tareas.es_renovacion_anual` identifica una única tarea de renovación por cuenta y admite cero o un agente. Las demás tareas siguen requiriendo un responsable.
+
 ### Propiedades de Dirección
 
 La migración `20261103_0001_properties.sql` crea `direccion_propiedades`

@@ -3,7 +3,6 @@
 import { useParams } from 'next/navigation';
 import React, { useState, useEffect } from 'react';
 import ContenidoGeneral from './componentesFicha/ContenidoGeneral';
-import { rangoAnualValido } from './componentesFicha/general/EnvioPropuestasAnuales';
 import ContenidoComentarios from './componentesFicha/ContenidoComentarios';
 import ContenidoContactosEmpresa from './componentesFicha/cards/ContenidoContactosEmpresa';
 import ContenidoDatosAdministrativos from './componentesFicha/ContenidoDatosAdministrativos';
@@ -174,10 +173,6 @@ const FichaCliente = () => {
 
   const handleSaveChanges = async () => {
     if (!cuentaEditable || !id_cuenta) return;
-    if (!rangoAnualValido(cuentaEditable.datos_comerciales.envio_propuestas_anuales)) {
-      setErrorGuardado('Introduce un día y un mes válidos en Entre y Hasta, o deja ambas fechas vacías.');
-      return;
-    }
 
     try {
       setSaving(true);

@@ -71,22 +71,6 @@ const ContenidoGeneral: FC<ContenidoGeneralProps> = ({
     setIsContenidoEdited(true);
   };
 
-  const handleEnvioAnualChange = (extremo: "entre" | "hasta", value: string) => {
-    setCuentaEditable(prev => prev && ({
-      ...prev,
-      datos_comerciales: {
-        ...prev.datos_comerciales,
-        envio_propuestas_anuales: {
-          entre: "",
-          hasta: "",
-          ...prev.datos_comerciales.envio_propuestas_anuales,
-          [extremo]: value,
-        },
-      },
-    }));
-    setIsContenidoEdited(true);
-  };
-
   return (
     <div className="flex flex-col">
       <DatosCRM
@@ -117,8 +101,6 @@ const ContenidoGeneral: FC<ContenidoGeneralProps> = ({
         cuenta_agencia={cuentaEditable.cuenta_agencia || ""}
         fuente_novedades={cuentaEditable.fuente_novedades_cuenta}
         onChange={handleCRMChange}
-        envioAnual={cuentaEditable.datos_comerciales.envio_propuestas_anuales}
-        onEnvioAnualChange={handleEnvioAnualChange}
       />
 
       <DatosComerciales

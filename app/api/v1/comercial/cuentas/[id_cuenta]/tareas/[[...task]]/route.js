@@ -1,7 +1,7 @@
 import {resolveIdentifier} from '@/server/features/identifiers/IdentifierAliases.js';
 import { NextResponse } from 'next/server';
 import { taskIdentity } from '@/server/features/laboral/TaskAccess.js';
-import { accountTasks, readAccountTask, saveAccountTask } from '@/server/features/cuenta/AccountTaskRepository.js';
+import { accountTasks, readAccountTask, readAnnualRenewal, saveAccountTask, saveAnnualRenewal } from '@/server/features/cuenta/AccountTaskRepository.js';
 import { canManageAccountTasks } from '@/app/config/accountTasks.js';
 
 export const runtime = 'nodejs';
@@ -11,6 +11,11 @@ async function handle(request, context) {
     const id_cuenta=await resolveIdentifier('cuenta',oldAccount);
     if (task.length > 1) return NextResponse.json({ message: 'No encontrado.' }, { status: 404 });
     const actor = taskIdentity(request), id = task[0];
+    if (id === 'renovacion-anual') {
+      if (request.method === 'GET') return NextResponse.json(await readAnnualRenewal(actor,id_cuenta));
+      if (request.method === 'PUT') return NextResponse.json(await saveAnnualRenewal(actor,id_cuenta,await request.json()));
+      return NextResponse.json({ message: 'Método no válido.' }, { status: 405 });
+    }
     if (request.method === 'GET') return NextResponse.json(id ? await readAccountTask(actor,id,id_cuenta) : { rows: await accountTasks(actor,{accountId:id_cuenta}), puede_editar: canManageAccountTasks(actor.role) });
     if (request.method === 'POST' && id || request.method !== 'POST' && !id) return NextResponse.json({ message: 'Ruta no válida.' }, { status: 405 });
     return NextResponse.json(await saveAccountTask(actor,id_cuenta,id,await request.json(),request.method === 'PATCH'), { status: request.method === 'POST' ? 201 : 200 });
