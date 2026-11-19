@@ -71,7 +71,6 @@ const ContenidoGeneral: FC<ContenidoGeneralProps> = ({
     setIsContenidoEdited(true);
   };
 
-  return (
   const handleEnvioAnualChange = (extremo: "entre" | "hasta", value: string) => {
     setCuentaEditable(prev => prev && ({
       ...prev,
@@ -88,6 +87,7 @@ const ContenidoGeneral: FC<ContenidoGeneralProps> = ({
     setIsContenidoEdited(true);
   };
 
+  return (
     <div className="flex flex-col">
       <DatosCRM
         id_cuenta={cuentaEditable.id_cuenta}
