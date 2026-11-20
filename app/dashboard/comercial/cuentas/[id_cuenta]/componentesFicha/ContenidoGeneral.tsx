@@ -69,16 +69,30 @@ const ContenidoGeneral: FC<ContenidoGeneralProps> = ({
         redesSociales={cuentaEditable.redes_sociales || []}
         onRedesSocialesSaved={onRedesSocialesSaved}
         catalogos={cuentaEditable.catalogos || ""}
+        catalogos_enlaces={cuentaEditable.catalogos_enlaces || []}
         array_cuentas_distribuidoras={cuentaEditable.array_cuentas_distribuidoras || []}
         array_cuentas_distribuidas={cuentaEditable.array_cuentas_distribuidas || []}
         fuente_novedades={cuentaEditable.fuente_novedades_cuenta}
         onChange={handleCRMChange}
+        id_agente={cuentaEditable.id_agente || ""}
+        asignado_a={cuentaEditable.asignado_a || ""}
+        summary={<label className="flex min-h-32 flex-col text-sm font-medium">Resumen actividad<textarea className="flex-1 rounded border border-gray-300 p-2 font-normal" value={cuentaEditable.datos_comerciales.resumen_actividad_cuenta || ""} onChange={event => handleDatosComercialesChange("resumen_actividad_cuenta", event.target.value)} /></label>}
+        description={<Descripcion
+        descripcion={cuentaEditable.descripcion_cuenta}
+        onChange={(value) => {
+          setCuentaEditable(prev =>
+            prev ? { ...prev, descripcion_cuenta: value } : prev
+          );
+          setIsContenidoEdited(true);
+        }}
+      />}
         commercialDetails={
           <DatosComerciales
             key={cuentaEditable.id_cuenta}
             datos_comerciales={cuentaEditable.datos_comerciales}
             idCuenta={cuentaEditable.id_cuenta}
             pais={cuentaEditable.pais_cuenta}
+            onCountryChange={value => handleCRMChange("pais_cuenta", value)}
             tipo_cuenta={cuentaEditable.tipo_cuenta || ""}
             cuenta_agencia={cuentaEditable.cuenta_agencia || ""}
             onAccountChange={handleCRMChange}
@@ -98,15 +112,7 @@ const ContenidoGeneral: FC<ContenidoGeneralProps> = ({
         }}
       />
 
-      <Descripcion
-        descripcion={cuentaEditable.descripcion_cuenta}
-        onChange={(value) => {
-          setCuentaEditable(prev =>
-            prev ? { ...prev, descripcion_cuenta: value } : prev
-          );
-          setIsContenidoEdited(true);
-        }}
-      />
+
 
     </div>
   );

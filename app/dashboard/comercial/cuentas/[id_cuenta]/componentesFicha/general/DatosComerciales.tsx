@@ -2,6 +2,7 @@
 
 import React, { ChangeEvent, FC, useEffect, useState } from 'react';
 import Link from 'next/link';
+import CountrySelect from "@/app/components/CountrySelect";
 import CountryFlag from '@/app/components/CountryFlag';
 import { ContactoService } from '@/app/service/ContactoService';
 import { CuentaService } from '@/app/service/CuentaService';
@@ -16,6 +17,7 @@ interface DatosComercialesProps {
   };
   idCuenta: string;
   pais: string;
+  onCountryChange: (value: string) => void;
   tipo_cuenta: string;
   cuenta_agencia: string;
   onAccountChange: (field: string, value: string) => void;
@@ -23,7 +25,10 @@ interface DatosComercialesProps {
   onChange: (field: string, value: string) => void;
 }
 
-const contactCard = "flex w-full cursor-pointer items-center gap-3 rounded-lg border border-gray-200 bg-white p-2 text-left font-medium shadow-sm transition-colors hover:border-blue-200 hover:bg-blue-50";
+import accountCountries from "@/app/dashboard/comercial/contactos/crear/fases/fasescomponents/countries.json";
+const accountCountryNames = accountCountries.map(country => country.name);
+
+const contactCard = "flex w-full cursor-pointer items-center gap-3 rounded-lg border border-gray-200 bg-white p-2 text-slate-900 text-left font-medium shadow-sm transition-colors hover:border-blue-200 hover:bg-blue-50";
 
 function ContactIcon() {
   return (
@@ -36,9 +41,9 @@ function ContactIcon() {
   );
 }
 
-const inputClass = 'w-full rounded border border-gray-300 px-2 py-1 focus:outline-none focus:ring focus:ring-blue-400';
+const inputClass = 'w-full rounded border border-white bg-transparent text-white [&_option]:text-slate-900 px-2 py-1 focus:outline-none focus:ring focus:ring-blue-400';
 
-const DatosComerciales: FC<DatosComercialesProps> = ({ datos_comerciales, idCuenta, pais, tipo_cuenta, cuenta_agencia, onAccountChange, onOpenContactos, onChange }) => {
+const DatosComerciales: FC<DatosComercialesProps> = ({ datos_comerciales, idCuenta, pais, onCountryChange, tipo_cuenta, cuenta_agencia, onAccountChange, onOpenContactos, onChange }) => {
   const [principal, setPrincipal] = useState<{ id_contacto: string; nombre_completo_contacto: string }>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -82,11 +87,11 @@ const DatosComerciales: FC<DatosComercialesProps> = ({ datos_comerciales, idCuen
   };
 
   return (
-    <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-2 lg:grid-cols-3">
-      <div className="flex gap-3 rounded-lg bg-gray-50 p-3">
-        <svg aria-hidden="true" className="h-6 w-6 shrink-0 text-blue-900" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+    <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-3">
+      <div className="flex gap-3 rounded-xl bg-gray-700 p-4 text-white shadow-md">
+        <svg aria-hidden="true" className="h-6 w-6 shrink-0 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>
         <div className="min-w-0 flex-1 space-y-3">
-          <p className="flex items-center gap-2 font-medium"><CountryFlag country={pais}/>{pais || "Sin país"}</p>
+          <div className="flex items-center gap-2"><CountryFlag country={pais}/><CountrySelect countries={accountCountryNames} flags="options" value={pais} onChange={onCountryChange} className={inputClass} /></div>
           <label className="block space-y-1">
           <span className="font-medium">Ciudad</span>
           <input name="ciudad_principal_cuenta" value={datos_comerciales.ciudad_principal_cuenta} onChange={handleInputChange} className={inputClass} />
@@ -94,13 +99,13 @@ const DatosComerciales: FC<DatosComercialesProps> = ({ datos_comerciales, idCuen
         </div>
       </div>
 
-      <div className="flex gap-3 rounded-lg bg-gray-50 p-3">
-        <svg aria-hidden="true" className="h-6 w-6 shrink-0 text-blue-900" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M5 3H9l2 5-3 2a13 13 0 0 0 6 6l2-3 5 2v4a2 2 0 0 1-2 2A18 18 0 0 1 3 5a2 2 0 0 1 2-2Z"/></svg>
+      <div className="flex gap-3 rounded-xl bg-gray-700 p-4 text-white shadow-md">
+        <svg aria-hidden="true" className="h-6 w-6 shrink-0 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M5 3H9l2 5-3 2a13 13 0 0 0 6 6l2-3 5 2v4a2 2 0 0 1-2 2A18 18 0 0 1 3 5a2 2 0 0 1 2-2Z"/></svg>
         <div className="min-w-0 flex-1 space-y-3">
         <label className="block space-y-1">
           <span className="font-medium">Teléfono principal</span>
           <input name="telefono_principal_cuenta" value={datos_comerciales.telefono_principal_cuenta} onChange={handleInputChange} className={inputClass} />
-          <span className="text-xs text-gray-600">(agregar el prefijo +xy siempre)</span>
+          <span className="text-xs text-white">(agregar el prefijo +xy siempre)</span>
         </label>
 
         <div className="space-y-1">
@@ -110,7 +115,7 @@ const DatosComerciales: FC<DatosComercialesProps> = ({ datos_comerciales, idCuen
               <Link href={`/dashboard/comercial/contactos/${encodeURIComponent(principal.id_contacto)}`} className={contactCard}>
                 <ContactIcon />{principal.nombre_completo_contacto || principal.id_contacto}
               </Link>
-              <button type="button" onClick={onOpenContactos} className="cursor-pointer text-xs text-blue-950 hover:underline">Cambiar contacto principal</button>
+              <button type="button" onClick={onOpenContactos} className="cursor-pointer text-xs text-white hover:underline">Cambiar contacto principal</button>
             </>
           ) : (
             <button type="button" onClick={onOpenContactos} className={contactCard}>
@@ -121,7 +126,7 @@ const DatosComerciales: FC<DatosComercialesProps> = ({ datos_comerciales, idCuen
         </div>
       </div>
 
-      <div className="grid content-start gap-3 rounded-lg bg-gray-50 p-3">
+      <div className="grid content-start gap-3 rounded-xl bg-gray-700 p-4 text-white shadow-md">
         <label className="space-y-1">
           <span className="font-medium">Categoría</span>
           <select name="categoria_principal_cuenta" value={category} onChange={handleInputChange}
@@ -148,15 +153,7 @@ const DatosComerciales: FC<DatosComercialesProps> = ({ datos_comerciales, idCuen
           </select>
         </label>
       </div>
-        <label className="space-y-1 md:col-span-2 lg:col-span-3">
-          <span className="font-medium">Resumen actividad</span>
-          <textarea
-            name="resumen_actividad_cuenta"
-            value={datos_comerciales.resumen_actividad_cuenta}
-            onChange={handleInputChange}
-            className={`${inputClass} min-h-28 resize-y`}
-          />
-        </label>
+
     </div>
   );
 };

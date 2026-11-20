@@ -1,10 +1,12 @@
 'use client';
 
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import apiClient from '@/app/apiClient';
 import DatePartsInput from '@/app/components/DatePartsInput';
+import TableFilters from '@/app/components/TableFilters';
+import { matchesTableFilter } from '@/app/lib/dateFilters';
 import SearchableSelect from '@/app/components/SearchableSelect';
 import { AgenteService } from '@/app/service/AgenteService';
 import { CuentaService } from '@/app/service/CuentaService';
@@ -15,7 +17,7 @@ const states = { pendiente: 'Pendiente', en_curso: 'En curso', finalizada: 'Fina
 type Entity = { id: string; nombre: string };
 type Campaign = {
   id: string; nombre: string; descripcion: string; estado: keyof typeof states; creada_por: string;
-  fecha_creacion: string; fecha_finalizacion: string | null; updated_at: string;
+  fecha_creacion: string; fecha_inicio?: string | null; fecha_finalizacion: string | null; updated_at: string;
   agentes: Entity[]; cuentas: Entity[]; tareas: (Entity & { estado: string; id_cuenta: string | null })[];
 };
 const empty: Campaign = { id: '', nombre: '', descripcion: '', estado: 'pendiente', creada_por: '', fecha_creacion: '', fecha_finalizacion: '', updated_at: '', agentes: [], cuentas: [], tareas: [] };
@@ -26,23 +28,89 @@ function message(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
 }
 
+function OptionalCampaignDate({ label, enabled, toggle, value, onChange }: {
+  label: string; enabled: boolean; toggle: () => void; value: string; onChange: (value: string) => void;
+}) {
+  return <div className="space-y-2">
+    <button type="button" role="switch" aria-checked={enabled} aria-label={`¿Con ${label.toLowerCase()}?`} onClick={toggle}
+      className="flex flex-wrap items-center gap-3 rounded px-2 py-1 enabled:cursor-pointer enabled:hover:bg-blue-50">
+      ¿Con {label.toLowerCase()}?
+      <span className="inline-flex rounded-full border bg-gray-100 p-0.5 text-xs">
+        <span className={`rounded-full px-3 py-1 ${enabled ? 'bg-blue-950 font-semibold text-white' : 'text-gray-600'}`}>Sí</span>
+        <span className={`rounded-full px-3 py-1 ${!enabled ? 'bg-blue-950 font-semibold text-white' : 'text-gray-600'}`}>No</span>
+      </span>
+    </button>
+    {enabled && <DatePartsInput label={label} value={value} onChange={onChange} />}
+  </div>;
+}
+
 export function AccountCampaigns({ accountId }: { accountId: string }) {
   const [rows, setRows] = useState<Campaign[]>();
   const [error, setError] = useState('');
+  const [choices, setChoices] = useState<Campaign[]>([]);
+  const [selected, setSelected] = useState('');
+  const [name, setName] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [modalError, setModalError] = useState('');
+  const [revision, setRevision] = useState(0);
+  const dialog = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     const controller = new AbortController();
     apiClient.get<Campaign[]>(campaignUrl, { params: { cuenta: accountId }, signal: controller.signal })
       .then(({ data }) => { if (!controller.signal.aborted) setRows(data); })
       .catch(error => { if (!controller.signal.aborted) setError(message(error, 'No se pudieron cargar las campañas.')); });
     return () => controller.abort();
-  }, [accountId]);
+  }, [accountId, revision]);
+  async function open() {
+    setSelected('');
+    setName('');
+    setModalError('');
+    dialog.current?.showModal();
+    try {
+      const { data } = await apiClient.get<Campaign[]>(campaignUrl);
+      setChoices(data.filter(campaign => !rows?.some(row => row.id === campaign.id)));
+    } catch {
+      setModalError('No se pudieron cargar las campañas disponibles.');
+    }
+  }
+  async function associate(event: FormEvent) {
+    event.preventDefault();
+    setBusy(true);
+    setModalError('');
+    try {
+      if (selected) {
+        const url = `${campaignUrl}/${encodeURIComponent(selected)}`;
+        const { data } = await apiClient.get<Campaign>(url);
+        await apiClient.put(url, { ...data, version: data.updated_at, agentes: data.agentes.map(agent => agent.id),
+          cuentas: [...new Set([...data.cuentas.map(account => account.id), accountId])] });
+      } else {
+        await apiClient.post(campaignUrl, { ...empty, nombre: name.trim(), cuentas: [accountId] });
+      }
+      dialog.current?.close();
+      setRevision(value => value + 1);
+    } catch (failure) {
+      setModalError(message(failure, 'No se pudo asociar la campaña.'));
+    } finally {
+      setBusy(false);
+    }
+  }
   return <div className="space-y-2 md:col-span-3">
-    <h3 className="font-medium">Campañas comerciales</h3>
+    <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-medium">Lista de campañas comerciales asociadas a la cuenta</h3><button type="button" className={button} onClick={open}>Agregar</button></div>
     {error ? <p role="alert" className="text-red-700">{error}</p> : !rows ? <p role="status">Cargando campañas…</p> : !rows.length ? <p className="text-gray-600">Sin campañas asociadas.</p> : null}
     {rows?.map(row => <Link key={row.id} href={`${campaignPage}/${encodeURIComponent(row.id)}`} className="block cursor-pointer rounded-lg border bg-white p-3 shadow-sm hover:border-blue-300 hover:bg-blue-50">
       <span className="font-medium">{row.nombre}</span>
       <span className="ml-2 text-xs text-gray-600">{states[row.estado]}{row.fecha_finalizacion && ` · ${row.fecha_finalizacion}`}</span>
     </Link>)}
+    <dialog ref={dialog} aria-labelledby="account-campaign-title" onCancel={event => { if (busy) event.preventDefault(); event.stopPropagation(); }}
+      className="m-auto w-[min(32rem,95vw)] rounded-xl bg-white p-5 shadow-lg backdrop:bg-black/40">
+      <form className="space-y-3" onSubmit={associate}>
+        <div className="flex items-center justify-between"><h3 id="account-campaign-title" className="font-semibold">Agregar campaña comercial</h3><button type="button" className={button} aria-label="Cerrar" disabled={busy} onClick={() => dialog.current?.close()}>×</button></div>
+        <SearchableSelect label="Campaña existente" value={selected} onChange={setSelected} options={choices.map(row => ({ value: row.id, label: row.nombre }))} disabled={busy || Boolean(name)} />
+        <label className="block">Nombre de una campaña nueva<input value={name} onChange={event => setName(event.target.value)} disabled={busy || Boolean(selected)} className={field} /></label>
+        {modalError && <p role="alert" className="text-red-700">{modalError}</p>}
+        <button disabled={busy || (!selected && !name.trim())} className={button}>{selected ? 'Asociar campaña' : 'Crear y asociar'}</button>
+      </form>
+    </dialog>
   </div>;
 }
 
@@ -103,6 +171,8 @@ export function CampaignEditor({ id, onSaved }: { id: string; onSaved: (id: stri
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [task, setTask] = useState({ nombre: '', cuenta: '-', agente: '' });
+  const [withStart, setWithStart] = useState(!id);
+  const [withEnd, setWithEnd] = useState(!id);
 
   useEffect(() => {
     let active = true;
@@ -110,7 +180,7 @@ export function CampaignEditor({ id, onSaved }: { id: string; onSaved: (id: stri
       if (active) setAgents(data.filter((row: { estado_agente?: string }) => !['inactivo', 'borrador'].includes(row.estado_agente?.toLowerCase() || '')).map((row: { id_agente: string; nombre_completo_agente: string; is_empleado_account?: boolean }) => ({ id: row.id_agente, nombre: row.nombre_completo_agente || row.id_agente, employee: row.is_empleado_account !== false })));
     }).catch(error => { if (active) setError(message(error, 'No se pudieron cargar los agentes.')); });
     if (id) apiClient.get<Campaign>(`${campaignUrl}/${encodeURIComponent(id)}`).then(({ data }) => {
-      if (active) setCampaign(data);
+      if (active) { setCampaign(data); setWithStart(Boolean(data.fecha_inicio)); setWithEnd(Boolean(data.fecha_finalizacion)); }
     }).catch(error => { if (active) setError(message(error, 'No se pudo cargar la campaña.')); });
     return () => { active = false; };
   }, [id]);
@@ -120,7 +190,8 @@ export function CampaignEditor({ id, onSaved }: { id: string; onSaved: (id: stri
     if (!campaign || busy) return;
     setBusy(true);
     setError('');
-    const data = { ...campaign, agentes: campaign.agentes.map(row => row.id), cuentas: campaign.cuentas.map(row => row.id), version: campaign.updated_at };
+    const data = { ...campaign, fecha_inicio: withStart ? campaign.fecha_inicio : null, fecha_finalizacion: withEnd ? campaign.fecha_finalizacion : null,
+      agentes: campaign.agentes.map(row => row.id), cuentas: campaign.cuentas.map(row => row.id), version: campaign.updated_at };
     try {
       const result = id ? await apiClient.put<Campaign>(`${campaignUrl}/${encodeURIComponent(id)}`, data) : await apiClient.post<Campaign>(campaignUrl, data);
       setCampaign(result.data);
@@ -153,16 +224,22 @@ export function CampaignEditor({ id, onSaved }: { id: string; onSaved: (id: stri
     {error && <p role="alert" className="text-red-700">{error}</p>}
     <form onSubmit={save} className="space-y-5">
       <fieldset disabled={busy} className="space-y-5">
-        <div className="grid gap-4 md:grid-cols-3">
-          <label>Nombre<input required maxLength={250} value={campaign.nombre} onChange={event => setCampaign({ ...campaign, nombre: event.target.value })} className={field} /></label>
-          <DatePartsInput label="Fecha de finalización" value={campaign.fecha_finalizacion || ''} onChange={value => setCampaign({ ...campaign, fecha_finalizacion: value })} />
-          <label>Estado<select className={`${field} enabled:cursor-pointer enabled:hover:border-blue-700`} value={campaign.estado} onChange={event => setCampaign({ ...campaign, estado: event.target.value as Campaign['estado'] })}>
+        <div className="grid max-w-xl gap-4">
+          <label>Nombre de la campaña<input required maxLength={250} value={campaign.nombre} onChange={event => setCampaign({ ...campaign, nombre: event.target.value })} className={field} /></label>
+          <label>Descripción de la campaña<textarea maxLength={20000} value={campaign.descripcion} onChange={event => setCampaign({ ...campaign, descripcion: event.target.value })} className={`${field} min-h-24`} /></label>
+          <label>Estado de la campaña<select className={`${field} enabled:cursor-pointer enabled:hover:border-blue-700`} value={campaign.estado} onChange={event => setCampaign({ ...campaign, estado: event.target.value as Campaign['estado'] })}>
             {Object.entries(states).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
           </select></label>
         </div>
-        <label className="block">Descripción<textarea maxLength={20000} value={campaign.descripcion} onChange={event => setCampaign({ ...campaign, descripcion: event.target.value })} className={`${field} min-h-24`} /></label>
-        <div>
-          <h3 className="font-semibold">Agentes asociados</h3>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <OptionalCampaignDate label="Fecha de inicio" enabled={withStart} toggle={() => setWithStart(!withStart)}
+            value={campaign.fecha_inicio || ''} onChange={value => setCampaign({ ...campaign, fecha_inicio: value })} />
+          <OptionalCampaignDate label="Fecha de finalización" enabled={withEnd} toggle={() => setWithEnd(!withEnd)}
+            value={campaign.fecha_finalizacion || ''} onChange={value => setCampaign({ ...campaign, fecha_finalizacion: value })} />
+        </div>
+        <div className="grid items-start gap-4 md:grid-cols-2">
+        <details className="rounded border p-3">
+          <summary className="font-semibold hover:text-blue-800">Agentes asociados <span className="float-right">{campaign.agentes.length}</span></summary>
           <div className="mt-2 grid max-h-56 gap-1 overflow-auto sm:grid-cols-2 lg:grid-cols-3">
             {agentsAvailable.map(agent => {
               const checked = campaign.agentes.some(row => row.id === agent.id);
@@ -172,14 +249,15 @@ export function CampaignEditor({ id, onSaved }: { id: string; onSaved: (id: stri
               </label>;
             })}
           </div>
-        </div>
-        <div className="space-y-2">
-          <h3 className="font-semibold">Cuentas asociadas</h3>
+        </details>
+        <details className="space-y-2 rounded border p-3">
+          <summary className="font-semibold hover:text-blue-800">Cuentas asociadas <span className="float-right">{campaign.cuentas.length}</span></summary>
           {campaign.cuentas.map(row => <div key={row.id} className="flex items-center gap-3">
             <Link href={`/dashboard/comercial/cuentas/${encodeURIComponent(row.id)}`} className="cursor-pointer text-blue-900 hover:underline">{row.nombre}</Link>
             <button type="button" className={button} aria-label={`Quitar ${row.nombre}`} onClick={() => setCampaign({ ...campaign, cuentas: campaign.cuentas.filter(item => item.id !== row.id) })}>×</button>
           </div>)}
           <button type="button" className={button} onClick={() => setPicking(true)}>Asociar cuentas</button>
+        </details>
         </div>
       </fieldset>
       <button type="submit" disabled={busy || !campaign.nombre.trim()} className={button}>Guardar campaña</button>
@@ -205,6 +283,8 @@ export function CampaignList() {
   const router = useRouter();
   const [rows, setRows] = useState<Campaign[]>();
   const [error, setError] = useState('');
+  const [filters, setFilters] = useState<Record<string, string>>({});
+  const [page, setPage] = useState(1);
   useEffect(() => {
     const request = new AbortController();
     apiClient.get<Campaign[]>(campaignUrl, { signal: request.signal }).then(({ data }) => {
@@ -212,19 +292,47 @@ export function CampaignList() {
     }).catch(error => { if (!request.signal.aborted) setError(message(error, 'No se pudieron cargar las campañas.')); });
     return () => request.abort();
   }, []);
+  const columns = [['nombre','Nombre'],['fecha_creacion','Fecha de creación'],['fecha_finalizacion','Fecha de finalización'],['estado','Estado'],['creada_por','Creada por'],['agentes','Agentes']] as const;
+  const normalize = (value: string) => value.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
+  const visible = (rows ?? []).filter(row =>
+    normalize(row.nombre).includes(normalize(filters.nombre || '')) &&
+    (!filters.estado || row.estado === filters.estado) &&
+    (!filters.creada_por || row.creada_por === filters.creada_por) &&
+    (!filters.agentes || row.agentes.some(agent => agent.id === filters.agentes)) &&
+    matchesTableFilter(row.fecha_creacion, filters.fecha_creacion || '') &&
+    matchesTableFilter(row.fecha_finalizacion, filters.fecha_finalizacion || ''));
+  const pageCount = Math.max(1, Math.ceil(visible.length / 20)), current = Math.min(page, pageCount);
+  const change = (key: string, value: string) => { setFilters(prev => ({ ...prev, [key]: value })); setPage(1); };
+  const agentOptions = [...new Map((rows ?? []).flatMap(row => row.agentes.map(agent => [agent.id, agent.nombre] as const)))].sort((a,b) => a[1].localeCompare(b[1], 'es'));
   return <div className="space-y-4">
-    <Link href={`${campaignPage}/nueva`} className={`inline-block cursor-pointer hover:bg-blue-50 ${button}`}>Nueva campaña</Link>
+    <TableFilters>{columns.map(([key,label]) => {
+      if (key.startsWith('fecha')) return <DatePartsInput key={key} label={label} value={filters[key] || ''} onChange={value => change(key,value)} />;
+      const options = key === 'estado' ? Object.entries(states) : key === 'agentes' ? agentOptions : key === 'creada_por'
+        ? [...new Set((rows ?? []).map(row => row.creada_por))].sort().map(value => [value,value]) : null;
+      return <label key={key} className="block text-xs font-light">{label}{options
+        ? <select value={filters[key] || ''} onChange={event => change(key,event.target.value)} className={`${field} cursor-pointer hover:border-blue-700`}>
+            <option value="">Todos</option>{options.map(([value,name]) => <option key={value} value={value}>{name}</option>)}</select>
+        : <input value={filters[key] || ''} onChange={event => change(key,event.target.value)} className={field} />}</label>;
+    })}</TableFilters>
     {error && <p role="alert" className="text-red-700">{error}</p>}
     {!rows && !error && <p role="status">Cargando campañas…</p>}
     {rows && <div className="overflow-x-auto rounded-lg border bg-white shadow-sm">
+      <div className="flex justify-end bg-blue-950 px-3 pt-3">
+        <Link href={`${campaignPage}/nueva`} className={`cursor-pointer hover:bg-blue-50 ${button}`}>Nueva campaña</Link>
+      </div>
       <table className="min-w-full whitespace-nowrap text-left text-sm">
         <thead className="bg-blue-950 text-white"><tr>{['Nombre', 'Fecha de creación', 'Fecha de finalización', 'Estado', 'Creada por', 'Agentes'].map(label => <th key={label} className="p-3">{label}</th>)}</tr></thead>
-        <tbody>{rows.map(row => <tr key={row.id} className="cursor-pointer border-t hover:bg-blue-50" onClick={() => router.push(`${campaignPage}/${encodeURIComponent(row.id)}`)}>
+        <tbody>{visible.slice((current-1)*20,current*20).map(row => <tr key={row.id} className="cursor-pointer border-t hover:bg-blue-50" onClick={() => router.push(`${campaignPage}/${encodeURIComponent(row.id)}`)}>
           <td className="p-3"><Link onClick={event => event.stopPropagation()} className="cursor-pointer font-medium text-blue-900 hover:underline" href={`${campaignPage}/${encodeURIComponent(row.id)}`}>{row.nombre}</Link></td>
           <td className="p-3">{row.fecha_creacion}</td><td className="p-3">{row.fecha_finalizacion || '—'}</td><td className="p-3">{states[row.estado]}</td><td className="p-3">{row.creada_por}</td><td className="p-3">{row.agentes.map(agent => agent.nombre).join(', ') || '—'}</td>
         </tr>)}</tbody>
       </table>
-      {!rows.length && <p className="p-4">No hay campañas comerciales.</p>}
+      {!visible.length && <p className="p-4">No hay campañas con estos filtros.</p>}
+      <div className="flex items-center justify-end gap-3 border-t p-3">
+        <button type="button" className={button} disabled={current <= 1} onClick={() => setPage(current-1)}>Anterior</button>
+        <span>Página {current} de {pageCount}</span>
+        <button type="button" className={button} disabled={current >= pageCount} onClick={() => setPage(current+1)}>Siguiente</button>
+      </div>
     </div>}
   </div>;
 }

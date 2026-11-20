@@ -62,6 +62,7 @@ function mapCuenta(cuentaData: any): InterfazCuenta {
     ferias: Array.isArray(cuentaData.ferias) ? cuentaData.ferias : [],
     redes_sociales: Array.isArray(cuentaData.redes_sociales) ? cuentaData.redes_sociales : [],
     catalogos: cuentaData.catalogos || '',
+    catalogos_enlaces: cuentaData.catalogos_enlaces || [],
     array_cuentas_distribuidoras: cuentaData.array_cuentas_distribuidoras || [],
     array_cuentas_distribuidas: cuentaData.array_cuentas_distribuidas || [],
     cuenta_agencia: cuentaData.cuenta_agencia || '',
@@ -93,7 +94,6 @@ const FichaCliente = () => {
   const [error, setError] = useState<string | null>(null);
   const [errorGuardado, setErrorGuardado] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [agentes, setAgentes] = useState<any[]>([]);
   
   // Estados de cuenta (desde ContenidoGeneral)
   const [cuentaEditable, setCuentaEditable] = useState<InterfazCuenta | undefined>(undefined);
@@ -126,7 +126,6 @@ const FichaCliente = () => {
         ]);
         if (request.signal.aborted) return;
         const agentes = Array.isArray(agentData) ? agentData : [];
-        setAgentes(agentes);
         
         if (!cuentaData) {
           setError('Cuenta no encontrada');
@@ -284,8 +283,8 @@ const FichaCliente = () => {
 
       <div className="bg-gray-200 min-h-screen p-12 text-gray-600">
         {errorGuardado && <p role="alert" className="mb-4 rounded-lg border border-red-300 bg-red-100 p-4 text-red-700">{errorGuardado}</p>}
-        <div className="mb-4 rounded-xl bg-white p-5 shadow-sm">
-          <CuentaHeader key={cuentaEditable.id_cuenta} agents={agentes}
+        <div className="mb-4 py-2">
+          <CuentaHeader key={cuentaEditable.id_cuenta}
             data={{ ...cuentaEditable, asignado_a: cuentaEditable.asignado_a || '' }}
             onChange={(field, value) => {
               setCuentaEditable(prev => prev && { ...prev, [field]: value });

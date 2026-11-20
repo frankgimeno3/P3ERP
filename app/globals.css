@@ -168,6 +168,11 @@ td {
   color: #111827;
 }
 
+summary::marker { content: none; }
+summary::-webkit-details-marker { display: none; }
+summary::before { content: "▸"; margin-inline-end: .6rem; }
+details[open] > summary::before { content: "▾"; }
+
 :where(a[href], button:not(:disabled), [role="button"]:not([aria-disabled="true"]), summary) {
   cursor: pointer;
   transition: filter 150ms ease, background-color 150ms ease, border-color 150ms ease, color 150ms ease, opacity 150ms ease;

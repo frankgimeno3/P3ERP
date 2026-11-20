@@ -59,6 +59,7 @@ export interface InterfazCuenta {
   red_social_prioritaria?: string;
   redes_sociales?: SocialProfile[];
   catalogos?: string;
+  catalogos_enlaces?: { nombre: string; url: string; fecha: string }[];
   array_cuentas_distribuidoras?: { id_cuenta?: string; nombre_empresa?: string }[];
   array_cuentas_distribuidas?: { id_cuenta?: string; nombre_empresa?: string }[];
   cuenta_agencia?: string;

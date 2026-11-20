@@ -36,6 +36,7 @@ const writableColumns = [
   "ferias",
   "red_social_prioritaria",
   "catalogos",
+  "catalogos_enlaces",
   "array_cuentas_distribuidoras",
   "array_cuentas_distribuidas",
   "cuenta_agencia",
@@ -59,6 +60,7 @@ const writableColumns = [
 ];
 
 const jsonColumns = new Set([
+  "catalogos_enlaces",
   "stands_ferias_ediciones",
   "datos_comerciales",
   "ferias",
@@ -99,6 +101,7 @@ function normalizeCuenta(row) {
     ferias: Array.isArray(row.ferias) ? row.ferias : [],
     red_social_prioritaria: row.red_social_prioritaria ?? "",
     catalogos: row.catalogos ?? "",
+    catalogos_enlaces: row.catalogos_enlaces ?? [],
     array_cuentas_distribuidoras: row.array_cuentas_distribuidoras ?? [],
     array_cuentas_distribuidas: row.array_cuentas_distribuidas ?? [],
     cuenta_agencia: row.cuenta_agencia ?? "",
@@ -135,6 +138,21 @@ function normalizeValue(column, value) {
     })) throw Object.assign(new Error("Revisa las ediciones y los datos de los stands."), { status: 400 });
   }
   if (jsonColumns.has(column)) {
+    if (column === "catalogos_enlaces" && Array.isArray(value)) {
+      return JSON.stringify(value.map(item => {
+        const nombre = typeof item?.nombre === "string" ? item.nombre.trim() : "";
+        const fecha = typeof item?.fecha === "string" ? item.fecha : "";
+        try {
+          const url = new URL(item.url);
+          const date = new Date(fecha);
+          if (!nombre || nombre.length > 250 || url.href.length > 2048 || !["https:", "http:"].includes(url.protocol)
+            || !/^\d{4}-\d{2}-\d{2}$/.test(fecha) || date.toISOString().slice(0, 10) !== fecha) throw new Error();
+          return { nombre, url: url.href, fecha };
+        } catch {
+          throw Object.assign(new Error("Revisa los nombres, fechas y enlaces de los catálogos."), { status: 400 });
+        }
+      }));
+    }
     if (value === undefined || value === null) return JSON.stringify(column === "datos_comerciales" ? {} : []);
     if (column === "datos_comerciales") return JSON.stringify(value && typeof value === "object" ? value : {});
     return JSON.stringify(Array.isArray(value) ? value : []);
@@ -309,6 +327,11 @@ export async function createCuenta(cuentaData) {
 }
 
 export async function updateCuenta(idCuenta, cuentaData) {
+  for (const field of ["array_cuentas_distribuidoras", "array_cuentas_distribuidas"]) {
+    if (Array.isArray(cuentaData[field]) && cuentaData[field].some(row => row?.id_cuenta === idCuenta)) {
+      throw Object.assign(new Error("Una cuenta no puede vincularse consigo misma como distribuidora."), { status: 400 });
+    }
+  }
   const pool = getPgPool();
   const before = await getCuentaById(idCuenta);
   idCuenta = before?.id_cuenta || idCuenta;

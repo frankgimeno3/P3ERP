@@ -5,13 +5,15 @@ import React, { FC, ChangeEvent, useEffect, useState } from "react";
 import { AgenteService } from "@/app/service/AgenteService";
 import { CuentaService } from "@/app/service/CuentaService";
 import type { SocialProfile } from "@/app/lib/accountSocialProfiles";
+import CatalogosCuenta, { type Catalogo } from "./CatalogosCuenta";
 import RedesSociales from "./RedesSociales";
 import { AccountCampaigns } from "@/app/components/CommercialCampaigns";
 import { YesNoToggle } from "./Direcciones";
-import IdentidadCuenta from "./IdentidadCuenta";
+import IdentidadCuenta, { AccountAssignments } from "./IdentidadCuenta";
 import EnvioPropuestasAnuales from "./EnvioPropuestasAnuales";
 
 interface DatosCRMProps {
+  id_agente: string; asignado_a: string; summary: React.ReactNode; description: React.ReactNode;
   commercialDetails: React.ReactNode;
   id_cuenta: string;
   id_edisoft: string;
@@ -30,6 +32,7 @@ interface DatosCRMProps {
   redesSociales: SocialProfile[];
   onRedesSocialesSaved: (profiles: SocialProfile[]) => void;
   catalogos: string;
+  catalogos_enlaces: Catalogo[];
   array_cuentas_distribuidoras: any[];
   array_cuentas_distribuidas: any[];
   fuente_novedades: string;
@@ -46,16 +49,18 @@ interface Agente {
   is_empleado_account?: boolean;
 }
 
+const coldLeadStates = ["Fase 1 - Datos actualizados 2026","Fase 2 - Cualificado","Fase 3 - En desarrollo","Fase 4 - En seguimiento","Fase 5 - Propuesta","Respuesta NEGATIVA"];
 const fieldClass = "w-full border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring focus:ring-blue-400";
 
 function ToggleDistribucion({
   label,
   items,
-  onOpen,
+  onOpen, onRemove,
 }: {
   label: string;
   items: any[];
   onOpen: () => void;
+  onRemove: (item: any) => void;
 }) {
   const activo = Array.isArray(items) && items.length > 0;
   return (
@@ -80,6 +85,7 @@ function ToggleDistribucion({
           {items.map((item, index) => (
             <span key={`${item.id_cuenta || item.nombre_empresa}-${index}`} className="rounded bg-blue-50 px-2 py-1 text-xs text-blue-950">
               {item.nombre_empresa || item.id_cuenta}
+              <button type="button" aria-label="Desvincular" onClick={() => onRemove(item)} className="ml-1 cursor-pointer rounded p-1 hover:bg-blue-200"><svg aria-hidden="true" viewBox="0 0 16 16" className="size-3" stroke="currentColor"><path d="m4 4 8 8m-8 0 8-8"/></svg></button>
             </span>
           ))}
         </div>
@@ -89,11 +95,12 @@ function ToggleDistribucion({
 }
 
 function CuentaSearchModal({
-  title,
+  title, exclude,
   onClose,
   onConfirm,
 }: {
   title: string;
+  exclude: string;
   onClose: () => void;
   onConfirm: (cuenta: any) => void;
 }) {
@@ -111,9 +118,9 @@ function CuentaSearchModal({
 
   useEffect(() => {
     CuentaService.getCuentas({ clienteFiltro: query })
-      .then((data) => setCuentas(Array.isArray(data) ? data.slice(0, 20) : []))
+      .then((data) => setCuentas(Array.isArray(data) ? data.filter(cuenta => cuenta.id_cuenta !== exclude).slice(0, 20) : []))
       .catch(() => setCuentas([]));
-  }, [query]);
+  }, [query, exclude]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
@@ -142,7 +149,7 @@ function CuentaSearchModal({
 }
 
 const DatosCRM: FC<DatosCRMProps> = ({
-  commercialDetails,
+  commercialDetails, id_agente, asignado_a, summary, description,
   id_cuenta,
   id_edisoft,
   pais_cuenta,
@@ -159,7 +166,7 @@ const DatosCRM: FC<DatosCRMProps> = ({
   correo_principal,
   redesSociales,
   onRedesSocialesSaved,
-  catalogos,
+  catalogos, catalogos_enlaces,
   array_cuentas_distribuidoras,
   array_cuentas_distribuidas,
   fuente_novedades,
@@ -181,9 +188,18 @@ const DatosCRM: FC<DatosCRMProps> = ({
     onChange(e.target.name, e.target.value === "true");
   };
 
+  const [unlink, setUnlink] = useState<{field: "array_cuentas_distribuidoras" | "array_cuentas_distribuidas"; id: string; name: string} | null>(null);
+  useEffect(() => {
+    if (!unlink) return;
+    const close = (event: KeyboardEvent) => { if (event.key === "Escape") setUnlink(null); };
+    window.addEventListener("keydown", close);
+    return () => window.removeEventListener("keydown", close);
+  }, [unlink]);
+
   const addCuentaRelacionada = (field: "array_cuentas_distribuidoras" | "array_cuentas_distribuidas", cuenta: any) => {
     const current = field === "array_cuentas_distribuidoras" ? array_cuentas_distribuidoras : array_cuentas_distribuidas;
     const next = [...(Array.isArray(current) ? current : [])];
+    if (cuenta.id_cuenta === id_cuenta) return;
     if (!next.some((item) => item.id_cuenta === cuenta.id_cuenta)) {
       next.push({ id_cuenta: cuenta.id_cuenta, nombre_empresa: cuenta.nombre_empresa });
     }
@@ -196,73 +212,78 @@ const DatosCRM: FC<DatosCRMProps> = ({
       <IdentidadCuenta
         data={{ id_cuenta, id_edisoft, pais_cuenta, potencial_actual_relacion, potencial_futuro_encaje }}
         onChange={onChange}
+        assignments={<AccountAssignments id_agente={id_agente} asignado_a={asignado_a} agents={agentes} onChange={onChange} />}
+        summary={summary} description={description}
       >
         {commercialDetails}
       </IdentidadCuenta>
 
       <section className="space-y-4">
         <h2 className="text-xl font-bold">Estado de tareas</h2>
-        <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-3">
+        <div className="grid gap-4 text-sm md:grid-cols-2">
+          <div className="grid content-start gap-4">
           <label className="space-y-1">
-            <span className="font-medium">Revisado Ricardo</span>
+            <span className="font-medium">¿Cuenta revisada por Ricardo?</span>
             <select name="revisado_ricardo" value={String(revisado_ricardo)} onChange={handleBooleanChange} className={fieldClass}>
               <option value="false">No</option>
               <option value="true">Sí</option>
             </select>
           </label>
-          <AccountCampaigns key={id_cuenta} accountId={id_cuenta} />
           <label className="space-y-1">
             <span className="font-medium">Estado leads fríos</span>
-            <input name="estado_leads_frios" value={estado_leads_frios} onChange={handleTextChange} className={fieldClass} />
+            <select name="estado_leads_frios" value={estado_leads_frios} onChange={handleTextChange} className={fieldClass+" cursor-pointer hover:border-blue-800"}><option value="">Sin definir</option>{estado_leads_frios && !coldLeadStates.includes(estado_leads_frios) && <option>{estado_leads_frios}</option>}{coldLeadStates.map(state => <option key={state}>{state}</option>)}</select>
           </label>
-          <EnvioPropuestasAnuales key={id_cuenta} idCuenta={id_cuenta} agents={agentes} />
+          </div>
+          <div className="rounded bg-gray-50 p-3"><AccountCampaigns key={id_cuenta} accountId={id_cuenta} /></div>
         </div>
+          <EnvioPropuestasAnuales key={id_cuenta} idCuenta={id_cuenta} agents={agentes} />
       </section>
 
       <section className="space-y-4">
         <h2 className="text-xl font-bold">Actividades Información Producción</h2>
         <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-3">
-          <RedesSociales key={id_cuenta} idCuenta={id_cuenta} profiles={redesSociales} onSaved={onRedesSocialesSaved} />
+          <div className="grid content-start gap-4 md:col-span-3">
           <label className="space-y-1">
-            <span className="font-medium">Correo principal</span>
+            <span className="font-medium">Dirección de email principal</span>
             <input name="correo_principal" value={correo_principal} onChange={handleTextChange} className={fieldClass} />
           </label>
           <label className="space-y-1">
-            <span className="font-medium">QQ</span>
-            <select name="qq" value={String(qq || presente_en_qq)} onChange={handleBooleanChange} className={fieldClass}>
+            <span className="font-medium">¿Aparecen en QQ?</span>
+            <select name="qq" value={String(qq || presente_en_qq)} onChange={event => { const checked = event.target.value === "true"; onChange("qq", checked); onChange("presente_en_qq", checked); }} className={fieldClass}>
               <option value="false">No</option>
               <option value="true">Sí</option>
             </select>
           </label>
 
+          <div className="md:col-span-3"><CatalogosCuenta items={catalogos_enlaces} legacy={catalogos} onChange={items => onChange("catalogos_enlaces", items)} /></div>
+          </div>
           <label className="space-y-1">
-            <span className="font-medium">Catálogos</span>
-            <input name="catalogos" value={catalogos} onChange={handleTextChange} className={fieldClass} />
-          </label>
-          <label className="space-y-1 md:col-span-3">
             <span className="font-medium">Fuentes novedades</span>
             <textarea name="fuente_novedades" value={fuente_novedades} onChange={handleTextChange} className={`${fieldClass} min-h-24`} />
           </label>
-          <label className="space-y-1 md:col-span-3">
+          <label className="space-y-1">
             <span className="font-medium">Actividades cuenta</span>
             <textarea name="actividades" value={actividades} onChange={handleTextChange} className={`${fieldClass} min-h-24`} />
           </label>
-          <label className="space-y-1 md:col-span-3">
+          <label className="space-y-1">
             <span className="font-medium">Descripción actividad</span>
             <textarea name="descripcion_actividad" value={descripcion_actividad} onChange={handleTextChange} className={`${fieldClass} min-h-24`} />
           </label>
 
+          <div className="md:col-span-3"><RedesSociales key={id_cuenta} idCuenta={id_cuenta} profiles={redesSociales} onSaved={onRedesSocialesSaved} /></div>
           <div className="grid gap-4 md:col-span-3 md:grid-cols-2">
-            <div className="space-y-3">
+            <div className="space-y-3 rounded bg-gray-50 p-3">
           <ToggleDistribucion
             label="Tiene distribuidor?"
             items={array_cuentas_distribuidoras}
             onOpen={() => setModalCuenta("distribuidoras")}
+            onRemove={item => setUnlink({field: "array_cuentas_distribuidoras", id: item.id_cuenta, name: item.nombre_empresa || item.id_cuenta})}
           />
           <ToggleDistribucion
             label="Es distribuidor de otras cuentas?"
             items={array_cuentas_distribuidas}
             onOpen={() => setModalCuenta("distribuidas")}
+            onRemove={item => setUnlink({field: "array_cuentas_distribuidas", id: item.id_cuenta, name: item.nombre_empresa || item.id_cuenta})}
           />
             </div>
       <div className="space-y-3 rounded bg-gray-50 p-3">
@@ -280,8 +301,20 @@ const DatosCRM: FC<DatosCRMProps> = ({
         </div>
       </section>
 
+      {unlink && <div className="fixed inset-0 z-50 grid place-items-center bg-black/40">
+        <div role="dialog" aria-modal="true" aria-label="Desvincular cuenta" className="rounded-xl bg-white p-5 shadow-xl">
+          <div className="flex items-center justify-between gap-4"><h3 className="font-semibold">Desvincular cuenta</h3><button type="button" onClick={() => setUnlink(null)} aria-label="Cerrar" className="cursor-pointer rounded px-2 hover:bg-gray-100">×</button></div>
+          <p className="my-3">¿Quieres desvincular a {unlink.name}?</p>
+          <button type="button" className="cursor-pointer rounded bg-blue-950 px-3 py-2 text-white hover:bg-blue-800" onClick={() => {
+            const current = unlink.field === "array_cuentas_distribuidoras" ? array_cuentas_distribuidoras : array_cuentas_distribuidas;
+            onChange(unlink.field, current.filter(item => item.id_cuenta !== unlink.id));
+            setUnlink(null);
+          }}>Desvincular</button>
+        </div>
+      </div>}
       {modalCuenta === "distribuidoras" && (
         <CuentaSearchModal
+          exclude={id_cuenta}
           title="Seleccionar distribuidor"
           onClose={() => setModalCuenta(null)}
           onConfirm={(cuenta) => addCuentaRelacionada("array_cuentas_distribuidoras", cuenta)}
@@ -289,6 +322,7 @@ const DatosCRM: FC<DatosCRMProps> = ({
       )}
       {modalCuenta === "distribuidas" && (
         <CuentaSearchModal
+          exclude={id_cuenta}
           title="Seleccionar cuenta distribuida"
           onClose={() => setModalCuenta(null)}
           onConfirm={(cuenta) => addCuentaRelacionada("array_cuentas_distribuidas", cuenta)}

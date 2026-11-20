@@ -13,8 +13,8 @@ const Descripcion: FC<DescripcionProps> = ({ descripcion, onChange }) => {
   };
 
   return (
-    <div className="p-4">
-      <h2 className="mb-2 text-xl font-bold">Descripción y comentarios generales fijados</h2>
+    <div>
+      <h2 className="mb-1 text-sm font-medium">Descripción y comentarios generales fijados</h2>
       <textarea
         value={descripcion}
         onChange={handleChange}

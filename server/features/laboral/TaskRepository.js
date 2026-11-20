@@ -32,7 +32,7 @@ export async function taskEmployees(actor) {
     (count(t.id) FILTER (WHERE t.estado IN ('completada','cancelada')) +
       (SELECT count(*) FROM comercial_cuenta_tarea_agentes ca JOIN comercial_cuenta_tareas ct ON ct.id=ca.id_tarea WHERE ca.id_agente=a.id_agente AND ct.estado IN ('completada','cancelada')))::int terminadas
     FROM agentes_db a LEFT JOIN laboral_tareas_empleado t ON t.agente=a.id_agente OR t.agentes_asociados ? a.id_agente
-    WHERE COALESCE(a.is_empleado_account,true) OR EXISTS(SELECT 1 FROM laboral_tareas_empleado x WHERE (x.agente=a.id_agente OR x.agentes_asociados ? a.id_agente) AND x.vtiger_original IS NOT NULL) GROUP BY a.id_agente ORDER BY nombre,a.id_agente`)).rows;
+    WHERE a.estado_agente='activo' AND COALESCE(a.is_empleado_account,true) GROUP BY a.id_agente ORDER BY nombre,a.id_agente`)).rows;
 }
 export async function taskCalendar(actor) {
   requireTaskIdentity(actor,true);
@@ -51,7 +51,7 @@ export async function writeTask(actor,id,body){
   const ids=body.agentes_asociados||[body.agente];
   if(!Array.isArray(ids)||!ids.length||ids.some(value=>typeof value!=='string'||!value))fail('Selecciona agentes válidos.');
   const unique=[...new Set(ids)];
-  if((await getPgPool().query('SELECT 1 FROM agentes_db WHERE id_agente=ANY($1::text[]) AND COALESCE(is_empleado_account,true)',[unique])).rowCount!==unique.length)fail('Selecciona agentes empleados válidos.');
+  if((await getPgPool().query("SELECT 1 FROM agentes_db WHERE id_agente=ANY($1::text[]) AND COALESCE(is_empleado_account,true) AND estado_agente='activo'",[unique])).rowCount!==unique.length)fail('Selecciona agentes empleados válidos.');
   return saveAgentTask(null,{...body,agente:unique[0],agentes_asociados:unique});
  }
  const db=await getPgPool().connect();

@@ -12,6 +12,7 @@ export async function commercialCampaigns(actor, { id, accountId } = {}, db = ge
   const { rows } = await db.query(`
     SELECT c.id, c.nombre, c.descripcion, c.estado, c.updated_at,
       to_char(c.created_at AT TIME ZONE 'Europe/Madrid','DD/MM/YYYY') fecha_creacion,
+      to_char(c.fecha_inicio,'DD/MM/YYYY') fecha_inicio,
       to_char(c.fecha_finalizacion,'DD/MM/YYYY') fecha_finalizacion,
       COALESCE(NULLIF(a.nombre_completo_agente,''), a.id_agente) creada_por,
       COALESCE((SELECT jsonb_agg(jsonb_build_object('id', ca.id_agente, 'nombre', COALESCE(NULLIF(ag.nombre_completo_agente,''),ag.id_agente)) ORDER BY ag.nombre_completo_agente)
@@ -20,8 +21,10 @@ export async function commercialCampaigns(actor, { id, accountId } = {}, db = ge
                 FROM comercial_campana_cuentas cc JOIN comercial_cuentas acc USING(id_cuenta) WHERE cc.id_campana=c.id),'[]') ELSE '[]'::jsonb END cuentas,
       CASE WHEN $1::text IS NOT NULL THEN COALESCE((SELECT jsonb_agg(jsonb_build_object('id', t.id, 'nombre', t.nombre, 'estado', t.estado, 'id_cuenta', t.id_cuenta) ORDER BY t.nombre,t.id)
                 FROM (
-                  SELECT id,nombre,estado,id_cuenta FROM comercial_cuenta_tareas WHERE id_campana=c.id
-                  UNION ALL SELECT id,nombre,estado,id_cuenta FROM laboral_tareas_empleado WHERE id_campana=c.id
+                  SELECT t.id,t.nombre,t.estado,t.id_cuenta FROM comercial_cuenta_tareas t WHERE t.id_campana=c.id
+                    OR EXISTS(SELECT 1 FROM comercial_campana_tareas link WHERE link.id_campana=c.id AND link.id_tarea_cuenta=t.id)
+                  UNION ALL SELECT t.id,t.nombre,t.estado,t.id_cuenta FROM laboral_tareas_empleado t WHERE t.id_campana=c.id
+                    OR EXISTS(SELECT 1 FROM comercial_campana_tareas link WHERE link.id_campana=c.id AND link.id_tarea_empleado=t.id)
                 ) t),'[]') ELSE '[]'::jsonb END tareas
     FROM comercial_campanas c JOIN agentes_db a ON a.id_agente=c.creada_por
     WHERE ($1::text IS NULL OR c.id=$1)
@@ -43,10 +46,10 @@ export async function addCampaignTask(actor, id, input) {
 function campaignDate(value) {
   if (!value) return null;
   const parts = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(value);
-  if (!parts) fail('Introduce una fecha de finalización válida.');
+  if (!parts) fail('Introduce una fecha válida.');
   const iso = `${parts[3]}-${parts[2].padStart(2, '0')}-${parts[1].padStart(2, '0')}`;
   const date = new Date(iso);
-  if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== iso || parts[3] === '0000') fail('Introduce una fecha de finalización válida.');
+  if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== iso || parts[3] === '0000') fail('Introduce una fecha válida.');
   return iso;
 }
 
@@ -61,18 +64,20 @@ export async function saveCommercialCampaign(actor, id, input, pool = getPgPool(
   const nombre = String(input?.nombre || '').trim(), descripcion = String(input?.descripcion || '').trim();
   if (!nombre || nombre.length > 250 || descripcion.length > 20000 || !statuses.includes(input.estado)) fail('Revisa el nombre, la descripción y el estado.');
   const fecha = campaignDate(input.fecha_finalizacion);
+  const inicio = campaignDate(input.fecha_inicio);
+  if (inicio && fecha && inicio > fecha) fail('La fecha de inicio debe ser anterior o igual a la de finalización.');
   const agentes = ids(input.agentes), cuentas = ids(input.cuentas);
   const db = await pool.connect();
   try {
     await db.query('BEGIN');
     const campaignId = id || `camp_${randomUUID()}`;
     if (id) {
-      const updated = await db.query(`UPDATE comercial_campanas SET nombre=$2,descripcion=$3,fecha_finalizacion=$4,estado=$5,
+      const updated = await db.query(`UPDATE comercial_campanas SET nombre=$2,descripcion=$3,fecha_finalizacion=$4,estado=$5,fecha_inicio=$7,
         updated_at=GREATEST(clock_timestamp(),updated_at+interval '1 millisecond') WHERE id=$1 AND date_trunc('milliseconds', updated_at)=$6::timestamptz`,
-      [id,nombre,descripcion,fecha,input.estado,input.version || null]);
+      [id,nombre,descripcion,fecha,input.estado,input.version || null,inicio]);
       if (!updated.rowCount) fail('La campaña ha cambiado. Recarga antes de guardar.', 409);
     } else {
-      await db.query('INSERT INTO comercial_campanas(id,nombre,descripcion,fecha_finalizacion,estado,creada_por) VALUES($1,$2,$3,$4,$5,$6)',[campaignId,nombre,descripcion,fecha,input.estado,actor.id]);
+      await db.query('INSERT INTO comercial_campanas(id,nombre,descripcion,fecha_finalizacion,estado,creada_por,fecha_inicio) VALUES($1,$2,$3,$4,$5,$6,$7)',[campaignId,nombre,descripcion,fecha,input.estado,actor.id,inicio]);
     }
     for (const [table, column, values] of [
       ['comercial_campana_agentes','id_agente',agentes],

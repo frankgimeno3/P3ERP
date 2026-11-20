@@ -12,12 +12,15 @@ import { PropuestaService } from '@/app/service/PropuestaService';
 import apiClient from '@/app/apiClient';
 import {dashboardCounter,useDashboardRows} from '@/app/lib/useDashboardRows';
 import MisPendientes from "@/app/dashboard/comercial/propuestas/componentesPropuestas/tablaspropuestas/MisPendientes";
+import TaskCalendar from '@/app/dashboard/operaciones/tareas/TaskCalendar';
+import { generalCalendarEvents } from '@/app/config/generalCalendar2027';
 import MyTasksPanel from '@/app/components/tasks/MyTasksPanel';
 import MyContentsPanel from '@/app/components/contents/MyContentsPanel';
 import { dashboardMenu } from "@/app/config/dashboardMenu";
 import { canViewModule, normalizeRole } from "@/app/config/roleAccess";
 
 const tabs = [
+  { key: 'calendario', label: 'Calendario general' },
   { key: "tareas", label: "Mis tareas" },
   { key: "contenidos", label: "Mis contenidos" },
   { key: "clientes", label: "Mis cuentas" },
@@ -54,6 +57,7 @@ export default function DashboardPage() {
   const [openModuleCards, setOpenModuleCards] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('vista') === 'calendario') setActiveTab('calendario');
     let payload: any = {};
     try {
       payload = JSON.parse(localStorage.getItem("userPayload") || "{}");
@@ -239,13 +243,14 @@ export default function DashboardPage() {
               }`}
               style={{ marginLeft: index === 0 ? "0px" : "-5px" }}
             >
-              {tab.label} ({counters[tab.key]})
+              {tab.label}{counters[tab.key] && ` (${counters[tab.key]})`}
             </button>
           ))}
         </div>
 
+        {activeTab === 'calendario' && <TaskCalendar rows={generalCalendarEvents} general />}
         {activeTab === 'tareas' && <div className="rounded bg-white p-6"><MyTasksPanel data={taskData}/></div>}
-        {activeTab !== "tareas" && activeTab !== "clientes" && activeTab !== "contenidos" && activeTab !== "propuestas" && (
+        {activeTab !== "calendario" && activeTab !== "tareas" && activeTab !== "clientes" && activeTab !== "contenidos" && activeTab !== "propuestas" && (
           <div className="bg-white p-6 shadow-sm">
             <h2 className="text-lg font-semibold text-blue-950">{currentTab?.label}</h2>
             <p className="mt-2 text-sm text-gray-500">Sin datos para mostrar.</p>

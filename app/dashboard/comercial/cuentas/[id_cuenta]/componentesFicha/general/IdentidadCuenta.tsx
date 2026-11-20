@@ -1,13 +1,9 @@
 'use client';
 
 import { useId, useState, type ReactNode } from "react";
-import CountryFlag from "@/app/components/CountryFlag";
-import CountrySelect from "@/app/components/CountrySelect";
 import { isCommercialAgent } from "@/app/config/commercialAgents";
-import accountCountries from "@/app/dashboard/comercial/contactos/crear/fases/fasescomponents/countries.json";
 
 type Agent = { id_agente: string; nombre_completo_agente: string; nombre_agente?: string; apellidos_agente?: string; email_agente?: string };
-const accountCountryNames = accountCountries.map(country => country.name);
 
 const potencialActualOptions = [
   "Cliente", "Altas Posibilidades - buena relación con el responsable", "Propuesta desestimada o silencio",
@@ -23,7 +19,6 @@ const potencialFuturoOptions = [
 
 const cardField = "block min-w-0 w-full rounded text-left border border-white bg-transparent px-2 py-1.5 font-normal text-white outline-none placeholder:text-gray-200 focus-visible:ring-2 focus-visible:ring-white";
 const cardSelect = `${cardField} cursor-pointer transition-colors hover:bg-white/10 [&>option]:bg-white [&>option]:text-gray-900`;
-const agentSelect = "block w-full cursor-pointer rounded border border-gray-300 bg-white px-2 py-1.5 transition-colors hover:border-blue-800";
 
 function CardInfo({ title, children }: { title: string; children: ReactNode }) {
   const id = useId();
@@ -79,14 +74,11 @@ function agentName(agent: Agent) {
 
 type Header = { nombre_empresa: string; id_agente: string; asignado_a: string };
 
-export function CuentaHeader({ data, agents, onChange }: {
+export function CuentaHeader({ data, onChange }: {
   data: Header;
-  agents: Agent[];
   onChange: (field: keyof Header, value: string) => void;
 }) {
-  const { nombre_empresa, id_agente, asignado_a } = data;
-  const commercial = agents.filter(isCommercialAgent);
-  const assignedOptions = Array.from(new Set(commercial.map(agent => agent.email_agente).filter(Boolean)));
+  const { nombre_empresa } = data;
   const [editingName, setEditingName] = useState(false);
   return (
     <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
@@ -104,10 +96,20 @@ export function CuentaHeader({ data, agents, onChange }: {
           </button>
         )}
       </h1>
-      <div className="grid w-full gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm shadow-sm lg:w-72">
+    </div>
+  );
+}
+
+export function AccountAssignments({ id_agente, asignado_a, agents, onChange }: {
+  id_agente: string; asignado_a: string; agents: Agent[];
+  onChange: (field: string, value: string) => void;
+}) {
+  const commercial = agents.filter(isCommercialAgent);
+  const assignedOptions = Array.from(new Set(commercial.map(agent => agent.email_agente).filter(Boolean)));
+  return <div className="grid gap-3 text-sm">
         <label className="space-y-1 font-medium">
           <span>Agente</span>
-          <select value={id_agente} onChange={event => onChange("id_agente", event.target.value)} className={agentSelect}>
+          <select value={id_agente} onChange={event => onChange("id_agente", event.target.value)} className={cardSelect}>
             <option value="">Sin asignar</option>
             {id_agente && !commercial.some(agent => agent.id_agente === id_agente) && (
               <option value={id_agente}>{agentName(agents.find(agent => agent.id_agente === id_agente) ?? { id_agente, nombre_completo_agente: "" })}</option>
@@ -117,15 +119,13 @@ export function CuentaHeader({ data, agents, onChange }: {
         </label>
         <label className="space-y-1 font-medium">
           <span>Asignado a</span>
-          <select value={asignado_a} onChange={event => onChange("asignado_a", event.target.value)} className={agentSelect}>
+          <select value={asignado_a} onChange={event => onChange("asignado_a", event.target.value)} className={cardSelect}>
             <option value="">Sin asignar</option>
             {asignado_a && !assignedOptions.includes(asignado_a) && <option value={asignado_a}>{asignado_a}</option>}
             {assignedOptions.map(email => <option key={email} value={email}>{email}</option>)}
           </select>
         </label>
-      </div>
-    </div>
-  );
+      </div>;
 }
 
 type Identity = {
@@ -133,16 +133,18 @@ type Identity = {
   potencial_actual_relacion: string; potencial_futuro_encaje: string;
 };
 
-export default function IdentidadCuenta({ data, onChange, children }: {
+export default function IdentidadCuenta({ data, onChange, children, assignments, summary, description }: {
   data: Identity;
   onChange: (field: keyof Identity, value: string) => void;
-  children: ReactNode;
+  children: ReactNode; assignments: ReactNode; summary: ReactNode; description: ReactNode;
 }) {
-  const { id_cuenta, id_edisoft, pais_cuenta, potencial_actual_relacion, potencial_futuro_encaje } = data;
+  const { id_cuenta, id_edisoft, potencial_actual_relacion, potencial_futuro_encaje } = data;
   return (
     <section className="space-y-5">
       <h2 className="text-xl font-bold">Detalles de la cuenta</h2>
-      <div className="mx-auto grid w-full max-w-5xl gap-4 md:grid-cols-3">
+      <div className="grid gap-4 xl:grid-cols-[3fr_1fr]">
+      <div className="space-y-4">
+      <div className="grid w-full gap-4 md:grid-cols-3">
         <DetailCard title="Identificadores" help={<>
           <p><strong>Código Vtiger.</strong> Identifica la cuenta en el CRM de origen y en P3ERP.</p>
           <p className="mt-2"><strong>Código Edisoft.</strong> Vincula la cuenta con sus registros e informes administrativos.</p>
@@ -156,15 +158,7 @@ export default function IdentidadCuenta({ data, onChange, children }: {
             <input value={id_edisoft} onChange={event => onChange("id_edisoft", event.target.value)} className={cardField} />
           </label>
         </DetailCard>
-        <DetailCard id="pais-cuenta-detalles" title="País" help="País principal de la cuenta. Se utiliza para localizarla en los filtros comerciales y se refleja en Datos comerciales.">
-          <div className="flex flex-col items-center gap-3">
-            <CountryFlag country={pais_cuenta} className="h-12 w-12 shrink-0" />
-            <div className="w-full">
-              <CountrySelect countries={accountCountryNames} flags="options" value={pais_cuenta} onChange={value => onChange("pais_cuenta", value)}
-                placeholder="Selecciona un país" className={`${cardField} text-center! focus:border-white!`} />
-            </div>
-          </div>
-        </DetailCard>
+        <DetailCard title="Asignaciones de la cuenta" help="Agente comercial y persona asignada a la cuenta.">{assignments}</DetailCard>
         <DetailCard title="Potencial" help={<>
           <p><strong>Potencial actual.</strong> Describe la relación comercial y el estado del contacto.</p>
           <p className="mt-2"><strong>Potencial futuro.</strong> Valora cuánto encaja la cuenta con nuestros medios y mercados.</p>
@@ -176,6 +170,10 @@ export default function IdentidadCuenta({ data, onChange, children }: {
         </DetailCard>
       </div>
       {children}
+      </div>
+      {summary}
+      </div>
+      {description}
     </section>
   );
 }

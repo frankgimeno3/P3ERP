@@ -50,6 +50,8 @@
   "/dashboard/comercial/campanas": {
     "summary": "Gestiona campañas comerciales, sus responsables, cuentas y tareas.",
     "steps": [
+      "Abre Filtros para buscar por nombre, fechas, estado, autor o agentes. Usa los botones inferiores para cambiar de página. Nueva campaña está a la derecha del encabezado azul.",
+      "Activa o desactiva las fechas de inicio y fin. Despliega Agentes asociados y Cuentas asociadas para editar las relaciones y consultar su número.",
       "La tabla muestra el nombre, las fechas de creación y finalización, el estado, quién creó la campaña y sus agentes. Abre una fila o pulsa Nueva campaña.",
       "En la ficha edita el nombre, la descripción, la fecha de finalización y el estado. Marca los agentes con las casillas. Busca cuentas en Asociar cuentas y selecciónalas en el modal. Guarda la campaña para registrar los cambios.",
       "Añade tareas con o sin cuenta desde una campaña guardada. Las tareas de cuenta y las tareas propias también permiten seleccionar una campaña en su formulario. Las campañas asociadas aparecen como tarjetas en la ficha de la cuenta."
@@ -823,6 +825,8 @@
   "/dashboard/comercial/cuentas/[id_cuenta]": {
     "summary": "Consulta los datos comerciales y de gestión, los contactos, las ferias y las tareas de la cuenta.",
     "steps": [
+      "Detalles de la cuenta reúne seis tarjetas junto a Resumen actividad. Debajo están la descripción y los comentarios fijados.",
+      "En Estado de tareas puedes seleccionar el estado de leads fríos y crear o asociar campañas. Agrega o edita catálogos con nombre, URL y fecha en Actividades Información Producción. La cruz junto al distribuidor o la cuenta distribuida abre una confirmación de desvinculación.",
       "La fila comercial agrupa país y ciudad, teléfono y contacto principal, y categoría, tipo y cuenta agencia. Los estados de recepción y suscripción de la revista aparecen junto a la distribución. Las campañas asociadas se muestran en tarjetas.",
       "La ficha se organiza en Datos Comerciales (Datos generales, Datos administrativos, Comentarios, Contactos, Propuestas y Ferias) y Datos de gestión (Contratos, Contenidos y Registro de eventos). Tareas sigue disponible como pestaña principal.",
       "En Propuestas, las subpestañas son Pendientes, Aprobadas, Rechazadas y Otras. Aprobadas incluye los estados Aceptada y Aprobada. Otras reúne los borradores y cualquier estado adicional.",
@@ -876,6 +880,7 @@
   "/dashboard/operaciones/tareas": {
     "summary": "Tareas agentes supervisa las tareas por agente, consulta el calendario e importa tareas de vtiger por fases.",
     "steps": [
+      "Pulsa Agregar tarea para crearla desde un modal y asignarla a agentes activos. Los agentes inactivos no aparecen en Tareas por agente.",
       "Tareas agentes permanece directamente en Operaciones, fuera de las carpetas Tablas y BBDD.",
       "Alterna Tareas por agente, Calendario y Sin agente. Las tareas sin responsables se muestran exclusivamente en esa pestaña adicional, en lugar de aparecer debajo de los agentes. El calendario muestra los meses a la izquierda y filtros y tarjetas a la derecha. Puedes cambiar el año, seleccionar un día y abrir el detalle de cada tarea.",
       "Importar tareas de vtiger abre un asistente de cuatro fases: cargar CSV, revisar agentes, revisar cuentas y confirmar. Las coincidencias únicas de nombre o correo se proponen automáticamente; los nombres ambiguos quedan sin asociar. Puedes asignar varios agentes a una tarea, y no se crean agentes ni cuentas. Los responsables y relaciones originales se conservan siempre.",
@@ -891,6 +896,7 @@
   "/dashboard": {
     "summary": "Panel personal del agente.",
     "steps": [
+      "Calendario general muestra las ferias, ventanas editoriales, vacaciones y festivos del calendario laboral 2027. También se abre desde el icono de calendario en GM.",
       "En tablet y móvil el contenido sigue la orientación del dispositivo y los desplegables se abren junto a su campo.",
       "El tutorial de funcionamiento incluye un desplegable del Dashboard con Mis tareas, Mis contenidos, Mis cuentas y Mis propuestas pendientes, y un resumen por cada módulo permitido por tu rol. Los módulos siguen el menú lateral actual: Comercial, Producción, Administración, Operaciones, Contabilidad y Dirección. Producción distingue la consulta de compromisos, la gestión de contenidos y Almacenamiento; Contabilidad reúne extractos, conciliación y previsión de liquidez; Dirección agrupa Laboral, Finanzas y herramientas del ERP.",
       "Todas las pestañas principales llevan contador: Mis tareas cuenta todas tus tareas, Mis contenidos tus contenidos pendientes, Mis cuentas las cuentas de esa sección y Mis propuestas pendientes las propuestas pendientes asignadas a tu agente. Los datos se cargan al entrar para mostrar los contadores sin tener que abrir cada pestaña. Mientras cargan se muestra … y, si falla la consulta, —; un cero indica una consulta correcta sin registros.",
@@ -1062,6 +1068,7 @@
   "/mis-tareas": {
     "summary": "Tareas del agente seleccionado o, por defecto, del agente autenticado.",
     "steps": [
+      "En la ficha de una tarea, cada campaña comercial asociada tiene una tarjeta. Usa el modal para agregar o editar un vínculo y confirma antes de desasociarlo.",
       "Pendientes muestra pendientes y en curso; Terminadas muestra completadas y canceladas. Un gestor puede abrir la selección de otro agente desde Operaciones. El servidor comprueba esa autorización y no mezcla tareas ajenas.",
       "Abre una tarea para consultar la descripción previa, cuenta, responsables y fechas. El agente asignado puede cambiar el estado y escribir sus comentarios, sin alterar el encargo ni reasignar sus responsables.",
       "La fecha y agente de creación y de finalización se registran en el servidor. Completar registra al autor real; reabrir retira la finalización vigente, conservando su historial de auditoría. Los datos históricos desconocidos se muestran sin registrar.",

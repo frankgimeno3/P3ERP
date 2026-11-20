@@ -1,10 +1,13 @@
 import {NextResponse} from 'next/server';
 import {taskIdentity} from '@/server/features/laboral/TaskAccess.js';
 import {readTasks,taskEmployees,writeTask,createOwnTask,taskCalendar,ownTaskCollaborators} from '@/server/features/laboral/TaskRepository.js';
+import {taskCampaignLinks} from '@/server/features/laboral/TaskCampaignRepository.js';
 async function handle(request,context){
  try{
   const parts=(await context.params).path||[],actor=taskIdentity(request);
+  if(parts.length===2 && parts[1]==='campanas') return NextResponse.json(await taskCampaignLinks(actor,parts[0],request.method,request.method==='GET'?{}:await request.json()));
   if(parts.length>1)return NextResponse.json({message:'No encontrado.'},{status:404});
+  if(request.method==='DELETE')return NextResponse.json({message:'Método no permitido.'},{status:405});
   if(parts[0]==='calendario')return request.method==='GET'?NextResponse.json(await taskCalendar(actor)):NextResponse.json({message:'Método no permitido.'},{status:405});
   if(parts[0]==='colaboradores')return request.method==='GET'?NextResponse.json(await ownTaskCollaborators(actor)):NextResponse.json({message:'Método no permitido.'},{status:405});
   if(request.method==='POST'&&parts[0]==='propias')return NextResponse.json(await createOwnTask(actor,await request.json()),{status:201});
@@ -13,4 +16,4 @@ async function handle(request,context){
   return NextResponse.json(await writeTask(actor,parts[0],await request.json()),{status:request.method==='POST'?201:200});
  }catch(error){return NextResponse.json({message:error.status?error.message:'No se pudo procesar la tarea.'},{status:error.status||500});}
 }
-export {handle as GET,handle as POST,handle as PUT};
+export {handle as GET,handle as POST,handle as PUT,handle as DELETE};
