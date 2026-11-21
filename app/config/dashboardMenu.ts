@@ -81,6 +81,8 @@ export const dashboardMenu: DashboardMenuModule[] = [
       group("tablas", "Tablas", [
         page("Ferias", "/dashboard/operaciones/ferias"),
         page("Revistas", "/dashboard/operaciones/revistas"),
+        page("Actividades de cuentas", "/dashboard/operaciones/actividades-cuentas"),
+        page("Tipos de contacto", "/dashboard/operaciones/tipos-contacto"),
         page("Documentación", "/dashboard/operaciones/documentacion"),
         page("Servicios", "/dashboard/operaciones/servicios"),
       ]),

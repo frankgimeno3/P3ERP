@@ -1,4 +1,5 @@
 
+import CommercialClassifications from "@/app/components/CommercialClassifications";
 import SortableTable from '@/app/components/SortableTable';
 import { InterfazContacto } from '@/app/interfaces/interfaces';
 import React, { FC } from 'react';
@@ -74,6 +75,7 @@ const DatosGralesContacto: FC<DatosGralesContactoProps> = ({ contacto, setContac
           </tr>
         </tbody>
       </SortableTable>
+      <CommercialClassifications key={contacto.id_contacto} kind="tipos-contacto" record={contacto.id_contacto} />
     </div>
   );
 };

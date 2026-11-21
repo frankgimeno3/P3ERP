@@ -20,7 +20,7 @@ const potencialFuturoOptions = [
 const cardField = "block min-w-0 w-full rounded text-left border border-white bg-transparent px-2 py-1.5 font-normal text-white outline-none placeholder:text-gray-200 focus-visible:ring-2 focus-visible:ring-white";
 const cardSelect = `${cardField} cursor-pointer transition-colors hover:bg-white/10 [&>option]:bg-white [&>option]:text-gray-900`;
 
-function CardInfo({ title, children }: { title: string; children: ReactNode }) {
+export function CardInfo({ title, children }: { title: string; children: ReactNode }) {
   const id = useId();
   const [open, setOpen] = useState(false);
   return (

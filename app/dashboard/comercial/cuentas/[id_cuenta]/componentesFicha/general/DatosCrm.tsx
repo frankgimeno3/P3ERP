@@ -5,6 +5,8 @@ import React, { FC, ChangeEvent, useEffect, useState } from "react";
 import { AgenteService } from "@/app/service/AgenteService";
 import { CuentaService } from "@/app/service/CuentaService";
 import type { SocialProfile } from "@/app/lib/accountSocialProfiles";
+import CommercialClassifications from "@/app/components/CommercialClassifications";
+import SegmentacionProduccion from "./SegmentacionProduccion";
 import CatalogosCuenta, { type Catalogo } from "./CatalogosCuenta";
 import RedesSociales from "./RedesSociales";
 import { AccountCampaigns } from "@/app/components/CommercialCampaigns";
@@ -14,6 +16,8 @@ import EnvioPropuestasAnuales from "./EnvioPropuestasAnuales";
 
 interface DatosCRMProps {
   id_agente: string; asignado_a: string; summary: React.ReactNode; description: React.ReactNode;
+  segmentacion: Record<string,string>;
+  onSegmentacionChange: (data: Record<string,string>) => void;
   commercialDetails: React.ReactNode;
   id_cuenta: string;
   id_edisoft: string;
@@ -22,20 +26,15 @@ interface DatosCRMProps {
   suscriptor_revista: boolean;
   potencial_actual_relacion: string;
   potencial_futuro_encaje: string;
-  revisado_ricardo: boolean;
-  estado_leads_frios: string;
-  presente_en_qq: boolean;
-  qq: boolean;
-  actividades: string;
   descripcion_actividad: string;
   correo_principal: string;
   redesSociales: SocialProfile[];
   onRedesSocialesSaved: (profiles: SocialProfile[]) => void;
+  seguimiento_qq: string; canal_youtube: string;
   catalogos: string;
   catalogos_enlaces: Catalogo[];
   array_cuentas_distribuidoras: any[];
   array_cuentas_distribuidas: any[];
-  fuente_novedades: string;
   onChange: (field: string, value: string | boolean | any[]) => void;
 }
 
@@ -49,7 +48,6 @@ interface Agente {
   is_empleado_account?: boolean;
 }
 
-const coldLeadStates = ["Fase 1 - Datos actualizados 2026","Fase 2 - Cualificado","Fase 3 - En desarrollo","Fase 4 - En seguimiento","Fase 5 - Propuesta","Respuesta NEGATIVA"];
 const fieldClass = "w-full border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring focus:ring-blue-400";
 
 function ToggleDistribucion({
@@ -149,7 +147,7 @@ function CuentaSearchModal({
 }
 
 const DatosCRM: FC<DatosCRMProps> = ({
-  commercialDetails, id_agente, asignado_a, summary, description,
+  segmentacion, onSegmentacionChange, commercialDetails, id_agente, asignado_a, summary, description,
   id_cuenta,
   id_edisoft,
   pais_cuenta,
@@ -157,19 +155,13 @@ const DatosCRM: FC<DatosCRMProps> = ({
   suscriptor_revista,
   potencial_actual_relacion,
   potencial_futuro_encaje,
-  revisado_ricardo,
-  estado_leads_frios,
-  presente_en_qq,
-  qq,
-  actividades,
   descripcion_actividad,
   correo_principal,
   redesSociales,
   onRedesSocialesSaved,
-  catalogos, catalogos_enlaces,
+  seguimiento_qq, canal_youtube, catalogos, catalogos_enlaces,
   array_cuentas_distribuidoras,
   array_cuentas_distribuidas,
-  fuente_novedades,
   onChange,
 }) => {
   const [agentes, setAgentes] = useState<Agente[]>([]);
@@ -220,57 +212,47 @@ const DatosCRM: FC<DatosCRMProps> = ({
 
       <section className="space-y-4">
         <h2 className="text-xl font-bold">Estado de tareas</h2>
-        <div className="grid gap-4 text-sm md:grid-cols-2">
-          <div className="grid content-start gap-4">
-          <label className="space-y-1">
-            <span className="font-medium">¿Cuenta revisada por Ricardo?</span>
-            <select name="revisado_ricardo" value={String(revisado_ricardo)} onChange={handleBooleanChange} className={fieldClass}>
-              <option value="false">No</option>
-              <option value="true">Sí</option>
-            </select>
-          </label>
-          <label className="space-y-1">
-            <span className="font-medium">Estado leads fríos</span>
-            <select name="estado_leads_frios" value={estado_leads_frios} onChange={handleTextChange} className={fieldClass+" cursor-pointer hover:border-blue-800"}><option value="">Sin definir</option>{estado_leads_frios && !coldLeadStates.includes(estado_leads_frios) && <option>{estado_leads_frios}</option>}{coldLeadStates.map(state => <option key={state}>{state}</option>)}</select>
-          </label>
-          </div>
+        <div className="grid gap-4 text-sm">
           <div className="rounded bg-gray-50 p-3"><AccountCampaigns key={id_cuenta} accountId={id_cuenta} /></div>
         </div>
           <EnvioPropuestasAnuales key={id_cuenta} idCuenta={id_cuenta} agents={agentes} />
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-xl font-bold">Actividades Información Producción</h2>
+        <h2 className="text-xl font-bold">Información producción</h2>
+        <SegmentacionProduccion data={segmentacion} onChange={onSegmentacionChange}>
         <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-3">
           <div className="grid content-start gap-4 md:col-span-3">
           <label className="space-y-1">
             <span className="font-medium">Dirección de email principal</span>
             <input name="correo_principal" value={correo_principal} onChange={handleTextChange} className={fieldClass} />
           </label>
-          <label className="space-y-1">
-            <span className="font-medium">¿Aparecen en QQ?</span>
-            <select name="qq" value={String(qq || presente_en_qq)} onChange={event => { const checked = event.target.value === "true"; onChange("qq", checked); onChange("presente_en_qq", checked); }} className={fieldClass}>
-              <option value="false">No</option>
-              <option value="true">Sí</option>
+          <label className="space-y-1">Seguimiento QQ
+            <select name="seguimiento_qq" value={seguimiento_qq} onChange={handleTextChange} className={fieldClass + " cursor-pointer hover:border-blue-800"}>
+              <option value="">Selecciona una opción</option>
+              {["OKQQ","OKQQ LATAM","OK QQ ESPAÑA Y LATAM","AÑADIRQQ","CAMBIARQQ","QUITARQQ"].map(value => <option key={value}>{value}</option>)}
             </select>
           </label>
-
           <div className="md:col-span-3"><CatalogosCuenta items={catalogos_enlaces} legacy={catalogos} onChange={items => onChange("catalogos_enlaces", items)} /></div>
           </div>
-          <label className="space-y-1">
-            <span className="font-medium">Fuentes novedades</span>
-            <textarea name="fuente_novedades" value={fuente_novedades} onChange={handleTextChange} className={`${fieldClass} min-h-24`} />
-          </label>
-          <label className="space-y-1">
-            <span className="font-medium">Actividades cuenta</span>
-            <textarea name="actividades" value={actividades} onChange={handleTextChange} className={`${fieldClass} min-h-24`} />
-          </label>
-          <label className="space-y-1">
+          <div className="md:col-span-3"><CommercialClassifications kind="actividades-cuentas" record={id_cuenta} /></div>
+          <label className="space-y-1 md:col-span-3">
             <span className="font-medium">Descripción actividad</span>
             <textarea name="descripcion_actividad" value={descripcion_actividad} onChange={handleTextChange} className={`${fieldClass} min-h-24`} />
           </label>
 
-          <div className="md:col-span-3"><RedesSociales key={id_cuenta} idCuenta={id_cuenta} profiles={redesSociales} onSaved={onRedesSocialesSaved} /></div>
+          <div className="grid gap-5 md:col-span-3 md:grid-cols-2">
+            <RedesSociales key={id_cuenta} idCuenta={id_cuenta} profiles={redesSociales} onSaved={onRedesSocialesSaved} />
+            <section>
+              <h3 className="font-medium">Vídeos · Canal de YouTube</h3>
+              <svg viewBox="0 0 24 24" width="32" height="32" aria-hidden="true"><rect x="1" y="4" width="22" height="16" rx="4" fill="#ff0033"/><path d="m10 8 6 4-6 4z" fill="white"/></svg>
+              <label className="block">URL del canal<input type="url" name="canal_youtube" className={fieldClass} value={canal_youtube} onChange={handleTextChange}/></label>
+            </section>
+          </div>
+          <div className="grid gap-4 md:col-span-3 md:grid-cols-2">
+            <label>Dirección-Contacto artículos ESPAÑA<textarea className={fieldClass} value={segmentacion.articulos_espana || ""} onChange={event => onSegmentacionChange({...segmentacion, articulos_espana:event.target.value})}/></label>
+            <label>Dirección-Contacto artículos LATAM<textarea className={fieldClass} value={segmentacion.articulos_latam || ""} onChange={event => onSegmentacionChange({...segmentacion, articulos_latam:event.target.value})}/></label>
+          </div>
           <div className="grid gap-4 md:col-span-3 md:grid-cols-2">
             <div className="space-y-3 rounded bg-gray-50 p-3">
           <ToggleDistribucion
@@ -299,6 +281,7 @@ const DatosCRM: FC<DatosCRMProps> = ({
 
           </div>
         </div>
+        </SegmentacionProduccion>
       </section>
 
       {unlink && <div className="fixed inset-0 z-50 grid place-items-center bg-black/40">

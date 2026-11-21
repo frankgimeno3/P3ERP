@@ -5,9 +5,7 @@ import apiClient from "@/app/apiClient";
 import DatePartsInput from "@/app/components/DatePartsInput";
 import SearchableSelect from "@/app/components/SearchableSelect";
 import { taskStates } from "@/app/components/tasks/TaskList";
-import { normalizeAnnualDayMonth, normalizeAnnualRange } from "@/app/lib/annualRenewalDates";
 
-type RangoAnual = { entre: string; hasta: string };
 type Task = {
   id: string;
   nombre: string;
@@ -28,9 +26,8 @@ type Agent = {
 };
 type Renewal = {
   activo: boolean;
-  predeterminado: RangoAnual;
-  rango: RangoAnual | null;
-  rango_manual: boolean;
+  fecha_predeterminada: string;
+  fecha_aproximada: string | null;
   tarea: Task | null;
   puede_editar: boolean;
 };
@@ -44,32 +41,6 @@ const months = Array.from({ length: 12 }, (_, index) => ({
   value: String(index + 1).padStart(2, "0"),
   name: new Intl.DateTimeFormat("es", { month: "long", timeZone: "UTC" }).format(new Date(Date.UTC(2000, index, 1))),
 }));
-
-function FechaAnual({ label, value, onChange, disabled }: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  disabled: boolean;
-}) {
-  const [day = "", month = ""] = value.split("/");
-  return (
-    <fieldset disabled={disabled} className="flex flex-wrap items-center gap-2">
-      <span className="min-w-9">{label}</span>
-      <input aria-label={`${label}, número`} aria-invalid={Boolean(value && !normalizeAnnualDayMonth(value))}
-        className="w-16 rounded border border-gray-300 px-2 py-1 text-center" inputMode="numeric" maxLength={2}
-        placeholder="dd" value={day}
-        onBlur={() => { if (day.length === 1) onChange(`${day.padStart(2, "0")}/${month}`); }}
-        onChange={event => onChange(`${event.target.value.replace(/\D/g, "").slice(0, 2)}/${month}`)} />
-      <span>del mes de</span>
-      <select aria-label={`${label}, mes`} value={month ? month.padStart(2, "0") : ""}
-        onChange={event => onChange(`${day}/${event.target.value}`)}
-        className="rounded border border-gray-300 bg-white px-2 py-1 enabled:cursor-pointer enabled:hover:border-blue-700 disabled:opacity-60">
-        <option value="">Mes</option>
-        {months.map(({ value, name }) => <option key={value} value={value}>{name}</option>)}
-      </select>
-    </fieldset>
-  );
-}
 
 function RenewalTaskModal({ task, agents, onClose, onSave }: {
   task: Task | null;
@@ -155,7 +126,7 @@ function errorMessage(reason: unknown, fallback: string) {
 
 export default function EnvioPropuestasAnuales({ idCuenta, agents }: { idCuenta: string; agents: Agent[] }) {
   const [data, setData] = useState<Renewal>();
-  const [rango, setRango] = useState<RangoAnual>({ entre: "", hasta: "" });
+  const [fecha, setFecha] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -166,7 +137,7 @@ export default function EnvioPropuestasAnuales({ idCuenta, agents }: { idCuenta:
     apiClient.get<Renewal>(url, { signal: request.signal }).then(({ data }) => {
       if (request.signal.aborted) return;
       setData(data);
-      setRango(data.rango ?? data.predeterminado);
+      setFecha(data.fecha_aproximada ?? data.fecha_predeterminada);
     }).catch(reason => {
       if (!request.signal.aborted) setError(errorMessage(reason, "No se pudo cargar el seguimiento."));
     });
@@ -177,7 +148,7 @@ export default function EnvioPropuestasAnuales({ idCuenta, agents }: { idCuenta:
     if (!data?.activo || saving || editing) return;
     const cancelRange = (event: KeyboardEvent) => {
       if (event.key === "Escape" && !event.defaultPrevented && !document.querySelector('dialog[open], [aria-modal="true"]')) {
-        setRango(data.rango ?? data.predeterminado);
+        setFecha(data.fecha_aproximada ?? data.fecha_predeterminada);
         setError("");
       }
     };
@@ -188,20 +159,18 @@ export default function EnvioPropuestasAnuales({ idCuenta, agents }: { idCuenta:
   if (!data) return <p className="md:col-span-3" role={error ? "alert" : "status"}>{error || "Cargando seguimiento de renovación…"}</p>;
 
   const { activo, tarea: task } = data;
-  const currentRange = data.rango ?? data.predeterminado;
-  const settingsChanged = rango.entre !== currentRange.entre || rango.hasta !== currentRange.hasta;
-  const normalized = normalizeAnnualRange(rango);
+  const settingsChanged = fecha !== (data.fecha_aproximada ?? data.fecha_predeterminada);
+  const [year, month] = fecha.split("-");
+  const normalized = /^[1-9]\d{3}-(0[1-9]|1[0-2])$/.test(fecha);
   const canEdit = data.puede_editar && !saving;
-
-  const saveSettings = async (nextActive: boolean, nextRange: RangoAnual | null) => {
+  const saveSettings = async (nextActive: boolean, nextDate: string | null) => {
     if (!canEdit) return;
     setSaving(true);
     setError("");
-    const automatic = !data.rango_manual && nextRange?.entre === data.predeterminado.entre && nextRange?.hasta === data.predeterminado.hasta;
     try {
-      const response = await apiClient.put<Renewal>(url, { activo: nextActive, rango: nextActive && !automatic ? nextRange : null });
+      const response = await apiClient.put<Renewal>(url, { activo: nextActive, fecha_aproximada: nextActive && nextDate !== data.fecha_predeterminada ? nextDate : null });
       setData(response.data);
-      setRango(response.data.rango ?? response.data.predeterminado);
+      setFecha(response.data.fecha_aproximada ?? response.data.fecha_predeterminada);
     } catch (reason) {
       setError(errorMessage(reason, "No se pudo guardar el seguimiento."));
     } finally {
@@ -223,11 +192,13 @@ export default function EnvioPropuestasAnuales({ idCuenta, agents }: { idCuenta:
         {activo && (
           <>
             <div>
-              <h3 className="mb-2 font-medium">Fecha de envío de las próximas propuestas anuales</h3>
-              <p className="mb-3 text-gray-600">La próxima propuesta de renovación debe enviarse aproximadamente entre:</p>
-              <div className="space-y-2">
-                <FechaAnual label="El día" value={rango.entre} disabled={!canEdit} onChange={entre => setRango(prev => ({ ...prev, entre }))} />
-                <FechaAnual label="y el día" value={rango.hasta} disabled={!canEdit} onChange={hasta => setRango(prev => ({ ...prev, hasta }))} />
+              <h3 className="mb-2 font-medium">Fecha aproximada de renovación</h3>
+              <div className="flex flex-wrap gap-2">
+                <label>Mes<select disabled={!canEdit} value={month || ""} onChange={event => setFecha(year + "-" + event.target.value)} className={control + " enabled:cursor-pointer enabled:hover:border-blue-700"}>
+                  <option value="">Mes</option>
+                  {months.map(({ value, name }) => <option key={value} value={value}>{name}</option>)}
+                </select></label>
+                <label>Año<input disabled={!canEdit} inputMode="numeric" maxLength={4} value={year} onChange={event => setFecha(event.target.value.replace(/\D/g, "") + "-" + (month || ""))} className={control + " w-24"}/></label>
               </div>
             </div>
             <div>
@@ -246,7 +217,7 @@ export default function EnvioPropuestasAnuales({ idCuenta, agents }: { idCuenta:
       </div>
       {error && <p role="alert" className="text-red-700">{error}</p>}
       {data.puede_editar && activo && (settingsChanged || !task) && (
-        <button type="button" className={primaryButton} disabled={!canEdit || !normalized} onClick={() => void saveSettings(true, normalized)}>
+        <button type="button" className={primaryButton} disabled={!canEdit || !normalized} onClick={() => void saveSettings(true, fecha)}>
           {saving ? "Guardando…" : "Guardar seguimiento"}
         </button>
       )}

@@ -8,7 +8,7 @@ const accountMap = {
   'DESCRIPCIÓN DE ACTIVIDAD': 'descripcion_actividad', 'RED SOCIAL PRIORITARIA': 'red_social_prioritaria',
   'CATÁLOGOS': 'catalogos', 'Dirección (Factura)': 'direccion_facturacion', 'Población (Factura)': 'poblacion_facturacion',
   'Código Postal (Factura)': 'cp_facturacion', 'País (Factura)': 'pais_facturacion', CAMPAÑAS: 'campanas',
-  'ESTADO LEADS FRÍOS': 'estado_leads_frios', 'FACTURAS EMITIDAS': 'detalles_facturacion',
+  'FACTURAS EMITIDAS': 'detalles_facturacion',
 };
 const contactMap = {
   'Contacto Id': 'id_contacto', Nombre: 'nombre_contacto', Apellido: 'apellidos_contacto',
@@ -17,7 +17,7 @@ const contactMap = {
   Descripción: 'otros_datos_interes', 'PUBLICACIONES QUE RECIBE': 'suscripciones',
 };
 const allowed = {
-  cuentas: new Set(['id_cuenta','nombre_empresa','website','asignado_a','id_agente','potencial_actual_relacion','potencial_futuro_encaje','descripcion_cuenta','tipo_cuenta','actividades_cuenta','correo_principal','descripcion_actividad','red_social_prioritaria','catalogos','direccion_facturacion','poblacion_facturacion','cp_facturacion','pais_facturacion','campanas','estado_leads_frios','detalles_facturacion','datos_comerciales']),
+  cuentas: new Set(['id_cuenta','nombre_empresa','website','asignado_a','id_agente','potencial_actual_relacion','potencial_futuro_encaje','descripcion_cuenta','tipo_cuenta','actividades_cuenta','correo_principal','descripcion_actividad','red_social_prioritaria','catalogos','direccion_facturacion','poblacion_facturacion','cp_facturacion','pais_facturacion','campanas','detalles_facturacion','datos_comerciales']),
   contactos: new Set(['id_contacto','nombre_contacto','apellidos_contacto','nombre_completo_contacto','nombre_empresa','email_contacto','cargo_contacto','telefono_contacto','pais_contacto','linkedin_cuenta','otros_datos_interes','suscripciones']),
 };
 const jsonCols = new Set(['datos_comerciales','suscripciones']);

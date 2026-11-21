@@ -43,9 +43,7 @@ export interface InterfazCuenta {
   suscriptor_revista?: boolean;
   potencial_actual_relacion?: string;
   potencial_futuro_encaje?: string;
-  revisado_ricardo?: boolean;
   campanas?: string;
-  estado_leads_frios?: string;
   stands_ferias?: string;
   stands_ferias_ediciones?: { id_feria: string; fecha: string; hall: string; stand: string }[];
   tipo_cuenta?: string;
@@ -58,12 +56,13 @@ export interface InterfazCuenta {
   ferias?: string[];
   red_social_prioritaria?: string;
   redes_sociales?: SocialProfile[];
+  seguimiento_qq?: string;
+  canal_youtube?: string;
   catalogos?: string;
   catalogos_enlaces?: { nombre: string; url: string; fecha: string }[];
   array_cuentas_distribuidoras?: { id_cuenta?: string; nombre_empresa?: string }[];
   array_cuentas_distribuidas?: { id_cuenta?: string; nombre_empresa?: string }[];
   cuenta_agencia?: string;
-  fuente_novedades_cuenta: string;
   vat_code?: string;
   nombre_fiscal?: string;
   pais_facturacion?: string;
@@ -78,6 +77,7 @@ export interface InterfazCuenta {
     importe?: number | string;
   }[];
   datos_comerciales: {
+    segmentacion_produccion?: Record<string,string>;
     envio_propuestas_anuales?: { entre: string; hasta: string };
     ciudad_principal_cuenta: string;
     telefono_principal_cuenta: string;

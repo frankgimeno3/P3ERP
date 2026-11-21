@@ -1,7 +1,7 @@
 const accountFields = {
   'ID de la cuenta': 'id_cuenta', 'Nombre de la empresa': 'nombre_empresa', 'País de la cuenta': 'pais_cuenta',
   'ID del agente': 'id_agente', 'Descripción de la cuenta': 'descripcion_cuenta', 'Actividades de la cuenta': 'actividades_cuenta',
-  'Presente en QQ': 'presente_en_qq', 'Fuente de novedades': 'fuente_novedades_cuenta',
+  'Presente en QQ': 'presente_en_qq',
   'Ciudad principal': 'ciudad_principal_cuenta', 'Teléfono principal': 'telefono_principal_cuenta',
   'Categoría principal': 'categoria_principal_cuenta', 'Contacto principal': 'contacto_principal', 'Resumen de actividad': 'resumen_actividad_cuenta',
 };

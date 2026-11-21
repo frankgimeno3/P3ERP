@@ -14,7 +14,7 @@ export function normalizeAnnualRange(range) {
   return entre && hasta ? { entre, hasta } : null;
 }
 
-export function defaultAnnualRange(signatures) {
+function latestAnnualSignature(signatures) {
   let latest = '';
   for (const value of signatures) {
     const raw = String(value ?? '').trim();
@@ -25,6 +25,19 @@ export function defaultAnnualRange(signatures) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(iso) || !Number.isFinite(Date.parse(iso))) continue;
     if (new Date(iso).toISOString().slice(0, 10) === iso && iso > latest) latest = iso;
   }
+  return latest;
+}
+
+export function defaultAnnualRange(signatures) {
+  const latest = latestAnnualSignature(signatures);
   const month = latest ? String((Number(latest.slice(5, 7)) + 5) % 12 + 1).padStart(2, '0') : '09';
   return { entre: `01/${month}`, hasta: `15/${month}` };
+}
+
+export function defaultRenewalMonth(signatures, now = new Date()) {
+  const latest = latestAnnualSignature(signatures);
+  const [year, month] = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit' }).format(now).split('-').map(Number);
+  if (!latest) return `${year + Number(month > 9)}-09`;
+  const due = new Date(Date.UTC(Number(latest.slice(0,4)), Number(latest.slice(5,7)) + 5, 1));
+  return due.toISOString().slice(0, 7);
 }

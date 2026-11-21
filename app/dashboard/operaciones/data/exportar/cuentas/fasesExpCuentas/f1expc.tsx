@@ -31,7 +31,6 @@ const F1expc: FC<F1expcProps> = ({
         "Descripción de la cuenta",
         "Actividades de la cuenta",
         "Presente en QQ",
-        "Fuente de novedades",
         "Ciudad principal",
         "Teléfono principal",
         "Categoría principal",

@@ -47,6 +47,14 @@
       "Crear nueva propuesta desde una cuenta conserva su cuenta en la URL y completa el contacto principal y el título. El encabezado de edición muestra el nombre de la propuesta. Al seleccionar un servicio de revista, la línea conserva la revista, edición y publicación elegidas; el catálogo aporta especificaciones y precio. Página preferente empieza en No: al activar Sí debes elegir una página para confirmar; volver a No retira la selección."
     ]
   },
+  "/dashboard/operaciones/actividades-cuentas": {
+    "summary": "Mantén el catálogo de actividades y consulta las cuentas vinculadas.",
+    "steps": ["Pulsa Añadir para registrar una actividad. Los nombres duplicados se rechazan.", "Abre una actividad para ver las empresas vinculadas."]
+  },
+  "/dashboard/operaciones/tipos-contacto": {
+    "summary": "Mantén el catálogo de tipos de contacto y consulta sus contactos.",
+    "steps": ["Pulsa Añadir para registrar un tipo. Los nombres duplicados se rechazan.", "Abre un tipo para ver los contactos vinculados."]
+  },
   "/dashboard/comercial/campanas": {
     "summary": "Gestiona campañas comerciales, sus responsables, cuentas y tareas.",
     "steps": [
@@ -60,6 +68,7 @@
   "/dashboard/comercial/contactos/[id]": {
     "summary": "Consulta y edita la ficha del contacto.",
     "steps": [
+      "En Datos generales, usa + para vincular tipos de contacto y Desvincular para retirarlos.",
       "Otros contactos de esta cuenta lista los contactos asociados a la misma empresa. Pulsa uno para abrir su ficha."
     ]
   },
@@ -825,8 +834,10 @@
   "/dashboard/comercial/cuentas/[id_cuenta]": {
     "summary": "Consulta los datos comerciales y de gestión, los contactos, las ferias y las tareas de la cuenta.",
     "steps": [
+      "Información producción incluye las subpestañas General, Segmentación por envío y Segmentación por actividad. En General se vinculan actividades, se edita el seguimiento QQ y el canal de YouTube, y se guardan las direcciones de contacto para artículos de España y LATAM.",
+      "La fecha aproximada de renovación se elige por mes y año.",
       "Detalles de la cuenta reúne seis tarjetas junto a Resumen actividad. Debajo están la descripción y los comentarios fijados.",
-      "En Estado de tareas puedes seleccionar el estado de leads fríos y crear o asociar campañas. Agrega o edita catálogos con nombre, URL y fecha en Actividades Información Producción. La cruz junto al distribuidor o la cuenta distribuida abre una confirmación de desvinculación.",
+      "En Estado de tareas puedes crear o asociar campañas. Agrega o edita catálogos con nombre, URL y fecha en Actividades Información Producción. La cruz junto al distribuidor o la cuenta distribuida abre una confirmación de desvinculación.",
       "La fila comercial agrupa país y ciudad, teléfono y contacto principal, y categoría, tipo y cuenta agencia. Los estados de recepción y suscripción de la revista aparecen junto a la distribución. Las campañas asociadas se muestran en tarjetas.",
       "La ficha se organiza en Datos Comerciales (Datos generales, Datos administrativos, Comentarios, Contactos, Propuestas y Ferias) y Datos de gestión (Contratos, Contenidos y Registro de eventos). Tareas sigue disponible como pestaña principal.",
       "En Propuestas, las subpestañas son Pendientes, Aprobadas, Rechazadas y Otras. Aprobadas incluye los estados Aceptada y Aprobada. Otras reúne los borradores y cualquier estado adicional.",

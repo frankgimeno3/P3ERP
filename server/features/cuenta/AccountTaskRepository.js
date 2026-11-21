@@ -3,7 +3,7 @@ import { getPgPool } from '../../database/pgClient.js';
 import { accountTaskTypes, canManageAccountTasks } from '../../../app/config/accountTasks.js';
 import { requireTaskIdentity } from '../laboral/TaskAccess.js';
 import { addCuentaEvento } from '../registroEventos/RegistroEventosRepository.js';
-import { defaultAnnualRange, normalizeAnnualRange } from '../../../app/lib/annualRenewalDates.js';
+import { defaultAnnualRange, defaultRenewalMonth, normalizeAnnualRange, normalizeAnnualDayMonth } from '../../../app/lib/annualRenewalDates.js';
 
 const fail = (message, status = 400) => { throw Object.assign(new Error(message), { status }); };
 const states = ['pendiente', 'en_curso', 'completada', 'cancelada'];
@@ -123,10 +123,14 @@ async function loadAnnualRenewal(actor, accountId, db) {
   if (!account) fail('Cuenta no encontrada.', 404);
   const activo = account.renovacion_anual?.activo !== false;
   const predeterminado = defaultAnnualRange(account.firmas);
-  const rangoManual = normalizeAnnualRange(account.renovacion_anual ? account.renovacion_anual.rango : account.rango_anterior);
+  const fechaPredeterminada = defaultRenewalMonth(account.firmas);
+  const legacyMonth = normalizeAnnualDayMonth((account.renovacion_anual?.rango || account.rango_anterior)?.entre)?.slice(3);
+  const fechaManual = account.renovacion_anual?.fecha_aproximada || (legacyMonth ? fechaPredeterminada.slice(0,4) + '-' + legacyMonth : null);
+  const rangoManual = fechaManual ? { entre: '01/' + fechaManual.slice(5), hasta: '15/' + fechaManual.slice(5) } : null;
   const task = (await db.query(`${select} WHERE t.id_cuenta=$1 AND t.es_renovacion_anual`, [accountId])).rows[0];
   return {
     activo, predeterminado, rango: activo ? rangoManual || predeterminado : null,
+    fecha_predeterminada: fechaPredeterminada, fecha_aproximada: activo ? fechaManual || fechaPredeterminada : null,
     rango_manual: Boolean(rangoManual), tarea: task ? decorate(task, actor) : null,
     puede_editar: canManageAccountTasks(actor.role),
   };
@@ -147,10 +151,11 @@ export async function saveAnnualRenewal(actor, accountId, body, pool = getPgPool
       await writeAccountTask(db, actor, accountId, current.tarea?.id, body.tarea, false, !current.tarea);
     } else {
       if (typeof body.activo !== 'boolean') fail('Indica si la cuenta está en seguimiento.');
-      const rango = body.activo ? normalizeAnnualRange(body.rango) : null;
-      if (body.activo && body.rango != null && !rango) fail('Introduce un día y mes válidos en Entre y Hasta.');
+      const rango = normalizeAnnualRange(body.rango);
+      const fecha = body.fecha_aproximada ?? (rango ? current.fecha_predeterminada.slice(0,4) + '-' + rango.entre.slice(3) : null);
+      if (body.activo && ((fecha !== null && !/^[1-9]\d{3}-(0[1-9]|1[0-2])$/.test(fecha)) || (body.rango != null && !rango))) fail('Introduce un mes y año válidos.');
       await db.query('UPDATE comercial_cuentas SET renovacion_anual=$2::jsonb WHERE id_cuenta=$1',
-        [accountId, JSON.stringify({ activo: body.activo, rango })]);
+        [accountId, JSON.stringify({ activo: body.activo, fecha_aproximada: body.activo ? fecha : null })]);
       if (body.activo && !current.tarea) await writeAccountTask(db, actor, accountId, null, renewalTask, false, true);
       if (!body.activo && current.tarea) {
         await db.query('DELETE FROM comercial_cuenta_tareas WHERE id=$1', [current.tarea.id]);

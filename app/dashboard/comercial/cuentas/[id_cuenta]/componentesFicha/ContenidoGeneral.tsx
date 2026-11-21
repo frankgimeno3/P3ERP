@@ -28,10 +28,6 @@ const ContenidoGeneral: FC<ContenidoGeneralProps> = ({
 
   const fieldMap: Record<string, string> = {
     nombre_empresa: "nombre_empresa",
-    actividades: "actividades_cuenta",
-    presente_en_qq: "presente_en_qq",
-    qq: "qq",
-    fuente_novedades: "fuente_novedades_cuenta",
   };
 
   const handleCRMChange = (field: string, value: string | boolean | string[] | any[]) => {
@@ -41,7 +37,7 @@ const ContenidoGeneral: FC<ContenidoGeneralProps> = ({
     setIsContenidoEdited(true);
   };
 
-  const handleDatosComercialesChange = (field: string, value: string) => {
+  const handleDatosComercialesChange = (field: string, value: string | Record<string,string>) => {
     setCuentaEditable(prev => prev && {
       ...prev,
       datos_comerciales: { ...prev.datos_comerciales, [field]: value },
@@ -59,20 +55,16 @@ const ContenidoGeneral: FC<ContenidoGeneralProps> = ({
         suscriptor_revista={Boolean(cuentaEditable.suscriptor_revista)}
         potencial_actual_relacion={cuentaEditable.potencial_actual_relacion || ""}
         potencial_futuro_encaje={cuentaEditable.potencial_futuro_encaje || ""}
-        revisado_ricardo={Boolean(cuentaEditable.revisado_ricardo)}
-        estado_leads_frios={cuentaEditable.estado_leads_frios || ""}
-        presente_en_qq={cuentaEditable.presente_en_qq}
-        qq={Boolean(cuentaEditable.qq)}
-        actividades={cuentaEditable.actividades_cuenta}
         descripcion_actividad={cuentaEditable.descripcion_actividad || ""}
         correo_principal={cuentaEditable.correo_principal || ""}
         redesSociales={cuentaEditable.redes_sociales || []}
         onRedesSocialesSaved={onRedesSocialesSaved}
+        seguimiento_qq={cuentaEditable.seguimiento_qq || ""}
+        canal_youtube={cuentaEditable.canal_youtube || ""}
         catalogos={cuentaEditable.catalogos || ""}
         catalogos_enlaces={cuentaEditable.catalogos_enlaces || []}
         array_cuentas_distribuidoras={cuentaEditable.array_cuentas_distribuidoras || []}
         array_cuentas_distribuidas={cuentaEditable.array_cuentas_distribuidas || []}
-        fuente_novedades={cuentaEditable.fuente_novedades_cuenta}
         onChange={handleCRMChange}
         id_agente={cuentaEditable.id_agente || ""}
         asignado_a={cuentaEditable.asignado_a || ""}
@@ -86,6 +78,8 @@ const ContenidoGeneral: FC<ContenidoGeneralProps> = ({
           setIsContenidoEdited(true);
         }}
       />}
+        segmentacion={cuentaEditable.datos_comerciales.segmentacion_produccion || {}}
+        onSegmentacionChange={value => handleDatosComercialesChange("segmentacion_produccion", value)}
         commercialDetails={
           <DatosComerciales
             key={cuentaEditable.id_cuenta}
@@ -101,6 +95,7 @@ const ContenidoGeneral: FC<ContenidoGeneralProps> = ({
           />
         }
       />
+
 
       <Direcciones
         direcciones={cuentaEditable.array_direcciones_cuenta}

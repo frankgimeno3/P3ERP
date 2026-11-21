@@ -25,7 +25,6 @@ const DatosEmpresaContacto: FC<DatosEmpresaContactoProps> = ({
     descripcion_cuenta: e.descripcion_cuenta || "",
     actividades_cuenta: e.actividades_cuenta || "",
     presente_en_qq: e.presente_en_qq || false,
-    fuente_novedades_cuenta: e.fuente_novedades_cuenta || "",
     datos_comerciales: {
       ciudad_principal_cuenta: e.datos_comerciales?.ciudad_principal_cuenta || "",
       telefono_principal_cuenta: e.datos_comerciales?.telefono_principal_cuenta || "",

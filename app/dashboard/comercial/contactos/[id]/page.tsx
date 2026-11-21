@@ -28,6 +28,7 @@ const FichaContacto: FC = () => {
     : params?.id ?? null;
 
   const [isContenidoEdited, setIsContenidoEdited] = useState(false);
+  const [missing, setMissing] = useState(false);
   const [saving, setSaving] = useState(false);
   
   // Estado de contacto editable
@@ -53,24 +54,24 @@ const FichaContacto: FC = () => {
   useEffect(() => {
     if (!contactoId) return;
 
-    const fetchContacto = async () => {
-      const contactos = await ContactoService.getContactos();
-      const contacto = contactos.find((c: InterfazContacto) => c.id_contacto === contactoId);
+    const request = new AbortController();
+    setContactoEditable(undefined);
+    setMissing(false);
+    const deadline = window.setTimeout(() => setMissing(true), 15000);
+    ContactoService.getContactos({ id_contacto: contactoId }, { signal: request.signal }).then(contactos => {
+      if (request.signal.aborted) return;
+      const contacto = contactos.find((row: InterfazContacto) => row.id_contacto === contactoId);
+      if (!contacto) return;
+      window.clearTimeout(deadline);
       setContactoEditable(contacto);
-      if (contacto) {
-        setSuscripciones(contacto.suscripciones || []);
-        setOtrosDatos(contacto.otros_datos_interes || "");
-        setIdiomas(contacto.idiomas);
-        setPais(contacto.pais_contacto);
-        setConocidoEn(contacto.conocido_en || "");
-        setContactadoEnFeria(contacto.contactado_en_feria);
-      }
-    };
-
-    fetchContacto().catch((error) => {
-      console.error("Error fetching contacto:", error);
-      setContactoEditable(undefined);
-    });
+      setSuscripciones(contacto.suscripciones || []);
+      setOtrosDatos(contacto.otros_datos_interes || "");
+      setIdiomas(contacto.idiomas);
+      setPais(contacto.pais_contacto);
+      setConocidoEn(contacto.conocido_en || "");
+      setContactadoEnFeria(contacto.contactado_en_feria);
+    }).catch(() => {});
+    return () => { request.abort(); window.clearTimeout(deadline); };
   }, [contactoId]);
 
   // Cargar comentarios desde JSON
@@ -107,7 +108,7 @@ const FichaContacto: FC = () => {
   if (!contactoEditable) {
     return (
       <div className="bg-gray-100 min-h-screen p-12 text-gray-600">
-        <h2 className="text-lg font-semibold">Contacto no encontrado {contactoId}</h2>
+        <h2 role="status" className="text-lg font-semibold">{missing ? `Contacto no encontrado ${contactoId ?? ""}` : "Cargando contacto…"}</h2>
       </div>
     );
   }

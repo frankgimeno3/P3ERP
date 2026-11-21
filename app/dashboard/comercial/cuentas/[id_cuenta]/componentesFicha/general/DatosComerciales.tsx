@@ -2,6 +2,7 @@
 
 import React, { ChangeEvent, FC, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { CardInfo } from "./IdentidadCuenta";
 import CountrySelect from "@/app/components/CountrySelect";
 import CountryFlag from '@/app/components/CountryFlag';
 import { ContactoService } from '@/app/service/ContactoService';
@@ -88,8 +89,8 @@ const DatosComerciales: FC<DatosComercialesProps> = ({ datos_comerciales, idCuen
 
   return (
     <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-3">
-      <div className="flex gap-3 rounded-xl bg-gray-700 p-4 text-white shadow-md">
-        <svg aria-hidden="true" className="h-6 w-6 shrink-0 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+      <div className="rounded-xl bg-gray-700 p-4 text-white shadow-md">
+        <div className="mb-3 flex justify-between gap-2 font-semibold">País y ciudad<CardInfo title="País y ciudad">Ubicación principal de la empresa.</CardInfo></div>
         <div className="min-w-0 flex-1 space-y-3">
           <div className="flex items-center gap-2"><CountryFlag country={pais}/><CountrySelect countries={accountCountryNames} flags="options" value={pais} onChange={onCountryChange} className={inputClass} /></div>
           <label className="block space-y-1">
@@ -99,8 +100,8 @@ const DatosComerciales: FC<DatosComercialesProps> = ({ datos_comerciales, idCuen
         </div>
       </div>
 
-      <div className="flex gap-3 rounded-xl bg-gray-700 p-4 text-white shadow-md">
-        <svg aria-hidden="true" className="h-6 w-6 shrink-0 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M5 3H9l2 5-3 2a13 13 0 0 0 6 6l2-3 5 2v4a2 2 0 0 1-2 2A18 18 0 0 1 3 5a2 2 0 0 1 2-2Z"/></svg>
+      <div className="rounded-xl bg-gray-700 p-4 text-white shadow-md">
+        <div className="mb-3 flex justify-between gap-2 font-semibold">Contacto y teléfono<CardInfo title="Contacto y teléfono">Persona de referencia y teléfono principal con prefijo internacional.</CardInfo></div>
         <div className="min-w-0 flex-1 space-y-3">
         <label className="block space-y-1">
           <span className="font-medium">Teléfono principal</span>

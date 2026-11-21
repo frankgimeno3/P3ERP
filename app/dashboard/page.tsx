@@ -130,7 +130,6 @@ export default function DashboardPage() {
         pais_cuenta: cuenta.pais_cuenta || "",
         correo_principal: cuenta.correo_principal || "",
         tipo_cuenta: cuenta.tipo_cuenta || "",
-        estado_leads_frios: cuenta.estado_leads_frios || "",
       };
 
       return Object.entries(clienteFilters).every(([field, filter]) =>

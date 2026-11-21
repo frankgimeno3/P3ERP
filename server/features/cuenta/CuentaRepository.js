@@ -21,9 +21,7 @@ const writableColumns = [
   "suscriptor_revista",
   "potencial_actual_relacion",
   "potencial_futuro_encaje",
-  "revisado_ricardo",
   "campanas",
-  "estado_leads_frios",
   "stands_ferias",
   "stands_ferias_ediciones",
   "tipo_cuenta",
@@ -31,16 +29,15 @@ const writableColumns = [
   "actividades_cuenta",
   "descripcion_actividad",
   "correo_principal",
-  "qq",
-  "presente_en_qq",
   "ferias",
   "red_social_prioritaria",
+  "seguimiento_qq",
+  "canal_youtube",
   "catalogos",
   "catalogos_enlaces",
   "array_cuentas_distribuidoras",
   "array_cuentas_distribuidas",
   "cuenta_agencia",
-  "fuente_novedades_cuenta",
   "vat_code",
   "identificador_fiscal_tipo",
   "cif",
@@ -86,26 +83,25 @@ function normalizeCuenta(row) {
     suscriptor_revista: Boolean(row.suscriptor_revista),
     potencial_actual_relacion: row.potencial_actual_relacion ?? "",
     potencial_futuro_encaje: row.potencial_futuro_encaje ?? "",
-    revisado_ricardo: Boolean(row.revisado_ricardo),
     campanas: row.campanas ?? "",
-    estado_leads_frios: row.estado_leads_frios ?? "",
     stands_ferias: row.stands_ferias ?? "",
     stands_ferias_ediciones: Array.isArray(row.stands_ferias_ediciones) ? row.stands_ferias_ediciones : [],
     tipo_cuenta: row.tipo_cuenta ?? "",
     descripcion_cuenta: row.descripcion_cuenta ?? "",
-    actividades_cuenta: row.actividades_cuenta ?? "",
+    actividades_cuenta: row.actividades_normalizadas ?? row.actividades_cuenta ?? "",
     descripcion_actividad: row.descripcion_actividad ?? "",
     correo_principal: row.correo_principal ?? "",
-    qq: Boolean(row.qq),
-    presente_en_qq: Boolean(row.presente_en_qq),
+    qq: /^OK/.test(row.seguimiento_qq ?? ""),
+    presente_en_qq: /^OK/.test(row.seguimiento_qq ?? ""),
     ferias: Array.isArray(row.ferias) ? row.ferias : [],
     red_social_prioritaria: row.red_social_prioritaria ?? "",
+    seguimiento_qq: row.seguimiento_qq ?? "",
+    canal_youtube: row.canal_youtube ?? "",
     catalogos: row.catalogos ?? "",
     catalogos_enlaces: row.catalogos_enlaces ?? [],
     array_cuentas_distribuidoras: row.array_cuentas_distribuidoras ?? [],
     array_cuentas_distribuidas: row.array_cuentas_distribuidas ?? [],
     cuenta_agencia: row.cuenta_agencia ?? "",
-    fuente_novedades_cuenta: row.fuente_novedades_cuenta ?? "",
     vat_code: row.vat_code ?? "",
     identificador_fiscal_tipo: row.identificador_fiscal_tipo ?? "",
     cif: row.cif ?? "",
@@ -128,6 +124,19 @@ function normalizeCuenta(row) {
 }
 
 function normalizeValue(column, value) {
+  if (column === "seguimiento_qq" && !["","OKQQ","OKQQ LATAM","OK QQ ESPAÑA Y LATAM","AÑADIRQQ","CAMBIARQQ","QUITARQQ"].includes(value)) {
+    throw Object.assign(new Error("Selecciona un seguimiento QQ válido."), { status: 400 });
+  }
+  if (column === "canal_youtube" && value) {
+    try {
+      const url = new URL(value);
+      if (!["http:", "https:"].includes(url.protocol) || !["youtube.com", "www.youtube.com", "m.youtube.com"].includes(url.hostname)) throw new Error();
+      return url.href;
+    } catch {
+      throw Object.assign(new Error("Introduce una URL de YouTube válida."), { status: 400 });
+    }
+  }
+
   if (column === "stands_ferias_ediciones") {
     const seen = new Set();
     if (!Array.isArray(value) || value.some(row => {
@@ -158,12 +167,16 @@ function normalizeValue(column, value) {
     return JSON.stringify(Array.isArray(value) ? value : []);
   }
 
-  if (["presente_en_qq", "qq", "receptor_revista", "suscriptor_revista", "revisado_ricardo"].includes(column)) {
+  if (["receptor_revista", "suscriptor_revista"].includes(column)) {
     return Boolean(value);
   }
 
   return value;
 }
+
+const activityNames = `COALESCE((SELECT string_agg(c.nombre,' |##| ' ORDER BY c.nombre)
+  FROM comercial_cuenta_actividades r JOIN operaciones_clasificaciones c ON c.id=r.id_clasificacion
+  WHERE r.id_cuenta=comercial_cuentas.id_cuenta),'') AS actividades_normalizadas`;
 
 export async function getCuentas(filters = {}) {
   const pool = getPgPool();
@@ -207,7 +220,7 @@ export async function getCuentas(filters = {}) {
   let pagination = '';
   if (paged) { values.push(filters.limit, ((filters.page || 1) - 1) * filters.limit); pagination = `LIMIT $${values.length - 1} OFFSET $${values.length}`; }
   const query = `
-    SELECT *
+    SELECT *, ${activityNames}
     FROM ${tableName}
     ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
     ORDER BY ${cuentaOrderBy(filters.sortBy, filters.sortDirection)}
@@ -245,7 +258,7 @@ export async function getCuentaById(idCuenta) {
   idCuenta=await resolveIdentifier('cuenta',idCuenta);
   const pool = getPgPool();
   const { rows } = await pool.query(
-    `SELECT * FROM ${tableName} WHERE id_cuenta = $1 LIMIT 1`,
+    `SELECT *, ${activityNames} FROM ${tableName} WHERE id_cuenta = $1 LIMIT 1`,
     [idCuenta],
   );
 
