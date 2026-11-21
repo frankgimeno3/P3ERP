@@ -12,6 +12,9 @@ function normalizeContacto(row) {
     id_contacto: row.id_contacto,
     es_prueba:Boolean(row.es_prueba),
     es_principal: Boolean(row.es_principal),
+    es_contacto_administrativo: Boolean(row.es_contacto_administrativo),
+    es_receptor_digital: Boolean(row.es_receptor_digital),
+    tipos_contacto: row.tipos_contacto ?? [],
     id_cuenta: row.id_cuenta ?? "",
     nombre_contacto: row.nombre_contacto ?? "",
     apellidos_contacto: row.apellidos_contacto ?? "",
@@ -70,6 +73,8 @@ export async function getContactos(filters = {}) {
   const { rows } = await pool.query(
     `
       SELECT *, EXISTS(SELECT 1 FROM comercial_cuentas c WHERE c.id_cuenta=comercial_contactos.id_cuenta AND c.datos_comerciales->>'contacto_principal'=comercial_contactos.id_contacto) AS es_principal
+      ${filters.idCuenta ? `, ARRAY(SELECT c.nombre FROM comercial_contacto_tipos r JOIN operaciones_clasificaciones c ON c.id=r.id_clasificacion
+        WHERE r.id_contacto=comercial_contactos.id_contacto ORDER BY c.nombre) AS tipos_contacto` : ''}
       FROM comercial_contactos
       ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
       ORDER BY ${orderBy}

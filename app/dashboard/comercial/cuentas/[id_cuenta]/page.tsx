@@ -35,6 +35,10 @@ const datosComercialesDefault = {
 };
 
 function mapCuenta(cuentaData: any): InterfazCuenta {
+  const directions: InterfazCuenta['array_direcciones_cuenta'] = Array.isArray(cuentaData.array_direcciones_cuenta) ? cuentaData.array_direcciones_cuenta : [];
+  const address = directions.find(row => /principal/i.test(row.nombre_direccion))
+    ?? (directions.length === 1 ? directions[0] : undefined);
+  const defaultIfEmpty = (value: string | undefined, fallback?: string) => value?.trim() ? value : fallback || '';
   return {
     id_cuenta: cuentaData.id_cuenta || '',
     nombre_empresa: cuentaData.nombre_empresa || '',
@@ -65,16 +69,16 @@ function mapCuenta(cuentaData: any): InterfazCuenta {
     array_cuentas_distribuidas: cuentaData.array_cuentas_distribuidas || [],
     cuenta_agencia: cuentaData.cuenta_agencia || '',
     vat_code: cuentaData.vat_code || '',
-    nombre_fiscal: cuentaData.nombre_fiscal || '',
-    pais_facturacion: cuentaData.pais_facturacion || '',
-    direccion_facturacion: cuentaData.direccion_facturacion || '',
-    mail_contabilidad: cuentaData.mail_contabilidad || '',
-    poblacion_facturacion: cuentaData.poblacion_facturacion || '',
-    cp_facturacion: cuentaData.cp_facturacion || '',
+    nombre_fiscal: defaultIfEmpty(cuentaData.nombre_fiscal, cuentaData.nombre_empresa),
+    pais_facturacion: defaultIfEmpty(cuentaData.pais_facturacion, address?.pais_direccion || cuentaData.pais_cuenta),
+    direccion_facturacion: defaultIfEmpty(cuentaData.direccion_facturacion, address?.direccion_completa),
+    mail_contabilidad: defaultIfEmpty(cuentaData.mail_contabilidad, cuentaData.correo_principal),
+    poblacion_facturacion: defaultIfEmpty(cuentaData.poblacion_facturacion, address?.ciudad_direccion || cuentaData.datos_comerciales?.ciudad_principal_cuenta),
+    cp_facturacion: defaultIfEmpty(cuentaData.cp_facturacion, address?.codigo_postal),
     detalles_facturacion: cuentaData.detalles_facturacion || '',
     facturas_emitidas: cuentaData.facturas_emitidas || [],
     datos_comerciales: cuentaData.datos_comerciales || datosComercialesDefault,
-    array_direcciones_cuenta: cuentaData.array_direcciones_cuenta || [],
+    array_direcciones_cuenta: directions,
     array_contactos_cuenta: cuentaData.array_contactos_cuenta || [],
     array_comentarios_cuenta: cuentaData.array_comentarios_cuenta || [],
   };
