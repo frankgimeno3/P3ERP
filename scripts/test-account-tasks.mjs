@@ -15,7 +15,7 @@ try{
  await db.query("ALTER TABLE comercial_cuenta_tareas ADD COLUMN comentarios_agente text NOT NULL DEFAULT '', ADD COLUMN es_renovacion_anual boolean NOT NULL DEFAULT false");
  await db.query(await readFile(new URL('../database/migrations/20261120_0001_commercial_campaigns_and_fair_stands.sql',import.meta.url),'utf8'));
  pool.query=(...args)=>db.query(...args);pool.connect=async()=>({query:db.query.bind(db),release(){}});
- await db.query("INSERT INTO agentes_db(id_agente,nombre_completo_agente,is_empleado_account) VALUES('owner','Owner',true),('other','Other',true),('manager','Manager',true),('external','External',false)");
+ await db.query("INSERT INTO agentes_db(id_agente,nombre_completo_agente,is_empleado_account,estado_agente) VALUES('owner','Owner',true,'activo'),('other','Other',true,'activo'),('manager','Manager',true,'activo'),('external','External',false,'activo')");
  await db.query("INSERT INTO comercial_cuentas(id_cuenta,nombre_empresa) VALUES('account','Account')");
  await db.query("INSERT INTO comercial_campanas(id,nombre,creada_por) VALUES('camp-test','Campaign','manager')");
  const manager={id:'manager',role:'base'},owner={id:'owner',role:'base'},other={id:'other',role:'base'};
