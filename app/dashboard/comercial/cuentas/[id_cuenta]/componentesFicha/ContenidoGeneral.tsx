@@ -12,6 +12,7 @@ interface ContenidoGeneralProps {
   setCuentaEditable: React.Dispatch<React.SetStateAction<InterfazCuenta | undefined>>;
   setIsContenidoEdited: (val: boolean) => void;
   onOpenContactos: () => void;
+  renewalAssignmentKey: string;
   onRedesSocialesSaved: (profiles: NonNullable<InterfazCuenta['redes_sociales']>) => void;
 }
 
@@ -21,6 +22,7 @@ const ContenidoGeneral: FC<ContenidoGeneralProps> = ({
   setIsContenidoEdited,
   onOpenContactos,
   onRedesSocialesSaved,
+  renewalAssignmentKey,
 }) => {
   if (!cuentaEditable) {
     return <p className="text-red-700">Cuenta no encontrada</p>;
@@ -48,6 +50,7 @@ const ContenidoGeneral: FC<ContenidoGeneralProps> = ({
   return (
     <div className="flex flex-col">
       <DatosCRM
+        renewalAssignmentKey={renewalAssignmentKey}
         id_cuenta={cuentaEditable.id_cuenta}
         id_edisoft={cuentaEditable.id_edisoft || ""}
         pais_cuenta={cuentaEditable.pais_cuenta}
@@ -68,7 +71,6 @@ const ContenidoGeneral: FC<ContenidoGeneralProps> = ({
         onChange={handleCRMChange}
         id_agente={cuentaEditable.id_agente || ""}
         asignado_a={cuentaEditable.asignado_a || ""}
-        summary={<label className="flex min-h-32 flex-col text-sm font-medium">Resumen actividad<textarea className="flex-1 rounded border border-gray-300 p-2 font-normal" value={cuentaEditable.datos_comerciales.resumen_actividad_cuenta || ""} onChange={event => handleDatosComercialesChange("resumen_actividad_cuenta", event.target.value)} /></label>}
         description={<Descripcion
         descripcion={cuentaEditable.descripcion_cuenta}
         onChange={(value) => {

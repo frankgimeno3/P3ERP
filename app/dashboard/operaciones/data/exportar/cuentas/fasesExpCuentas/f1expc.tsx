@@ -35,7 +35,6 @@ const F1expc: FC<F1expcProps> = ({
         "Teléfono principal",
         "Categoría principal",
         "Contacto principal",
-        "Resumen de actividad"
     ];
 
     const actividades = [

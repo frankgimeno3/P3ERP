@@ -57,7 +57,7 @@ function PotentialField({ label, value, options, onChange }: {
   onChange: (value: string) => void;
 }) {
   return (
-    <label className="block space-y-1 text-right">
+    <label className="block space-y-1 text-left">
       <span>{label}</span>
       <select value={value} onChange={event => onChange(event.target.value)} className={cardSelect}>
         <option value="">Sin definir</option>
@@ -133,10 +133,10 @@ type Identity = {
   potencial_actual_relacion: string; potencial_futuro_encaje: string;
 };
 
-export default function IdentidadCuenta({ data, onChange, children, assignments, summary, description }: {
+export default function IdentidadCuenta({ data, onChange, children, assignments, description }: {
   data: Identity;
   onChange: (field: keyof Identity, value: string) => void;
-  children: ReactNode; assignments: ReactNode; summary: ReactNode; description: ReactNode;
+  children: ReactNode; assignments: ReactNode; description: ReactNode;
 }) {
   const { id_cuenta, id_edisoft, potencial_actual_relacion, potencial_futuro_encaje } = data;
   return (
@@ -149,11 +149,11 @@ export default function IdentidadCuenta({ data, onChange, children, assignments,
           <p><strong>Código Vtiger.</strong> Identifica la cuenta en el CRM de origen y en P3ERP.</p>
           <p className="mt-2"><strong>Código Edisoft.</strong> Vincula la cuenta con sus registros e informes administrativos.</p>
         </>}>
-          <label className="block space-y-1 text-right">
+          <label className="block space-y-1 text-left">
             <span>Código Vtiger</span>
             <input value={id_cuenta} disabled className={cardField} />
           </label>
-          <label className="block space-y-1 text-right">
+          <label className="block space-y-1 text-left">
             <span>Código Edisoft</span>
             <input value={id_edisoft} onChange={event => onChange("id_edisoft", event.target.value)} className={cardField} />
           </label>
@@ -171,9 +171,8 @@ export default function IdentidadCuenta({ data, onChange, children, assignments,
       </div>
       {children}
       </div>
-      {summary}
-      </div>
       {description}
+      </div>
     </section>
   );
 }

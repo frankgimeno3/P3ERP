@@ -4,7 +4,6 @@ import React, { ChangeEvent, FC, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { CardInfo } from "./IdentidadCuenta";
 import CountrySelect from "@/app/components/CountrySelect";
-import CountryFlag from '@/app/components/CountryFlag';
 import { ContactoService } from '@/app/service/ContactoService';
 import { CuentaService } from '@/app/service/CuentaService';
 
@@ -14,7 +13,6 @@ interface DatosComercialesProps {
     telefono_principal_cuenta: string;
     categoria_principal_cuenta: string;
     contacto_principal: string;
-    resumen_actividad_cuenta: string;
   };
   idCuenta: string;
   pais: string;
@@ -92,7 +90,7 @@ const DatosComerciales: FC<DatosComercialesProps> = ({ datos_comerciales, idCuen
       <div className="rounded-xl bg-gray-700 p-4 text-white shadow-md">
         <div className="mb-3 flex justify-between gap-2 font-semibold">País y ciudad<CardInfo title="País y ciudad">Ubicación principal de la empresa.</CardInfo></div>
         <div className="min-w-0 flex-1 space-y-3">
-          <div className="flex items-center gap-2"><CountryFlag country={pais}/><CountrySelect countries={accountCountryNames} flags="options" value={pais} onChange={onCountryChange} className={inputClass} /></div>
+          <CountrySelect countries={accountCountryNames} flags="all" value={pais} onChange={onCountryChange} className={inputClass} />
           <label className="block space-y-1">
           <span className="font-medium">Ciudad</span>
           <input name="ciudad_principal_cuenta" value={datos_comerciales.ciudad_principal_cuenta} onChange={handleInputChange} className={inputClass} />

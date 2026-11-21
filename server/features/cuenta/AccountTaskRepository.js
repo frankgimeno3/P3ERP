@@ -3,6 +3,7 @@ import { getPgPool } from '../../database/pgClient.js';
 import { accountTaskTypes, canManageAccountTasks } from '../../../app/config/accountTasks.js';
 import { requireTaskIdentity } from '../laboral/TaskAccess.js';
 import { addCuentaEvento } from '../registroEventos/RegistroEventosRepository.js';
+import { getUserEventContext } from '../userEvents/EventContext.js';
 import { defaultAnnualRange, defaultRenewalMonth, normalizeAnnualRange, normalizeAnnualDayMonth } from '../../../app/lib/annualRenewalDates.js';
 
 const fail = (message, status = 400) => { throw Object.assign(new Error(message), { status }); };
@@ -16,6 +17,40 @@ function date(value) {
   return iso;
 }
 const renewalTask = { nombre: 'Enviar propuesta de renovación anual', tipo: 'propuesta_renovacion', estado: 'pendiente', agentes: [] };
+
+async function renewalAssignees(db, account, changedField) {
+  const email = String(account.asignado_a || '').trim();
+  const id = String(account.id_agente || '').trim();
+  const byEmail = changedField !== 'id_agente' && Boolean(email);
+  const value = byEmail ? email : id;
+  if (!value) return [];
+  const { rows } = await db.query(`SELECT id_agente FROM agentes_db
+    WHERE ${byEmail ? "lower(btrim(email_agente))=lower($1)" : "id_agente=$1"}
+    AND COALESCE(is_empleado_account,true)
+    AND lower(COALESCE(estado_agente,'')) NOT IN ('inactivo','borrador')
+    ORDER BY id_agente LIMIT 2 FOR KEY SHARE`, [value]);
+  return rows.length === 1 ? [rows[0].id_agente] : [];
+}
+
+export async function syncRenewalAssignee(db, account, changedField) {
+  if (account.renovacion_anual?.activo === false) return;
+  const task = (await db.query(`SELECT id FROM comercial_cuenta_tareas
+    WHERE id_cuenta=$1 AND es_renovacion_anual FOR UPDATE`, [account.id_cuenta])).rows[0];
+  const agents = await renewalAssignees(db, account, changedField);
+  if (!task) {
+    if (agents.length) {
+      const context = await getUserEventContext();
+      await writeAccountTask(db, { id: context?.actorId || '' }, account.id_cuenta, null,
+        { ...renewalTask, agentes: agents }, false, true);
+    }
+    return;
+  }
+  const current = (await db.query('SELECT id_agente FROM comercial_cuenta_tarea_agentes WHERE id_tarea=$1', [task.id])).rows;
+  if (current.length === agents.length && current[0]?.id_agente === agents[0]) return;
+  await db.query('DELETE FROM comercial_cuenta_tarea_agentes WHERE id_tarea=$1', [task.id]);
+  if (agents.length) await db.query('INSERT INTO comercial_cuenta_tarea_agentes(id_tarea,id_agente) VALUES($1,$2)', [task.id, agents[0]]);
+  await db.query("UPDATE comercial_cuenta_tareas SET updated_at=GREATEST(clock_timestamp(),updated_at+interval '1 millisecond') WHERE id=$1", [task.id]);
+}
 
 function validate(body, annual) {
   const nombre = String(body.nombre || '').trim(), descripcion = String(body.descripcion || '').trim(), referencia = String(body.referencia || '').trim();
@@ -156,7 +191,10 @@ export async function saveAnnualRenewal(actor, accountId, body, pool = getPgPool
       if (body.activo && ((fecha !== null && !/^[1-9]\d{3}-(0[1-9]|1[0-2])$/.test(fecha)) || (body.rango != null && !rango))) fail('Introduce un mes y año válidos.');
       await db.query('UPDATE comercial_cuentas SET renovacion_anual=$2::jsonb WHERE id_cuenta=$1',
         [accountId, JSON.stringify({ activo: body.activo, fecha_aproximada: body.activo ? fecha : null })]);
-      if (body.activo && !current.tarea) await writeAccountTask(db, actor, accountId, null, renewalTask, false, true);
+      if (body.activo && !current.tarea) {
+        const account = (await db.query('SELECT id_agente,asignado_a FROM comercial_cuentas WHERE id_cuenta=$1', [accountId])).rows[0];
+        await writeAccountTask(db, actor, accountId, null, { ...renewalTask, agentes: await renewalAssignees(db, account) }, false, true);
+      }
       if (!body.activo && current.tarea) {
         await db.query('DELETE FROM comercial_cuenta_tareas WHERE id=$1', [current.tarea.id]);
         await addCuentaEvento({ idCuenta: accountId, idAgente: actor.id, detalles: 'Eliminada la tarea de renovación anual al desactivar el seguimiento.', eventType: 'Cambio por agente' }, db);

@@ -835,9 +835,9 @@
     "summary": "Consulta los datos comerciales y de gestión, los contactos, las ferias y las tareas de la cuenta.",
     "steps": [
       "Información producción incluye las subpestañas General, Segmentación por envío y Segmentación por actividad. En General se vinculan actividades, se edita el seguimiento QQ y el canal de YouTube, y se guardan las direcciones de contacto para artículos de España y LATAM.",
-      "La fecha aproximada de renovación se elige por mes y año.",
-      "Detalles de la cuenta reúne seis tarjetas junto a Resumen actividad. Debajo están la descripción y los comentarios fijados.",
-      "En Estado de tareas puedes crear o asociar campañas. Agrega o edita catálogos con nombre, URL y fecha en Actividades Información Producción. La cruz junto al distribuidor o la cuenta distribuida abre una confirmación de desvinculación.",
+      "La fecha aproximada de renovación se elige por mes y año. Al guardar un cambio de agente en Asignaciones de la cuenta, el recordatorio de renovación se reasigna automáticamente.",
+      "Detalles de la cuenta reúne seis tarjetas con etiquetas alineadas a la izquierda. La bandera aparece dentro del selector de país y la descripción y los comentarios fijados se editan junto a las tarjetas.",
+      "En Estado de tareas puedes crear o asociar campañas. En Información producción, agrega o edita catálogos con nombre y URL. Los catálogos nuevos registran automáticamente la fecha de alta. Los botones Agregar catálogo y Agregar actividad están debajo de sus tarjetas. Si una lista está vacía, aparece un aviso gris. La cruz junto al distribuidor o la cuenta distribuida abre una confirmación de desvinculación.",
       "La fila comercial agrupa país y ciudad, teléfono y contacto principal, y categoría, tipo y cuenta agencia. Los estados de recepción y suscripción de la revista aparecen junto a la distribución. Las campañas asociadas se muestran en tarjetas.",
       "La ficha se organiza en Datos Comerciales (Datos generales, Datos administrativos, Comentarios, Contactos, Propuestas y Ferias) y Datos de gestión (Contratos, Contenidos y Registro de eventos). Tareas sigue disponible como pestaña principal.",
       "En Propuestas, las subpestañas son Pendientes, Aprobadas, Rechazadas y Otras. Aprobadas incluye los estados Aceptada y Aprobada. Otras reúne los borradores y cualquier estado adicional.",

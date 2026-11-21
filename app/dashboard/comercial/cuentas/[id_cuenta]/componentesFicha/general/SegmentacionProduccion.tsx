@@ -28,10 +28,10 @@ export default function SegmentacionProduccion({ data, onChange, children }: {
   children: ReactNode;
 }) {
   const [tab, setTab] = useState('general');
-  return <>
-    <ModuleTabs label="Información producción" value={tab} items={tabs} onChange={setTab} />
-    <div hidden={tab !== 'general'}>{children}</div>
-    {tab !== 'general' && <div className="grid gap-4 rounded border border-gray-200 p-4 sm:grid-cols-2">
+  return <div className="rounded-lg border border-gray-200 bg-white">
+    <ModuleTabs plain label="Información producción" value={tab} items={tabs} onChange={setTab} />
+    <div className="p-4" hidden={tab !== 'general'}>{children}</div>
+    {tab !== 'general' && <div className="grid gap-4 p-4 sm:grid-cols-2">
       {fields[tab as 'envio' | 'actividad'].map(([key, label]) => (
         <label key={key} className="block text-sm font-medium">
           {label}
@@ -40,5 +40,5 @@ export default function SegmentacionProduccion({ data, onChange, children }: {
         </label>
       ))}
     </div>}
-  </>;
+  </div>;
 }

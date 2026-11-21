@@ -83,7 +83,6 @@ export interface InterfazCuenta {
     telefono_principal_cuenta: string;
     categoria_principal_cuenta: string;
     contacto_principal: string;
-    resumen_actividad_cuenta: string;
   };
   array_direcciones_cuenta: InterfazDireccion[];
   array_contactos_cuenta: { id_contacto: string }[];

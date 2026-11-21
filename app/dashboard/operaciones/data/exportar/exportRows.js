@@ -3,7 +3,7 @@ const accountFields = {
   'ID del agente': 'id_agente', 'Descripción de la cuenta': 'descripcion_cuenta', 'Actividades de la cuenta': 'actividades_cuenta',
   'Presente en QQ': 'presente_en_qq',
   'Ciudad principal': 'ciudad_principal_cuenta', 'Teléfono principal': 'telefono_principal_cuenta',
-  'Categoría principal': 'categoria_principal_cuenta', 'Contacto principal': 'contacto_principal', 'Resumen de actividad': 'resumen_actividad_cuenta',
+  'Categoría principal': 'categoria_principal_cuenta', 'Contacto principal': 'contacto_principal',
 };
 const contactFields = ['id_contacto','nombre_contacto','apellidos_contacto','nombre_completo_contacto','id_cuenta','nombre_empresa','telefono_contacto','email_contacto','cargo_contacto','idiomas','conocido_en','contactado_en_feria','suscripciones','otros_datos_interes','pais_contacto'];
 const normalized = value => String(value ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase();

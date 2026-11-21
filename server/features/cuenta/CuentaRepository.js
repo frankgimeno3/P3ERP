@@ -2,6 +2,7 @@ import {testMode,testIdentifier} from '../identifiers/TestMode.js';
 import {resolveIdentifier} from '../identifiers/IdentifierAliases.js';
 import { assertCommercialAgent } from "../agente/CommercialAgent.js";
 import { cuentaOrderBy } from './CuentaSorting.js';
+import { syncRenewalAssignee } from './AccountTaskRepository.js';
 import {allocateAccountIdentifier} from '../identifiers/BusinessIdentifiers.js';
 import { getPgPool } from "../../database/pgClient.js";
 import { addCuentaEvento, formatChangeDetail } from "../registroEventos/RegistroEventosRepository.js";
@@ -369,7 +370,14 @@ export async function updateCuenta(idCuenta, cuentaData) {
     return jsonColumns.has(column) ? `${column} = ${placeholder}::jsonb` : `${column} = ${placeholder}`;
   });
 
-  const { rows } = await pool.query(
+  const client = await pool.connect();
+  let rows;
+  try {
+    await client.query('BEGIN');
+    const locked = (await client.query(
+      'SELECT id_agente,asignado_a FROM comercial_cuentas WHERE id_cuenta=$1 FOR UPDATE', [idCuenta],
+    )).rows[0];
+    ({ rows } = await client.query(
     `
       UPDATE ${tableName}
       SET ${assignments.join(", ")}, updated_at = NOW()
@@ -377,7 +385,19 @@ export async function updateCuenta(idCuenta, cuentaData) {
       RETURNING *
     `,
     values,
-  );
+    ));
+    if (locked && rows[0]) {
+      const changedField = (locked.asignado_a ?? '') !== (rows[0].asignado_a ?? '') ? 'asignado_a'
+        : (locked.id_agente ?? '') !== (rows[0].id_agente ?? '') ? 'id_agente' : null;
+      if (changedField) await syncRenewalAssignee(client, rows[0], changedField);
+    }
+    await client.query('COMMIT');
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
 
   const updated = rows[0] ? normalizeCuenta(rows[0]) : null;
 

@@ -32,7 +32,6 @@ const datosComercialesDefault = {
   telefono_principal_cuenta: '',
   categoria_principal_cuenta: '',
   contacto_principal: '',
-  resumen_actividad_cuenta: '',
 };
 
 function mapCuenta(cuentaData: any): InterfazCuenta {
@@ -350,6 +349,7 @@ const FichaCliente = () => {
               setIsContenidoEdited={setIsContenidoEdited}
               onOpenContactos={() => setPestana('contactos')}
               onRedesSocialesSaved={syncSocialProfiles}
+              renewalAssignmentKey={JSON.stringify([savedAccount.current?.id_agente, savedAccount.current?.asignado_a])}
             />
           )}
 

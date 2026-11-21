@@ -19,6 +19,7 @@ export default function CommercialClassifications({ kind, record }: { kind: Kind
   const base = '/dashboard/operaciones/' + kind;
   const dialog = useRef<HTMLDialogElement>(null);
   const [rows, setRows] = useState<Row[]>([]);
+  const [loaded, setLoaded] = useState(false);
   const [item, setItem] = useState<Row>();
   const [input, setInput] = useState('');
   const [error, setError] = useState('');
@@ -28,7 +29,7 @@ export default function CommercialClassifications({ kind, record }: { kind: Kind
   useEffect(() => {
     const controller = new AbortController();
     apiClient.get(api(kind), { params: { id, registro: record }, signal: controller.signal })
-      .then(({ data }) => { if (!controller.signal.aborted) { if (id) setItem(data); else setRows(data); } })
+      .then(({ data }) => { if (!controller.signal.aborted) { if (id) setItem(data); else setRows(data); setLoaded(true); } })
       .catch(error => { if (!controller.signal.aborted) setError(message(error)); });
     return () => controller.abort();
   }, [kind, record, id, revision]);
@@ -45,19 +46,27 @@ export default function CommercialClassifications({ kind, record }: { kind: Kind
       if (remove) setError(message(error)); else setModalError(message(error));
     } finally { setBusy(false); }
   }
+  const accountActivities = Boolean(record && kind === 'actividades-cuentas');
+  const linked = rows.filter(row => row.asociado);
+  const openDialog = () => { setInput(''); setModalError(''); dialog.current?.showModal(); };
   return <section className={record ? 'space-y-2' : 'space-y-4 p-6'}>
     <div className="flex items-center justify-between gap-3">
       <h2 className="font-semibold">{id ? item?.nombre || title(kind) : title(kind)}</h2>
-      {!id && <button type="button" className={action} aria-label={record ? 'Vincular clasificación' : 'Crear clasificación'} disabled={busy} onClick={() => { setInput(''); setModalError(''); dialog.current?.showModal(); }}>{record ? '+' : 'Añadir'}</button>}
+      {!id && !accountActivities && <button type="button" className={action} aria-label={record ? 'Vincular clasificación' : 'Crear clasificación'} disabled={busy} onClick={openDialog}>{record ? '+' : 'Añadir'}</button>}
     </div>
     {error && <p role="alert" className="text-red-700">{error}</p>}
-    {record ? rows.filter(row => row.asociado).map(row => <article key={row.id} className="flex items-center justify-between gap-3 rounded border bg-white p-3">
+    {record ? linked.map(row => <article key={row.id} className="flex items-center justify-between gap-3 rounded border bg-white p-3">
       <Link className="cursor-pointer hover:underline" href={base + '/' + row.id}>{row.nombre}</Link>
       <button type="button" className={action} disabled={busy} onClick={() => update(row.id)}>Desvincular</button>
     </article>) : <table className="w-full border bg-white text-left">
       <thead className="bg-blue-950 text-white"><tr><th className="p-3">ID</th><th className="p-3">{id ? (segment === 'cuentas' ? 'Empresa' : 'Contacto') : 'Nombre'}</th></tr></thead>
       <tbody>{(id ? item?.miembros || [] : rows).map(row => <tr key={row.id} className="border-t hover:bg-blue-50"><td className="p-3">{row.id}</td><td className="p-3"><Link className="cursor-pointer text-blue-950 hover:underline" href={id ? '/dashboard/comercial/' + segment + '/' + encodeURIComponent(row.id) : base + '/' + row.id}>{row.nombre}</Link></td></tr>)}</tbody>
     </table>}
+    {accountActivities && <>
+      {!error && !linked.length && <p role="status" className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-gray-600">{loaded ? 'No hay actividades vinculadas.' : 'Cargando actividades…'}</p>}
+      <button type="button" disabled={busy || !loaded} onClick={openDialog}
+        className="rounded-md bg-blue-950 px-4 py-2 font-medium text-white enabled:cursor-pointer enabled:hover:bg-blue-800 disabled:opacity-50">Agregar actividad</button>
+    </>}
     <dialog ref={dialog} aria-label="Añadir clasificación" className="m-auto w-[min(94vw,32rem)] rounded-xl p-5 shadow-xl backdrop:bg-black/40" onCancel={event => { if (busy) event.preventDefault(); }}>
       <form className="space-y-4" onSubmit={event => { event.preventDefault(); void update(); }}>
         <div className="flex justify-between"><h3 className="font-semibold">{record ? 'Vincular' : 'Añadir'}</h3><button type="button" aria-label="Cerrar" className={action} disabled={busy} onClick={() => dialog.current?.close()}>×</button></div>

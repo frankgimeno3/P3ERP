@@ -15,7 +15,8 @@ import IdentidadCuenta, { AccountAssignments } from "./IdentidadCuenta";
 import EnvioPropuestasAnuales from "./EnvioPropuestasAnuales";
 
 interface DatosCRMProps {
-  id_agente: string; asignado_a: string; summary: React.ReactNode; description: React.ReactNode;
+  id_agente: string; asignado_a: string; description: React.ReactNode;
+  renewalAssignmentKey: string;
   segmentacion: Record<string,string>;
   onSegmentacionChange: (data: Record<string,string>) => void;
   commercialDetails: React.ReactNode;
@@ -147,7 +148,7 @@ function CuentaSearchModal({
 }
 
 const DatosCRM: FC<DatosCRMProps> = ({
-  segmentacion, onSegmentacionChange, commercialDetails, id_agente, asignado_a, summary, description,
+  renewalAssignmentKey, segmentacion, onSegmentacionChange, commercialDetails, id_agente, asignado_a, description,
   id_cuenta,
   id_edisoft,
   pais_cuenta,
@@ -205,7 +206,7 @@ const DatosCRM: FC<DatosCRMProps> = ({
         data={{ id_cuenta, id_edisoft, pais_cuenta, potencial_actual_relacion, potencial_futuro_encaje }}
         onChange={onChange}
         assignments={<AccountAssignments id_agente={id_agente} asignado_a={asignado_a} agents={agentes} onChange={onChange} />}
-        summary={summary} description={description}
+        description={description}
       >
         {commercialDetails}
       </IdentidadCuenta>
@@ -215,13 +216,17 @@ const DatosCRM: FC<DatosCRMProps> = ({
         <div className="grid gap-4 text-sm">
           <div className="rounded bg-gray-50 p-3"><AccountCampaigns key={id_cuenta} accountId={id_cuenta} /></div>
         </div>
-          <EnvioPropuestasAnuales key={id_cuenta} idCuenta={id_cuenta} agents={agentes} />
+          <EnvioPropuestasAnuales key={id_cuenta + renewalAssignmentKey} idCuenta={id_cuenta} agents={agentes} />
       </section>
 
       <section className="space-y-4">
         <h2 className="text-xl font-bold">Información producción</h2>
         <SegmentacionProduccion data={segmentacion} onChange={onSegmentacionChange}>
         <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-3">
+          <div className="grid gap-4 md:col-span-3 md:grid-cols-2">
+            <label>Dirección-Contacto artículos ESPAÑA<textarea className={fieldClass} value={segmentacion.articulos_espana || ""} onChange={event => onSegmentacionChange({...segmentacion, articulos_espana:event.target.value})}/></label>
+            <label>Dirección-Contacto artículos LATAM<textarea className={fieldClass} value={segmentacion.articulos_latam || ""} onChange={event => onSegmentacionChange({...segmentacion, articulos_latam:event.target.value})}/></label>
+          </div>
           <div className="grid content-start gap-4 md:col-span-3">
           <label className="space-y-1">
             <span className="font-medium">Dirección de email principal</span>
@@ -248,10 +253,6 @@ const DatosCRM: FC<DatosCRMProps> = ({
               <svg viewBox="0 0 24 24" width="32" height="32" aria-hidden="true"><rect x="1" y="4" width="22" height="16" rx="4" fill="#ff0033"/><path d="m10 8 6 4-6 4z" fill="white"/></svg>
               <label className="block">URL del canal<input type="url" name="canal_youtube" className={fieldClass} value={canal_youtube} onChange={handleTextChange}/></label>
             </section>
-          </div>
-          <div className="grid gap-4 md:col-span-3 md:grid-cols-2">
-            <label>Dirección-Contacto artículos ESPAÑA<textarea className={fieldClass} value={segmentacion.articulos_espana || ""} onChange={event => onSegmentacionChange({...segmentacion, articulos_espana:event.target.value})}/></label>
-            <label>Dirección-Contacto artículos LATAM<textarea className={fieldClass} value={segmentacion.articulos_latam || ""} onChange={event => onSegmentacionChange({...segmentacion, articulos_latam:event.target.value})}/></label>
           </div>
           <div className="grid gap-4 md:col-span-3 md:grid-cols-2">
             <div className="space-y-3 rounded bg-gray-50 p-3">

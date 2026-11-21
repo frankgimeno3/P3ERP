@@ -128,7 +128,6 @@ export default function CrearCuenta() {
         datos_comerciales: {
           telefono_principal_cuenta: form.telefono_principal.trim(),
           ciudad_principal_cuenta: form.poblacion_facturacion.trim(),
-          resumen_actividad_cuenta: "",
         },
         array_direcciones_cuenta: form.direccion_facturacion || form.pais_facturacion ? [{
           nombre_direccion: "Direccion fiscal",

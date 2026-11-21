@@ -30,7 +30,6 @@ const DatosEmpresaContacto: FC<DatosEmpresaContactoProps> = ({
       telefono_principal_cuenta: e.datos_comerciales?.telefono_principal_cuenta || "",
       categoria_principal_cuenta: e.datos_comerciales?.categoria_principal_cuenta || "",
       contacto_principal: e.datos_comerciales?.contacto_principal || "",  
-      resumen_actividad_cuenta: e.datos_comerciales?.resumen_actividad_cuenta || "",
     },
     array_direcciones_cuenta: e.array_direcciones_cuenta?.length
       ? e.array_direcciones_cuenta

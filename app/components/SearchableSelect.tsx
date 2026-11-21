@@ -51,6 +51,6 @@ export default function SearchableSelect({ id:providedId,inputClassName,options,
     {open && !disabled && createPortal(<div id={`${id}-options`} role="listbox" aria-label={label} style={position} className="fixed z-[1000] overflow-auto rounded border border-gray-300 bg-white p-1 text-slate-900 shadow-xl">
       {shown.map((option, i) => <button id={`${id}-${i}`} key={option.value} tabIndex={-1} type="button" role="option" aria-selected={option.value === value} disabled={option.disabled} onMouseDown={event => event.preventDefault()} onClick={() => choose(option)} className={`flex w-full items-center gap-2 rounded px-3 py-2 text-left enabled:cursor-pointer enabled:hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50 ${i === active ? 'bg-blue-50' : ''}`}>{option.icon}{option.label}</button>)}
       {!shown.length && <p className="p-3 text-sm text-gray-500">No hay opciones coincidentes.</p>}
-    </div>,document.body)}
+    </div>,root.current?.closest('dialog') ?? document.body)}
   </div>;
 }
